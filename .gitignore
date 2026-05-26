@@ -1,0 +1,52 @@
+# === AI 에이전트 개인 오버라이드 ===
+# Claude Code 공식: code.claude.com/docs/en/memory (4-tier 메모리 스코프 "Local")
+CLAUDE.local.md
+
+# Codex CLI 공식: developers.openai.com/codex/guides/agents-md (per-dir + ~/.codex/)
+AGENTS.override.md
+
+# Claude Code per-project local settings
+.claude/settings.local.json
+
+# === 환경 변수 ===
+# global.md §4 강제: .env* 무시, .env.example 만 예외
+.env*
+!.env.example
+
+# === AI 룰 프레임워크 (로컬 자산으로 운용) ===
+.ai/
+.claude/
+.agents/
+
+# === 클라이언트 원본 자료 (ADR-018 — README만 트래킹, 원본은 로컬 보관) ===
+docs/source/*
+!docs/source/README.md
+
+# === OS / Editor ===
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# === Node / Next.js (ADR-001 fullstack 스택) ===
+node_modules/
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# === 로그·테스트 산출물 ===
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+coverage/
+.nyc_output/
+
+# === 빌드·배포 캐시 ===
+.cache/
+.turbo/
+.vercel/
