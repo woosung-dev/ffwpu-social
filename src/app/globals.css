@@ -1,0 +1,13 @@
+/* Tailwind v4 CSS-first 진입점 — 디자인 토큰은 D-4에 docs/design.md 참조로 확장 */
+@import "tailwindcss";
+
+:root {
+  --color-primary: #501f7e;
+  --color-accent: #f4b600;
+  --color-text: #3e404e;
+}
+
+html,
+body {
+  color: var(--color-text);
+}

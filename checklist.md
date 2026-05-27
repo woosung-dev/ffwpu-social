@@ -65,3 +65,50 @@
 ## Phase 5 — 코드 작업 시작 가능
 
 위 Phase 0~4가 끝나야 코드 작업 시작.
+
+## Sprint 1 D-5 (2026-05-27) — 셋업 + 공통 토대
+
+- [x] `docker-compose.yml` 작성 (postgres 16-alpine + minio + minio-init 자동 버킷)
+- [x] `package.json` + `tsconfig.json` + `next.config.ts` + `eslint.config.mjs` + `postcss.config.mjs`
+- [x] 의존성 설치 (drizzle/next-auth/tiptap/aws-sdk/bcryptjs/zod/dotenv/dayjs 등)
+- [x] `next.config.ts`: `output: 'standalone'` + `images.remotePatterns` (localhost:9000 + R2/S3) + `cacheComponents: true`
+- [x] `drizzle.config.ts`: `strict: true` + postgresql + dotenv 명시 로드
+- [x] `.env.local` 생성 (`.env.example` 기반, POSTGRES_PORT 5433로 격리)
+- [x] `src/db/schema/` 5개 (news/news_tags/heart_events/users/audit_logs) + index.ts 배럴
+- [x] **🚨 GATE 1 통과** — 스키마 SQL 검토 + 사용자 승인 + `drizzle-kit migrate` 적용
+- [x] seed 데이터 (news 9건 + 태그 27건 + admin 1명)
+- [x] NextAuth v5 셋업 (`src/auth.ts` + `src/proxy.ts` + handlers route + `src/types/next-auth.d.ts`)
+- [x] **🚨 GATE 2 통과** — 임시 비밀번호 자동 생성 → bcrypt → seed users
+- [x] `features/news/` 3-Layer 골격 (actions/service/db/schemas) — listNews/getNewsDetail 구현, create/update/toggleHeart는 D-2에
+- [x] `tech.md` ADR-022 + ADR-020 반영 (5 테이블 + NextAuth + Docker 로컬 스택)
+- [x] 임시 홈 `src/app/page.tsx` — Suspense 패턴으로 시드 9건 표시 (D-3에 디자인 시안으로 교체)
+- [x] `pnpm tsc --noEmit` 통과
+- [x] `pnpm build` 통과 (`/` Partial Prerender, NextAuth handler dynamic, proxy 인식)
+
+## Sprint 1 D-4 (2026-05-28) — 공통 컴포넌트 (F3 폴더 구조, ADR-024)
+
+- [ ] shadcn/ui 초기화 (`pnpm dlx shadcn@latest init`) + 필요 primitive 추가
+- [ ] `src/client/layouts/PublicHeader.tsx` (4 BP variants + 스크롤스파이 hook 사용)
+- [ ] `src/client/layouts/PublicFooter.tsx`
+- [ ] `src/client/layouts/Banner.tsx` (Sow Good 가족이 아니어도…)
+- [ ] `src/client/hooks/useScrollSpy.ts` (Intersection Observer)
+- [ ] `src/admin/layouts/AdminSidebar.tsx`
+- [ ] `src/features/news/components/ArticleCard.tsx` (12 variants, 공유)
+- [ ] `src/features/news/components/StoryCard.tsx`
+- [ ] `src/features/news/components/FeaturedStoryCard.tsx`
+- [ ] `src/features/news/components/Heart.tsx` (Client, 익명 좋아요 + optimistic)
+- [ ] `src/features/news/components/CategoryTabs.tsx`
+- [ ] `src/features/news/components/Pagination.tsx`
+- [ ] `src/features/news/components/KpiCard.tsx`
+- [ ] `src/features/news/index.ts` public API (actions/service/types만 export, db는 격리)
+- [ ] 디자인 토큰 매핑 — `globals.css` CSS vars + `docs/design.md` 보라 9단계·액센트·텍스트 토큰
+- [ ] SUIT 폰트 셋업 (next/font/local 또는 CDN)
+- [ ] `app/(public)/layout.tsx` (PublicHeader + main + PublicFooter wrap)
+- [ ] `app/admin/(auth)/layout.tsx` (중앙 카드, noindex meta)
+- [ ] `app/admin/(panel)/layout.tsx` (AdminSidebar wrap, noindex meta)
+
+## Sprint 1 D-1 추가 백로그
+
+- [ ] ESLint flat config 정식 셋업 (eslint-config-next 16 flat 패턴) — 현재 빈 config
+- [ ] next-auth peer dep 경고 검증 — next 16 호환 확인 또는 별도 패치
+- [ ] 임시 비밀번호 변경 — 첫 어드민 로그인 후 즉시

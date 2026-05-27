@@ -949,3 +949,136 @@ export const auditLogs = pgTable('audit_logs', {
 
 - Docker 이미지 ~150MB로 빌드 가능 (2단계 AWS 이전 친화).
 - 이미지 저장이 Vercel/AWS 양쪽에서 동일 작동.
+
+---
+
+## ADR-023: 도메인 아키텍처 — 옵션 2 서브도메인 + 단일 Next.js 앱 (host 분기)
+
+- **Status**: Accepted
+- **Date**: 2026-05-27
+
+### Context
+
+D-5 후반 사용자 결정 — 어드민과 사용자 페이지의 URL/도메인 분리 전략 잠금. 3안 비교 후 옵션 2 선택.
+
+| 옵션 | 패턴 | 비고 |
+|---|---|---|
+| 1. 동일 도메인 + 경로 | `xxx.org/` + `xxx.org/admin` | 가장 단순. 워드프레스·Notion 류 |
+| 2. **서브도메인** ★ 채택 | `xxx.org/` + `admin.xxx.org/` | B2B SaaS 표준 (Stripe·Slack·Shopify) |
+| 3. 완전 별도 도메인 | `xxx-a.org` + `xxx-b.org` | 정부·금융 등 강력 격리. 우리 규모 오버킬 |
+
+### Decision
+
+- **사용자 페이지**: `<main-domain>` (도메인 미정, 사회공헌국 회신 대기)
+- **어드민**: `admin.<main-domain>` (서브도메인 분리)
+- **구현 방안 A**: 단일 Next.js 앱 + `src/proxy.ts`에서 hostname 분기. monorepo 분리 없음.
+- **NextAuth**: `AUTH_URL`은 어드민 호스트 기준. 쿠키 domain `.<main-domain>` wildcard (cross-subdomain 인증 호환).
+- **DNS**: `<main>` + `admin.<main>` CNAME 추가 (사회공헌국 도메인 회신 시).
+
+### Implementation 일정
+
+- **D-4~D-3**: 폴더 구조는 옵션 1과 *동일* — `app/(public)/` + `app/admin/(auth)/` + `app/admin/(panel)/`. 도메인 코드 무관.
+- **D-1 (도메인 확정 후)**: `proxy.ts`에 host 분기 5-10줄 추가:
+
+```ts
+// 의사 코드 (D-1에 정식 작성)
+const host = req.headers.get("host") ?? "";
+const isAdminHost = host.startsWith("admin.") || host === "localhost:3000";
+
+if (isAdminHost) {
+  // admin.xxx.org → /admin/* 만 노출, 미인증 시 /admin/login 으로
+} else {
+  // xxx.org → /admin 접근 시 404
+}
+```
+
+- 로컬 개발은 `localhost:3000`에서 양쪽 모두 접근 (호스트 분기 우회).
+- 또는 로컬에 `127.0.0.1 admin.localhost` `/etc/hosts` 추가하여 서브도메인 동작 테스트.
+
+### Consequences
+
+- ✅ **검색엔진 색인 자연 분리** — 구글은 서브도메인을 별개 사이트로 인식. `robots.txt` 보강 가능.
+- ✅ **인증 호환** — NextAuth가 cross-subdomain 쿠키 wildcard 지원. 별도 SSO 패턴 불필요.
+- ✅ **확장**: v1.1·v2에 어드민을 별도 인프라(ECS Fargate)로 분리 시 코드 거의 무수정.
+- ✅ **5일 데드라인 OK** — 폴더 구조는 영향 없고, host 분기 코드는 D-1 단계 5-10줄.
+- ✅ **비용 0** — 서브도메인은 무료 (메인 도메인 1개만).
+- ⚠️ 도메인이 미정인 동안은 hostname 분기 미적용. 도메인 확정 직전 D-1 단계에 정식 적용.
+- ⚠️ 어드민 절대 URL을 NextAuth 콜백·이메일에 쓸 때 `process.env.AUTH_URL` 일관 사용 (하드코딩 금지).
+
+### v2 안 — 옵션 3 전환 시점
+
+옵션 2로 운영 중 *강력 보안 격리*가 필요해지면 (예: 결제 시스템 도입, 개인정보 대량 처리) → 옵션 3으로 마이그레이션. 코드 변경: monorepo 분리 (`apps/web` + `apps/admin`) + DB connection pool 분리. 비용·복잡도 증가. 현재 시점에는 불필요.
+
+---
+
+## ADR-024: 폴더 구조 잠금 — F3 (src/client + src/admin + src/features)
+
+- **Status**: Accepted (Supersedes ADR-023의 폴더 구조 부분 — 도메인 아키텍처(서브도메인)는 ADR-023 유지)
+- **Date**: 2026-05-27
+
+### Context
+
+ADR-023에서 *도메인 분리(서브도메인)*는 결정했으나 *폴더 구조*는 A안(`app/(public)` + Route Groups + `features/<도메인>/components/admin/`)으로 가던 중. 사용자가 "더 분리된 형태"를 원해 5개 폴더 패턴(A·D·F1·F2·F3) 점수표 + 업계 사례 + 스타트업 단계 매핑 검토 후 **F3 채택**.
+
+### 5개 옵션 점수 (가중치 균등 ~ 분리 ×2 시나리오 모두 검토)
+
+| 옵션 | 균등 | 분리 ×2 | 바이브/에이전틱 ×2 | 비고 |
+|---|---|---|---|---|
+| A Route Groups + Features | 60 | 66 | 79 | 분리감 약함 |
+| D Bulletproof-React | 56 | 61 | 71 | client/admin 평면 |
+| F1 client+admin+shared | 60 | 70 | 76 | 데이터 모델 shared 가면 F3 수렴 |
+| F2 Monorepo | 44 | 54 | 53 | 5일 데드라인 부담 + 시리즈 A+ 표준 |
+| **F3 client+admin+features** ★ | **61** | **69** | **79** | **균형 + 사용자 분리 의도 충족** |
+
+업계 매핑: 1인·1도메인·시드 이전 단계 → F3 또는 A 표준. F2(Monorepo)는 시리즈 A+ 마이그레이션 시점.
+
+### Decision
+
+**F3 폴더 구조 채택**:
+
+```
+src/
+├── app/                      ← 라우팅만 (Route Groups 유지: (public) + admin/(auth)/(panel))
+├── client/                   ← ★ 사용자 전용 UI (layouts/sections/hooks)
+├── admin/                    ← ★ 어드민 전용 UI (layouts/components/hooks)
+├── features/                 ← ★ 도메인 로직 SSOT (actions/service/db/schemas + 양쪽 공유 components)
+│   └── news/{actions,service,db,schemas,components/,index.ts}
+├── components/ui/            ← shadcn primitive (양쪽 공유)
+├── db/, lib/, hooks/, types/ ← 양쪽 공유 인프라
+├── auth.ts, proxy.ts
+```
+
+**F3 결정 규칙 (AI/사람 동일 적용)**:
+
+1. **라우트/페이지** → `app/(public)/` 또는 `app/admin/(panel)/`
+2. **사용자에게만 보이는 UI** → `src/client/` (PublicHeader, 랜딩 sections, useScrollSpy)
+3. **어드민에게만 보이는 UI** → `src/admin/` (AdminSidebar, NewsEditor, ImageUploader, NewsForm)
+4. **양쪽이 모두 쓰는 도메인 UI** → `src/features/<도메인>/components/` (ArticleCard, Heart, CategoryTabs)
+5. **도메인 로직(서버)** → `src/features/<도메인>/{actions,service,db,schemas}.ts` (3-Layer 그대로)
+6. **도메인 무관 UI primitive** → `src/components/ui/` (shadcn)
+7. **순수 함수 유틸** → `src/lib/`
+8. **공용 React 훅** → `src/hooks/` (도메인 종속이면 client/admin/hooks 또는 features/X/hooks)
+
+**features/<domain>/index.ts public API** (D 패턴 흡수): `db.ts`는 export 안 함. 외부에서 직접 호출 금지. `actions`·`service`·types만 노출.
+
+### Consequences
+
+- ✅ **사용자 분리 요구 충족** — `src/client/` ↔ `src/admin/` 최상위 분기. 트리만 봐도 명확.
+- ✅ **데이터 SSOT** — Drizzle·Zod·3-Layer는 `features/` 한 곳. DRY 위반 0.
+- ✅ **5일 데드라인 안전** — D-5 셋업 src/features/news/는 그대로 유지. D-4 진입 시 src/client/ + src/admin/ 신규 폴더만 생성.
+- ✅ **에이전틱 코딩 친화** — AI가 "어드민 UI" / "도메인 로직" / "공용 컴포넌트" 3분기로 위치 즉결.
+- ✅ **v1.1+ F2 마이그레이션 친화** — `src/client/`와 `src/admin/`이 이미 분리되어 있어 `apps/web` + `apps/admin`으로 split 시 비용 낮음.
+- ⚠️ **결정 비용 (작음)** — "이 컴포넌트는 client 전용? 양쪽 공유?" 판단 1회 필요. 규칙: 양쪽 사용 가능성이 있으면 처음부터 `features/<도메인>/components/`에 (보수적).
+- ⚠️ **현재 src/db, src/lib 등은 변경 없음** — F3 적용은 *UI 분리*에만. 데이터 레이어 폴더는 그대로.
+
+### Implementation 일정
+
+- **지금**: docs(tech.md/checklist.md/context-notes.md) F3 반영. 현재 src/ 코드 이동 0.
+- **D-4 진입 시**: `src/client/layouts/`(PublicHeader/Footer/Banner) + `src/client/sections/`(랜딩 6 섹션) + `src/admin/layouts/`(AdminSidebar) + `src/admin/components/`(NewsEditor 등) 신규 생성.
+- **D-2**: `src/features/news/components/admin/` 서브폴더는 *만들지 않음* — 어드민 전용 UI는 모두 `src/admin/`으로 통합. 단, ArticleCard처럼 양쪽 공유 UI는 `src/features/news/components/`에 유지.
+- **v1.1+ 단계 진입 시**: F2 Monorepo 마이그레이션 검토 (도메인 3+ 또는 어드민 인프라 분리 결정 시).
+
+### Open Issue
+
+- `src/admin/components/admin/...` 같은 *중복 nesting*은 회피. `src/admin/components/NewsEditor.tsx` 직접 위치.
+- 어드민 전용 컴포넌트가 도메인 모델 import는 자유 (`src/admin/components/NewsEditor.tsx`가 `features/news/schemas`에서 News 타입 import).

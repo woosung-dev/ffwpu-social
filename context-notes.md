@@ -337,3 +337,132 @@ Figma MCP로 컴포넌트 5개(Header, Menu, StoryCard, ArticleCard, Heart) 추�
 - **현재 디렉토리 상태**: 13개 항목 (3 hidden 폴더 + AGENTS.md + GEMINI.md + checklist + context-notes + README + setup.sh + .env.example + docs).
 - **남은 작업**: 코드 작업 진입 — Clerk·Neon·Cloudflare R2 셋업 → Drizzle 스키마 → 페이지 구현.
 
+---
+
+## 2026-05-27 — Sprint 1 D-5 완료 (셋업 + 공통 토대)
+
+ADR-020/021/022 결정 기반으로 5일 데드라인의 첫째 날 작업. 인프라 + 데이터 + 3-Layer 골격까지 모두 완료. 빌드 검증 통과.
+
+- **결정**: 호스트 Postgres 포트 충돌(5432, nexus_db 다른 프로젝트 점유)을 발견 — 우리는 5433으로 격리. `docker compose --env-file .env.local` 명시 로드.
+- **왜**: 다른 프로젝트(nexus_db 4일째 가동)를 건드리지 않고 작업. 12-Factor — 호스트 포트는 변수화, 컨테이너 내부는 표준값 5432 고정.
+
+- **결정**: `drizzle.config.ts`에서 `dotenv.config({ path: ".env.local" })` 명시 로드.
+- **왜**: drizzle-kit은 `.env.local` 자동 로드 안 함 — `.env`만. Next.js 컨벤션과 분리되어 있어 명시 필요.
+
+- **결정**: `src/db/seed.ts`에서 dynamic import 패턴(`await import("./index")`) 사용.
+- **왜**: ESM hoisting으로 `import` 가 `dotenv.config()` 보다 먼저 평가됨 → `DATABASE_URL` undefined 에러. dynamic import로 평가 순서 강제.
+
+- **결정**: `bcryptjs`는 default import 사용 (`import bcrypt from "bcryptjs"`).
+- **왜**: bcryptjs 2.x는 CJS만 — named export(`compare`/`hash`) 런타임 실패. tsc는 .d.ts만 보고 통과시켜서 런타임에서야 발견됨.
+
+- **결정**: 임시 비밀번호 자동 생성(`openssl rand -base64 18 | tr -d '/+=' | head -c 16`)으로 GATE 2 통과. 결과: `bRhHR2CWkqrMnj0L`.
+- **왜**: conversation 노출 위험을 줄이는 옵션 중 사용자가 자동 생성을 선택. 배포 전 어드민 로그인 → 비밀번호 변경 절차 필수 (checklist D-1에 등록).
+
+- **결정**: `proxy.ts`에 `runtime: "nodejs"` 명시 제거.
+- **왜**: Next 16에서 proxy는 *항상* Node Runtime — 명시 금지 룰. middleware → proxy 마이그레이션의 차이.
+
+- **결정**: `next.config.ts`의 `cacheComponents`를 `experimental` 밖 톱레벨로 이동.
+- **왜**: Next 16에서 stable 승격됨. `experimental.cacheComponents` 사용 시 warning.
+
+- **결정**: 임시 홈 `app/page.tsx`에서 `<Suspense>` boundary로 DB fetch 감쌈.
+- **왜**: Cache Components 환경에서 uncached data는 Suspense 밖에서 호출 금지. `"use cache"` 또는 `<Suspense>` 둘 중 하나 필수. 이 패턴은 D-3 디자인 구현에도 동일 적용.
+
+- **결정**: `next lint` 폐기 → `eslint .` 직접 호출. eslint.config.mjs는 최소 ignore만 (D-1에 정식 보강).
+- **왜**: Next 16에서 `next lint` 제거 + eslint-config-next 16의 FlatCompat 브릿지가 순환 참조 에러 발생. 빠른 진행 위해 최소화, 정식 셋업은 D-1 QA 단계로 이월.
+
+- **검증 증거 (methodology-tooled §6)**:
+  - DB: `\dt` 결과 5/5 테이블 + `drizzle/0000_milky_sway.sql` SQL diff
+  - 시드: stdout `news 9건 + 태그 27건`
+  - 빌드: `✓ Compiled successfully` + `/ ◐ Partial Prerender` + `ƒ /api/auth/[...nextauth]` + `Proxy (Middleware)`
+  - 타입: `pnpm tsc --noEmit` 0 에러
+
+- **다음 단계 (D-4)**: shadcn/ui 초기화 → 공통 컴포넌트 9개(Header 스크롤스파이 + Footer + Banner + ArticleCard 12 variants 등). 디자인 토큰을 Tailwind에 매핑. SUIT 폰트 셋업.
+
+---
+
+## 2026-05-27 (D-5 종결 후) — 도메인 아키텍처 잠금 (ADR-023)
+
+D-4 진입 직전 사용자 결정 — 어드민과 사용자 페이지의 URL/도메인 분리 패턴 잠금.
+
+- **결정**: 옵션 2 (서브도메인) 채택. `<main>` + `admin.<main>`. 구현 방안 A (단일 Next.js 앱 + `proxy.ts` hostname 분기).
+- **왜**: B2B SaaS 업계 표준 (Stripe / Slack / Shopify / AWS Console). 검색엔진 자연 분리 + NextAuth cross-subdomain 쿠키 wildcard 호환 + 비용 0(서브도메인 무료) + 5일 데드라인 안 구현 가능(host 분기 5-10줄) + v1.1 인프라 분리 자연스러움.
+- **옵션 3 거부 사유**: 정부·금융 수준 격리 불필요. cross-origin 인증 복잡(NextAuth 호환성 문제), 도메인 2배 비용·배포 2배. 우리 규모(super 1명·콘텐츠 사이트) 오버킬.
+- **옵션 1 거부 사유 (사용자 의사)**: 어드민을 명시적으로 격리하고 싶음.
+- **폴더 구조 영향**: 옵션 1·2 모두 *동일 폴더 구조* 사용 가능 — `app/(public)/` + `app/admin/(auth)/` + `app/admin/(panel)/`. proxy.ts host 분기만 D-1에 추가.
+- **로컬 개발 영향**: `localhost:3000`에서 양쪽 모두 접근 (host 분기 우회). 또는 `/etc/hosts`에 `127.0.0.1 admin.localhost` 추가하여 서브도메인 동작 테스트.
+- **NextAuth 영향**: 도메인 확정 시 `AUTH_URL=https://admin.<main>` + 쿠키 domain `.<main>` wildcard 설정. 코드 변경 최소.
+
+### 폴더 구조 잠금 (D-4 진입 전 명확화)
+
+```
+src/app/
+  (public)/              # Route Group, URL에 안 나옴
+    layout.tsx           # PublicHeader + PublicFooter
+    page.tsx             # /
+    news/{page,[id]/page}.tsx
+  admin/
+    (auth)/              # 로그인 전 — Sidebar 없음, noindex
+      layout.tsx
+      login/page.tsx
+    (panel)/             # 로그인 후 — Sidebar, noindex
+      layout.tsx
+      page.tsx           # 대시보드
+      news/{page,new/page,[id]/edit/page}.tsx
+  api/
+    auth/[...nextauth]/route.ts
+    heart/route.ts
+```
+
+`app/admin/layout.tsx`는 *두지 않는다* — 두면 login에도 Sidebar 적용됨. 대신 `(auth)`와 `(panel)` 각자 layout 보유.
+
+### 도메인 미정 영향
+
+`docs/current.md` TBD에 메모: 사회공헌국 회신 시 메인 도메인 + admin 서브도메인 권장. 메인 후보: `socialgood.ffwpu.kr` 등.
+
+---
+
+## 2026-05-27 (D-5 종결 후 · 추가) — 폴더 구조 F3 잠금 (ADR-024)
+
+ADR-023 결정 직후 사용자가 "더 분리된 형태"를 원해서 5개 폴더 패턴 점수표 + 업계 사례 검토.
+
+- **결정**: F3 패턴 — `src/client/` + `src/admin/` + `src/features/`. ADR-023 폴더 부분 (A안)을 supersede.
+- **검토한 5 옵션**:
+  - A Route Groups + Features (분리 6점, 균등 60, 분리×2 66, 바이브×2 79)
+  - D Bulletproof-React (분리 5점, 균등 56)
+  - F1 client+admin+shared (분리 10점, 균등 60, 분리×2 70 ★) — 데이터 모델 shared 가면 사실상 F3 수렴
+  - F2 Monorepo (분리 10점, 데드라인 4점) — 시리즈 A+ 표준, 우리 1인·1도메인 시드 이전 단계엔 시기상조
+  - **F3 client+admin+features** (분리 8점, 균등 61 ★, 바이브×2 79 ★) — 최종 채택
+- **왜 F3**:
+  - 업계·스타트업 시드 이전 단계 표준 패턴
+  - 사용자 분리 요구 충족 (트리 최상위에서 client/admin 갈림)
+  - 데이터 로직 SSOT 유지 (features/ 한 곳)
+  - 에이전틱 코딩 친화 (AI가 3분기로 위치 즉결: UI냐 도메인 로직이냐, UI면 client인가 admin인가 공유인가)
+  - 5일 데드라인 안전 — D-5 셋업 src/features/news/ 그대로 유지, D-4에 src/client/ + src/admin/ 신규 생성
+  - v1.1+ F2 Monorepo 마이그레이션 자연 (src/client → apps/web, src/admin → apps/admin)
+- **F2 채택 안 한 이유**: 5일 데드라인에 monorepo 셋업 +1일 부담 + 1차 단일 도메인(news)에 packages/ui 만들기는 over-engineering. 업계상 시리즈 A+ 패턴.
+- **F1 채택 안 한 이유**: 데이터 모델(news 테이블)이 양쪽 공유라 shared 안에 features가 결국 생김 → 사실상 F3.
+
+### F3 핵심 결정 규칙 (AI/사람 동일)
+
+```
+페이지/라우트         → app/(public)/ or app/admin/(panel)/
+사용자 전용 UI        → src/client/{layouts,sections,hooks}/
+어드민 전용 UI        → src/admin/{layouts,components,hooks}/
+양쪽 공유 도메인 UI   → src/features/<도메인>/components/
+도메인 로직(서버)     → src/features/<도메인>/{actions,service,db,schemas}.ts
+shadcn primitive     → src/components/ui/
+순수 함수 유틸        → src/lib/
+Drizzle 스키마        → src/db/schema/
+외부 연동 API         → src/app/api/.../route.ts
+```
+
+D 패턴 흡수: `src/features/<도메인>/index.ts` public API — 외부에서 `db.ts` 직접 import 금지, actions/service/types만 노출.
+
+### D-4 진입 영향
+
+현재 src/ 코드 이동 0. D-4 시작 시:
+- 신규 생성: `src/client/{layouts,sections,hooks}/`, `src/admin/{layouts,components}/`
+- 기존 유지: `src/features/news/{actions,service,db,schemas}.ts`, `src/db/`, `src/lib/`, `src/auth.ts`, `src/proxy.ts`
+
+`src/types/`와 `src/hooks/`도 그대로 유지 (전역 공용).
+
