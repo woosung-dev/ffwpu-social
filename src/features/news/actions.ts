@@ -27,6 +27,18 @@ function authError(e: unknown): { success: false; error: string } {
   return { success: false, error: "Unauthorized" };
 }
 
+// 어드민 CRUD revalidate 묶음 — 글 변경 시 사용자 사이트 + 어드민 캐시 무효화
+function revalidateNewsRoutes(id?: string) {
+  revalidatePath("/news");
+  revalidatePath("/admin/news");
+  revalidatePath("/admin");
+  revalidatePath("/");
+  if (id) {
+    revalidatePath(`/news/${id}`);
+    revalidatePath(`/admin/news/${id}/edit`);
+  }
+}
+
 // ─── 사용자 사이트 (인증 불필요, 읽기 전용) ─────────────────────────────────
 
 export async function listNewsAction(rawQuery: Record<string, unknown>) {
@@ -44,26 +56,72 @@ export async function getNewsDetailAction(id: string) {
   return { success: true as const, data };
 }
 
-// ─── 어드민 CRUD (super 가드) ──────────────────────────────────────────────
-// service.createNews / updateNews / deleteNews 는 T7 에서 transaction 패턴으로 구현
+// ─── 어드민 CRUD (super 가드) — RHF handleSubmit 의 values 객체 직접 수신 (결정 로그 [T7 시그니처]) ──
 
 export async function createNewsAction(
-  _prevState: ActionResult<unknown, NewsInput> | null,
-  formData: FormData,
+  input: NewsInput,
 ): Promise<ActionResult<{ id: string }, NewsInput>> {
   try {
-    await requireSuperAdmin();
+    const session = await requireSuperAdmin();
+    const parsed = newsInputSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error };
+    }
+    const created = await newsService.createNews(parsed.data, session.user.id);
+    revalidateNewsRoutes(created.id);
+    return { success: true, data: created };
   } catch (e) {
     return authError(e);
   }
-  const parsed = newsInputSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) {
-    return { success: false, error: parsed.error };
+}
+
+export async function updateNewsAction(
+  id: string,
+  input: NewsInput,
+): Promise<ActionResult<{ id: string }, NewsInput>> {
+  try {
+    await requireSuperAdmin();
+    const parsed = newsInputSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error };
+    }
+    const updated = await newsService.updateNews(id, parsed.data);
+    if (!updated) return { success: false, error: "Not Found" };
+    revalidateNewsRoutes(id);
+    return { success: true, data: updated };
+  } catch (e) {
+    return authError(e);
   }
-  // TODO(T7): newsService.createNews(parsed.data, session.user.id)
-  revalidatePath("/news");
-  revalidatePath("/admin/news");
-  return { success: false, error: "Not Implemented (T7 작업)" };
+}
+
+export async function deleteNewsAction(
+  id: string,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireSuperAdmin();
+    const deleted = await newsService.deleteNews(id);
+    if (!deleted) return { success: false, error: "Not Found" };
+    revalidateNewsRoutes(id);
+    return { success: true, data: deleted };
+  } catch (e) {
+    return authError(e);
+  }
+}
+
+// 발행/해제 — UI 의 row 토글 버튼용 (편집 페이지 저장과 별도 — 결정 로그 [T7 publish 분리])
+export async function publishNewsAction(
+  id: string,
+  publish: boolean,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireSuperAdmin();
+    const updated = await newsService.setPublishedAt(id, publish);
+    if (!updated) return { success: false, error: "Not Found" };
+    revalidateNewsRoutes(id);
+    return { success: true, data: updated };
+  } catch (e) {
+    return authError(e);
+  }
 }
 
 // ─── 이미지 업로드 Presigned POST 발급 (codex P1#4 + 결정 #16) ────────────

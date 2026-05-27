@@ -9,3 +9,5 @@ export {
   type UploadScope,
   type UploadTarget,
 } from "./upload";
+
+export { deleteByPrefix } from "./cleanup";

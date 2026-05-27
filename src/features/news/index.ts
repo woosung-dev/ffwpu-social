@@ -5,10 +5,20 @@ export {
   listNewsAction,
   getNewsDetailAction,
   createNewsAction,
+  updateNewsAction,
+  deleteNewsAction,
+  publishNewsAction,
+  uploadImageAction,
   type ActionResult,
+  type UploadImageInput,
 } from "./actions";
 
-export { listNews, getNewsDetail, listCategories } from "./service";
+export {
+  listNews,
+  getNewsDetail,
+  listCategories,
+  getAdminNewsDetail,
+} from "./service";
 
 export {
   newsInputSchema,
