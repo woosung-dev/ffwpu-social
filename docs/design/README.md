@@ -96,11 +96,46 @@ mcp__plugin_figma_figma__get_variable_defs({});
 
 > Figma MCP `get_design_context` 결과의 `img` URL 을 다운로드 → 본 매핑 표에 영속 기록. 7 일 후 URL 만료되므로 노드 ID 기록이 핵심.
 
-| Figma 노드 | 명칭 | 파일 형식 | 코드 위치 | 메모 |
-|---|---|---|---|---|
-| `I98:7101;97:10027` (`_레이어_1`) | Sow Good 헤더 BI 로고 | SVG 24KB | `public/icons/sow-good-header-logo.svg` | 80×53.333 viewBox, 보라+노란 해바라기 일러스트. HeroBanner 헤더 좌측 |
-| `I98:7101;97:10079;928:9074` | 헤더 검색 아이콘 | SVG 506B | `public/icons/search-icon.svg` | 20.6667×20.6667 viewBox, 돋보기 stroke white. 일반 lucide-react Search 와 거의 동일 (선택적 교체) |
-| `9:5456` (clip-path id 추정) | Sow Good 푸터 로고 | inline TSX | `src/client/components/icons/SowGoodFooterLogo.tsx` | 59×39 워드마크 + 꽃 BI. currentColor 사용 (다크 배경 위 라벤더 `--color-brand-lavender`) |
+**자산 폴더 분리:**
+- `public/icons/` — 작은 SVG 아이콘·일러스트
+- `public/images/` — 큰 PNG 사진·이미지
+
+### Header (HeroBanner Header `98:7101`)
+
+| Figma 노드 | 명칭 | 파일 형식 | 코드 위치 |
+|---|---|---|---|
+| `I98:7101;97:10027` (`_레이어_1`) | Sow Good 헤더 BI 로고 | SVG 24KB | `public/icons/sow-good-header-logo.svg` |
+| `I98:7101;97:10079;928:9074` | 헤더 검색 아이콘 | SVG 506B | `public/icons/search-icon.svg` |
+
+### Footer (`93:8810` 내부)
+
+| Figma 노드 | 명칭 | 파일 형식 | 코드 위치 |
+|---|---|---|---|
+| `9:5456` (clip-path id 추정) | Sow Good 푸터 로고 | inline TSX | `src/client/components/icons/SowGoodFooterLogo.tsx` |
+
+### HeroBanner (`96:7690`)
+
+| Figma 노드 (이름) | 명칭 | 파일 형식 | 코드 위치 |
+|---|---|---|---|
+| `96:7717` (`IconSet`) | CTA "지난 활동 살펴보기" 화살표 | SVG 376B | `public/icons/hero-cta-arrow.svg` |
+| `97:8503` (`flower`) | 보라/노란 해바라기 일러스트 (560×511) | SVG 218KB | `public/icons/hero-flower.svg` |
+| `97:7054` (`BannerBackground`) | 풀스크린 배경 그래픽 (2875×1441) | SVG 316B | `public/icons/hero-banner-background.svg` |
+
+### KpiSection (`96:7773`)
+
+| Figma 노드 (이름) | 명칭 | 파일 형식 | 코드 위치 |
+|---|---|---|---|
+| `96:9872` (`Smile`) | 보라 카드 Smile 일러스트 (106×51) | SVG 34KB | `public/icons/kpi-smile-illustration.svg` |
+| `96:9891` | 그래프 아이콘 (84×84) | SVG 54KB | `public/icons/kpi-graph-icon.svg` |
+| `96:9893` | 별 아이콘 (83×83) | SVG 112KB | `public/icons/kpi-star-icon.svg` |
+| `96:9902` (`_레이어_1`) | 노란 카드 Sow Good 워드마크 (204×49) | SVG 12KB | `public/icons/kpi-yellow-card-wordmark.svg` |
+| `96:9916` | 연두 카드 일러스트 (198×206) | SVG 47KB | `public/icons/kpi-lime-card-illustration.svg` |
+| `96:9924` | 보라 카드 vector (285×422) | SVG 486B | `public/icons/kpi-purple-card-vector.svg` |
+| `96:9925` (`image (1) 1`) | 보라 카드 사람 사진 (1920×2571) | PNG 1.4MB | `public/images/kpi-purple-card-photo.png` |
+
+### StorySection (`96:7834`), ArticleGrid (`96:7877`), Section5 (`96:7897`), FeaturedSection
+
+> D-3 진입 직전 일괄 호출 + 다운로드 + 본 표에 추가. 작업 명령: `mcp__plugin_figma_figma__get_design_context(nodeId, fileKey)` → 자산 URL 추출 → curl → public/icons|images/.
 
 ### 자산 다운로드 표준 절차
 
