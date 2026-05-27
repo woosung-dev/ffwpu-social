@@ -85,19 +85,27 @@
 - [x] `pnpm tsc --noEmit` 통과
 - [x] `pnpm build` 통과 (`/` Partial Prerender, NextAuth handler dynamic, proxy 인식)
 
-## Sprint 1 D-4 (2026-05-28) — 공통 컴포넌트
+## Sprint 1 D-4 (2026-05-28) — 공통 컴포넌트 (F3 폴더 구조, ADR-024)
 
-- [ ] shadcn/ui 초기화 + 필요 컴포넌트 추가
-- [ ] `components/layout/Header.tsx` (4 BP variants + 스크롤스파이 hook)
-- [ ] `components/layout/Footer.tsx`
-- [ ] `components/layout/Banner.tsx` ("Sow Good 가족이 아니어도...")
-- [ ] `features/news/components/ArticleCard.tsx` (12 variants)
-- [ ] `features/news/components/StoryCard.tsx`
-- [ ] `features/news/components/Heart.tsx` (Client Component, 익명 좋아요 + optimistic)
-- [ ] `features/news/components/CategoryTabs.tsx`
-- [ ] `features/news/components/Pagination.tsx`
-- [ ] 디자인 토큰 Tailwind 설정 — `globals.css` CSS vars + design.md 토큰 표 매핑
+- [ ] shadcn/ui 초기화 (`pnpm dlx shadcn@latest init`) + 필요 primitive 추가
+- [ ] `src/client/layouts/PublicHeader.tsx` (4 BP variants + 스크롤스파이 hook 사용)
+- [ ] `src/client/layouts/PublicFooter.tsx`
+- [ ] `src/client/layouts/Banner.tsx` (Sow Good 가족이 아니어도…)
+- [ ] `src/client/hooks/useScrollSpy.ts` (Intersection Observer)
+- [ ] `src/admin/layouts/AdminSidebar.tsx`
+- [ ] `src/features/news/components/ArticleCard.tsx` (12 variants, 공유)
+- [ ] `src/features/news/components/StoryCard.tsx`
+- [ ] `src/features/news/components/FeaturedStoryCard.tsx`
+- [ ] `src/features/news/components/Heart.tsx` (Client, 익명 좋아요 + optimistic)
+- [ ] `src/features/news/components/CategoryTabs.tsx`
+- [ ] `src/features/news/components/Pagination.tsx`
+- [ ] `src/features/news/components/KpiCard.tsx`
+- [ ] `src/features/news/index.ts` public API (actions/service/types만 export, db는 격리)
+- [ ] 디자인 토큰 매핑 — `globals.css` CSS vars + `docs/design.md` 보라 9단계·액센트·텍스트 토큰
 - [ ] SUIT 폰트 셋업 (next/font/local 또는 CDN)
+- [ ] `app/(public)/layout.tsx` (PublicHeader + main + PublicFooter wrap)
+- [ ] `app/admin/(auth)/layout.tsx` (중앙 카드, noindex meta)
+- [ ] `app/admin/(panel)/layout.tsx` (AdminSidebar wrap, noindex meta)
 
 ## Sprint 1 D-1 추가 백로그
 

@@ -73,7 +73,8 @@
 - **"쌀 나눔" 캠페인 중심 공개 사이트** — 랜딩 페이지(스크롤스파이 6 섹션) + 소식 게시판(목록·상세)
 - **익명 좋아요 + 카테고리 5개**: 전체 / 가족 치유 / 지역 봉사 / 환경 캠페인 / 쌀 나눔
 - **사회공헌국 단독 어드민 운영** — NextAuth Credentials + super 단일 계정 (v1.0, ADR-020)
-- **도메인 분리** — `<main>` + `admin.<main>` 서브도메인 (옵션 2). 단일 Next.js 앱 + proxy.ts host 분기 (ADR-023). 폴더 구조는 동일 옵션 1과 호환.
+- **도메인 분리** — `<main>` + `admin.<main>` 서브도메인 (옵션 2). 단일 Next.js 앱 + proxy.ts host 분기 (ADR-023).
+- **폴더 구조** — F3: `src/client/` (사용자 UI) + `src/admin/` (어드민 UI) + `src/features/<도메인>/` (도메인 로직·공유 컴포넌트 SSOT) (ADR-024). v1.1+ F2 Monorepo 마이그레이션 친화.
 - **회원가입·문의 폼 없음** (1차 범위)
 - **상세 도메인 규칙**: `.ai/rules/domain.md` (절대 제약·해석 원칙·자주 하는 실수)
 
@@ -93,7 +94,7 @@ pnpm drizzle-kit studio        # DB 브라우저
 
 - 진행 중: Sprint 1 D-5 완료 — 셋업 + 데이터 + 3-Layer 골격 (2026-05-27)
 - 디테일: `docs/plans/active/2026-05-27-sprint-1-ralph.md`, `checklist.md`, `context-notes.md`
-- 다음 (D-4, 5/28): shadcn/ui 초기화 → 공통 컴포넌트 9개 (Header 스크롤스파이 + Footer + Banner + ArticleCard 12 variants + StoryCard + Heart + CategoryTabs + Pagination) + 디자인 토큰 Tailwind 매핑 + SUIT 폰트 셋업
+- 다음 (D-4, 5/28): F3 폴더 신규 생성 (`src/client/{layouts,sections,hooks}/` + `src/admin/{layouts,components}/`) → shadcn/ui 초기화 → 공통 컴포넌트 (PublicHeader 스크롤스파이 + PublicFooter + Banner + AdminSidebar + ArticleCard 12 variants + StoryCard + Heart + CategoryTabs + Pagination + KpiCard) + 디자인 토큰 Tailwind 매핑 + SUIT 폰트 셋업
 - 로컬 가동: `docker compose --env-file .env.local up -d` → `pnpm dev` (포트 5433)
 - 임시 어드민: `admin@ffwpu-social.local` / `bRhHR2CWkqrMnj0L` (배포 전 변경 필수)
 

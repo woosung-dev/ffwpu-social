@@ -419,3 +419,50 @@ src/app/
 
 `docs/current.md` TBD에 메모: 사회공헌국 회신 시 메인 도메인 + admin 서브도메인 권장. 메인 후보: `socialgood.ffwpu.kr` 등.
 
+---
+
+## 2026-05-27 (D-5 종결 후 · 추가) — 폴더 구조 F3 잠금 (ADR-024)
+
+ADR-023 결정 직후 사용자가 "더 분리된 형태"를 원해서 5개 폴더 패턴 점수표 + 업계 사례 검토.
+
+- **결정**: F3 패턴 — `src/client/` + `src/admin/` + `src/features/`. ADR-023 폴더 부분 (A안)을 supersede.
+- **검토한 5 옵션**:
+  - A Route Groups + Features (분리 6점, 균등 60, 분리×2 66, 바이브×2 79)
+  - D Bulletproof-React (분리 5점, 균등 56)
+  - F1 client+admin+shared (분리 10점, 균등 60, 분리×2 70 ★) — 데이터 모델 shared 가면 사실상 F3 수렴
+  - F2 Monorepo (분리 10점, 데드라인 4점) — 시리즈 A+ 표준, 우리 1인·1도메인 시드 이전 단계엔 시기상조
+  - **F3 client+admin+features** (분리 8점, 균등 61 ★, 바이브×2 79 ★) — 최종 채택
+- **왜 F3**:
+  - 업계·스타트업 시드 이전 단계 표준 패턴
+  - 사용자 분리 요구 충족 (트리 최상위에서 client/admin 갈림)
+  - 데이터 로직 SSOT 유지 (features/ 한 곳)
+  - 에이전틱 코딩 친화 (AI가 3분기로 위치 즉결: UI냐 도메인 로직이냐, UI면 client인가 admin인가 공유인가)
+  - 5일 데드라인 안전 — D-5 셋업 src/features/news/ 그대로 유지, D-4에 src/client/ + src/admin/ 신규 생성
+  - v1.1+ F2 Monorepo 마이그레이션 자연 (src/client → apps/web, src/admin → apps/admin)
+- **F2 채택 안 한 이유**: 5일 데드라인에 monorepo 셋업 +1일 부담 + 1차 단일 도메인(news)에 packages/ui 만들기는 over-engineering. 업계상 시리즈 A+ 패턴.
+- **F1 채택 안 한 이유**: 데이터 모델(news 테이블)이 양쪽 공유라 shared 안에 features가 결국 생김 → 사실상 F3.
+
+### F3 핵심 결정 규칙 (AI/사람 동일)
+
+```
+페이지/라우트         → app/(public)/ or app/admin/(panel)/
+사용자 전용 UI        → src/client/{layouts,sections,hooks}/
+어드민 전용 UI        → src/admin/{layouts,components,hooks}/
+양쪽 공유 도메인 UI   → src/features/<도메인>/components/
+도메인 로직(서버)     → src/features/<도메인>/{actions,service,db,schemas}.ts
+shadcn primitive     → src/components/ui/
+순수 함수 유틸        → src/lib/
+Drizzle 스키마        → src/db/schema/
+외부 연동 API         → src/app/api/.../route.ts
+```
+
+D 패턴 흡수: `src/features/<도메인>/index.ts` public API — 외부에서 `db.ts` 직접 import 금지, actions/service/types만 노출.
+
+### D-4 진입 영향
+
+현재 src/ 코드 이동 0. D-4 시작 시:
+- 신규 생성: `src/client/{layouts,sections,hooks}/`, `src/admin/{layouts,components}/`
+- 기존 유지: `src/features/news/{actions,service,db,schemas}.ts`, `src/db/`, `src/lib/`, `src/auth.ts`, `src/proxy.ts`
+
+`src/types/`와 `src/hooks/`도 그대로 유지 (전역 공용).
+

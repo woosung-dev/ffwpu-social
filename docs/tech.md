@@ -71,11 +71,11 @@
   → (모든 mutation → audit_logs 자동 기록)
 ```
 
-## 폴더 구조 — Route Groups + FSD Lite (fullstack.md §10 + ADR-023)
+## 폴더 구조 — F3 패턴 (src/client + src/admin + src/features) — ADR-024
 
 ```
 src/
-├── app/
+├── app/                              # 라우팅만 (얇음). 비즈니스 로직 ❌
 │   ├── layout.tsx                    # 루트 — <html lang="ko"><body> 최소
 │   ├── globals.css
 │   ├── not-found.tsx
@@ -87,61 +87,75 @@ src/
 │   │       ├── page.tsx              # /news 목록
 │   │       └── [id]/page.tsx         # /news/[id] 상세
 │   │
-│   ├── admin/                        # /admin 경로 — 어드민 서브도메인에도 라우팅
-│   │   ├── (auth)/                   # 로그인 전 — Sidebar 없음
-│   │   │   ├── layout.tsx            # 중앙 카드 단독 layout (noindex meta 포함)
+│   ├── admin/                        # /admin 경로 — admin 서브도메인 라우팅 대상
+│   │   ├── (auth)/
+│   │   │   ├── layout.tsx            # 중앙 카드 (Sidebar 없음, noindex)
 │   │   │   └── login/page.tsx        # /admin/login
-│   │   └── (panel)/                  # 로그인 후 — Sidebar 있음
-│   │       ├── layout.tsx            # <AdminSidebar/> + content (noindex meta)
+│   │   └── (panel)/
+│   │       ├── layout.tsx            # <AdminSidebar/> wrap (noindex)
 │   │       ├── page.tsx              # /admin (대시보드)
 │   │       └── news/
-│   │           ├── page.tsx          # /admin/news
+│   │           ├── page.tsx
 │   │           ├── new/page.tsx
 │   │           └── [id]/edit/page.tsx
 │   │
 │   └── api/
-│       ├── auth/[...nextauth]/route.ts  # NextAuth
-│       └── heart/route.ts               # 익명 좋아요 토글
+│       ├── auth/[...nextauth]/route.ts
+│       └── heart/route.ts            # 익명 좋아요 토글
 │
-├── auth.ts                           # NextAuth v5 config
+├── auth.ts                           # NextAuth v5
 ├── proxy.ts                          # /admin 보호 + (D-1) hostname 분기
 │
-├── components/
-│   ├── ui/                           # shadcn/ui (직접 수정 금지)
-│   └── layout/                       # 앱 전역 layout 컴포넌트
-│       ├── PublicHeader.tsx          # 스크롤스파이 4메뉴 + 반응형 4 BP
-│       ├── PublicFooter.tsx          # 다크 카피라이트
-│       ├── Banner.tsx                # 공통 Sow Good 안내 띠
-│       └── AdminSidebar.tsx          # 어드민 좌측 네비
+├── client/                           # ★ 사용자 전용 UI
+│   ├── layouts/
+│   │   ├── PublicHeader.tsx          # 스크롤스파이 4메뉴 + 반응형 4 BP
+│   │   ├── PublicFooter.tsx
+│   │   └── Banner.tsx                # Sow Good 안내 띠 (사용자 페이지 전용)
+│   ├── sections/                     # 랜딩 6 섹션
+│   │   ├── HeroBanner.tsx
+│   │   ├── KpiSection.tsx
+│   │   ├── StorySection.tsx
+│   │   ├── ArticleGrid.tsx
+│   │   ├── PartnerSection.tsx
+│   │   └── PageFooterCta.tsx
+│   └── hooks/
+│       └── useScrollSpy.ts
 │
-├── features/
+├── admin/                            # ★ 어드민 전용 UI
+│   ├── layouts/
+│   │   └── AdminSidebar.tsx
+│   └── components/
+│       ├── NewsEditor.tsx            # Tiptap rich text
+│       ├── ImageUploader.tsx         # MinIO presigned upload
+│       ├── NewsForm.tsx              # 제목·카테고리·태그 입력
+│       └── DashboardStats.tsx
+│
+├── features/                         # ★ 도메인 로직 SSOT (양쪽 공유)
 │   └── news/
-│       ├── actions.ts                # Server Actions
-│       ├── service.ts                # 비즈니스 로직 (db ❌)
-│       ├── db.ts                     # Drizzle 쿼리 전담 (DAL)
-│       ├── schemas.ts                # Zod + drizzle-zod 브릿지
-│       └── components/
-│           ├── ArticleCard.tsx       # 공개·어드민 양쪽 사용
-│           ├── FeaturedStoryCard.tsx
-│           ├── StoryCard.tsx
-│           ├── Heart.tsx             # Client (익명 좋아요)
-│           ├── CategoryTabs.tsx
-│           ├── Pagination.tsx
-│           ├── KpiCard.tsx
-│           └── admin/                # 어드민 전용 (Tiptap·업로더·폼)
-│               ├── NewsEditor.tsx
-│               ├── ImageUploader.tsx
-│               └── NewsForm.tsx
+│       ├── actions.ts                # Server Action (auth + Zod)
+│       ├── service.ts                # 비즈니스 (db ❌)
+│       ├── db.ts                     # Drizzle 쿼리 (DAL)
+│       ├── schemas.ts                # Zod + drizzle-zod
+│       ├── components/               # 공개·어드민 양쪽 사용
+│       │   ├── ArticleCard.tsx
+│       │   ├── FeaturedStoryCard.tsx
+│       │   ├── StoryCard.tsx
+│       │   ├── Heart.tsx
+│       │   ├── CategoryTabs.tsx
+│       │   ├── Pagination.tsx
+│       │   └── KpiCard.tsx
+│       └── index.ts                  # public API (외부 import 진입점, D 패턴 흡수)
 │
-├── db/
-│   ├── index.ts                      # Drizzle 클라이언트
+├── components/
+│   └── ui/                           # shadcn primitive (양쪽 공유)
+│
+├── db/                               # Drizzle (양쪽 공유)
+│   ├── index.ts
 │   ├── schema/                       # 5 테이블 (ADR-022)
-│   └── seed.ts                       # admin + 9 news 시드
+│   └── seed.ts
 │
-├── lib/                              # ipHash, image url, dayjs formatters
-├── hooks/                            # useScrollSpy 등 공용
-└── types/                            # next-auth.d.ts 등 augmentation
-
+├── lib/                              # 순수 함수 (ipHash, format, s3 등)
+├── types/                            # next-auth.d.ts 등 augmentation
 drizzle/                              # 마이그레이션 SQL
 drizzle.config.ts
 docker-compose.yml                    # postgres + minio
@@ -149,13 +163,41 @@ public/
   robots.txt                          # Disallow: /admin/ (D-1 추가)
 ```
 
+### F3 결정 규칙 (5초 위치 결정)
+
+| 무엇을 만드나? | 어디에? |
+|---|---|
+| 페이지/라우트 | `app/(public)/...` 또는 `app/admin/(panel)/...` |
+| **사용자 전용 UI** (Header·랜딩 섹션·Footer·Banner) | `src/client/{layouts,sections,hooks}/` |
+| **어드민 전용 UI** (Sidebar·Editor·Uploader·Form) | `src/admin/{layouts,components,hooks}/` |
+| **양쪽 공유 도메인 UI** (ArticleCard·Heart·CategoryTabs) | `src/features/<도메인>/components/` |
+| Server Action / 비즈니스 / Drizzle 쿼리 / Zod | `src/features/<도메인>/{actions,service,db,schemas}.ts` |
+| shadcn primitive | `src/components/ui/` |
+| 순수 함수 유틸 | `src/lib/` |
+| Drizzle 스키마 | `src/db/schema/` |
+| 외부 연동 Route Handler | `src/app/api/.../route.ts` |
+
 ### 핵심 폴더 선택 이유
 
-- **`app/(public)/` Route Group**: URL에 `(public)` 안 나옴. PublicHeader/Footer layout 깨끗 분리.
-- **`app/admin/(auth)/` + `(panel)/`**: `/admin/login`만 Sidebar 없이, 나머지 `/admin/*`은 Sidebar. **`app/admin/layout.tsx`를 두지 않음** — 두면 login에도 Sidebar 강제 적용됨.
-- **`features/news/components/` + `components/admin/` 서브폴더**: 공용(ArticleCard) vs 어드민 전용(NewsEditor) 분리. 같은 도메인 안에서 격리.
-- **`components/layout/`** 글로벌: layout 컴포넌트는 도메인 무관, 여러 페이지 공유.
-- **`/api/heart/route.ts`**: 익명 좋아요는 Server Action 대신 Route Handler — IP 추출 + 쿠키 세션 처리 (ADR-010).
+- **`src/client/` + `src/admin/` 최상위 분리**: 트리만 봐도 영역 즉시 식별. 에이전틱 코딩 시 AI가 한 폴더만 봐도 작업 가능.
+- **`src/features/`에 도메인 로직 SSOT**: Drizzle·Zod·3-Layer는 한 곳. DRY + 데이터 일관성.
+- **양쪽 공유 도메인 컴포넌트는 `features/<도메인>/components/`**: ArticleCard처럼 사용자·어드민이 모두 쓰는 UI는 도메인에 둠. 어드민 전용 NewsEditor는 `src/admin/components/`로 분리.
+- **`app/admin/layout.tsx` 미생성**: `(auth)`와 `(panel)` 각자 layout 보유 → login은 Sidebar 없이, panel은 Sidebar 있게.
+- **`/api/heart/route.ts`**: 익명 좋아요 (IP 추출 + 쿠키 세션) — Server Action 대신 Route Handler (ADR-010).
+
+### v1.1+ F2 마이그레이션 경로
+
+F3는 F2 Monorepo로의 전환이 자연스럽다. 도메인 3+ 또는 어드민 인프라 분리 결정 시:
+
+```
+src/client/  →  apps/web/src/
+src/admin/   →  apps/admin/src/
+src/features/ → packages/features/ (또는 각 앱에 복제)
+src/db/      →  packages/db/
+src/components/ui/ + src/lib/ → packages/ui/, packages/lib/
+```
+
+폴더 이동 + tsconfig·next.config 분리만 — 코드 무수정.
 
 ## 데이터 모델 — 1차 런칭 5 테이블 (ADR-022)
 
