@@ -227,6 +227,82 @@ mv public/icons/<asset-name>.tmp public/icons/<asset-name>.<ext>
 
 ---
 
+## 📐 반응형 세션 MCP 노드 ID (2026-05-27 추가)
+
+> 아래 3개 노드는 구현 SSoT. 섹션별 작업 시 반드시 이 노드로 `get_screenshot` / `get_design_context` 재확인.
+
+| 세션 이름 | 노드 ID | 설명 | dev mode URL |
+|---|---|---|---|
+| **컴포넌트 세션** | `97:10250` | 헤더 4 BP variants + 소식 목록 카드 | `?node-id=97-10250&m=dev` |
+| **홈 반응형** | `96:5908` | 랜딩 페이지 전체 4 BP (1920~1440 / 1025~1439 / 768~1024 / 375~767) | `?node-id=96-5908&m=dev` |
+| **소식 전체·상세** | `95:9359` | 소식 목록 + 상세 4 BP | `?node-id=95-9359&m=dev` |
+
+---
+
+## 🔴 Figma 1:1 갭 분석 — D-3 구현 vs Figma (2026-05-27)
+
+> 아래 갭은 D-3 섹션 구현 후 Figma MCP 비교로 발견. 수정 우선순위 P0 (즉시 수정 필요).
+
+### 1. Header (`98:7101`) — 내비게이션 정렬
+
+| 항목 | Figma | 현재 구현 | 필요 수정 |
+|---|---|---|---|
+| nav 정렬 | `flex-1 justify-end` (우측 정렬) | centered (justify-between 3항목) | nav에 `flex-1 justify-end` 추가 |
+| 컨테이너 패딩 | `px-[120px]` | `lg:px-20` (80px) | 선택적 조정 |
+
+**핵심:** Figma는 `Logo | [flex-1 nav + justify-END] | Search` 구조. nav 아이템이 search icon 좌측에 몰림.
+
+### 2. HeroBanner (`96:7690`) — 구조적 문제
+
+| 항목 | Figma | 현재 구현 | 필요 수정 |
+|---|---|---|---|
+| 흰색 하단 커브 | BannerBackground SVG 내장 (타원 곡선 하단) | SVG에 타원만 있고 커브 없음 | CSS white wave div 추가 또는 SVG 갱신 |
+| items 정렬 | `items-end` (콘텐츠 하단 정렬) | `items-center` | `items-end` 변경 |
+| 컨텐츠 높이 | `h-[612px]` | `min-h-[652px]` | 612px로 조정 |
+| 타이틀 패딩 | `py-[100px]` | `py-16` (64px) | 100px로 조정 |
+| 섹션 overflow | — | `overflow-hidden` (꽃 이미지 클립) | 제거 or 구조 조정 |
+| Background 위치 | `absolute top-[-752px] w-[2875px] h-[1441px]` | `fill object-cover` | 포지셔닝 방식 변경 |
+
+**핵심:** `hero-banner-background.svg`는 `preserveAspectRatio="none"` 때문에 타원이 직사각형으로 늘어남. 흰색 커브 효과 없음.
+
+### 3. KpiSection (`96:7773`) — 레이아웃 구조 완전 불일치
+
+| 항목 | Figma | 현재 구현 |
+|---|---|---|
+| 전체 구조 | `Left 251px text` + `Right flex-1 bento grid h-760` | `Left heading` + `Right 2-col simple grid` |
+| 헤딩 부제 | "가정연합은 도움이 필요한 사람들에게 오랜기간 손을..." | ❌ 없음 |
+| 카드 레이아웃 | 벤토 (Row1: 보라 293px + 회색 flex1 / Row2: 회색+노랑 / 연두) + 보라 tall | 단순 2열 그리드 |
+| 보라 tall 카드 | 자원봉사자 사진 포함 (`kpi-purple-card-photo.png`) | ❌ 없음 |
+| 카드 크기 | 다양한 높이 (Row1 자동 / Row2 760-Row1-32) | 동일한 높이 |
+
+**벤토 그리드 정확한 명세:**
+```
+Dashboard (flex-col h-760 gap-16):
+  Row1 (shrink-0, flex gap-16):
+    [보라 w-293 py-70 px-84] + [회색 flex-1 self-stretch "45,217명+"]
+  Row2 (flex-1, flex gap-16):
+    Left (w-607 flex-col gap-16):
+      SubRow (flex gap-16): [회색 flex-1 "38년 5개월"] + [노랑 flex-1 "Sow Good"]
+      [연두 flex-1 "3,614회+"]
+    [보라 flex-1 h-full "80,257개+" + 사람사진]
+```
+
+### 4. PartnersSection (`96:7897`) — 헤딩 구조
+
+| 항목 | Figma | 현재 구현 | 필요 수정 |
+|---|---|---|---|
+| 헤딩 | `[가정연합 로고 인라인] 과 함께하고 있는 파트너` | "과 함께하고 있는 파트너" (로고 없음) | `s5-sow-good-logo.svg` inline 추가 |
+
+### 수정 우선순위
+
+1. ✅ **P0 즉시**: Header nav 정렬 (간단)
+2. ✅ **P0 즉시**: Hero 흰색 하단 커브 + items-end
+3. ✅ **P0 즉시**: KpiSection 벤토 그리드 완전 재구현
+4. **P1**: PartnersSection 헤딩 로고 인라인
+5. **이후**: D-3 4,5번 (StorySection, ArticleGridSection)
+
+---
+
 ## 🔑 핵심 컴포넌트 노드 ID — 영구 참조표
 
 > 다음 노드 ID 는 코드 결정 시 매번 Figma 재호출하지 않도록 영속 기록. Figma 가 업데이트되면 본 표 갱신.
