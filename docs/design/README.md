@@ -133,9 +133,27 @@ mcp__plugin_figma_figma__get_variable_defs({});
 | `96:9924` | 보라 카드 vector (285×422) | SVG 486B | `public/icons/kpi-purple-card-vector.svg` |
 | `96:9925` (`image (1) 1`) | 보라 카드 사람 사진 (1920×2571) | PNG 1.4MB | `public/images/kpi-purple-card-photo.png` |
 
-### StorySection (`96:7834`), ArticleGrid (`96:7877`), Section5 (`96:7897`), FeaturedSection
+### StorySection (`96:7834`) — "밥이 사랑입니다 / 나누는 우리는 식구입니다"
 
-> D-3 진입 직전 일괄 호출 + 다운로드 + 본 표에 추가. 작업 명령: `mcp__plugin_figma_figma__get_design_context(nodeId, fileKey)` → 자산 URL 추출 → curl → public/icons|images/.
+> 배경 `bg-[#faf4ff]` (옅은 보라). 좌측: 2 사진 카드 (816×425) + 작은 화살표. 우측: "쌀 나눔 활동" 태그 + 헤딩 + 본문 + Result 통계 (후원 기관 16개 / 지원 가정 23가정 / 지역 시설 2시설, `text-brand-mid #9257CA`). 배경 장식: 하트·별·잎 일러스트 6개 분산.
+
+| Figma 노드 (이름) | 명칭 | 파일 형식 | 코드 위치 |
+|---|---|---|---|
+| `97:7549` (`Card`) | 좌측 카드 1 (큰 사진) | PNG 1.3MB (916×786) | `public/images/story-card1.png` |
+| `97:7548` (`Card`) | 좌측 카드 2 (작은 사진) | PNG 908KB (572×768) | `public/images/story-card2.png` |
+| `96:7855` (`Vector`) | 카드 우하단 화살표 (43×56) | SVG 45KB | `public/icons/story-arrow.svg` |
+| `96:7869`·`96:7873` (`Line 1251`) | Result 통계 구분선 (세로 44px) | SVG 259B | `public/icons/story-divider.svg` |
+| `97:7244` (`heart`) | 좌상단 하트 일러스트 (-24.69° rotate) | SVG 40KB | `public/icons/story-heart.svg` |
+| `97:7206` (`star`) | 우상단 작은 별 (40×41) | SVG 37KB | `public/icons/story-star1.svg` |
+| `96:7854` (`star`) | 우상단 큰 별 (62×64) | SVG 42KB | `public/icons/story-star2.svg` |
+| `96:7852` (`Vector`) | 좌상단 데코 1 (꽃잎 -22.82°) | SVG 49KB | `public/icons/story-deco1.svg` |
+| `96:7856` (`Vector`) | 중하단 데코 2 (꽃 -24.69°) | SVG 70KB | `public/icons/story-deco2.svg` |
+| `96:7857` (`Vector`) | 우하단 데코 3 (꽃 22.2°) | SVG 52KB | `public/icons/story-deco3.svg` |
+| `96:7853` (`Vector`) | 상단 데코 4 (잎 -11.83°) | SVG 73KB | `public/icons/story-deco4.svg` |
+
+### ArticleGrid (`96:7877`), Section5 (`96:7897`), FeaturedSection — 미수집
+
+> 다음 세션 (D-3 진입 직전) `mcp__plugin_figma_figma__get_design_context(nodeId, fileKey)` 일괄 호출 + 다운로드.
 
 ### 자산 다운로드 표준 절차
 
