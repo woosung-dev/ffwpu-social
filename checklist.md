@@ -85,27 +85,30 @@
 - [x] `pnpm tsc --noEmit` 통과
 - [x] `pnpm build` 통과 (`/` Partial Prerender, NextAuth handler dynamic, proxy 인식)
 
-## Sprint 1 D-4 (2026-05-28) — 공통 컴포넌트 (F3 폴더 구조, ADR-024)
+## Sprint 1 D-4 (2026-05-27) — 공통 컴포넌트 (F3 폴더 구조, ADR-024)
 
-- [ ] shadcn/ui 초기화 (`pnpm dlx shadcn@latest init`) + 필요 primitive 추가
-- [ ] `src/client/layouts/PublicHeader.tsx` (4 BP variants + 스크롤스파이 hook 사용)
-- [ ] `src/client/layouts/PublicFooter.tsx`
-- [ ] `src/client/layouts/Banner.tsx` (Sow Good 가족이 아니어도…)
-- [ ] `src/client/hooks/useScrollSpy.ts` (Intersection Observer)
-- [ ] `src/admin/layouts/AdminSidebar.tsx`
-- [ ] `src/features/news/components/ArticleCard.tsx` (12 variants, 공유)
-- [ ] `src/features/news/components/StoryCard.tsx`
-- [ ] `src/features/news/components/FeaturedStoryCard.tsx`
-- [ ] `src/features/news/components/Heart.tsx` (Client, 익명 좋아요 + optimistic)
-- [ ] `src/features/news/components/CategoryTabs.tsx`
-- [ ] `src/features/news/components/Pagination.tsx`
-- [ ] `src/features/news/components/KpiCard.tsx`
-- [ ] `src/features/news/index.ts` public API (actions/service/types만 export, db는 격리)
-- [ ] 디자인 토큰 매핑 — `globals.css` CSS vars + `docs/design.md` 보라 9단계·액센트·텍스트 토큰
-- [ ] SUIT 폰트 셋업 (next/font/local 또는 CDN)
-- [ ] `app/(public)/layout.tsx` (PublicHeader + main + PublicFooter wrap)
-- [ ] `app/admin/(auth)/layout.tsx` (중앙 카드, noindex meta)
-- [ ] `app/admin/(panel)/layout.tsx` (AdminSidebar wrap, noindex meta)
+- [x] shadcn/ui 초기화 (Neutral base, RSC, css variables) + primitive 9종 (button/input/label/card/select/dialog/form/separator/carousel)
+- [x] `src/client/layouts/PublicHeader.tsx` (4 BP variants + 스크롤스파이 hook + 햄버거 1024↓ + 검색 disabled)
+- [x] `src/client/layouts/PublicFooter.tsx` (--color-surface-dark + © 2026 정적)
+- [x] `src/client/layouts/Banner.tsx` (Sow Good 워드마크 + 참여 권유 placeholder, D-3 카피 확정)
+- [x] `src/client/hooks/useScrollSpy.ts` (IntersectionObserver, idsKey join 으로 dep 안정화)
+- [x] `src/admin/layouts/AdminSidebar.tsx` (Client, 대시보드·소식·로그아웃, 1024↓ 토글 + 오버레이)
+- [x] `src/features/news/components/ArticleCard.tsx` (size 1~4 × state default/hover/none = 12 variants 통합 컴포넌트)
+- [x] `src/features/news/components/StoryCard.tsx` (278×425 + 라벤더 텍스트)
+- [x] `src/features/news/components/FeaturedStoryCard.tsx` (shadcn Carousel + Active 22px / Inactive 17px 인디케이터)
+- [x] `src/features/news/components/Heart.tsx` (Client, optimistic UI useTransition, onToggleAction prop)
+- [x] `src/features/news/components/CategoryTabs.tsx` (5 enum 탭, Active text-ink-strong + brand-vivid 2px 라인)
+- [x] `src/features/news/components/Pagination.tsx` (Active text-brand-primary 무배경, 7+ 페이지 시 ellipsis)
+- [x] `src/features/news/components/KpiCard.tsx` (4 variants gray/green/purple/yellow)
+- [x] `src/features/news/index.ts` server-only public API (actions/service/schemas) + `src/features/news/components/index.ts` client-safe barrel 분리
+- [x] 디자인 토큰 매핑 — `globals.css` @theme inline (보라 9단계 brand-* + KPI 4색 + 텍스트 다단계 ink-* + 배경 surface-* + 태그 + 그라디언트)
+- [x] SUIT 폰트 셋업 (next/font/local 6 weight sun-typeface/SUIT v3 OFL, public/fonts/)
+- [x] `app/(public)/layout.tsx` (Banner + PublicHeader + main + PublicFooter wrap)
+- [x] `app/admin/(auth)/layout.tsx` (중앙 카드, robots noindex meta) + `(auth)/login/page.tsx` placeholder
+- [x] `app/admin/(panel)/layout.tsx` (AdminSidebar wrap, robots noindex meta) + `(panel)/page.tsx` 대시보드 placeholder
+- [x] D-4 검증 게이트 통과 — pnpm tsc/lint/build 0 error + 5 BP 가로 스크롤 0 + console.error 0 (favicon 404 만 D-3 백로그)
+- [x] Multi-Agent 검증 — designer(RE-HIERARCHY)·code-reviewer(NIT-ONLY)·human(CONFUSED→ITERATE)·docs-sync(DOC_UPDATE_REQUIRED)·codex(GATE PASS) + evaluator 메타 (ITERATE 보완 후 D-3 진입 가능)
+- [x] P0 후속 수정 — CategoryTabs/Pagination active 색 Figma 정합 + 홈 placeholder 카피 (사회공헌국 H-1 결정)
 
 ## Sprint 1 D-1 추가 백로그
 

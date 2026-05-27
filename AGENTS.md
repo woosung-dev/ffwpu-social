@@ -92,11 +92,12 @@ pnpm drizzle-kit studio        # DB 브라우저
 
 ### 현재 작업
 
-- 진행 중: Sprint 1 D-5 완료 — 셋업 + 데이터 + 3-Layer 골격 (2026-05-27)
+- 진행 중: Sprint 1 D-4 완료 — F3 폴더 + 디자인 토큰 + SUIT 폰트 + 공통 컴포넌트 11종 + Route Group 3 layout (2026-05-27, ITERATE→P0 7건 처리 완료)
 - 디테일: `docs/plans/active/2026-05-27-sprint-1-ralph.md`, `checklist.md`, `context-notes.md`
-- 다음 (D-4, 5/28): F3 폴더 신규 생성 (`src/client/{layouts,sections,hooks}/` + `src/admin/{layouts,components}/`) → shadcn/ui 초기화 → 공통 컴포넌트 (PublicHeader 스크롤스파이 + PublicFooter + Banner + AdminSidebar + ArticleCard 12 variants + StoryCard + Heart + CategoryTabs + Pagination + KpiCard) + 디자인 토큰 Tailwind 매핑 + SUIT 폰트 셋업
+- 다음 (D-3, 5/28): 디자인 시안 적용 — `src/client/sections/` 6 섹션 (Hero + KpiSection + ArticleGrid + StorySection + FeaturedSection + Footer) + `app/(public)/page.tsx` placeholder 교체 + 헤더 `#B769FF` 시안 정합 + Banner 카피 확정 (사회공헌국 H-3) + favicon. 어드민 D-2 평행 가능 (`src/admin/components/NewsEditor` Tiptap + `(panel)/news/` CRUD)
 - 로컬 가동: `docker compose --env-file .env.local up -d` → `pnpm dev` (포트 5433)
 - 임시 어드민: `admin@ffwpu-social.local` / `bRhHR2CWkqrMnj0L` (배포 전 변경 필수)
+- 사회공헌국 escalation 대기: H-2 푸터 종교 법인명 위치, H-3 Banner "참여하기" 카피 (`docs/TODO.md` 참조)
 
 ---
 
