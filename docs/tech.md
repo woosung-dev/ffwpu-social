@@ -73,6 +73,14 @@
 
 ## 폴더 구조 — F3 패턴 (src/client + src/admin + src/features) — ADR-024
 
+> ⚠️ **시점 표기 (2026-05-27 기준)**: 아래 다이어그램은 *D-4 완료 후 최종 상태*.
+>
+> **D-5 PR #1 시점 (현재) 실제 존재 폴더**: `src/app/`, `src/auth.ts`, `src/proxy.ts`, `src/db/`, `src/features/news/`, `src/types/` 만.
+>
+> **D-4 PR에서 신규 생성**: `src/client/{layouts,sections,hooks}/`, `src/admin/{layouts,components}/`, `src/features/news/components/`, `src/components/ui/` (shadcn 초기화 시), `src/lib/`, `src/hooks/`, `app/(public)/`, `app/admin/(auth)/`, `app/admin/(panel)/`.
+>
+> 즉 *temporal drift*는 의도된 시간차 — ADR-024는 *결정 잠금* 시점, 실제 *코드 적용*은 D-4 PR.
+
 ```
 src/
 ├── app/                              # 라우팅만 (얇음). 비즈니스 로직 ❌
