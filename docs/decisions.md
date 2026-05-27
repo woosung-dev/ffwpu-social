@@ -1082,3 +1082,57 @@ src/
 
 - `src/admin/components/admin/...` 같은 *중복 nesting*은 회피. `src/admin/components/NewsEditor.tsx` 직접 위치.
 - 어드민 전용 컴포넌트가 도메인 모델 import는 자유 (`src/admin/components/NewsEditor.tsx`가 `features/news/schemas`에서 News 타입 import).
+
+---
+
+## ADR-025: 카테고리 — pgEnum 5 고정 → categories 테이블 (운영 자율성)
+
+- **Status**: Accepted (Supersedes ADR-007 카테고리 enum 부분)
+- **Date**: 2026-05-27
+
+### Context
+
+ADR-007에서 카테고리를 `pgEnum` 5개 고정 (all/family_healing/local_volunteer/environment/rice_sharing)으로 잠갔으나, 사용자가 "카테고리를 고정하지 말고 어드민이 선택·추가 가능한 자유 구조"를 요구. ADR-002 운영 자율성 절대 제약 (콘텐츠·분류 업데이트가 개발자 개입 없이 가능)과 정합. codex consult로 트레이드오프 검토 후 전환.
+
+### Decision
+
+- `pgEnum news_category` 제거 → `categories` 테이블 신규 (`id`, `name`, `slug` unique, `sort_order`, `is_active`, timestamps).
+- `news.category` enum 컬럼 → `news.category_id` uuid FK (`onDelete: restrict` — 카테고리에 글 있으면 삭제 불가).
+- `slug`는 URL·필터용 **immutable** (변경 시 URL 깨짐). 삭제 대신 `is_active=false` 비활성화 (hard delete 금지, codex 권고).
+- **`all`은 DB 카테고리가 아니라 UI 필터 전용 slug** (`ALL_CATEGORY_SLUG`, `features/news/constants.ts`). 글 작성 시 `all` 입력 불가 (categoryId FK라 구조적 차단).
+- 카테고리 vs 태그 역할 분리: 카테고리 = 1개 선택·공개 탭·URL·내비 / 태그(`news_tags`) = 다중 자유 키워드·검색 보조.
+- 초기 seed 4개: 가족 치유 / 지역 봉사 / 환경 캠페인 / 쌀 나눔 (Figma 디자인 기준, sortOrder 1~4).
+
+### Consequences
+
+- ✅ **운영 자율성** — 어드민이 카테고리 추가·수정·비활성화·정렬 가능 (D-2 어드민 UI).
+- ✅ **데이터 무결성** — categoryId FK restrict로 글 있는 카테고리 삭제 차단.
+- ✅ **`all` 오염 차단** — codex 지적 (newsInputSchema가 enum 기반이라 `all` 입력 가능했던 문제) 구조적 해소.
+- ⚠️ **CategoryTabs 가변 대응** — enum 5 하드코딩 → categories props 기반. 탭 개수 2~N개 UI 대응 필요 (D-3 모바일 가로 스크롤/드롭다운 결정).
+- ⚠️ **Figma 5 고정 디자인과 정합** — D-3 시안은 4 카테고리 + 전체 탭 기준. 어드민이 카테고리 추가 시 탭 UI 자동 확장.
+- ⚠️ **마이그레이션 0001** — 개발 단계 destructive (기존 enum 컬럼 drop + categoryId 추가). prod 데이터 없어 truncate 후 재시드. 배포 후 전환은 비용 큼 (codex 경고) → 지금 전환이 정답.
+
+---
+
+## ADR-026: 익명 좋아요 — IP+세션 → sessionId(localStorage) 단순화
+
+- **Status**: Accepted (Supersedes ADR-010 ip_hash 부분)
+- **Date**: 2026-05-27
+
+### Context
+
+ADR-010에서 익명 좋아요를 `(news_id, ip_hash, session_id)` 조합 unique로 설계. codex consult 검토 결과: (1) 세션이 localStorage라 시크릿창·쿠키삭제로 쉽게 우회 → "보안 아니라 중복 클릭 완화" 수준, (2) 공유 IP(NAT)에서 sessionId 다르면 안 막혀 IP는 사실상 보조 신호, (3) HMAC·rate limit 등 강한 방어는 익명 좋아요에 과한 스펙. 사용자가 "최대한 심플"을 요구.
+
+### Decision
+
+- `heart_events.ip_hash` 컬럼 **제거**. unique를 `(news_id, session_id)`로 단순화.
+- `session_id` = 클라이언트 localStorage UUID. 좋아요 토글 = 기존 row의 `deleted_at` 토글 (soft delete, 현재 상태 복원 모델).
+- **개인정보 미수집** — ip_hash 제거로 IP 관련 개인정보 보존·HMAC secret·보존 기간 결정 불필요 (개인정보 보호 절대 제약 정합).
+- 좋아요는 "1인 1회 보장"이 아니라 **"동일 브라우저 중복 완화"**로 문서화. KPI·랭킹·보상 대상 아님.
+
+### Consequences
+
+- ✅ **스펙 단순화** — ip_hash·HMAC·IP 추출·보존 기간 결정 전부 제거. 개인정보 0 수집.
+- ✅ **개인정보 보호 강화** — IP 관련 데이터 미저장 (ADR-004 개인정보 보호 절대 제약).
+- ⚠️ **어뷰징 가능** — localStorage 클리어·시크릿창으로 우회 가능. 단 좋아요가 가벼운 반응이라 허용 범위 (codex 동의).
+- ⚠️ **D-2 toggleHeart 구현 시** — Heart 컴포넌트가 클라 localStorage UUID 생성 → toggleHeart action 인자로 전달. unique 충돌 시 기존 row deleted_at 토글 (insert 재시도 아님).

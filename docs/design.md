@@ -209,18 +209,23 @@ Figma 파일은 단일 페이지("Page 1")이고, 그 안에 3개 섹션이 있�
 
 > ⚠️ 다음 색은 Figma Variables가 아닌 컴포넌트 내 인라인 값. 향후 변수로 승격 권장.
 
-**Primary/Purple 계열 (가장 다양)**
-| 인라인 값 | 사용처 | 권장 토큰명 |
+**Primary/Purple 계열 (실제 구현 토큰 — Tailwind v4 `@theme inline` D-4 매핑)**
+
+> Sprint 1 D-4 (2026-05-27) 구현: shadcn `--primary` namespace 와 충돌 회피 + 의미 기반 분리를 위해 `--color-brand-*` namespace 채택. 텍스트는 `--color-ink-*`, 배경은 `--color-surface-*` 로 별도 prefix (관련 결정 — D-4 context-notes).
+> Tailwind utility 명명: `bg-brand-primary`·`text-brand-vivid`·`bg-kpi-yellow`·`text-ink-strong` 등.
+
+| 인라인 값 | 사용처 | 실제 토큰 (코드 SSoT) |
 |---|---|---|
-| `#3A0F62` | 히어로 슬로건 텍스트 (진보라) | `--color-primary-darkest` |
-| `#3C1264` | 히어로 CTA 버튼 배경 | `--color-primary-darker` |
-| `#501F7E` (=KeyColor) | 메뉴 선택 테두리·텍스트, Banner "Sow Good" | `--color-primary` |
-| `#9257CA` | StorySection Result 카운트 | `--color-primary-mid` |
-| `#9B7DB6` | Banner 본문 (연보라) | `--color-primary-soft` |
-| `#B35FEB` | 카테고리 태그·좋아요·소식 CTA 배경 | `--color-primary-bright` |
-| `#B769FF` | Header 배경, KpiCard 보라 | `--color-primary-light` |
-| `#DBB4FF` | Section5 아이콘 배경 | `--color-primary-pale` |
-| `#F8F1FF` / `#FAF4FF` / `#F2EFF4` | 옅은 배경 그라디언트 시작 | `--color-bg-primary-tint-*` |
+| `#3A0F62` | 히어로 슬로건 텍스트 (진보라) | `--color-brand-deep` |
+| `#3C1264` | 히어로 CTA 버튼 배경 | `--color-brand-darkest` |
+| `#501F7E` (=KeyColor) | 메뉴 선택 테두리·텍스트, Banner "Sow Good", Pagination active | `--color-brand-primary` (= `--primary`) |
+| `#9257CA` | StorySection Result 카운트 | `--color-brand-mid` |
+| `#9B7DB6` | Banner 본문 (연보라) | `--color-brand-soft` |
+| `#B35FEB` | 카테고리 active 라인·좋아요·소식 CTA·캐러셀 active 인디케이터 | `--color-brand-vivid` |
+| `#B769FF` | Header 배경, KpiCard 보라 | `--color-brand-bright` |
+| `#DBB4FF` | Section5 아이콘 배경 | `--color-brand-pale` |
+| `#F1E3FF` | StoryCard 텍스트 (라벤더) | `--color-brand-lavender` |
+| `#F8F1FF` / `#FAF4FF` / `#F2EFF4` | 옅은 배경 그라디언트 시작 | (D-3 도입 예정 — `--color-surface-purple-tint-*`) |
 
 **Lavender Text (보라 위 텍스트용 — 색깔별로 미묘하게 다름)**
 | 값 | 사용처 |
@@ -231,42 +236,45 @@ Figma 파일은 단일 페이지("Page 1")이고, 그 안에 3개 섹션이 있�
 | `#F0E1FF` | Footer 카피라이트 |
 | `#F1E3FF` | StoryCard 텍스트 |
 
-**Accent / Special**
-| 값 | 사용처 |
-|---|---|
-| `#F4B600` (=KeyColor2) | Accent |
-| `#FFCF41` | KpiSection Sow Good 노란 카드 |
-| `#DCEF7D` | KpiSection 봉사활동 횟수 카드 (연두) |
-| `#3B4700` | DCEF7D 위 텍스트 (진녹) |
+**Accent / Special (D-4 매핑)**
+| 값 | 사용처 | 실제 토큰 |
+|---|---|---|
+| `#F4B600` (=KeyColor2) | Accent | `--color-warm` |
+| `#FFCF41` | KpiSection Sow Good 노란 카드 | `--color-kpi-yellow` |
+| `#DCEF7D` | KpiSection 봉사활동 횟수 카드 (연두) | `--color-kpi-lime` |
+| `#B769FF` | KpiSection 보라 카드 | `--color-kpi-purple` (= brand-bright alias) |
+| `#F6F6F6` | KpiSection 그레이 카드 | `--color-kpi-gray` (= surface-soft alias) |
+| `#3B4700` | DCEF7D 위 텍스트 (진녹) | (인라인, 토큰 미도입 — D-3 시점에 변환) |
 
-**Dark / Text**
-| 값 | 사용처 |
-|---|---|
-| `#242424` | Footer 배경, ArticleGrid 좌측 블록, 태그 알약 |
-| `#343434` | KpiCard 텍스트 |
-| `#3E404E` | **본문 텍스트 (Figma 변수 `text/text`)** ← 소식 상세 본문 |
-| `#1F2937` | ArticleCard 제목 (graysacle/black) |
-| `#374151` | FeaturedStoryCard 본문 (graysacle/text) |
-| `#6B7280` | 페이지네이션 inactive 번호 (graysacle/subtext2) |
-| `#959BA9` | 날짜 텍스트 (graysacle/subtext3) |
-| `#F6F6F6` | KpiCard 그레이 배경 |
-| `#FAFAFA` | FeaturedStoryCard 배경 |
-| `#F9FAFB` | Tag Default 배경 (graysacle/box3) |
-| `#F5F6F8` | SNS 아이콘 배경 |
-| `#D1D5DB` | CategoryTab 하단 라인 (graysacle/line-highlight) |
+**Dark / Text / Surface (D-4 매핑)**
+| 값 | 사용처 | 실제 토큰 |
+|---|---|---|
+| `#242424` | Footer 배경, ArticleGrid 좌측 블록, 태그 알약 | `--color-surface-dark` |
+| `#343434` | KpiCard 텍스트 | (인라인 — D-3 시점 토큰화) |
+| `#3E404E` | **본문 텍스트 (Figma `text/text`)** ← 소식 상세 본문 | `--foreground` (= `--color-foreground`) |
+| `#1F2937` | ArticleCard 제목, CategoryTabs active 텍스트 | `--color-ink-strong` |
+| `#374151` | FeaturedStoryCard 본문 | (D-3 토큰화 — `--color-ink-strong` 흡수 검토) |
+| `#6B7280` | 페이지네이션 inactive, 비활성 텍스트 | `--color-ink-subtle` (= shadcn `--muted-foreground`) |
+| `#959BA9` | 날짜 텍스트 | `--color-ink-date` |
+| `#F6F6F6` | KpiCard 그레이 배경 | `--color-surface-soft` (= `--color-kpi-gray`) |
+| `#FAFAFA` | FeaturedStoryCard 배경 | `--color-surface-card` |
+| `#F9FAFB` | Tag Default 배경 | (D-3 토큰화 — `surface-card` 흡수 검토) |
+| `#F5F6F8` | SNS 아이콘 배경 | `--color-surface-cool` |
+| `#D1D5DB` | CategoryTab 하단 라인 | (shadcn `--border` oklch(0.922 0 0) 근사) |
 
-**Tag(해시태그) 색** — 보라 인접
-| 값 | 사용처 |
-|---|---|
-| `#AC86D0` | Tag Default 보더·텍스트 |
-| `#9E6FCB` | Tag Hover 보더·텍스트 |
-| `#F7EFFF` | Tag Hover 배경 |
+**Tag(해시태그) 색 (D-4 매핑)** — 보라 인접
+| 값 | 사용처 | 실제 토큰 |
+|---|---|---|
+| `#AC86D0` | Tag Default 보더·텍스트 | `--color-tag-default` |
+| `#9E6FCB` | Tag Hover 보더·텍스트 | `--color-tag-hover` |
+| `#F7EFFF` | Tag Hover 배경 | `--color-tag-bg` |
 
-**기타**
-| 값 | 사용처 |
-|---|---|
-| `#7B2AC7 → #AC69EA` | ArticleCard None 그라디언트 |
-| `rgba(36,36,36,0.6)` / `rgba(75,85,99,0.15)` | 비선택 / 캐러셀 inactive |
+**기타 (D-4 매핑)**
+| 값 | 사용처 | 실제 토큰 |
+|---|---|---|
+| `#7B2AC7 → #AC69EA` | ArticleCard None 그라디언트, FeaturedStoryCard placeholder | `--color-gradient-from` / `--color-gradient-to` |
+| `rgba(36,36,36,0.6)` | 비선택 텍스트 (D-3 헤더 시안 정합 시 `text-foreground/60` 으로) | (D-3 토큰화 검토) |
+| `rgba(75,85,99,0.15)` | 캐러셀 inactive 인디케이터 | (P1 — `--color-carousel-inactive` 토큰화 권고) |
 
 ### 타이포그래피
 

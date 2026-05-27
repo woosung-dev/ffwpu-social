@@ -466,3 +466,153 @@ D 패턴 흡수: `src/features/<도메인>/index.ts` public API — 외부에서
 
 `src/types/`와 `src/hooks/`도 그대로 유지 (전역 공용).
 
+---
+
+## 2026-05-27 (D-4 — F3 폴더 + 디자인 토큰 + 공통 컴포넌트 11종)
+
+### 결정 #1 — SUIT 폰트 출처 (next/font/local 6 weight)
+
+- **결정:** `sun-typeface/SUIT` GitHub repo v3 woff2 6 weight (Heavy/ExtraBold/Bold/SemiBold/Medium/Regular) 다운로드 후 `public/fonts/` 커밋. `next/font/local` 로 `--font-suit` CSS 변수 주입.
+- **왜:** SIL Open Font License (OFL) 로 상업·비상업 자유 사용. CDN 미존재. preload 최적화 + FOUT 회피.
+- **대안 검토:** `@font-face` + CDN (FOUT 가능, jsdelivr 미러 신뢰도 우려) / 시스템 폰트 폴백 (디자인 토큰 검증 불완전).
+- **파일 크기:** woff2 6 weight 총 ~1MB. Vercel 배포 영향 미미.
+
+### 결정 #2 — Gmarket Sans 미도입 (D-3 이월)
+
+- **결정:** Gmarket Sans Medium (히어로 슬로건 60px 전용) 은 D-4 에 도입하지 않음. D-3 디자인 시안 적용 시점에 별도 처리.
+- **왜:** 공식 배포는 ZIP otf 만 제공 (gmarket.com), woff2 변환 별도 작업 필요. 히어로 슬로건은 D-3 에 본격 도입되므로 D-4 공통 컴포넌트엔 영향 없음. SUIT Heavy 폴백으로 임시 대체 가능.
+- **이월 항목:** Gmarket Sans Medium woff2 변환 + `next/font/local` 추가 + globals.css `--font-display` 토큰 정의 + `font-display` Tailwind utility.
+
+### 결정 #3 — shadcn/ui Neutral 베이스 + 보라 primary 오버라이드
+
+- **결정:** `shadcn@latest add` 비대화형 진행 (구 CLI `init --base-color neutral` 옵션 제거됨 — `components.json` 직접 작성 + `src/lib/utils.ts` 직접 생성 후 `add` 만 호출).
+- **베이스:** Neutral (shadcn `--primary` oklch 검정 그대로 → `#501F7E` 보라로 오버라이드).
+- **이유:** Violet 팔레트는 shadcn 기본 변수와 충돌 가능. Neutral + 커스텀 토큰 오버라이드가 가장 안전한 path. shadcn primitive 의 default Button 등이 자동으로 보라 primary 적용됨.
+- **9 primitive:** button / input / label / card / select / dialog / form / separator / carousel (FeaturedStoryCard 용 Embla 기반 carousel 포함).
+
+### 결정 #4 — 디자인 토큰 명명 체계 `--color-brand-*` / `--color-ink-*` / `--color-surface-*`
+
+- **결정:** 초기 계획 (`docs/design.md` 의 "권장 토큰명" 컬럼 `--color-primary-*`) 폐기. 실제 구현은 의미 기반 namespace 분리.
+- **왜:**
+  - shadcn `--primary` 와 `--color-primary` 가 이미 존재. `--color-primary-bright` 같은 추가 변형이 충돌·혼동 유발.
+  - `--color-brand-*` 는 우리 도메인 보라 9 단계 전용. shadcn primitive 와 명시적 분리.
+  - 텍스트는 `--color-ink-*` (strong/subtle/date), 배경은 `--color-surface-*` (soft/card/cool/dark), 액센트는 `--color-warm`, KPI 는 `--color-kpi-*`, 태그는 `--color-tag-*`, 그라디언트는 `--color-gradient-from/to`.
+- **Atomic Update:** `docs/design.md` 의 토큰명 컬럼을 실제 구현 변수명으로 동기화 완료 (D-4 종결).
+- **ADR 후보:** ADR-025 (또는 ADR-024 보강) — 의미 기반 namespace 분리 결정 + shadcn 충돌 회피.
+
+### 결정 #5 — ArticleCard 12 variants 단일 컴포넌트 통합
+
+- **결정:** size (1~4) × state (default / hover / none) = 12 시각 variants 를 한 컴포넌트 `ArticleCard.tsx` 의 props (`size`, `state`) 분기로 표현. 12 개 별도 컴포넌트 분리 안 함.
+- **왜:** 12 컴포넌트 분리 시 코드 중복 95%+, prop 인터페이스 통일 어려움. 단일 컴포넌트 + 내부 `SIZE_CONFIG` 매핑 객체로 size 별 width/aspect/font 스케일 관리.
+- **state="none":** placeholder (보라 그라디언트 `var(--color-gradient-from)` → `var(--color-gradient-to)`) + "보도자료" 텍스트 (ADR-007 더미 라벨, code-reviewer NIT-2 — 중립 표현으로 변경 검토는 D-3 백로그).
+
+### 결정 #6 — features/news 클라이언트/서버 barrel 분리
+
+- **결정 변경:** 초기 plan 에서 `features/news/index.ts` 에 컴포넌트도 함께 export 하기로 했으나, Client Component (예: `dev/components/page.tsx`) 가 `@/features/news` import 시 actions / service / schemas (drizzle-zod / db / @auth 의존) 도 함께 client bundle 에 포함되어 build error 발생.
+- **수정 결정:** 두 barrel 로 분리.
+  - `src/features/news/index.ts` — **server-only**: actions / service / schemas exports
+  - `src/features/news/components/index.ts` (신규) — **client-safe**: 7 컴포넌트 + 2 타입 exports
+- **Client Component 는 `@/features/news/components` 만 import.** Server Component 는 둘 다 가능.
+- **ADR 후보:** ADR-025 (또는 ADR-024 보강) — features/<도메인> 의 client/server barrel 분리 패턴.
+
+### 결정 #7 — PublicFooter © 연도 정적 hardcode (2026)
+
+- **결정:** `new Date().getFullYear()` 대신 `© 2026` 직접 박음.
+- **왜:** Next.js 16 Cache Components 활성 상태 (`next.config.ts` `cacheComponents: true`) 에서 Server Component 의 `new Date()` 호출은 prerender 단계 차단됨 (cookies / searchParams / connection 같은 dynamic source 선행 필요). Footer 는 정적 prerender 가 자연스러움.
+- **트레이드오프:** 매년 수동 업데이트 1회 필요. v1.1+ 에 BUILD_TIME 환경변수 또는 빌드 스크립트 자동화 후보.
+- **TODO 등록:** `docs/TODO.md` (또는 v1.1 백로그) 에 매년 1월 © 연도 갱신.
+
+### 결정 #8 — D-4 검증 ITERATE verdict 후 P0 후속 수정 3건 (사회공헌국 H-1 결정 반영)
+
+- **검증 파이프라인:** designer / code-reviewer / human / docs-sync / codex CLI 5 평가자 병렬 + evaluator 메타 종합. 결과 **ITERATE (보완 후 D-3 진입 가능)**.
+- **P0 그룹 A — Figma SSoT drift (사회공헌국 H-1: Figma 명세 정합 선택):**
+  - `CategoryTabs.tsx:38` active 텍스트 `text-brand-vivid` → `text-ink-strong` (vivid 중복 강조 해소).
+  - `Pagination.tsx:39` active 색 반전 (`bg-brand-primary text-white` → `font-bold text-brand-primary` 무배경) — Figma 명세 정확 정합.
+- **P0 그룹 B — 사용자 perception (human CONFUSED 신뢰 4/10):**
+  - `app/(public)/page.tsx` "D-5 데이터 검증 — 소식 N건" 개발 메모 제거 → "준비 중" 임시 카피 교체. D-3 디자인 시안 적용 시 본격 구현으로 교체.
+- **P0 그룹 C — Docs Atomic Update 4건:** checklist (D-4 18 항목 체크) / design.md (토큰 명명 동기화) / context-notes (D-4 결정 8건 누적 — 본 섹션) / CLAUDE.md "현재 작업" 포인터 D-3 갱신.
+- **Human escalation (`docs/TODO.md` 누적):**
+  - H-2 — 푸터 종교 법인명 위치 (포교 금지 절대 제약 vs 법적 의무 투명성). 사회공헌국 결정 사안.
+  - H-3 — Banner "참여하기" 카피 (D-3 카피 확정 시 의미 정합: "소식 보기" 또는 "이야기 보러가기" 권고).
+
+### D-3 진입 영향 (D-4 종결 시점)
+
+- **F3 폴더 골격 + 디자인 토큰 + SUIT 폰트 + 11 공통 컴포넌트 + Route Group 3 layout 완성** → D-3 디자인 시안 적용 시 `src/client/sections/` 6 섹션 신규 + `app/(public)/page.tsx` placeholder 를 시안 구현으로 교체만 하면 됨.
+- 어드민 D-2 진입도 평행 가능 (`src/admin/components/` 신규 + `app/admin/(panel)/news/` 라우트 + `(panel)/page.tsx` 본격 구현).
+- **ADR 후보 2건** 작성 — ADR-025 (client/server barrel 분리) + ADR-026 (토큰 명명 namespace) 또는 ADR-024 보강 — 다음 세션 (D-3 또는 D-2 시작 시) 초반에 처리 권고.
+
+### D-4 산출물 통계
+
+- **9 commits** (chore: shadcn / feat(design): 토큰+SUIT / feat(client): Header+Footer+Banner+useScrollSpy / feat(admin): AdminSidebar / feat(news): ArticleCard+StoryCard+Featured / feat(news): Heart+CategoryTabs+Pagination+KpiCard / feat(news): index.ts / chore(layouts): Route Group+dev/components+barrel split / fix(d4-review): P0 정합 3건).
+- **44+3 파일 변경** (신규 23, 수정 4, shadcn 9, 폰트 6, 잠금 2 + 본 docs Atomic Update 후속 commit + P0 후속 3건).
+- **pnpm tsc/lint/build 0 error**, 5 BP 가로 스크롤 0, console.error 1 (favicon.ico 404 — D-3 백로그).
+- **Multi-agent verdict:** ITERATE → 조건부 D-3 진입 가능 (P0 7건 처리 완료).
+
+### 결정 #9 — Figma SSoT 정합 작업 (2026-05-27, 사용자 지적 후)
+
+**배경:** D-4 종결 후 사용자가 1920 landing screenshot 과 코드 비교 → Figma 외 임의 추가 항목 3건 발견.
+
+**처리:**
+
+1. **상단 보라 Banner 띠 — 완전 삭제**
+   - 위반: `(public)/layout.tsx` 최상단에 Banner 렌더 (모든 페이지에 노출). Figma 1920 landing 에 해당 띠 없음.
+   - Figma 실제 명세: Banner (`125:8915`, 1440×132) 는 **소식 페이지 (목록·상세) 전용** 가로 띠. 카피 "Sow Good — 따뜻한 진심을 담아 / 나누는 진실의 활동들을 소개합니다".
+   - 조치: `src/client/layouts/Banner.tsx` 파일 삭제 + barrel export 제거 + layout import 제거. D-2 소식 페이지 구현 시 정확한 Figma 명세로 재작성.
+
+2. **홈 페이지 "준비 중" placeholder 카피 — 완전 비우기**
+   - 위반: `src/app/(public)/page.tsx` 의 "사회공헌단 Sow Good / 가치를 삶으로 증명합니다. / 곧 더 풍성한 활동 이야기로 인사드릴 예정입니다." 임의 카피.
+   - Figma 실제 명세: 홈은 6 섹션 (HeroBanner + KpiSection + StorySection + FeaturedSection + ArticleGrid + Pre-Footer). D-3 본격 구현.
+   - 조치: `<div />` 빈 본문. PublicHeader + PublicFooter 는 layout 에서 자동 wrap. **임의 placeholder 카피는 빈 화면보다 나쁜 사용자 경험 (D-5 "데이터 검증" 노출 사고 참조).**
+
+3. **PublicFooter 재구성 — Figma news-detail (93:8810) 명세 정확 정합**
+   - 위반: "© 2026 FFWPU Korea — Sow Good. All rights reserved." 임의 카피 + "소개·쌀 나눔 소식" 내부 링크 (Figma 미존재).
+   - Figma 실제 명세 (news-detail 1440 screenshot 직접 확인): 다크 띠 (#242424) 한 줄 — "COPYRIGHT 2026 © Sow Good All rights reserved.". 내부 링크·SNS 아이콘 없음.
+   - 조치: PublicFooter 단순화. 1920 landing 의 푸터 직전 보라/SNS 영역은 별도 섹션 (D-3 시안 적용 시 도입).
+
+4. **`docs/design/README.md` 신규 작성 — Figma SSoT 영속 참조**
+   - Figma URL (`lmjjU4UxUpK2pDi67BGRiW`) + MCP 도구 prefix (`mcp__plugin_figma_figma__*`) + 호출 예시 + 20 screenshots/ 파일 노드 ID 매핑 + 안티 패턴 명시 ("Figma 없으면 코드 없음").
+   - 이후 모든 세션 시작 시 `docs/design/README.md` + `docs/design.md` 동시 참조 권장.
+
+### 교훈 (lessons.md 후보)
+
+> **"placeholder 임의 카피 > 빈 화면 ≫ 사용자 신뢰 손상"** — 빈 화면은 의도된 미완성으로 인식되나, 임의 placeholder 카피 (예: "준비 중", "Sow Good 가족이 아니어도", "D-5 데이터 검증") 는 *프로덕션 의도된 콘텐츠로 오인* 되어 신뢰 손상.
+> AI 가 임시 카피를 작성할 때는 빈 div 또는 의도 명시 주석 (`<div data-todo="D-3 hero" />`) 으로 대체 — **사용자에게 보이는 텍스트 = Figma SSoT 만**.
+
+3 회 반복 시 `.ai/project/lessons.md` 승격 검토 (현재 사고 2건 누적: D-5 "데이터 검증" 헤딩 + D-4 placeholder 카피 3종).
+
+
+---
+
+## 2026-05-27 (D-4 후속 — 데이터 모델 변경: 카테고리 + heart, codex consult 기반)
+
+> PR 머지 전 사용자 검토 중 codex consult (`/codex`) 로 news.ts·heart-events.ts 피드백 → 두 데이터 모델 결정 변경.
+
+### 결정 #10 — 카테고리 pgEnum → categories 테이블 (ADR-025, ADR-007 supersede)
+
+- **사용자 결정 (2026-05-27)**: 카테고리 고정 enum 대신 어드민이 추가·관리 가능한 자유 구조. ADR-002 운영 자율성 우선.
+- **codex 트레이드오프 검토**: enum→FK 전환은 마이그레이션+UI 가변탭+Zod+어드민폼 4 레이어 변경. 단 "배포 후 전환 비용이 훨씬 크다"고 판정 → prod 데이터 없는 지금 전환이 정답.
+- **구현**: `categories` 테이블 (slug unique immutable, sort_order, is_active). `news.category` enum → `category_id` FK (onDelete restrict). `all`은 UI 필터 전용 (`ALL_CATEGORY_SLUG`, constants.ts client-safe). 마이그레이션 `0001` (개발 destructive truncate + 재시드).
+- **client/server barrel 3번째 사례**: `ALL_CATEGORY_SLUG` 를 schemas.ts(drizzle-zod) 가 아닌 `constants.ts` 로 분리 — CategoryTabs(client) 가 drizzle 끌어오는 build 실패 회피. (1번 features/news index 분리, 2번 components barrel, 3번 constants).
+- **CategoryTabs 전환**: enum 5 하드코딩 → categories props 기반 + 전체 가상 탭. ArticleCard category enum → categoryName(string) join.
+
+### 결정 #11 — 익명 좋아요 ip_hash 제거 (ADR-026, ADR-010 단순화)
+
+- **사용자 결정**: "최대한 심플". codex: IP+세션은 "보안 아니라 중복 완화", 공유 IP에서 IP 무의미, HMAC·rate limit 과한 스펙.
+- **구현**: `heart_events.ip_hash` 제거, unique `(news_id, session_id)`. sessionId = 클라 localStorage UUID. 개인정보 미수집 (ADR-004 정합).
+- **문서화**: "1인 1회 보장" 아님 "동일 브라우저 중복 완화". KPI·랭킹·보상 대상 아님.
+
+### codex consult 가 잡은 추가 항목 (PR 머지 전 검토 8항목)
+
+1. 카테고리 정책 ✅ 결정 (테이블 전환)
+2. `all` 의미 ✅ UI 필터 전용
+3. 카테고리 vs 태그 역할 ✅ domain.md 명시
+4. 카테고리 삭제·변경 ✅ slug immutable + is_active
+5. 좋아요 보안 표현 ✅ "중복 완화" 문서화
+6. ip_hash 생성·보존 ✅ 제거 (개인정보 0)
+7. heart soft delete 의미 ✅ 현재 상태 복원 모델
+8. 마이그레이션 baseline ✅ 0001 지금 전환
+
+### D-2 이월 (toggleHeart 구현 시)
+
+- Heart 컴포넌트가 클라 localStorage UUID 생성 → toggleHeart action 인자. unique 충돌 시 기존 row deleted_at 토글 (insert 재시도 금지).
+- 어드민 카테고리 관리 UI (`src/admin/components/CategoryManager`) — 추가·수정·비활성화·정렬.

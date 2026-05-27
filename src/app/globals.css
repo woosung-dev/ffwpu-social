@@ -1,13 +1,129 @@
-/* Tailwind v4 CSS-first 진입점 — 디자인 토큰은 D-4에 docs/design.md 참조로 확장 */
+/* Tailwind v4 CSS-first — shadcn Neutral 베이스 + ffwpu-social 디자인 토큰(Figma SSoT) + SUIT 폰트 */
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 :root {
-  --color-primary: #501f7e;
-  --color-accent: #f4b600;
-  --color-text: #3e404e;
+  --radius: 0.625rem;
+
+  /* shadcn 표준 변수 — Neutral 베이스에 보라 primary 오버라이드 */
+  --background: oklch(1 0 0);
+  --foreground: #3e404e; /* 본문 기본 — Figma text */
+  --card: oklch(1 0 0);
+  --card-foreground: #3e404e;
+  --popover: oklch(1 0 0);
+  --popover-foreground: #3e404e;
+  --primary: #501f7e; /* 보라 다크 — 메뉴 선택·CTA */
+  --primary-foreground: #ffffff;
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: #3e404e;
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: #6b7280;
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: #3e404e;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: #501f7e;
 }
 
-html,
-body {
-  color: var(--color-text);
+.dark {
+  --background: #242424;
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: #b769ff;
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: #b769ff;
+}
+
+@theme inline {
+  /* shadcn primitive 변수 노출 */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* ffwpu-social 디자인 토큰 — Figma SSoT (docs/design.md 동기화) */
+  /* 보라 브랜드 9단계 — 밝음 → 어두움 */
+  --color-brand-lavender: #f1e3ff; /* StoryCard 텍스트 */
+  --color-brand-pale: #dbb4ff; /* Section5 아이콘 배경 */
+  --color-brand-bright: #b769ff; /* 헤더 배경·KpiCard purple */
+  --color-brand-vivid: #b35feb; /* 카테고리·Heart·CTA active */
+  --color-brand-mid: #9257ca; /* Result 통계 카운트 */
+  --color-brand-soft: #9b7db6; /* Banner 본문 */
+  --color-brand-primary: #501f7e; /* 메뉴 선택·Banner 타이틀 (= --primary) */
+  --color-brand-deep: #3a0f62; /* 히어로 슬로건 */
+  --color-brand-darkest: #3c1264; /* 히어로 CTA */
+
+  /* 액센트 + KPI */
+  --color-warm: #f4b600; /* 오렌지 액센트 */
+  --color-kpi-yellow: #ffcf41;
+  --color-kpi-lime: #dcef7d;
+  --color-kpi-purple: #b769ff;
+  --color-kpi-gray: #f6f6f6;
+
+  /* 텍스트 다단계 */
+  --color-ink-strong: #1f2937; /* 제목 강조 */
+  --color-ink-subtle: #6b7280; /* 비활성 */
+  --color-ink-date: #959ba9; /* 날짜·메타 */
+
+  /* 배경 다단계 */
+  --color-surface-soft: #f6f6f6;
+  --color-surface-card: #fafafa;
+  --color-surface-cool: #f5f6f8;
+  --color-surface-dark: #242424; /* Footer·ArticleGrid 좌블록 */
+
+  /* 태그 */
+  --color-tag-default: #ac86d0;
+  --color-tag-hover: #9e6fcb;
+  --color-tag-bg: #f7efff;
+
+  /* ArticleCard None placeholder 그라디언트 양 끝 */
+  --color-gradient-from: #7b2ac7;
+  --color-gradient-to: #ac69ea;
+
+  /* 폰트 — next/font/local 이 :root 에 --font-suit 를 주입하면, Tailwind 가 .font-sans utility 로 emit */
+  --font-sans:
+    var(--font-suit), system-ui, -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
 }

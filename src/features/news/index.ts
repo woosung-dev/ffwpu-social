@@ -1,5 +1,6 @@
-// 도메인 public API — db.ts 격리, actions/service/types만 외부 노출 (ADR-024)
+// 도메인 server-side public API — db.ts 격리, actions/service/schemas 만 외부 노출 (ADR-024)
 // 외부에서 features/news/db.ts 직접 import 금지. service 또는 actions 경유.
+// Client Component 에서 사용하는 도메인 UI 컴포넌트는 별도 client-safe barrel — @/features/news/components
 export {
   listNewsAction,
   getNewsDetailAction,
@@ -7,13 +8,12 @@ export {
   type ActionResult,
 } from "./actions";
 
-export { listNews, getNewsDetail } from "./service";
+export { listNews, getNewsDetail, listCategories } from "./service";
 
 export {
-  newsCategorySchema,
   newsInputSchema,
   listNewsQuerySchema,
-  type NewsCategoryValue,
+  ALL_CATEGORY_SLUG,
   type NewsInput,
   type ListNewsQuery,
 } from "./schemas";

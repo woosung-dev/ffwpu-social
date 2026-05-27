@@ -15,13 +15,25 @@ if (!adminPassword) {
 }
 
 const { db } = await import("./index");
-const { users, news, newsTags } = await import("./schema");
+const { users, categories, news, newsTags } = await import("./schema");
 
 async function seed() {
   console.log("[seed] truncating existing rows...");
   await db.execute(
-    sql`TRUNCATE TABLE news_tags, heart_events, audit_logs, news, users RESTART IDENTITY CASCADE`,
+    sql`TRUNCATE TABLE news_tags, heart_events, audit_logs, news, categories, users RESTART IDENTITY CASCADE`,
   );
+
+  console.log("[seed] inserting categories...");
+  const categoryRows = await db
+    .insert(categories)
+    .values([
+      { name: "가족 치유", slug: "family_healing", sortOrder: 1 },
+      { name: "지역 봉사", slug: "local_volunteer", sortOrder: 2 },
+      { name: "환경 캠페인", slug: "environment", sortOrder: 3 },
+      { name: "쌀 나눔", slug: "rice_sharing", sortOrder: 4 },
+    ])
+    .returning();
+  const categoryIdBySlug = new Map(categoryRows.map((c) => [c.slug, c.id]));
 
   console.log("[seed] inserting super admin...");
   const passwordHash = await bcrypt.hash(adminPassword!, 10);
@@ -37,7 +49,7 @@ async function seed() {
 
   const samples: Array<{
     title: string;
-    category: "family_healing" | "local_volunteer" | "environment" | "rice_sharing" | "all";
+    category: "family_healing" | "local_volunteer" | "environment" | "rice_sharing";
     tags: string[];
     publishedAt: Date;
   }> = [
@@ -112,7 +124,7 @@ async function seed() {
             },
           ],
         },
-        category: sample.category,
+        categoryId: categoryIdBySlug.get(sample.category)!,
         publishedAt: sample.publishedAt,
         createdBy: admin.id,
       })
