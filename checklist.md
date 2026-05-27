@@ -90,7 +90,7 @@
 - [x] shadcn/ui 초기화 (Neutral base, RSC, css variables) + primitive 9종 (button/input/label/card/select/dialog/form/separator/carousel)
 - [x] `src/client/layouts/PublicHeader.tsx` (4 BP variants + 스크롤스파이 hook + 햄버거 1024↓ + 검색 disabled)
 - [x] `src/client/layouts/PublicFooter.tsx` (--color-surface-dark + © 2026 정적)
-- [x] `src/client/layouts/Banner.tsx` (Sow Good 워드마크 + 참여 권유 placeholder, D-3 카피 확정)
+- [~] `src/client/layouts/Banner.tsx` — **삭제됨** (2026-05-27). Figma 명세는 소식 페이지 (목록·상세) 전용 Banner (`125:8915`, 카피 "Sow Good — 따뜻한 진심을 담아 / 나누는 진실의 활동들을 소개합니다"). D-2 소식 페이지 구현 시 정확한 Figma 명세로 재작성
 - [x] `src/client/hooks/useScrollSpy.ts` (IntersectionObserver, idsKey join 으로 dep 안정화)
 - [x] `src/admin/layouts/AdminSidebar.tsx` (Client, 대시보드·소식·로그아웃, 1024↓ 토글 + 오버레이)
 - [x] `src/features/news/components/ArticleCard.tsx` (size 1~4 × state default/hover/none = 12 variants 통합 컴포넌트)
@@ -103,7 +103,7 @@
 - [x] `src/features/news/index.ts` server-only public API (actions/service/schemas) + `src/features/news/components/index.ts` client-safe barrel 분리
 - [x] 디자인 토큰 매핑 — `globals.css` @theme inline (보라 9단계 brand-* + KPI 4색 + 텍스트 다단계 ink-* + 배경 surface-* + 태그 + 그라디언트)
 - [x] SUIT 폰트 셋업 (next/font/local 6 weight sun-typeface/SUIT v3 OFL, public/fonts/)
-- [x] `app/(public)/layout.tsx` (Banner + PublicHeader + main + PublicFooter wrap)
+- [x] `app/(public)/layout.tsx` (PublicHeader + main + PublicFooter wrap — Banner 제거됨, Figma SSoT 정합)
 - [x] `app/admin/(auth)/layout.tsx` (중앙 카드, robots noindex meta) + `(auth)/login/page.tsx` placeholder
 - [x] `app/admin/(panel)/layout.tsx` (AdminSidebar wrap, robots noindex meta) + `(panel)/page.tsx` 대시보드 placeholder
 - [x] D-4 검증 게이트 통과 — pnpm tsc/lint/build 0 error + 5 BP 가로 스크롤 0 + console.error 0 (favicon 404 만 D-3 백로그)

@@ -548,3 +548,35 @@ D 패턴 흡수: `src/features/<도메인>/index.ts` public API — 외부에서
 - **pnpm tsc/lint/build 0 error**, 5 BP 가로 스크롤 0, console.error 1 (favicon.ico 404 — D-3 백로그).
 - **Multi-agent verdict:** ITERATE → 조건부 D-3 진입 가능 (P0 7건 처리 완료).
 
+### 결정 #9 — Figma SSoT 정합 작업 (2026-05-27, 사용자 지적 후)
+
+**배경:** D-4 종결 후 사용자가 1920 landing screenshot 과 코드 비교 → Figma 외 임의 추가 항목 3건 발견.
+
+**처리:**
+
+1. **상단 보라 Banner 띠 — 완전 삭제**
+   - 위반: `(public)/layout.tsx` 최상단에 Banner 렌더 (모든 페이지에 노출). Figma 1920 landing 에 해당 띠 없음.
+   - Figma 실제 명세: Banner (`125:8915`, 1440×132) 는 **소식 페이지 (목록·상세) 전용** 가로 띠. 카피 "Sow Good — 따뜻한 진심을 담아 / 나누는 진실의 활동들을 소개합니다".
+   - 조치: `src/client/layouts/Banner.tsx` 파일 삭제 + barrel export 제거 + layout import 제거. D-2 소식 페이지 구현 시 정확한 Figma 명세로 재작성.
+
+2. **홈 페이지 "준비 중" placeholder 카피 — 완전 비우기**
+   - 위반: `src/app/(public)/page.tsx` 의 "사회공헌단 Sow Good / 가치를 삶으로 증명합니다. / 곧 더 풍성한 활동 이야기로 인사드릴 예정입니다." 임의 카피.
+   - Figma 실제 명세: 홈은 6 섹션 (HeroBanner + KpiSection + StorySection + FeaturedSection + ArticleGrid + Pre-Footer). D-3 본격 구현.
+   - 조치: `<div />` 빈 본문. PublicHeader + PublicFooter 는 layout 에서 자동 wrap. **임의 placeholder 카피는 빈 화면보다 나쁜 사용자 경험 (D-5 "데이터 검증" 노출 사고 참조).**
+
+3. **PublicFooter 재구성 — Figma news-detail (93:8810) 명세 정확 정합**
+   - 위반: "© 2026 FFWPU Korea — Sow Good. All rights reserved." 임의 카피 + "소개·쌀 나눔 소식" 내부 링크 (Figma 미존재).
+   - Figma 실제 명세 (news-detail 1440 screenshot 직접 확인): 다크 띠 (#242424) 한 줄 — "COPYRIGHT 2026 © Sow Good All rights reserved.". 내부 링크·SNS 아이콘 없음.
+   - 조치: PublicFooter 단순화. 1920 landing 의 푸터 직전 보라/SNS 영역은 별도 섹션 (D-3 시안 적용 시 도입).
+
+4. **`docs/design/README.md` 신규 작성 — Figma SSoT 영속 참조**
+   - Figma URL (`lmjjU4UxUpK2pDi67BGRiW`) + MCP 도구 prefix (`mcp__plugin_figma_figma__*`) + 호출 예시 + 20 screenshots/ 파일 노드 ID 매핑 + 안티 패턴 명시 ("Figma 없으면 코드 없음").
+   - 이후 모든 세션 시작 시 `docs/design/README.md` + `docs/design.md` 동시 참조 권장.
+
+### 교훈 (lessons.md 후보)
+
+> **"placeholder 임의 카피 > 빈 화면 ≫ 사용자 신뢰 손상"** — 빈 화면은 의도된 미완성으로 인식되나, 임의 placeholder 카피 (예: "준비 중", "Sow Good 가족이 아니어도", "D-5 데이터 검증") 는 *프로덕션 의도된 콘텐츠로 오인* 되어 신뢰 손상.
+> AI 가 임시 카피를 작성할 때는 빈 div 또는 의도 명시 주석 (`<div data-todo="D-3 hero" />`) 으로 대체 — **사용자에게 보이는 텍스트 = Figma SSoT 만**.
+
+3 회 반복 시 `.ai/project/lessons.md` 승격 검토 (현재 사고 2건 누적: D-5 "데이터 검증" 헤딩 + D-4 placeholder 카피 3종).
+

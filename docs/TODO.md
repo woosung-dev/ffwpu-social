@@ -51,18 +51,25 @@
 ### 즉시 (이 세션)
 
 - [x] D-4 Atomic Update — checklist / design.md 토큰 / context-notes / AGENTS.md 동기화
-- [ ] D-4 git push 사용자 승인 (현재 9 commits, `feat/sprint-1-d4-components` 브랜치)
+- [x] **Figma SSoT 정합 작업 (2026-05-27 사용자 지적)** — Banner 삭제 + 홈 placeholder 빈화 + Footer Figma news-detail 정합 + `docs/design/README.md` 신규
+- [ ] D-4 git push 사용자 승인 (현재 11 commits, `feat/sprint-1-d4-components` 브랜치)
 - [ ] PR 생성 (사용자 승인 시)
 
 ### 다음 세션 (D-3 진입)
 
 - [ ] ADR 후보 2건 작성 — ADR-025 (client/server barrel 분리) + ADR-026 (토큰 명명 namespace `--color-brand-*` `--color-ink-*` `--color-surface-*`) 또는 ADR-024 보강.
 - [ ] `docs/tech.md` F3 다이어그램 마커 🆕 D-4 → ✅ D-4 전환 + `app/(public)/dev/components/` 추가.
-- [ ] `src/client/sections/` 6 섹션 신규 생성 (Hero + KpiSection + ArticleGrid + StorySection + FeaturedSection + Footer).
-- [ ] `src/app/(public)/page.tsx` placeholder → 디자인 시안 구현.
-- [ ] PublicHeader 배경 `bg-brand-bright` (`#B769FF`) 정합 + 비선택 메뉴 `text-foreground/60` alpha.
-- [ ] Banner 카피 사회공헌국 확정 + Gmarket Sans Medium woff2 도입.
-- [ ] favicon 적용.
+- [ ] `src/client/sections/` 6 섹션 신규 생성 (HeroBanner + KpiSection + StorySection + FeaturedSection + ArticleGrid + Pre-Footer).
+- [ ] `src/app/(public)/page.tsx` 빈 div → 디자인 시안 구현 (Figma 1920 landing 정합).
+- [ ] **PublicHeader 2단 구조 도입** — Figma news-detail (93:8810) 명세: 상단 작은 회색 NAV (캠페인 CTA "함께 동행하기" 등) + 아래 흰 영역 큰 로고/4메뉴/검색.
+- [ ] PublicHeader 배경 시안 정합 (현재 단순화 → Figma 실제 톤) + 비선택 메뉴 alpha 정합.
+- [ ] 1920 landing 푸터 직전 보라/SNS 영역을 별도 섹션으로 분리 도입 (현재 PublicFooter 는 news-detail 단순 카피라이트만).
+- [ ] Gmarket Sans Medium woff2 도입 (HeroBanner 슬로건 60px 전용).
+- [ ] favicon 적용 (사회공헌국 BI 자산).
+
+### 다음 세션 (D-2 진입)
+
+- [ ] **Banner 컴포넌트 재작성** — Figma `125:8915` 명세 정합 (1440×132 가로 띠, 카피 "Sow Good — 따뜻한 진심을 담아 / 나누는 진실의 활동들을 소개합니다"). 소식 페이지 (목록·상세) 전용으로 layout 분리.
 
 ### D-4 후속 디자인 P1 (D-3 진입과 병행 가능)
 

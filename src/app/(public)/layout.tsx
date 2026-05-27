@@ -1,5 +1,5 @@
-// 사용자 사이트 Route Group 레이아웃 — Banner + PublicHeader + main + PublicFooter wrap
-import { Banner, PublicFooter, PublicHeader } from "@/client/layouts";
+// 사용자 사이트 Route Group 레이아웃 — PublicHeader + main + PublicFooter wrap (Figma SSoT 정합)
+import { PublicFooter, PublicHeader } from "@/client/layouts";
 
 export default function PublicLayout({
   children,
@@ -8,7 +8,6 @@ export default function PublicLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <Banner />
       <PublicHeader />
       <main className="flex-1">{children}</main>
       <PublicFooter />
