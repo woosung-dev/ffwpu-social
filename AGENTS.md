@@ -92,10 +92,10 @@ pnpm drizzle-kit studio        # DB 브라우저
 
 ### 현재 작업
 
-- 진행 중: **Sprint 1 D-2 (어드민 페이지)** — Stage 3 plan 확정 + codex consult 통과 (P1 7건/P2 5건 모두 결정 #13~#16 + 위험표 반영) + 의존성 셋업 완료 (T1) (2026-05-28)
-- 디테일: `~/.claude/plans/ffwpu-social-sprint-1-d-2-ticklish-fox.md` (plan 본문 — 다음 세션에 `docs/plans/active/2026-05-28-sprint-1-d2-admin.md` 로 승격) / `context-notes.md` (D-2 진입 섹션) / `checklist.md`
+- 진행 중: **Sprint 1 D-2 (어드민 페이지)** — 구간 1+2 완료 (T1~T5). 인증 인프라 + S3 presigned POST + LoginForm + categories 3-Layer + CategoryManager UI. 5/13 task (2026-05-28)
+- 디테일: `~/.claude/plans/ffwpu-social-sprint-1-d-2-ticklish-fox.md` (plan 본문) / `context-notes.md` (D-2 구간 1+2 결정 #17·#18) / `checklist.md`
 - 워크트리: `/Users/woosung/project/agy-project/ffwpu-social-d2` (브랜치 `feat/sprint-1-d2-admin`). main worktree 의 docker (postgres 5433 + minio 9000-9001) 공유 사용
-- 다음 (T2~T13, 새 세션): lib/s3 + auth-guards + uploadImageAction → LoginForm → features/categories → CategoryManager → news db.ts query 분리 (listPublicNews / listForAdmin) + service transaction → TiptapEditor + 업로더·태그·NewsEditor → /admin/news routes → Dashboard → NewsBodyRenderer (Tiptap JSON walker XSS-safe, D-3 사용자 사이트 사용 예정) → 종합 verify
+- 다음 (T6~T13, 새 세션): news db.ts query 분리 (`listPublicNews`/`getPublicNewsById` vs `listForAdmin`/`getAdminNewsById`, mutation tx 시그니처) → service transaction + actions auth helper → TiptapEditor + CoverImageUploader + TagsInput → NewsEditor + NewsTable → /admin/news routes → Dashboard + 로그아웃 → NewsBodyRenderer (Tiptap JSON walker XSS-safe, D-3 사용자 사이트 사용 예정) + 5 단위 테스트 → 종합 verify (Playwright smoke 5)
 - 로컬 가동: `docker compose ps` (이미 healthy) → `pnpm dev` (포트 5433)
 - 임시 어드민: `admin@ffwpu-social.local` / `bRhHR2CWkqrMnj0L` (배포 전 변경 필수)
 - 사회공헌국 escalation 대기: H-2 푸터 종교 법인명 위치, H-3 Banner "참여하기" 카피 (`docs/TODO.md` 참조)

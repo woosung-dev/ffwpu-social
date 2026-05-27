@@ -120,14 +120,14 @@
 
 > 별도 worktree `ffwpu-social-d2` / 브랜치 `feat/sprint-1-d2-admin`. plan: `~/.claude/plans/ffwpu-social-sprint-1-d-2-ticklish-fox.md` (다음 세션 `docs/plans/active/2026-05-28-sprint-1-d2-admin.md` 로 승격 예정). 13 task, 4 구간.
 
-**구간 1 — 인증·인프라**
+**구간 1 — 인증·인프라** (commit `6acaa8e`)
 - [x] T1 — 의존성 (`@tiptap/extension-image@2.27.2`, `@tiptap/extension-link@2.27.2`, `@aws-sdk/s3-presigned-post`) + docker-compose 검증 (main worktree 의 ffwpu-postgres + ffwpu-minio 공유)
-- [ ] T2 — `src/lib/s3.ts` (S3Client MinIO endpoint + forcePathStyle) + `src/lib/auth-guards.ts::requireSuperAdmin()` + `src/features/storage/upload.ts::createPresignedPost` (content-length-range 5MB + 60s expiry, ADR-017 MIME) + `features/news/actions.ts::uploadImageAction` Server Action
-- [ ] T3 — `src/admin/components/LoginForm.tsx` (RHF + signIn credentials) + `app/admin/(auth)/login/page.tsx` 통합
+- [x] T2 — `src/lib/s3.ts` (S3Client MinIO endpoint + forcePathStyle + isAllowedImagePublicUrl) + `src/lib/auth-guards.ts::requireSuperAdmin()` + `src/features/storage/upload.ts::createPresignedPost` (content-length-range 5MB + Content-Type 정확 매치 + 60s expiry, ADR-017 MIME) + `features/news/actions.ts::uploadImageAction` Server Action + 기존 createNewsAction auth 가드 helper 교체
+- [x] T3 — `src/admin/components/LoginForm.tsx` (RHF + zodResolver + signIn credentials + useTransition + router.refresh) + `app/admin/(auth)/login/page.tsx` (placeholder auth() 중복 제거, proxy.ts 가 처리)
 
-**구간 2 — 카테고리 도메인**
-- [ ] T4 — `features/categories/{db,service,schemas,actions,index}.ts` (3-Layer + slug regex + immutable update schema + requireSuperAdmin + revalidate)
-- [ ] T5 — `src/admin/components/CategoryManager.tsx` (리스트 + 상단 추가 폼 + row Dialog + is_active 토글) + `app/admin/(panel)/categories/page.tsx`
+**구간 2 — 카테고리 도메인** (commit `2a9448d`)
+- [x] T4 — `features/categories/{db,service,schemas,actions,index}.ts` (3-Layer + CATEGORY_SLUG_REGEX + UpdateCategoryData 타입 slug 제외 강제 + requireSuperAdmin + revalidate 4곳)
+- [x] T5 — `src/admin/components/CategoryManager.tsx` (CreateForm + CategoriesTable + EditDialog + ErrorBanner) + shadcn Switch primitive 추가 + `app/admin/(panel)/categories/page.tsx` (Suspense boundary 안에 listAllForAdmin — Cache Components 정합)
 
 **구간 3 — 뉴스 CRUD**
 - [ ] T6 — `features/news/db.ts` query 분리 (`listPublicNews`/`getPublicNewsById` vs `listForAdmin`/`getAdminNewsById`) + mutation 함수 모두 `tx` 인자 + `listLatest(5)`·`countNewsByCategory()`·`searchTags(prefix)`·`replaceNewsTags(tx, id, tags)`

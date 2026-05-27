@@ -668,3 +668,58 @@ Tiptap 은 기존 2.x 와 통일 (peer dep 충돌 회피 — 3.x 설치 시 star
 2. T2 — `src/lib/s3.ts` + `src/lib/auth-guards.ts` + `src/features/storage/upload.ts` + `src/features/news/actions.ts::uploadImageAction`
 3. T3 — `src/admin/components/LoginForm.tsx` + `app/admin/(auth)/login/page.tsx` 통합
 4. 구간 1 종료 시 commit + 사용자 보고
+
+---
+
+## 2026-05-28 (D-2 진행 — 구간 1+2 완료, T1~T5)
+
+### 구간 1 — 인증·인프라 (commit `6acaa8e`)
+
+**T1 의존성**: `@tiptap/extension-image@2.27.2` + `@tiptap/extension-link@2.27.2` + `@aws-sdk/s3-presigned-post`. main worktree 의 docker (postgres 5433 + minio 9000-9001) 공유 사용.
+
+**T2 인프라**: 
+- `src/lib/auth-guards.ts::requireSuperAdmin()` — 모든 admin Server Action 첫 줄 helper (codex P1#1+#2 통일).
+- `src/lib/s3.ts` — S3Client (MinIO/R2 호환, `forcePathStyle`) + `getPublicUrl(key)` + `isAllowedImagePublicUrl(url)` (NewsBodyRenderer T12 정합).
+- `src/features/storage/upload.ts::createPresignedPost` — content-length-range [1, 5MB] + Content-Type 정확 매치 + 60s 만료 (codex P1#4). object key `news/{newsId|temp-{uuid}}/{uuid}.{ext}` (orphan 청소 친화).
+- `src/features/news/actions.ts::uploadImageAction` — Server Action (결정 #16). requireSuperAdmin → Zod 검증 → createPresignedPost → `{ uploadUrl, fields, publicUrl, key }` 반환. 기존 createNewsAction 의 auth 검사도 helper 로 교체.
+
+**T3 LoginForm**: 
+- `src/admin/components/LoginForm.tsx` — RHF + zodResolver + `signIn("credentials", { redirect: false })` + `router.refresh()`. useTransition + inline authError.
+- `app/admin/(auth)/login/page.tsx` — placeholder 의 `await auth()` 체크 제거 (proxy.ts 가 already-logged-in /admin/login → /admin 처리 중이라 중복). Cache Components 환경에서 prerender block 회피.
+
+### 구간 2 — 카테고리 도메인 (commit `2a9448d`)
+
+**T4 features/categories 3-Layer**:
+- `db.ts`: listAllCategoriesForAdmin + countNewsPerCategory + getCategoryBySlug + insertCategory + updateCategoryById. `UpdateCategoryData` 타입에 slug 제외 (ADR-025 immutable 컴파일 단계 강제 + codex P2#1).
+- `schemas.ts`: `CATEGORY_SLUG_REGEX` (영문 소문자·숫자·하이픈) + createCategorySchema + updateCategorySchema (slug 제외).
+- `service.ts`: listAllForAdmin (글 수 join Map merge) + createCategory (slug 중복 사전 검증) + updateCategory (필드 변경 0 거절).
+- `actions.ts`: requireSuperAdmin + revalidatePath (`/admin/categories` + `/admin/news` + `/news` + `/`).
+
+**T5 CategoryManager UI**:
+- shadcn Switch primitive 추가.
+- `src/admin/components/CategoryManager.tsx` — 상단 [+ 새 카테고리] 폼 + 리스트 (이름·slug·글수·정렬·활성 chip) + row [수정] → Dialog (name/sortOrder/isActive, slug readonly 안내). useTransition + inline ErrorBanner.
+- `app/admin/(panel)/categories/page.tsx` — Server Component + Suspense 안에 listAllForAdmin 호출. Cache Components 환경에서 uncached data 는 Suspense boundary 필수.
+
+### 결정 / 함정
+
+**결정 #17 — Cache Components 환경 admin 페이지는 Suspense boundary 패턴 (force-dynamic 미사용)**
+- `export const dynamic = "force-dynamic"` 는 `cacheComponents: true` 와 호환 X (Next.js 16 빌드 에러: "Route segment config 'dynamic' is not compatible with `nextConfig.cacheComponents`").
+- 정답 — 정적 헤더 + Suspense 로 data fetch 분리: `<Suspense fallback={<Loading />}><AsyncDataComp /></Suspense>`.
+- `/admin/categories` 가 ◐ Partial Prerender 로 빌드 (정적 헤더 prerender + 동적 데이터 스트림).
+- 다음 admin 페이지 (`/admin`, `/admin/news`, `/admin/news/new`, `/admin/news/[id]/edit`) 모두 같은 패턴 적용.
+
+**결정 #18 — Client Component 는 features/<domain> index.ts barrel 우회 (D-4 패턴 재확인)**
+- `from "@/features/categories"` 에서 import 하면 service.ts → db.ts → pg 가 client bundle 로 끌려옴 (module-not-found build 에러).
+- Client Component (CategoryManager 등) 는 직접 path import: `from "@/features/categories/actions"` + `from "@/features/categories/schemas"`.
+- index.ts 는 server-only barrel (Server Component 에서만 사용).
+
+### 다음 세션 (T6 진입) 첫 작업
+
+1. T6 — `features/news/db.ts` 보강:
+   - `findAllNews` → `listPublicNews` rename + `WHERE published_at IS NOT NULL` (P1#7)
+   - `findNewsById` → `getPublicNewsById` (published 강제) + `getAdminNewsById` (모두)
+   - 신규: `listForAdmin({ page, size, status })`, `getAdminNewsById`, `listLatest(5)`, `countNewsByCategory()`, `searchTags(prefix)`
+   - mutation: `insertNews(tx, data)`, `updateNews(tx, id, data)`, `deleteNews(tx, id)`, `replaceNewsTags(tx, id, tags)` — **모두 tx 인자 받음** (P1#5)
+   - 호출 측 (CategoryTabs / 사용자 사이트 routes / 어드민 routes) 의 import 도 함께 변경
+2. T7 — service.ts createNews/updateNews/deleteNews 모두 `db.transaction` 안에서 insertNews + replaceNewsTags. tags normalize + dedupe. actions.ts requireSuperAdmin + publishNewsAction
+3. 구간 3 (T6~T10) 모두 끝나는 시점에 사용자 보고 + commit
