@@ -66,12 +66,11 @@ export function Heart({
       }
       disabled={interactive ? pending : undefined}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full transition-colors",
+        "inline-flex items-center gap-1 rounded-full text-brand-vivid transition-opacity",
         interactive
-          ? "cursor-pointer hover:text-brand-vivid disabled:cursor-not-allowed disabled:opacity-50"
+          ? "cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           : "cursor-default",
-        active ? "text-brand-vivid" : "text-ink-subtle",
-        compact ? "text-xs" : "text-sm",
+        compact ? "text-xs" : "text-base",
       )}
     >
       <HeartIcon
@@ -79,7 +78,7 @@ export function Heart({
         fill={active ? "currentColor" : "none"}
         aria-hidden
       />
-      <span className="font-semibold tabular-nums">{displayCount}</span>
+      <span className="font-bold tabular-nums">{displayCount}</span>
     </Wrapper>
   );
 }

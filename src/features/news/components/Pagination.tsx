@@ -1,4 +1,4 @@
-// 페이지네이션 — Prev / 번호 / Next. 9개/페이지 기본 (listNewsQuerySchema limit 기본값). URL 연동은 D-3
+// 페이지네이션 — Figma node 125:9154 명세 정합. 30×32 셀, SUIT Medium 14px (active brand-primary / 비활성 ink-subtle Regular), 화살표 SVG (Figma 자산)
 "use client";
 
 import Link from "next/link";
@@ -31,31 +31,71 @@ export function Pagination({
   if (totalPages <= 1) return null;
   const pages = pageNumbers(page, totalPages);
 
-  const renderItem = (p: number, label: string, disabled: boolean) => {
-    const isActive = p === page && !disabled;
-    const base = cn(
-      "inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-sm transition-colors",
-      isActive
-        ? "font-bold text-brand-primary"
-        : disabled
-          ? "cursor-not-allowed text-ink-subtle opacity-50"
-          : "font-medium text-ink-subtle hover:bg-surface-soft hover:text-foreground",
+  const baseCell = "flex h-8 w-[30px] items-center justify-center rounded-lg";
+
+  const renderArrow = (
+    target: number,
+    direction: "left" | "right",
+    disabled: boolean,
+  ) => {
+    const icon = (
+      // eslint-disable-next-line @next/next/no-img-element -- SVG asset
+      <img
+        src={`/icons/pagination-arrow-${direction}.svg`}
+        alt=""
+        width={5}
+        height={9}
+        aria-hidden
+        className={cn(
+          "h-[9px] w-[5px]",
+          disabled ? "opacity-30" : "opacity-100",
+        )}
+      />
     );
+    const label = direction === "left" ? "이전 페이지" : "다음 페이지";
     if (disabled) {
       return (
-        <span aria-disabled className={base}>
-          {label}
+        <span aria-label={label} aria-disabled className={cn(baseCell, "cursor-not-allowed")}>
+          {icon}
         </span>
       );
     }
     if (hrefForAction) {
       return (
+        <Link href={hrefForAction(target)} aria-label={label} className={baseCell}>
+          {icon}
+        </Link>
+      );
+    }
+    return (
+      <button
+        type="button"
+        aria-label={label}
+        onClick={() => onPageChangeAction?.(target)}
+        className={baseCell}
+      >
+        {icon}
+      </button>
+    );
+  };
+
+  const renderNumber = (p: number) => {
+    const isActive = p === page;
+    const cls = cn(
+      baseCell,
+      "text-sm transition-colors",
+      isActive
+        ? "font-medium text-brand-primary"
+        : "font-normal text-ink-subtle hover:text-foreground",
+    );
+    if (hrefForAction) {
+      return (
         <Link
           href={hrefForAction(p)}
           aria-current={isActive ? "page" : undefined}
-          className={base}
+          className={cls}
         >
-          {label}
+          {p}
         </Link>
       );
     }
@@ -64,32 +104,36 @@ export function Pagination({
         type="button"
         onClick={() => onPageChangeAction?.(p)}
         aria-current={isActive ? "page" : undefined}
-        className={base}
+        className={cls}
       >
-        {label}
+        {p}
       </button>
     );
   };
 
   return (
-    <nav aria-label="페이지" className="flex items-center justify-center gap-1">
-      {renderItem(Math.max(1, page - 1), "이전", page <= 1)}
-      <ul className="flex items-center gap-1">
+    <nav aria-label="페이지" className="flex items-center gap-0.5">
+      {renderArrow(Math.max(1, page - 1), "left", page <= 1)}
+      <ul className="flex items-center gap-0.5">
         {pages.map((p, i) =>
           p === -1 ? (
             <li
               key={`gap-${i}`}
               aria-hidden
-              className="px-1 text-sm text-ink-subtle"
+              className={cn(baseCell, "text-sm font-normal text-ink-subtle")}
             >
               …
             </li>
           ) : (
-            <li key={p}>{renderItem(p, String(p), false)}</li>
+            <li key={p}>{renderNumber(p)}</li>
           ),
         )}
       </ul>
-      {renderItem(Math.min(totalPages, page + 1), "다음", page >= totalPages)}
+      {renderArrow(
+        Math.min(totalPages, page + 1),
+        "right",
+        page >= totalPages,
+      )}
     </nav>
   );
 }

@@ -33,10 +33,10 @@ export function CategoryTabs({ selected, onChangeAction }: Props) {
                 onClick={() => onChangeAction?.(tab.value)}
                 aria-pressed={isActive}
                 className={cn(
-                  "relative whitespace-nowrap px-4 py-3 text-sm transition-colors",
+                  "relative whitespace-nowrap px-4 py-3 text-[17px] font-medium transition-colors",
                   isActive
-                    ? "font-extrabold text-ink-strong"
-                    : "font-medium text-ink-subtle hover:text-foreground",
+                    ? "text-ink-strong"
+                    : "text-ink-subtle hover:text-foreground",
                 )}
               >
                 {tab.label}
