@@ -38,11 +38,15 @@ export function PublicHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-white/90 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:h-20 lg:px-8">
-        <Link
-          href="/"
-          className="text-lg font-extrabold tracking-tight text-brand-primary lg:text-xl"
-        >
-          Sow Good
+        <Link href="/" aria-label="Sow Good 홈으로" className="block shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset, next/image SVG dangerouslyAllowSVG 회피 */}
+          <img
+            src="/icons/sow-good-header-logo.svg"
+            alt="Sow Good"
+            width={80}
+            height={53}
+            className="h-10 w-auto lg:h-12"
+          />
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex">

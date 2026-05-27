@@ -92,6 +92,61 @@ mcp__plugin_figma_figma__get_variable_defs({});
 
 ---
 
+## 🗂️ 자산 매핑 (Figma node → 코드 위치)
+
+> Figma MCP `get_design_context` 결과의 `img` URL 을 다운로드 → 본 매핑 표에 영속 기록. 7 일 후 URL 만료되므로 노드 ID 기록이 핵심.
+
+| Figma 노드 | 명칭 | 파일 형식 | 코드 위치 | 메모 |
+|---|---|---|---|---|
+| `I98:7101;97:10027` (`_레이어_1`) | Sow Good 헤더 BI 로고 | SVG 24KB | `public/icons/sow-good-header-logo.svg` | 80×53.333 viewBox, 보라+노란 해바라기 일러스트. HeroBanner 헤더 좌측 |
+| `I98:7101;97:10079;928:9074` | 헤더 검색 아이콘 | SVG 506B | `public/icons/search-icon.svg` | 20.6667×20.6667 viewBox, 돋보기 stroke white. 일반 lucide-react Search 와 거의 동일 (선택적 교체) |
+| `9:5456` (clip-path id 추정) | Sow Good 푸터 로고 | inline TSX | `src/client/components/icons/SowGoodFooterLogo.tsx` | 59×39 워드마크 + 꽃 BI. currentColor 사용 (다크 배경 위 라벤더 `--color-brand-lavender`) |
+
+### 자산 다운로드 표준 절차
+
+```bash
+# 1) Figma MCP get_design_context 호출 → img URL 추출
+mcp__plugin_figma_figma__get_design_context({
+  nodeId: "98:7101", fileKey: "lmjjU4UxUpK2pDi67BGRiW",
+  clientFrameworks: "react,nextjs",
+  clientLanguages: "typescript,tsx,tailwindcss",
+});
+# 결과 예: const img1 = "https://www.figma.com/api/mcp/asset/<uuid>";
+
+# 2) 7 일 안에 curl 로 다운로드 (URL 만료 전)
+curl -sSL -o public/icons/<asset-name>.tmp "<img URL>"
+file public/icons/<asset-name>.tmp     # SVG / PNG 확인
+mv public/icons/<asset-name>.tmp public/icons/<asset-name>.<ext>
+
+# 3) 본 README 자산 매핑 표에 노드 ID + 파일 위치 영속 기록
+```
+
+> **이미지 vs inline SVG 판단:**
+> - 작은 SVG (< 1KB), 색상 토큰 매핑 필요 → React 컴포넌트 (inline + currentColor)
+> - 큰 SVG (≥ 5KB), 다중 색상 BI → `public/icons/*.svg` + `<img>` 태그
+> - Next.js Image 컴포넌트는 SVG 대응 `dangerouslyAllowSVG` 옵션 필요 → 가능하면 단순 `<img>` 사용
+
+---
+
+## 🔑 핵심 컴포넌트 노드 ID — 영구 참조표
+
+> 다음 노드 ID 는 코드 결정 시 매번 Figma 재호출하지 않도록 영속 기록. Figma 가 업데이트되면 본 표 갱신.
+
+| 컴포넌트 | Figma 노드 | 핵심 명세 (get_design_context 추출 발췌) |
+|---|---|---|
+| **HeroBanner Header** | `98:7101` | 배경 `bg-brand-bright` (`#B769FF`) · padding 120px · flex items-center · 인터랙션 어노테이션 "스크롤 위치에 따라 탭이 이동하는 인터렉션" (스크롤스파이) |
+| Header 메뉴 (active) | `I98:7101;97:10252` | white bg + `border-brand-primary` 1.6px + rounded-full + px-5/py-2.5 + SUIT ExtraBold 16px `text-brand-primary` |
+| Header 메뉴 (inactive) | `I98:7101;97:10253~10255` | 배경 없음 + px-5/py-2.5 + SUIT Bold 16px text-white |
+| Header 검색 버튼 | `I98:7101;97:10078` | 42×42 size, 28×28 IconSet, 18.667×18.667 Icon |
+| ArticleCard (12 variants) | `114:8164` (마스터) | size 1~4 × default/hover/none. None state: 보라 그라디언트 + 중앙 "보도자료" 텍스트만 (본문 영역 없음) |
+| Banner (소식 페이지 전용) | `125:8915` (1440×132) | "Sow Good — 따뜻한 진심을 담아 / 나누는 진실의 활동들을 소개합니다" 가로 띠 |
+| Footer (단순) | `93:8810` 내부 | 다크 띠 #242424, Sow Good 로고 + "COPYRIGHT 2026 © Sow Good All rights reserved." |
+| HeroBanner (전체) | `96:7690` | 740 height, 헤더 + 슬로건 + 해바라기 일러스트 |
+
+> **추가 핵심 명세는 `docs/design.md`** (컬러 토큰·타이포·반응형 4 BP).
+
+---
+
 ## 🧭 코드 결정 시 권장 워크플로우
 
 1. **읽기 단계:** `docs/design.md` 의 해당 섹션 + screenshots/ PNG 시각 확인
