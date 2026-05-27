@@ -18,7 +18,8 @@ export type FeaturedStory = {
   title: string;
   description: string;
   href: string;
-  imageUrl: string;
+  /** null 이면 보라 그라디언트 fallback */
+  imageUrl: string | null;
   badge?: string;
 };
 
@@ -71,13 +72,23 @@ export function FeaturedStoryCard({ stories }: Props) {
                 </div>
                 <div className="order-1 lg:order-2">
                   <div className="relative aspect-[612/411] overflow-hidden rounded-xl bg-white">
-                    <Image
-                      src={s.imageUrl}
-                      alt=""
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 612px"
-                      className="object-cover"
-                    />
+                    {s.imageUrl ? (
+                      <Image
+                        src={s.imageUrl}
+                        alt=""
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 612px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, var(--color-gradient-from), var(--color-gradient-to))",
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
               </div>

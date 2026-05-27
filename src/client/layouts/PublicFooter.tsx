@@ -26,8 +26,7 @@ export function PublicFooter() {
           </ul>
         </div>
         <p className="mt-8 text-xs text-white/40">
-          © {new Date().getFullYear()} FFWPU Korea — Sow Good. All rights
-          reserved.
+          © 2026 FFWPU Korea — Sow Good. All rights reserved.
         </p>
       </div>
     </footer>
