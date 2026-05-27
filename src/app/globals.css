@@ -1,5 +1,14 @@
-/* Tailwind v4 CSS-first — shadcn Neutral 베이스 + ffwpu-social 디자인 토큰(Figma SSoT) + SUIT 폰트 */
+/* Tailwind v4 CSS-first — shadcn Neutral 베이스 + ffwpu-social 디자인 토큰(Figma SSoT) + SUIT/Gmarket Sans 폰트 */
 @import "tailwindcss";
+
+/* Gmarket Sans Medium — HeroBanner 슬로건 전용 (GS Retail 배포 무료 폰트, woff→woff2 변환) */
+@font-face {
+  font-family: 'Gmarket Sans';
+  src: url('/fonts/GmarketSansMedium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
 
 @custom-variant dark (&:is(.dark *));
 
@@ -117,6 +126,8 @@
   --font-sans:
     var(--font-suit), system-ui, -apple-system, BlinkMacSystemFont,
     "Apple SD Gothic Neo", sans-serif;
+  /* Gmarket Sans — HeroBanner 슬로건 전용, @font-face 에서 로드 */
+  --font-gmarket: 'Gmarket Sans', 'SUIT Variable', system-ui, sans-serif;
 }
 
 @layer base {

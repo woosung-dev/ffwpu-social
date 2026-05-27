@@ -39,6 +39,15 @@
   - C) "참여하기" 유지 + 향후 봉사 신청 폼(v1.1) 라우팅 준비 — 미래 정합, 현재는 1차 범위 외.
 - **처리 시점:** D-3 디자인 시안 적용 단계에서 Banner 카피 일괄 확정 시.
 
+### H-4 — PartnersSection 파트너 로고 PNG 자산 (재추출 필요) ([확인 필요])
+
+> 출처: 2026-05-27 Sprint 1 D-3 외부 평가자(codex) P0 발견.
+
+- 현재: `public/images/s5-partner1~5.png` 파일이 172~332 bytes (1.1KB 한 개) 거의 빈 PNG. 시각상 로고 미표시.
+- Figma SSoT (`docs/design/README.md` Section5 절) 명세: 5개 파트너 로고 (선학UP대학원대학교 / 천주평화연합 / 선학역사편찬원 / PeaceTV / 천원궁) 각각 다른 너비.
+- 옵션: Figma MCP `get_design_context({nodeId:"96:7897"})` 재호출 → asset URL 추출 → 7일 내 curl 다운로드 → `public/images/s5-partner*.png` 교체.
+- 코드: `src/client/sections/PartnersSection.tsx` 정상 (자산 교체만 필요).
+
 ### 추가 escalation 후보 (D-3 진입 전 확정 권장)
 
 - [ ] **Pagination active 색** — H-1 결정 완료 (Figma 명세 `text-brand-primary` 무배경, 2026-05-27 사용자 확정). [확정됨]

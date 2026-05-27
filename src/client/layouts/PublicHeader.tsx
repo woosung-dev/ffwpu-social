@@ -37,69 +37,78 @@ export function PublicHeader() {
 
   return (
     <header className="sticky top-0 z-40 bg-brand-bright">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:h-20 lg:px-20">
-        <Link href="/" aria-label="Sow Good 홈으로" className="block shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset, next/image SVG dangerouslyAllowSVG 회피 */}
-          <img
-            src="/icons/sow-good-header-logo.svg"
-            alt="Sow Good"
-            width={80}
-            height={53}
-            className="h-10 w-auto lg:h-12"
-          />
-        </Link>
-
-        <nav className="hidden items-center gap-6 lg:flex">
-          {MENU.map((m) => {
-            const isActive = activeId === m.id;
-            return (
-              <Link
-                key={m.id}
-                href={m.href}
-                className={cn(
-                  "rounded-full px-5 py-2.5 text-base transition-colors",
-                  isActive
-                    ? "border-[1.6px] border-brand-primary bg-white font-extrabold text-brand-primary"
-                    : "font-bold text-white hover:bg-white/10",
-                )}
-              >
-                {m.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            disabled
-            aria-label="검색"
-            className="cursor-not-allowed text-white/60"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
+      {/* Figma: h-88 px-120 (lg) — 단일 레이어 padding clamp 적용 */}
+      <div
+        className="mx-auto flex h-16 items-center justify-between lg:h-[88px]"
+        style={{
+          paddingLeft: "clamp(1rem, 8.34vw, 120px)",
+          paddingRight: "clamp(1rem, 8.34vw, 120px)",
+        }}
+      >
+          <Link href="/" aria-label="Sow Good 홈으로" className="block shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset, next/image SVG dangerouslyAllowSVG 회피 */}
             <img
-              src="/icons/search-icon.svg"
-              alt=""
-              width={20}
-              height={20}
-              aria-hidden
-              className="size-5"
+              src="/icons/sow-good-header-logo.svg"
+              alt="Sow Good"
+              width={80}
+              height={53}
+              className="h-10 w-auto lg:h-[53.333px]"
             />
-          </button>
-          <button
-            type="button"
-            aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
-            aria-expanded={open}
-            className="text-white hover:text-brand-lavender lg:hidden"
-            onClick={() => setOpen((prev) => !prev)}
-          >
-            {open ? (
-              <X className="size-6" aria-hidden />
-            ) : (
-              <Menu className="size-6" aria-hidden />
-            )}
-          </button>
-        </div>
+          </Link>
+
+          {/* Figma: gap-24, justify-end (메뉴 영역) */}
+          <nav className="hidden flex-1 items-center justify-end gap-6 lg:flex">
+            {MENU.map((m) => {
+              const isActive = activeId === m.id;
+              return (
+                <Link
+                  key={m.id}
+                  href={m.href}
+                  className={cn(
+                    "rounded-full px-5 py-2.5 text-base transition-colors",
+                    isActive
+                      ? "border-[1.6px] border-brand-primary bg-white font-extrabold text-brand-primary"
+                      : "font-bold text-white hover:bg-white/10",
+                  )}
+                >
+                  {m.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-3 lg:ml-6">
+            {/* Figma: 42×42 hit area + 28 IconSet + 18.667 Icon */}
+            <button
+              type="button"
+              disabled
+              aria-label="검색"
+              className="flex size-[42px] cursor-not-allowed items-center justify-center rounded-full text-white/60"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
+              <img
+                src="/icons/search-icon.svg"
+                alt=""
+                width={19}
+                height={19}
+                aria-hidden
+                className="size-[19px]"
+              />
+            </button>
+            <button
+              type="button"
+              aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
+              aria-expanded={open}
+              className="flex size-[42px] items-center justify-center text-white hover:text-brand-lavender lg:hidden"
+              onClick={() => setOpen((prev) => !prev)}
+            >
+              {open ? (
+                <X className="size-6" aria-hidden />
+              ) : (
+                <Menu className="size-6" aria-hidden />
+              )}
+            </button>
+          </div>
       </div>
 
       {open && (
@@ -116,7 +125,7 @@ export function PublicHeader() {
                       "block rounded-md px-3 py-2.5 text-base transition-colors",
                       isActive
                         ? "bg-white font-extrabold text-brand-primary"
-                        : "font-bold text-white hover:bg-white/10",
+                        : "font-bold text-white/70 hover:bg-white/10",
                     )}
                   >
                     {m.label}

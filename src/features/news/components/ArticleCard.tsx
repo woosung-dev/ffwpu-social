@@ -75,7 +75,7 @@ export function ArticleCard({
   const config = SIZE_CONFIG[size];
 
   if (state === "none") {
-    // Figma (114:8164) 명세: 카드 전체가 그라디언트 + 중앙 "보도자료" 큰 텍스트만 (카테고리 라벨·제목·날짜 본문 영역 없음)
+    // Figma (114:8164) 명세: 카드 전체가 그라디언트 + 중앙 텍스트만 (카테고리 라벨·제목·날짜 없음)
     return (
       <div
         className={cn(
@@ -86,7 +86,7 @@ export function ArticleCard({
         style={{ ...GRADIENT_STYLE, aspectRatio: "1 / 1" }}
       >
         <span className="text-xl font-extrabold tracking-wide lg:text-2xl">
-          보도자료
+          활동 소식
         </span>
       </div>
     );

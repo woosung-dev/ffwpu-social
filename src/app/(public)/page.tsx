@@ -1,5 +1,20 @@
-// 사용자 사이트 홈 — D-3 스프린트에서 Figma 6 섹션 (Hero + KpiSection + StorySection + FeaturedSection + ArticleGrid + Pre-Footer) 본격 구현 시 교체
-// Figma SSoT (ADR-018) 정합: D-4 단계에서는 임의 카피·placeholder 노출 금지
+// 사용자 사이트 홈 — 6 섹션 조립 (Figma 1440 기준 위→아래 순서)
+import { ArticleGridSection } from "@/client/sections/ArticleGridSection";
+import { FeaturedSection } from "@/client/sections/FeaturedSection";
+import { HeroBanner } from "@/client/sections/HeroBanner";
+import { KpiSection } from "@/client/sections/KpiSection";
+import { PartnersSection } from "@/client/sections/PartnersSection";
+import { StorySection } from "@/client/sections/StorySection";
+
 export default function Home() {
-  return <div />;
+  return (
+    <>
+      <HeroBanner />
+      <KpiSection />
+      <StorySection />
+      <FeaturedSection />
+      <ArticleGridSection />
+      <PartnersSection />
+    </>
+  );
 }
