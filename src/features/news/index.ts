@@ -8,13 +8,12 @@ export {
   type ActionResult,
 } from "./actions";
 
-export { listNews, getNewsDetail } from "./service";
+export { listNews, getNewsDetail, listCategories } from "./service";
 
 export {
-  newsCategorySchema,
   newsInputSchema,
   listNewsQuerySchema,
-  type NewsCategoryValue,
+  ALL_CATEGORY_SLUG,
   type NewsInput,
   type ListNewsQuery,
 } from "./schemas";

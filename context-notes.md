@@ -580,3 +580,39 @@ D 패턴 흡수: `src/features/<도메인>/index.ts` public API — 외부에서
 
 3 회 반복 시 `.ai/project/lessons.md` 승격 검토 (현재 사고 2건 누적: D-5 "데이터 검증" 헤딩 + D-4 placeholder 카피 3종).
 
+
+---
+
+## 2026-05-27 (D-4 후속 — 데이터 모델 변경: 카테고리 + heart, codex consult 기반)
+
+> PR 머지 전 사용자 검토 중 codex consult (`/codex`) 로 news.ts·heart-events.ts 피드백 → 두 데이터 모델 결정 변경.
+
+### 결정 #10 — 카테고리 pgEnum → categories 테이블 (ADR-025, ADR-007 supersede)
+
+- **사용자 결정 (2026-05-27)**: 카테고리 고정 enum 대신 어드민이 추가·관리 가능한 자유 구조. ADR-002 운영 자율성 우선.
+- **codex 트레이드오프 검토**: enum→FK 전환은 마이그레이션+UI 가변탭+Zod+어드민폼 4 레이어 변경. 단 "배포 후 전환 비용이 훨씬 크다"고 판정 → prod 데이터 없는 지금 전환이 정답.
+- **구현**: `categories` 테이블 (slug unique immutable, sort_order, is_active). `news.category` enum → `category_id` FK (onDelete restrict). `all`은 UI 필터 전용 (`ALL_CATEGORY_SLUG`, constants.ts client-safe). 마이그레이션 `0001` (개발 destructive truncate + 재시드).
+- **client/server barrel 3번째 사례**: `ALL_CATEGORY_SLUG` 를 schemas.ts(drizzle-zod) 가 아닌 `constants.ts` 로 분리 — CategoryTabs(client) 가 drizzle 끌어오는 build 실패 회피. (1번 features/news index 분리, 2번 components barrel, 3번 constants).
+- **CategoryTabs 전환**: enum 5 하드코딩 → categories props 기반 + 전체 가상 탭. ArticleCard category enum → categoryName(string) join.
+
+### 결정 #11 — 익명 좋아요 ip_hash 제거 (ADR-026, ADR-010 단순화)
+
+- **사용자 결정**: "최대한 심플". codex: IP+세션은 "보안 아니라 중복 완화", 공유 IP에서 IP 무의미, HMAC·rate limit 과한 스펙.
+- **구현**: `heart_events.ip_hash` 제거, unique `(news_id, session_id)`. sessionId = 클라 localStorage UUID. 개인정보 미수집 (ADR-004 정합).
+- **문서화**: "1인 1회 보장" 아님 "동일 브라우저 중복 완화". KPI·랭킹·보상 대상 아님.
+
+### codex consult 가 잡은 추가 항목 (PR 머지 전 검토 8항목)
+
+1. 카테고리 정책 ✅ 결정 (테이블 전환)
+2. `all` 의미 ✅ UI 필터 전용
+3. 카테고리 vs 태그 역할 ✅ domain.md 명시
+4. 카테고리 삭제·변경 ✅ slug immutable + is_active
+5. 좋아요 보안 표현 ✅ "중복 완화" 문서화
+6. ip_hash 생성·보존 ✅ 제거 (개인정보 0)
+7. heart soft delete 의미 ✅ 현재 상태 복원 모델
+8. 마이그레이션 baseline ✅ 0001 지금 전환
+
+### D-2 이월 (toggleHeart 구현 시)
+
+- Heart 컴포넌트가 클라 localStorage UUID 생성 → toggleHeart action 인자. unique 충돌 시 기존 row deleted_at 토글 (insert 재시도 금지).
+- 어드민 카테고리 관리 UI (`src/admin/components/CategoryManager`) — 추가·수정·비활성화·정렬.

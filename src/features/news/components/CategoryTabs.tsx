@@ -1,36 +1,38 @@
-// 카테고리 5개 탭 — ADR-007 enum 고정 (전체/가족치유/지역봉사/환경캠페인/쌀나눔). URL 파라미터 연동은 D-3 에 useSearchParams 사용
+// 카테고리 탭 — categories 테이블(동적) 기반. "전체"는 가상 UI 필터 (ALL_CATEGORY_SLUG). Figma node 125:9134: SUIT Medium 17px, active brand-vivid 하단 라인
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { NewsCategoryValue } from "../schemas";
+import { ALL_CATEGORY_SLUG } from "../constants";
 
-type Props = {
-  selected: NewsCategoryValue;
-  onChangeAction?: (next: NewsCategoryValue) => void;
+export type CategoryTabItem = {
+  slug: string;
+  name: string;
 };
 
-const TABS: ReadonlyArray<{ value: NewsCategoryValue; label: string }> = [
-  { value: "all", label: "전체" },
-  { value: "family_healing", label: "가족 치유" },
-  { value: "local_volunteer", label: "지역 봉사" },
-  { value: "environment", label: "환경 캠페인" },
-  { value: "rice_sharing", label: "쌀 나눔" },
-];
+type Props = {
+  /** categories 테이블에서 내려온 활성 카테고리 (정렬됨) */
+  categories: readonly CategoryTabItem[];
+  /** 현재 선택된 slug ("all" 또는 카테고리 slug) */
+  selected: string;
+  onChangeAction?: (slug: string) => void;
+};
 
-export function CategoryTabs({ selected, onChangeAction }: Props) {
+export function CategoryTabs({ categories, selected, onChangeAction }: Props) {
+  const tabs: CategoryTabItem[] = [
+    { slug: ALL_CATEGORY_SLUG, name: "전체" },
+    ...categories,
+  ];
+
   return (
-    <nav
-      aria-label="카테고리"
-      className="w-full overflow-x-auto"
-    >
+    <nav aria-label="카테고리" className="w-full overflow-x-auto">
       <ul className="flex min-w-max items-center gap-1 border-b border-border">
-        {TABS.map((tab) => {
-          const isActive = tab.value === selected;
+        {tabs.map((tab) => {
+          const isActive = tab.slug === selected;
           return (
-            <li key={tab.value}>
+            <li key={tab.slug}>
               <button
                 type="button"
-                onClick={() => onChangeAction?.(tab.value)}
+                onClick={() => onChangeAction?.(tab.slug)}
                 aria-pressed={isActive}
                 className={cn(
                   "relative whitespace-nowrap px-4 py-3 text-[17px] font-medium transition-colors",
@@ -39,7 +41,7 @@ export function CategoryTabs({ selected, onChangeAction }: Props) {
                     : "text-ink-subtle hover:text-foreground",
                 )}
               >
-                {tab.label}
+                {tab.name}
                 {isActive && (
                   <span
                     aria-hidden

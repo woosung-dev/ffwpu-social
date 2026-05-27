@@ -14,16 +14,22 @@ import {
   Pagination,
   StoryCard,
 } from "@/features/news/components";
-import type { NewsCategoryValue } from "@/features/news/schemas";
 
 const SAMPLE: ArticleLite = {
   id: "demo-1",
   title: "가정연합, 유엔 경제사회이사회(ECOSOC) 특별협의지위 재획득",
-  category: "rice_sharing",
+  categoryName: "쌀 나눔",
   coverImageUrl: null,
   publishedAt: new Date("2026-03-11"),
   heartCount: 42,
 };
+
+const DEMO_CATEGORIES = [
+  { slug: "family_healing", name: "가족 치유" },
+  { slug: "local_volunteer", name: "지역 봉사" },
+  { slug: "environment", name: "환경 캠페인" },
+  { slug: "rice_sharing", name: "쌀 나눔" },
+] as const;
 
 const FEATURED: readonly FeaturedStory[] = [
   {
@@ -79,7 +85,7 @@ const SWATCHES = [
 ] as const;
 
 export default function ComponentsCheckPage() {
-  const [category, setCategory] = useState<NewsCategoryValue>("all");
+  const [categorySlug, setCategorySlug] = useState("all");
   const [page, setPage] = useState(3);
 
   return (
@@ -122,9 +128,13 @@ export default function ComponentsCheckPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-extrabold text-ink-strong">CategoryTabs · 5 enum</h2>
-        <CategoryTabs selected={category} onChangeAction={setCategory} />
-        <p className="text-sm text-ink-subtle">현재 선택 — <strong>{category}</strong></p>
+        <h2 className="text-xl font-extrabold text-ink-strong">CategoryTabs · 동적 카테고리 + 전체</h2>
+        <CategoryTabs
+          categories={DEMO_CATEGORIES}
+          selected={categorySlug}
+          onChangeAction={setCategorySlug}
+        />
+        <p className="text-sm text-ink-subtle">현재 선택 — <strong>{categorySlug}</strong></p>
       </section>
 
       <section className="space-y-4">

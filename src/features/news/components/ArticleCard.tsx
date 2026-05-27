@@ -4,13 +4,13 @@ import Link from "next/link";
 import dayjs from "dayjs";
 
 import { cn } from "@/lib/utils";
-import type { NewsCategoryValue } from "../schemas";
 import { Heart } from "./Heart";
 
 type ArticleLite = {
   id: string;
   title: string;
-  category: NewsCategoryValue;
+  /** categories join 으로 내려온 카테고리 표시 이름 — 예: "쌀 나눔" */
+  categoryName: string;
   coverImageUrl: string | null;
   publishedAt: Date | string | null;
   heartCount?: number;
@@ -24,14 +24,6 @@ type Props = {
   state?: State;
   article?: ArticleLite;
   className?: string;
-};
-
-const CATEGORY_LABEL: Record<NewsCategoryValue, string> = {
-  all: "전체",
-  family_healing: "가족 치유",
-  local_volunteer: "지역 봉사",
-  environment: "환경 캠페인",
-  rice_sharing: "쌀 나눔",
 };
 
 const SIZE_CONFIG: Record<
@@ -154,7 +146,7 @@ export function ArticleCard({
             config.categoryClass,
           )}
         >
-          {CATEGORY_LABEL[article.category]}
+          {article.categoryName}
         </span>
         <p className={cn("font-bold text-foreground", config.titleClass)}>
           {article.title}
