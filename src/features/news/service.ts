@@ -30,6 +30,11 @@ export async function getAdminNewsDetail(id: string) {
   return newsDb.getAdminNewsById(id);
 }
 
+// 태그 자동완성 — TagsInput(T8) 진입점. 빈도순
+export async function searchTags(prefix: string, limit = 10) {
+  return newsDb.searchTags(prefix, limit);
+}
+
 // 태그 정규화 — # 제거 + trim + lowercase + 중복 제거 + 빈 문자열 제외. service 단일 진입 (결정 로그 [T7 정규화 위치])
 function normalizeTags(tags: string[]): string[] {
   const cleaned = tags

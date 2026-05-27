@@ -208,4 +208,28 @@
 - **이유**: S3 객체 옮김은 비동기 작업, 실패 시 일관성 깨짐. URL 만 보면 prefix 가 일관성 갖지 않지만 동작상 문제 없음. v1.1 cleanup job 패턴.
 - **영향**: 글 삭제 시 `news/{newsId}/` prefix 삭제는 *수정 페이지에서 새로 올린 이미지* 만 청소함. temp- 업로드는 orphan 으로 남고 v1.1 에서 정리.
 
-## 추가 분기점 (T8~T13 진행 중 발생 시 본 파일에 누적)
+## [T8] Toast vs ErrorBanner
+
+- **질문**: 업로드 실패·진행 알림을 어떻게?
+- **옵션**: (A) shadcn sonner toast / (B) ErrorBanner inline (CategoryManager 패턴)
+- **선택**: (B) ErrorBanner inline + Loader2 스피너 inline
+- **이유**: sonner 미설치. CategoryManager 가 이미 inline 패턴이므로 일관성. NewsEditor 가 부모로서 ErrorBanner 노출, 자식 컴포넌트는 onError callback 으로 메시지 전달.
+- **영향**: TiptapEditor/CoverImageUploader/TagsInput 의 props 에 `onError?: (msg: string) => void` + isUploading inline 스피너.
+
+## [T8] searchTagsAction 인증
+
+- **질문**: 태그 autocomplete Action 인증?
+- **옵션**: (A) public / (B) require super admin
+- **선택**: (B) super admin 강제
+- **이유**: 어드민 전용 기능 (사용자 사이트엔 TagsInput 없음). public 으로 두면 metadata 추가 노출 위험. requireSuperAdmin 일관 패턴.
+- **영향**: actions.ts `searchTagsAction(prefix)` + service.ts `searchTags(prefix)` 신규.
+
+## [T8] Client Component function props serialization 경고
+
+- **질문**: Next.js 16 cacheComponents [71007] 경고 — `"use client"` 진입 파일의 onChange/onError 등 function props 가 직렬화 불가 (Server Action 명명 권장).
+- **옵션**: (A) 무시 (warning, error 아님) / (B) `onChangeAction` 으로 rename / (C) 단일 파일 inline
+- **선택**: (A) 무시
+- **이유**: 호출자(NewsEditor) 도 Client Component → 실제 RSC boundary 안 넘음. Next.js 가 보수적으로 경고하는 false positive. (B) 는 React 컨벤션과 충돌. (C) 는 600줄 거대 파일. tsc 0 error · lint 0 error · 빌드 통과 검증 예정 (T10/T13).
+- **영향**: TiptapEditor·CoverImageUploader·TagsInput 의 5개 onChange/onError props 가 warning. 기능 영향 0.
+
+## 추가 분기점 (T9~T13 진행 중 발생 시 본 파일에 누적)

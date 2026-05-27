@@ -124,6 +124,19 @@ export async function publishNewsAction(
   }
 }
 
+// 태그 자동완성 — TagsInput(T8) 진입점. super 가드 (결정 로그 [T8 searchTags 인증])
+export async function searchTagsAction(
+  prefix: string,
+): Promise<ActionResult<Array<{ tag: string; count: number }>>> {
+  try {
+    await requireSuperAdmin();
+    const tags = await newsService.searchTags(prefix);
+    return { success: true, data: tags };
+  } catch (e) {
+    return authError(e);
+  }
+}
+
 // ─── 이미지 업로드 Presigned POST 발급 (codex P1#4 + 결정 #16) ────────────
 
 const uploadInputSchema = z

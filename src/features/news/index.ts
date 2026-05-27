@@ -8,6 +8,7 @@ export {
   updateNewsAction,
   deleteNewsAction,
   publishNewsAction,
+  searchTagsAction,
   uploadImageAction,
   type ActionResult,
   type UploadImageInput,
