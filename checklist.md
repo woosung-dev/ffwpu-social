@@ -115,3 +115,36 @@
 - [ ] ESLint flat config 정식 셋업 (eslint-config-next 16 flat 패턴) — 현재 빈 config
 - [ ] next-auth peer dep 경고 검증 — next 16 호환 확인 또는 별도 패치
 - [ ] 임시 비밀번호 변경 — 첫 어드민 로그인 후 즉시
+
+## Sprint 1 D-2 (2026-05-28) — 어드민 페이지 본격 구현
+
+> 별도 worktree `ffwpu-social-d2` / 브랜치 `feat/sprint-1-d2-admin`. plan: `~/.claude/plans/ffwpu-social-sprint-1-d-2-ticklish-fox.md` (다음 세션 `docs/plans/active/2026-05-28-sprint-1-d2-admin.md` 로 승격 예정). 13 task, 4 구간.
+
+**구간 1 — 인증·인프라**
+- [x] T1 — 의존성 (`@tiptap/extension-image@2.27.2`, `@tiptap/extension-link@2.27.2`, `@aws-sdk/s3-presigned-post`) + docker-compose 검증 (main worktree 의 ffwpu-postgres + ffwpu-minio 공유)
+- [ ] T2 — `src/lib/s3.ts` (S3Client MinIO endpoint + forcePathStyle) + `src/lib/auth-guards.ts::requireSuperAdmin()` + `src/features/storage/upload.ts::createPresignedPost` (content-length-range 5MB + 60s expiry, ADR-017 MIME) + `features/news/actions.ts::uploadImageAction` Server Action
+- [ ] T3 — `src/admin/components/LoginForm.tsx` (RHF + signIn credentials) + `app/admin/(auth)/login/page.tsx` 통합
+
+**구간 2 — 카테고리 도메인**
+- [ ] T4 — `features/categories/{db,service,schemas,actions,index}.ts` (3-Layer + slug regex + immutable update schema + requireSuperAdmin + revalidate)
+- [ ] T5 — `src/admin/components/CategoryManager.tsx` (리스트 + 상단 추가 폼 + row Dialog + is_active 토글) + `app/admin/(panel)/categories/page.tsx`
+
+**구간 3 — 뉴스 CRUD**
+- [ ] T6 — `features/news/db.ts` query 분리 (`listPublicNews`/`getPublicNewsById` vs `listForAdmin`/`getAdminNewsById`) + mutation 함수 모두 `tx` 인자 + `listLatest(5)`·`countNewsByCategory()`·`searchTags(prefix)`·`replaceNewsTags(tx, id, tags)`
+- [ ] T7 — `features/news/service.ts` (createNews/updateNews/deleteNews 모두 `db.transaction` + 태그 normalize + dedupe) + `actions.ts` (requireSuperAdmin + revalidatePath) + publishNewsAction (publishedAt 토글)
+- [ ] T8 — `TiptapEditor.tsx` (StarterKit+Image+Link http(s)+`useEditor` 1회 + onUpdate 만 + body useState 별도) + `CoverImageUploader.tsx` + `TagsInput.tsx` (칩+autocomplete debounce 200ms)
+- [ ] T9 — `NewsEditor.tsx` (RHF 통합 + [임시 저장]/[발행] 버튼 + 수정모드 defaultValues) + `NewsTable.tsx` (URL searchParams 페이지네이션 + confirm Dialog 삭제)
+- [ ] T10 — `app/admin/(panel)/news/{page,new/page,[id]/edit/page}.tsx` Server Components
+
+**구간 4 — 대시보드 + 본문 렌더러 + verify**
+- [ ] T11 — `app/admin/(panel)/page.tsx` (환영 + 최근 5건 + 카테고리 카운트 칩) + `layout.tsx` 로그아웃 server action
+- [ ] T12 — `src/features/news/render/NewsBodyRenderer.tsx` (Tiptap JSON walker, Link http(s) only, Image src prefix 검증) + 5 단위 테스트 (javascript:/data:/unknown/정상 paragraph/정상 image+link)
+- [ ] T13 — 종합 verify — pnpm tsc/lint/build 0 error + Playwright MCP 5 시나리오 (로그인 / 뉴스 생성·발행 / 수정 / 카테고리 추가·비활성 / 뉴스 삭제)
+
+**검증 절차 (Heavy 분류, methodology §5)**
+- [x] codex consult v1 (plan 단계) — P1 7건 + P2 5건 모두 plan 반영
+- [ ] codex consult v2 (구현 종료 후 PR diff 재교차)
+- [ ] `/review` PR diff 리뷰
+- [ ] `/qa` Standard
+- [ ] `/design-review` (어드민 UI Figma 시안 없음이라 정합 평가 어렵지만 anti-slop 체크)
+- [ ] `/finishing-a-development-branch` → push 사용자 승인 → PR 사용자 승인 → merge

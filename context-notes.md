@@ -616,3 +616,55 @@ D 패턴 흡수: `src/features/<도메인>/index.ts` public API — 외부에서
 
 - Heart 컴포넌트가 클라 localStorage UUID 생성 → toggleHeart action 인자. unique 충돌 시 기존 row deleted_at 토글 (insert 재시도 금지).
 - 어드민 카테고리 관리 UI (`src/admin/components/CategoryManager`) — 추가·수정·비활성화·정렬.
+
+---
+
+## 2026-05-28 (D-2 진입 — 어드민 페이지 plan 확정 + 의존성 셋업)
+
+> 별도 worktree `ffwpu-social-d2` 에서 진행 (브랜치 `feat/sprint-1-d2-admin`). main worktree (`ffwpu-social`) 의 docker-compose (postgres 5433 + minio 9000-9001) 공유 사용 — d2 자체 compose up 시도 시 컨테이너 이름 충돌이라 main 의 인스턴스 그대로 활용.
+
+### Plan 위치
+
+- 개인 brainstorm: `~/.claude/plans/ffwpu-social-sprint-1-d-2-ticklish-fox.md` (Stage 3 plan 본문 + codex consult 결과 + 결정 #1~#16)
+- 공유 plan: `docs/plans/active/2026-05-28-sprint-1-d2-admin.md` *다음 세션에 ~/.claude 본문 옮겨 작성 예정 (global.md plans 라이프사이클 정합)*
+
+### Stage 1 Brainstorm 결정 16건 (요약)
+
+- **범위**: 로그인 + 뉴스 CRUD + 카테고리 관리만. toggleHeart D-3 이월, audit_logs v1.1 백로그.
+- **UI**: 사용자 사이트 보라 그대로 (새 토큰 추가 0). 대시보드 = 최근 글 5건 + 카테고리 카운트 칩. 뉴스 URL = UUID id 그대로. 발행 = publishedAt nullable 2 버튼 ([임시 저장]/[발행]). 카테고리 UI = 리스트 + 상단 추가 폼 + row Dialog. 카테고리 삭제 = is_active 토글만.
+- **폼 패턴**: RHF + Controller + handleSubmit → action. Tiptap StarterKit + Image + Link + 드래그앤드롭. 자동 저장 0. 태그 = 칩 + autocomplete. 커버 이미지 = 별도 필드.
+
+### codex consult 1차 결과 (Heavy 분류, session 019e6a2f)
+
+P1 7건 + P2 5건. P1 모두 plan 내 명시 처리:
+1. **`/api/upload` Route Handler 미보호** → 결정 #16 Route Handler 자체 생성 안 함. `uploadImageAction` Server Action 만 사용.
+2. **role check 복붙** → `src/lib/auth-guards.ts::requireSuperAdmin()` helper 일원화.
+3. **Tiptap XSS 위험** → 결정 #13 React renderer whitelist (`NewsBodyRenderer.tsx` 자체 walker, DOMPurify 의존성 0). Link http(s) only, Image src `NEXT_PUBLIC_S3_PUBLIC_URL` prefix 매칭 강제. 5 단위 테스트.
+4. **5MB 우회** → 결정 #14 Presigned POST + `content-length-range` policy. `@aws-sdk/s3-presigned-post` 신규 설치.
+5. **news + news_tags transaction** → service 가 `db.transaction(async tx => ...)` 안에서 insertNews + replaceNewsTags 호출. db.ts mutation 함수 모두 tx 인자 받음.
+6. **Tiptap + RHF 무한 루프** → quant-bridge LESSON-004 강화. `useEditor` 1회 + `onUpdate` 만 onChange + content 재주입 금지 + **body 는 RHF register 안 함, useState 별도 + submit 시 병합** (codex 추가 권장).
+7. **공개 목록 draft 노출 위험** → 결정 #15 `listPublicNews` (publishedAt IS NOT NULL) / `listForAdmin` 분리. type-safe — admin 함수는 server-only barrel 만 export.
+
+codex Recommendation: "D-2 반드시 결정: auth helper / public-admin query 분리 / Tiptap sanitize 전략 / upload size enforcement / transaction 방식". 모두 결정 #13~#16 + 위험표 6 행 + Task 분해 갱신으로 확정.
+
+### 의존성 추가 (T1)
+
+```bash
+pnpm add @tiptap/extension-image@^2.10.3 @tiptap/extension-link@^2.10.3 @aws-sdk/s3-presigned-post
+```
+
+Tiptap 은 기존 2.x 와 통일 (peer dep 충돌 회피 — 3.x 설치 시 starter-kit/react/pm 모두 업그레이드 필요).
+
+### Task 분해 (13 task, 4 구간)
+
+1. **구간 1 인증·인프라** (T1~T3): 의존성·docker 검증 ✅ / lib/s3 + auth-guards + storage upload + uploadImageAction / LoginForm
+2. **구간 2 카테고리** (T4~T5): features/categories 3-Layer / CategoryManager + /admin/categories
+3. **구간 3 뉴스 CRUD** (T6~T10): db.ts query 분리 + tx / service + actions / TiptapEditor + CoverImageUploader + TagsInput / NewsEditor + NewsTable / /admin/news routes
+4. **구간 4 대시보드 + body renderer** (T11~T13): Dashboard / NewsBodyRenderer + 5 단위 테스트 / 종합 verify
+
+### 다음 세션 (T2 진입 시) 첫 작업
+
+1. `docs/plans/active/2026-05-28-sprint-1-d2-admin.md` 작성 (~/.claude 본문 옮김 — global.md 승격 경로 정합)
+2. T2 — `src/lib/s3.ts` + `src/lib/auth-guards.ts` + `src/features/storage/upload.ts` + `src/features/news/actions.ts::uploadImageAction`
+3. T3 — `src/admin/components/LoginForm.tsx` + `app/admin/(auth)/login/page.tsx` 통합
+4. 구간 1 종료 시 commit + 사용자 보고

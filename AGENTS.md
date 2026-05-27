@@ -92,12 +92,14 @@ pnpm drizzle-kit studio        # DB 브라우저
 
 ### 현재 작업
 
-- 진행 중: Sprint 1 D-4 완료 — F3 폴더 + 디자인 토큰 + SUIT 폰트 + 공통 컴포넌트 11종 + Route Group 3 layout (2026-05-27, ITERATE→P0 7건 처리 완료)
-- 디테일: `docs/plans/active/2026-05-27-sprint-1-ralph.md`, `checklist.md`, `context-notes.md`
-- 다음 (D-3, 5/28): 디자인 시안 적용 — `src/client/sections/` 6 섹션 (Hero + KpiSection + ArticleGrid + StorySection + FeaturedSection + Footer) + `app/(public)/page.tsx` placeholder 교체 + 헤더 `#B769FF` 시안 정합 + Banner 카피 확정 (사회공헌국 H-3) + favicon. 어드민 D-2 평행 가능 (`src/admin/components/NewsEditor` Tiptap + `(panel)/news/` CRUD)
-- 로컬 가동: `docker compose --env-file .env.local up -d` → `pnpm dev` (포트 5433)
+- 진행 중: **Sprint 1 D-2 (어드민 페이지)** — Stage 3 plan 확정 + codex consult 통과 (P1 7건/P2 5건 모두 결정 #13~#16 + 위험표 반영) + 의존성 셋업 완료 (T1) (2026-05-28)
+- 디테일: `~/.claude/plans/ffwpu-social-sprint-1-d-2-ticklish-fox.md` (plan 본문 — 다음 세션에 `docs/plans/active/2026-05-28-sprint-1-d2-admin.md` 로 승격) / `context-notes.md` (D-2 진입 섹션) / `checklist.md`
+- 워크트리: `/Users/woosung/project/agy-project/ffwpu-social-d2` (브랜치 `feat/sprint-1-d2-admin`). main worktree 의 docker (postgres 5433 + minio 9000-9001) 공유 사용
+- 다음 (T2~T13, 새 세션): lib/s3 + auth-guards + uploadImageAction → LoginForm → features/categories → CategoryManager → news db.ts query 분리 (listPublicNews / listForAdmin) + service transaction → TiptapEditor + 업로더·태그·NewsEditor → /admin/news routes → Dashboard → NewsBodyRenderer (Tiptap JSON walker XSS-safe, D-3 사용자 사이트 사용 예정) → 종합 verify
+- 로컬 가동: `docker compose ps` (이미 healthy) → `pnpm dev` (포트 5433)
 - 임시 어드민: `admin@ffwpu-social.local` / `bRhHR2CWkqrMnj0L` (배포 전 변경 필수)
 - 사회공헌국 escalation 대기: H-2 푸터 종교 법인명 위치, H-3 Banner "참여하기" 카피 (`docs/TODO.md` 참조)
+- D-3 평행 (사용자 랜딩) — 별 세션 진행. 본 worktree 와 무관
 
 ---
 
