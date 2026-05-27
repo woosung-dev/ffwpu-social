@@ -378,3 +378,44 @@ ADR-020/021/022 결정 기반으로 5일 데드라인의 첫째 날 작업. 인�
 
 - **다음 단계 (D-4)**: shadcn/ui 초기화 → 공통 컴포넌트 9개(Header 스크롤스파이 + Footer + Banner + ArticleCard 12 variants 등). 디자인 토큰을 Tailwind에 매핑. SUIT 폰트 셋업.
 
+---
+
+## 2026-05-27 (D-5 종결 후) — 도메인 아키텍처 잠금 (ADR-023)
+
+D-4 진입 직전 사용자 결정 — 어드민과 사용자 페이지의 URL/도메인 분리 패턴 잠금.
+
+- **결정**: 옵션 2 (서브도메인) 채택. `<main>` + `admin.<main>`. 구현 방안 A (단일 Next.js 앱 + `proxy.ts` hostname 분기).
+- **왜**: B2B SaaS 업계 표준 (Stripe / Slack / Shopify / AWS Console). 검색엔진 자연 분리 + NextAuth cross-subdomain 쿠키 wildcard 호환 + 비용 0(서브도메인 무료) + 5일 데드라인 안 구현 가능(host 분기 5-10줄) + v1.1 인프라 분리 자연스러움.
+- **옵션 3 거부 사유**: 정부·금융 수준 격리 불필요. cross-origin 인증 복잡(NextAuth 호환성 문제), 도메인 2배 비용·배포 2배. 우리 규모(super 1명·콘텐츠 사이트) 오버킬.
+- **옵션 1 거부 사유 (사용자 의사)**: 어드민을 명시적으로 격리하고 싶음.
+- **폴더 구조 영향**: 옵션 1·2 모두 *동일 폴더 구조* 사용 가능 — `app/(public)/` + `app/admin/(auth)/` + `app/admin/(panel)/`. proxy.ts host 분기만 D-1에 추가.
+- **로컬 개발 영향**: `localhost:3000`에서 양쪽 모두 접근 (host 분기 우회). 또는 `/etc/hosts`에 `127.0.0.1 admin.localhost` 추가하여 서브도메인 동작 테스트.
+- **NextAuth 영향**: 도메인 확정 시 `AUTH_URL=https://admin.<main>` + 쿠키 domain `.<main>` wildcard 설정. 코드 변경 최소.
+
+### 폴더 구조 잠금 (D-4 진입 전 명확화)
+
+```
+src/app/
+  (public)/              # Route Group, URL에 안 나옴
+    layout.tsx           # PublicHeader + PublicFooter
+    page.tsx             # /
+    news/{page,[id]/page}.tsx
+  admin/
+    (auth)/              # 로그인 전 — Sidebar 없음, noindex
+      layout.tsx
+      login/page.tsx
+    (panel)/             # 로그인 후 — Sidebar, noindex
+      layout.tsx
+      page.tsx           # 대시보드
+      news/{page,new/page,[id]/edit/page}.tsx
+  api/
+    auth/[...nextauth]/route.ts
+    heart/route.ts
+```
+
+`app/admin/layout.tsx`는 *두지 않는다* — 두면 login에도 Sidebar 적용됨. 대신 `(auth)`와 `(panel)` 각자 layout 보유.
+
+### 도메인 미정 영향
+
+`docs/current.md` TBD에 메모: 사회공헌국 회신 시 메인 도메인 + admin 서브도메인 권장. 메인 후보: `socialgood.ffwpu.kr` 등.
+

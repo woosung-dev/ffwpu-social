@@ -949,3 +949,62 @@ export const auditLogs = pgTable('audit_logs', {
 
 - Docker 이미지 ~150MB로 빌드 가능 (2단계 AWS 이전 친화).
 - 이미지 저장이 Vercel/AWS 양쪽에서 동일 작동.
+
+---
+
+## ADR-023: 도메인 아키텍처 — 옵션 2 서브도메인 + 단일 Next.js 앱 (host 분기)
+
+- **Status**: Accepted
+- **Date**: 2026-05-27
+
+### Context
+
+D-5 후반 사용자 결정 — 어드민과 사용자 페이지의 URL/도메인 분리 전략 잠금. 3안 비교 후 옵션 2 선택.
+
+| 옵션 | 패턴 | 비고 |
+|---|---|---|
+| 1. 동일 도메인 + 경로 | `xxx.org/` + `xxx.org/admin` | 가장 단순. 워드프레스·Notion 류 |
+| 2. **서브도메인** ★ 채택 | `xxx.org/` + `admin.xxx.org/` | B2B SaaS 표준 (Stripe·Slack·Shopify) |
+| 3. 완전 별도 도메인 | `xxx-a.org` + `xxx-b.org` | 정부·금융 등 강력 격리. 우리 규모 오버킬 |
+
+### Decision
+
+- **사용자 페이지**: `<main-domain>` (도메인 미정, 사회공헌국 회신 대기)
+- **어드민**: `admin.<main-domain>` (서브도메인 분리)
+- **구현 방안 A**: 단일 Next.js 앱 + `src/proxy.ts`에서 hostname 분기. monorepo 분리 없음.
+- **NextAuth**: `AUTH_URL`은 어드민 호스트 기준. 쿠키 domain `.<main-domain>` wildcard (cross-subdomain 인증 호환).
+- **DNS**: `<main>` + `admin.<main>` CNAME 추가 (사회공헌국 도메인 회신 시).
+
+### Implementation 일정
+
+- **D-4~D-3**: 폴더 구조는 옵션 1과 *동일* — `app/(public)/` + `app/admin/(auth)/` + `app/admin/(panel)/`. 도메인 코드 무관.
+- **D-1 (도메인 확정 후)**: `proxy.ts`에 host 분기 5-10줄 추가:
+
+```ts
+// 의사 코드 (D-1에 정식 작성)
+const host = req.headers.get("host") ?? "";
+const isAdminHost = host.startsWith("admin.") || host === "localhost:3000";
+
+if (isAdminHost) {
+  // admin.xxx.org → /admin/* 만 노출, 미인증 시 /admin/login 으로
+} else {
+  // xxx.org → /admin 접근 시 404
+}
+```
+
+- 로컬 개발은 `localhost:3000`에서 양쪽 모두 접근 (호스트 분기 우회).
+- 또는 로컬에 `127.0.0.1 admin.localhost` `/etc/hosts` 추가하여 서브도메인 동작 테스트.
+
+### Consequences
+
+- ✅ **검색엔진 색인 자연 분리** — 구글은 서브도메인을 별개 사이트로 인식. `robots.txt` 보강 가능.
+- ✅ **인증 호환** — NextAuth가 cross-subdomain 쿠키 wildcard 지원. 별도 SSO 패턴 불필요.
+- ✅ **확장**: v1.1·v2에 어드민을 별도 인프라(ECS Fargate)로 분리 시 코드 거의 무수정.
+- ✅ **5일 데드라인 OK** — 폴더 구조는 영향 없고, host 분기 코드는 D-1 단계 5-10줄.
+- ✅ **비용 0** — 서브도메인은 무료 (메인 도메인 1개만).
+- ⚠️ 도메인이 미정인 동안은 hostname 분기 미적용. 도메인 확정 직전 D-1 단계에 정식 적용.
+- ⚠️ 어드민 절대 URL을 NextAuth 콜백·이메일에 쓸 때 `process.env.AUTH_URL` 일관 사용 (하드코딩 금지).
+
+### v2 안 — 옵션 3 전환 시점
+
+옵션 2로 운영 중 *강력 보안 격리*가 필요해지면 (예: 결제 시스템 도입, 개인정보 대량 처리) → 옵션 3으로 마이그레이션. 코드 변경: monorepo 분리 (`apps/web` + `apps/admin`) + DB connection pool 분리. 비용·복잡도 증가. 현재 시점에는 불필요.
