@@ -19,7 +19,7 @@
     "@auth/drizzle-adapter": "^1.7.4",
     "@aws-sdk/client-s3": "^3.705.0",
     "@aws-sdk/s3-request-presigner": "^3.705.0",
-    "@hookform/resolvers": "^3.9.1",
+    "@hookform/resolvers": "^3.10.0",
     "@tiptap/pm": "^2.10.3",
     "@tiptap/react": "^2.10.3",
     "@tiptap/starter-kit": "^2.10.3",
@@ -29,15 +29,17 @@
     "dayjs": "^1.11.13",
     "drizzle-orm": "^0.36.4",
     "drizzle-zod": "^0.7.0",
+    "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.468.0",
     "next": "^16.0.0",
     "next-auth": "5.0.0-beta.25",
     "pg": "^8.13.1",
+    "radix-ui": "^1.4.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-hook-form": "^7.54.0",
+    "react-hook-form": "^7.76.1",
     "tailwind-merge": "^2.5.5",
-    "zod": "^4.0.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
