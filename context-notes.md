@@ -337,3 +337,44 @@ Figma MCP로 컴포넌트 5개(Header, Menu, StoryCard, ArticleCard, Heart) 추�
 - **현재 디렉토리 상태**: 13개 항목 (3 hidden 폴더 + AGENTS.md + GEMINI.md + checklist + context-notes + README + setup.sh + .env.example + docs).
 - **남은 작업**: 코드 작업 진입 — Clerk·Neon·Cloudflare R2 셋업 → Drizzle 스키마 → 페이지 구현.
 
+---
+
+## 2026-05-27 — Sprint 1 D-5 완료 (셋업 + 공통 토대)
+
+ADR-020/021/022 결정 기반으로 5일 데드라인의 첫째 날 작업. 인프라 + 데이터 + 3-Layer 골격까지 모두 완료. 빌드 검증 통과.
+
+- **결정**: 호스트 Postgres 포트 충돌(5432, nexus_db 다른 프로젝트 점유)을 발견 — 우리는 5433으로 격리. `docker compose --env-file .env.local` 명시 로드.
+- **왜**: 다른 프로젝트(nexus_db 4일째 가동)를 건드리지 않고 작업. 12-Factor — 호스트 포트는 변수화, 컨테이너 내부는 표준값 5432 고정.
+
+- **결정**: `drizzle.config.ts`에서 `dotenv.config({ path: ".env.local" })` 명시 로드.
+- **왜**: drizzle-kit은 `.env.local` 자동 로드 안 함 — `.env`만. Next.js 컨벤션과 분리되어 있어 명시 필요.
+
+- **결정**: `src/db/seed.ts`에서 dynamic import 패턴(`await import("./index")`) 사용.
+- **왜**: ESM hoisting으로 `import` 가 `dotenv.config()` 보다 먼저 평가됨 → `DATABASE_URL` undefined 에러. dynamic import로 평가 순서 강제.
+
+- **결정**: `bcryptjs`는 default import 사용 (`import bcrypt from "bcryptjs"`).
+- **왜**: bcryptjs 2.x는 CJS만 — named export(`compare`/`hash`) 런타임 실패. tsc는 .d.ts만 보고 통과시켜서 런타임에서야 발견됨.
+
+- **결정**: 임시 비밀번호 자동 생성(`openssl rand -base64 18 | tr -d '/+=' | head -c 16`)으로 GATE 2 통과. 결과: `bRhHR2CWkqrMnj0L`.
+- **왜**: conversation 노출 위험을 줄이는 옵션 중 사용자가 자동 생성을 선택. 배포 전 어드민 로그인 → 비밀번호 변경 절차 필수 (checklist D-1에 등록).
+
+- **결정**: `proxy.ts`에 `runtime: "nodejs"` 명시 제거.
+- **왜**: Next 16에서 proxy는 *항상* Node Runtime — 명시 금지 룰. middleware → proxy 마이그레이션의 차이.
+
+- **결정**: `next.config.ts`의 `cacheComponents`를 `experimental` 밖 톱레벨로 이동.
+- **왜**: Next 16에서 stable 승격됨. `experimental.cacheComponents` 사용 시 warning.
+
+- **결정**: 임시 홈 `app/page.tsx`에서 `<Suspense>` boundary로 DB fetch 감쌈.
+- **왜**: Cache Components 환경에서 uncached data는 Suspense 밖에서 호출 금지. `"use cache"` 또는 `<Suspense>` 둘 중 하나 필수. 이 패턴은 D-3 디자인 구현에도 동일 적용.
+
+- **결정**: `next lint` 폐기 → `eslint .` 직접 호출. eslint.config.mjs는 최소 ignore만 (D-1에 정식 보강).
+- **왜**: Next 16에서 `next lint` 제거 + eslint-config-next 16의 FlatCompat 브릿지가 순환 참조 에러 발생. 빠른 진행 위해 최소화, 정식 셋업은 D-1 QA 단계로 이월.
+
+- **검증 증거 (methodology-tooled §6)**:
+  - DB: `\dt` 결과 5/5 테이블 + `drizzle/0000_milky_sway.sql` SQL diff
+  - 시드: stdout `news 9건 + 태그 27건`
+  - 빌드: `✓ Compiled successfully` + `/ ◐ Partial Prerender` + `ƒ /api/auth/[...nextauth]` + `Proxy (Middleware)`
+  - 타입: `pnpm tsc --noEmit` 0 에러
+
+- **다음 단계 (D-4)**: shadcn/ui 초기화 → 공통 컴포넌트 9개(Header 스크롤스파이 + Footer + Banner + ArticleCard 12 variants 등). 디자인 토큰을 Tailwind에 매핑. SUIT 폰트 셋업.
+
