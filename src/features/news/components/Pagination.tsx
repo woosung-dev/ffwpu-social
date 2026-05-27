@@ -36,7 +36,7 @@ export function Pagination({
     const base = cn(
       "inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-sm transition-colors",
       isActive
-        ? "bg-brand-primary text-white font-semibold"
+        ? "font-bold text-brand-primary"
         : disabled
           ? "cursor-not-allowed text-ink-subtle opacity-50"
           : "font-medium text-ink-subtle hover:bg-surface-soft hover:text-foreground",

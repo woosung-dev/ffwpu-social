@@ -35,7 +35,7 @@ export function CategoryTabs({ selected, onChangeAction }: Props) {
                 className={cn(
                   "relative whitespace-nowrap px-4 py-3 text-sm transition-colors",
                   isActive
-                    ? "font-extrabold text-brand-vivid"
+                    ? "font-extrabold text-ink-strong"
                     : "font-medium text-ink-subtle hover:text-foreground",
                 )}
               >
