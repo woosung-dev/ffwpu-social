@@ -30,6 +30,33 @@ export async function getAdminNewsDetail(id: string) {
   return newsDb.getAdminNewsById(id);
 }
 
+// 어드민 목록 (T10) — 페이지네이션 + status·categorySlug 필터
+export async function listNewsForAdmin(opts: {
+  page: number;
+  limit: number;
+  status?: "all" | "draft" | "published";
+  categorySlug?: string;
+}) {
+  const [items, total] = await Promise.all([
+    newsDb.listForAdmin(opts),
+    newsDb.countForAdmin({
+      status: opts.status,
+      categorySlug: opts.categorySlug,
+    }),
+  ]);
+  const totalPages = Math.max(1, Math.ceil(total / opts.limit));
+  return { items, total, totalPages, page: opts.page, limit: opts.limit };
+}
+
+// 대시보드 (T11) — 최근 N건 + 카테고리별 글 수
+export async function getAdminDashboard(latestLimit = 5) {
+  const [latest, perCategory] = await Promise.all([
+    newsDb.listLatest(latestLimit),
+    newsDb.countNewsByCategory(),
+  ]);
+  return { latest, perCategory };
+}
+
 // 태그 자동완성 — TagsInput(T8) 진입점. 빈도순
 export async function searchTags(prefix: string, limit = 10) {
   return newsDb.searchTags(prefix, limit);

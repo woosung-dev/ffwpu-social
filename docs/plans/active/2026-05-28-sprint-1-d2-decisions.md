@@ -232,4 +232,30 @@
 - **이유**: 호출자(NewsEditor) 도 Client Component → 실제 RSC boundary 안 넘음. Next.js 가 보수적으로 경고하는 false positive. (B) 는 React 컨벤션과 충돌. (C) 는 600줄 거대 파일. tsc 0 error · lint 0 error · 빌드 통과 검증 예정 (T10/T13).
 - **영향**: TiptapEditor·CoverImageUploader·TagsInput 의 5개 onChange/onError props 가 warning. 기능 영향 0.
 
-## 추가 분기점 (T9~T13 진행 중 발생 시 본 파일에 누적)
+## [T10] drizzle-zod 제거 → 순수 Zod
+
+- **질문**: schemas.ts 가 drizzle-zod `createInsertSchema(news)` 를 사용해 Client Component (NewsEditor) 가 import 시 build 실패.
+  - 1차 원인: drizzle-zod@0.7.1 ↔ drizzle-orm@0.36.4 버전 불일치 — `isView` export 누락.
+  - 2차 원인: drizzle-zod 가 server-only (drizzle-orm schema 의존) → Client bundle 끌어옴 = 안티패턴.
+- **옵션**: (A) drizzle-orm 업그레이드 / (B) drizzle-zod 다운그레이드 / (C) drizzle-zod 제거 + 순수 Zod / (D) schemas.ts 를 server/client 분리
+- **선택**: (C) drizzle-zod 제거
+- **이유**: (A) 는 마이그레이션 SQL 호환성 변경 가능. (B) 는 deps lock 변경. (C) 가 가장 직접적 — 본문(body) 검증은 NewsBodyRenderer(T12) 가 별도로 책임지므로 schemas.ts 의 자유도 손실 없음. tags/title/categoryId 모두 plain Zod 로 표현 가능.
+- **영향**: schemas.ts 가 drizzle-zod·newsInsertSchema 미사용. `body: z.unknown()` (renderer 검증).
+
+## [T10] Cache Components — `await params/searchParams` Suspense 자식으로
+
+- **질문**: Page Component 가 `async` + 최상단 `await props.params` → "Uncached data was accessed outside of <Suspense>" 빌드 에러.
+- **옵션**: (A) Page sync + promise 를 Suspense 자식으로 전달 / (B) `export const dynamic = "force-dynamic"` (cacheComponents 와 비호환)
+- **선택**: (A) Promise 전달
+- **이유**: Next.js 16 Cache Components 가 권장하는 패턴. (B) 는 결정 #17 (force-dynamic 미사용) 위반.
+- **영향**: `news/page.tsx` + `news/[id]/edit/page.tsx` 가 Page 는 sync, Suspense 자식 (`NewsListData`/`EditNewsData`) 가 promise 를 await.
+
+## [T10] Layout AdminSidebar Suspense 격리
+
+- **질문**: AdminSidebar (`usePathname()`) 이 layout 에서 직접 렌더 → dynamic route (news/[id]/edit) prerender 시 "Uncached data..." 에러.
+- **옵션**: (A) usePathname 제거 / (B) AdminSidebar Suspense 래핑 / (C) layout 자체 dynamic 강제 (cacheComponents 비호환)
+- **선택**: (B) Suspense 래핑
+- **이유**: usePathname 은 active 메뉴 표시 필수. (C) 는 cacheComponents 비호환. (B) 가 가장 작은 변경 — prerender 시 sidebar skeleton, 런타임에 hydration.
+- **영향**: `(panel)/layout.tsx` 가 `<Suspense fallback={<SidebarSkeleton/>}><AdminSidebar/></Suspense>`. 모든 어드민 페이지 ◐ Partial Prerender.
+
+## 추가 분기점 (T11~T13 진행 중 발생 시 본 파일에 누적)

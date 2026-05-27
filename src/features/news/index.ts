@@ -19,6 +19,8 @@ export {
   getNewsDetail,
   listCategories,
   getAdminNewsDetail,
+  listNewsForAdmin,
+  getAdminDashboard,
 } from "./service";
 
 export {
