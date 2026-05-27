@@ -258,4 +258,12 @@
 - **이유**: usePathname 은 active 메뉴 표시 필수. (C) 는 cacheComponents 비호환. (B) 가 가장 작은 변경 — prerender 시 sidebar skeleton, 런타임에 hydration.
 - **영향**: `(panel)/layout.tsx` 가 `<Suspense fallback={<SidebarSkeleton/>}><AdminSidebar/></Suspense>`. 모든 어드민 페이지 ◐ Partial Prerender.
 
-## 추가 분기점 (T11~T13 진행 중 발생 시 본 파일에 누적)
+## [T12] 단위 테스트 프레임워크 — vitest 단독 (testing-library 미설치)
+
+- **질문**: NewsBodyRenderer 안전 검증 테스트 5건을 어떻게 구성?
+- **옵션**: (A) vitest + jsdom + @testing-library/react — JSX 렌더 검증 / (B) vitest 단독 + pure sanitize() 함수 분리 (sanitize.ts ↔ news-body-renderer.tsx 분리) / (C) Playwright e2e 만
+- **선택**: (B) vitest 단독 + pure 함수 분리
+- **이유**: (A) 는 jsdom 셋업 + testing-library 의존성 추가 + Image 컴포넌트 mock 필요 (next/image 가 DOM 의존). (C) 는 단위 보장 안 됨 (구조적 차단 vs 시각 차단). (B) 는 sanitize.ts 가 React/next 의존 0 → 순수 단위 테스트 + node 환경에서 즉시 실행. 빠르고 가볍다.
+- **영향**: `src/features/news/render/sanitize.ts` (pure 함수) + `news-body-renderer.tsx` (React) + `sanitize.test.ts` (5 시나리오). vitest@4 + `vitest.config.ts` (path alias @ → src). `test` npm script 추가.
+
+## 추가 분기점 (T13 진행 중 발생 시 본 파일에 누적)

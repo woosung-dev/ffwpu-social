@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "tsc": "tsc --noEmit",
+    "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
@@ -58,7 +59,8 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.7"
   },
   "packageManager": "pnpm@9.15.0"
 }
