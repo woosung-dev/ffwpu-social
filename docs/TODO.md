@@ -6,9 +6,9 @@
 
 ## Completed (최근 3개)
 
+- [x] Sprint 1 D-3 — 랜딩 5섹션(Hero/KPI/Story/ArticleGrid/Partners) Figma 정합 + (public)/page.tsx 조립 + SEO metadata + cacheComponents 적용 + designer P1 토큰화 (2026-05-28, 4 commits)
 - [x] Sprint 1 D-4 — F3 폴더 + 디자인 토큰 + SUIT 폰트 + 공통 컴포넌트 11종 + Route Group (2026-05-27, 9 commits)
 - [x] D-4 Multi-Agent 검증 + ITERATE verdict → P0 7건 처리 완료
-- [x] Sprint 1 D-5 — 셋업 + DB + Auth + 3-Layer 골격 (2026-05-27, PR #1 머지)
 
 ## Blocked
 
@@ -16,35 +16,35 @@
 
 ## Questions / 사회공헌국 escalation
 
-### H-2 — 푸터 종교 법인명 위치 ([확인 필요])
+### H-2 — 푸터 종교 법인명 위치 ([확인 필요, 미회신 유지])
 
 > 출처: D-4 multi-agent 검증 human 페르소나 narrative (CONFUSED 모드, 신뢰 4/10).
 
-- 현재: `src/client/layouts/PublicFooter.tsx` 푸터 최하단 작은 글씨에 "세계평화통일가정연합 신한국협회 사회공헌국" 단 1회 표시.
+- 현재 (D-3 정합 후): `src/client/layouts/PublicFooter.tsx`는 BI 로고 + 세로 라인 + "COPYRIGHT 2026 © Sow Good All rights reserved." 만 표시 (Figma 126:10897 정합). **법인명은 미표시 상태 유지.**
 - **갈등:** ADR-004 (포교 금지 절대 제약) vs 법적 의무 (법인명 표시 투명성).
 - **옵션:**
-  - A) 푸터 최하단 작은 글씨 유지 — 법적 표시 충족, 사용자 첫인상 영향 미미.
-  - B) 푸터 별도 섹션 또는 About 페이지 이동 — 포교 금지 강하게 준수, 단 법적 의무 위치 검토 필요.
-- **결정 주체:** 사회공헌국 단독 (ADR-004 절대 제약).
+  - A) 미표시 유지 — Figma 시안 정합, 포교 금지 가장 강하게 준수.
+  - B) 푸터 최하단 작은 글씨 추가 — 법적 표시 충족.
+  - C) About 페이지 분리 (v1.1) — 1차 범위 외.
+- **결정 주체:** 사회공헌국 단독 (ADR-004 절대 제약). **D-3 시점 회신 없음 = A 옵션 유지.**
 
-### H-3 — Banner "참여하기" 카피 의미 합의 ([확인 필요])
+### H-3 — Banner "참여하기" 카피 ([Resolved 2026-05-28])
 
-> 출처: D-4 multi-agent 검증 human 페르소나 narrative + designer Banner 카피 D-3 확정 항목.
+- **결정:** Figma 원본 카피 "이야기 보러가기" 적용 (사용자 결정, D-3 plan v3).
+- Banner는 D-2 소식 페이지(목록·상세)에서 본격 작성 — D-3 범위 아님. /news 라우팅 의미 정합 확보.
 
-- 현재: `src/client/layouts/Banner.tsx` 의 "참여하기" 링크가 `/news` (소식 목록) 로 라우팅. 사용자는 봉사 신청 폼/캠페인 참가를 기대해 의미 불일치.
-- **1차 범위 제약:** ADR-011 — 회원가입·문의 폼 없음, 검색 미구현.
-- **옵션:**
-  - A) "참여하기" 유지 + /news 라우팅 — 행동 유도 강함, 단 의미 불일치.
-  - B) "소식 보기" 또는 "이야기 보러가기" 카피 변경 — 의미 정합, 행동 유도 약간 약화. **(권고)**
-  - C) "참여하기" 유지 + 향후 봉사 신청 폼(v1.1) 라우팅 준비 — 미래 정합, 현재는 1차 범위 외.
-- **처리 시점:** D-3 디자인 시안 적용 단계에서 Banner 카피 일괄 확정 시.
+### 추가 escalation (D-3 진행 상태 갱신)
 
-### 추가 escalation 후보 (D-3 진입 전 확정 권장)
+- [x] **Pagination active 색** — H-1 결정 완료 (2026-05-27).
+- [x] **홈 페이지 placeholder 카피** — D-3 본격 구현 완료 (5섹션 Figma SSoT 정합). placeholder 제거.
+- [x] **favicon 자산** — `src/app/icon.svg` + `public/favicon.ico` (Sow Good 로고 SVG 기반 임시). 추후 ICO 변환 권고.
+- [x] **헤더 배경 디자인** — D-4 완료 (`bg-brand-bright` #B769FF Figma 정합).
 
-- [ ] **Pagination active 색** — H-1 결정 완료 (Figma 명세 `text-brand-primary` 무배경, 2026-05-27 사용자 확정). [확정됨]
-- [ ] **홈 페이지 placeholder 카피** — D-4 의 "준비 중" 임시 카피는 D-3 디자인 시안 적용 시 본격 구현으로 교체 예정. 시안 미수령 시 사회공헌국 카피 확정 필요.
-- [ ] **favicon 자산** — Sow Good BI 기반 favicon 사회공헌국 제공 또는 사내 제작.
-- [ ] **헤더 배경 디자인** — 코드 현재 `bg-white/90` vs Figma 명세 `#B769FF` (brand-bright 보라). D-3 시안 적용 시 Figma 정합 권고.
+### 신규 escalation 후보 (D-2 진입 전)
+
+- [ ] **Gmarket Sans Medium woff2 폰트 자산** — HeroBanner 슬로건 60px 전용. 현재는 SUIT Heavy fallback chain. 라이센스·조달 후 `public/fonts/`에 추가 + `src/app/layout.tsx` `next/font/local` 등록.
+- [ ] **KPI 값 운영자 편집 분리 (v1.1)** — 현재 KpiSection은 Figma 시안 값 인라인 상수 (45,217 / 38년 5개월 / 3,614 / 80,257). admin에서 편집 가능하도록 분리.
+- [ ] **ArticleGridSection coverImageUrl seed 정상화** — DB news의 cover_image_url을 articlegrid-card{1~6}.png으로 seed 또는 시안 fallback 제거.
 
 ## Next Actions
 

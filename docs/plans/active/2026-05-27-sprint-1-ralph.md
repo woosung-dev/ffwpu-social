@@ -78,22 +78,24 @@ Stage 0~2는 이전 세션에 완료 (AGENTS.md + .ai/rules/domain.md + docs/dec
 - [ ] `components/ui/` 보강 (PrimaryButton variants, TagChip, CarouselIndicator)
 - [ ] 디자인 토큰 Tailwind 설정 (`globals.css` CSS vars + tailwind.config 확장)
 
-### D-3 (2026-05-29): 사용자 페이지 (평행 A) + 어드민 셸 (평행 B)
-- [ ] **A**: 랜딩 페이지 진입점 `app/(public)/page.tsx`
-- [ ] **A**: HeroBanner 섹션 (Gmarket Sans 슬로건 + 해바라기 SVG + CTA)
-- [ ] **A**: KpiSection 섹션 (KpiCard 4 variants + 부가 카드)
-- [ ] **A**: StorySection 섹션 (이미지 2개 + Result 통계 3개)
-- [ ] **A**: 스크롤스파이 hook (Intersection Observer + 헤더 메뉴 active 동기화)
-- [ ] **B**: `app/admin/layout.tsx` + 사이드바
-- [ ] **B**: `app/admin/login/page.tsx` (NextAuth SignIn)
-- [ ] **B**: `app/admin/page.tsx` 대시보드 (최근 글 5개)
-- [ ] **B**: `app/admin/news/page.tsx` 글 목록 (필터 + 페이지네이션)
-- [ ] **🚨 GATE**: 랜딩 첫 빌드 후 Playwright MCP로 스크린샷 → 보고
+### D-3 (2026-05-28): 사용자 랜딩 5섹션 [완료 — feat/sprint-1-d3-landing-sections, 4 commits]
+- [x] **A**: 랜딩 페이지 진입점 `app/(public)/page.tsx` (SEO metadata + OG)
+- [x] **A**: HeroBanner 섹션 (Gmarket Sans→SUIT Heavy fallback + 해바라기 SVG + CTA + 4 BP)
+- [x] **A**: KpiSection 섹션 (KpiCard 4 + 비대칭 dashboard + 보라 캐릭터/노란 Sow Good/라임/보라 가정수)
+- [x] **A**: StorySection 섹션 (이미지 2 + Result 3 #9257CA + 라인 가로↔세로 BP)
+- [x] **A**: ArticleGridSection (좌 다크 블록 + 우 마조네리 3열 listNews(limit:6))
+- [x] **A**: PartnersSection (그라디언트 + 보라 아이콘 + Sow Good + 파트너 5)
+- [x] **A**: 스크롤스파이 — D-4 useScrollSpy + PublicHeader 매핑 (#kpi·#stories·#story) 재사용
+- [x] **A**: PublicFooter 시안 정합 (로고 39 + 세로 라인 + SemiBold 16px)
+- [x] **A**: service.ts cacheComponents (use cache + cacheTag + cacheLife)
+- [x] **A**: designer P1 토큰화 + PartnersSection BP 1px 보정
+- [x] **A**: /news placeholder + favicon (prefetch·favicon 404 회피)
+- [x] **🚨 GATE**: 5 BP Playwright 스크린샷 → 사용자 보고 + designer review 통과
+- [ ] **B**: 어드민 셸 — D-2 plan v2로 흡수 (Phase 2 어드민 인프라)
 
-### D-2 (2026-05-30): 사용자 페이지 (평행 A) + 어드민 글 작성 (평행 B)
-- [ ] **A**: ArticleGrid 섹션 (마조네리 3열 + 다크 헤더 블록)
-- [ ] **A**: Section5 Partners (파트너 로고 5개 + Sow Good 아이콘)
-- [ ] **A**: Footer (다크 카피라이트)
+### D-2 (2026-05-29): 어드민 CRUD + 좋아요 + 소식 페이지 (D-2 plan v2 — codex consult revised)
+- [ ] **A**: 소식 목록 `/news` (FeaturedStoryCard 캐러셀 + CategoryTabs + 3×3 그리드 + Pagination)
+- [ ] **A**: 소식 상세 `/news/[id]` (카테고리 칩 + 제목 + Heart + 태그 + Tiptap 렌더 + 소셜 공유 + 관련 글 3개 + ScrollTopButton)
 - [ ] **A**: 소식 목록 `/news` (FeaturedStoryCard 캐러셀 + CategoryTabs + 3×3 그리드 + Pagination)
 - [ ] **A**: 소식 상세 `/news/[id]` (카테고리 칩 + 제목 + Heart + 태그 + Tiptap 렌더 + 소셜 공유 + 관련 글 3개 + ScrollTopButton)
 - [ ] **B**: `app/admin/news/new/page.tsx` 글 작성 (Tiptap + 이미지 업로드 to MinIO + 태그 자유 입력 + 카테고리 선택)
