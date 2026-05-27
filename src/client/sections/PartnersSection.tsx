@@ -5,12 +5,12 @@ export function PartnersSection() {
   return (
     <section
       id="partners"
-      className="w-full bg-gradient-to-b from-[#F8F1FF] to-white py-16 lg:py-24"
+      className="w-full bg-gradient-to-b from-surface-tint-soft to-white py-16 lg:py-24"
     >
       <div className="mx-auto w-full max-w-[1200px] px-4 lg:px-0">
         {/* 상단 — 보라 아이콘 + Sow Good 로고 + 카피 */}
-        <div className="flex flex-col items-center gap-4 text-[#242424] lg:flex-row lg:justify-center lg:gap-6">
-          <div className="flex size-[92px] items-center justify-center rounded-[20px] border-2 border-[#242424] bg-brand-pale">
+        <div className="flex flex-col items-center gap-4 text-surface-dark lg:flex-row lg:justify-center lg:gap-6">
+          <div className="flex size-[92px] items-center justify-center rounded-[20px] border-2 border-surface-dark bg-brand-pale">
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
             <img
               src="/icons/s5-icon-group.svg"
@@ -37,7 +37,7 @@ export function PartnersSection() {
         </div>
 
         {/* 하단 — 파트너 로고 5, opacity-23% */}
-        <div className="mt-12 grid grid-cols-2 items-center justify-items-center gap-8 sm:grid-cols-3 lg:mt-16 lg:grid-cols-5">
+        <div className="mt-12 grid grid-cols-2 items-center justify-items-center gap-8 sm:grid-cols-3 lg:mt-16 min-[1025px]:grid-cols-5">
           {PARTNERS.map((n) => (
             // eslint-disable-next-line @next/next/no-img-element -- public asset
             <img

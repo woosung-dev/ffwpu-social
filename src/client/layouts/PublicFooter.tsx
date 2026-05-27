@@ -6,8 +6,8 @@ export function PublicFooter() {
     <footer className="w-full bg-surface-dark">
       <div className="mx-auto flex max-w-[1200px] items-center justify-center gap-4 px-4 py-7 lg:px-0">
         <SowGoodFooterLogo className="h-[39px] w-auto shrink-0" />
-        <div aria-hidden className="h-6 w-px bg-[#F0E1FF]/40" />
-        <p className="text-base font-semibold text-[#F0E1FF]">
+        <div aria-hidden className="h-6 w-px bg-ink-on-purple/40" />
+        <p className="text-base font-semibold text-ink-on-purple">
           COPYRIGHT 2026 © Sow Good All rights reserved.
         </p>
       </div>

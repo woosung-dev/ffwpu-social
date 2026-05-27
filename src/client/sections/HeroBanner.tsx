@@ -5,7 +5,7 @@ export function HeroBanner() {
   return (
     <section
       id="hero"
-      className="relative w-full overflow-hidden bg-gradient-to-b from-[#F8F1FF] to-white"
+      className="relative w-full overflow-hidden bg-gradient-to-b from-surface-tint-soft to-white"
     >
       {/* Banner background — Figma `imgBannerBackground` 1441×2875, lg 이상에서만 노출 (모바일은 그라디언트로 대체) */}
       <div
@@ -41,7 +41,7 @@ export function HeroBanner() {
             href="/news"
             className="inline-flex items-center gap-2.5 rounded-full bg-brand-darkest px-[26px] py-3 transition-opacity hover:opacity-90"
           >
-            <span className="text-[18px] font-bold lg:text-[20px]" style={{ color: "#E9D1FF" }}>
+            <span className="text-[18px] font-bold text-ink-on-purple lg:text-[20px]">
               지난 활동 살펴보기
             </span>
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}

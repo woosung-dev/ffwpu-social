@@ -6,7 +6,7 @@ export function KpiSection() {
     <section id="kpi" className="w-full bg-white py-16 lg:py-24">
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10 px-4 lg:flex-row lg:items-start lg:gap-[70px] lg:px-0">
         {/* 좌측 헤딩 */}
-        <div className="flex flex-col gap-4 text-[#242424] lg:w-[251px] lg:shrink-0">
+        <div className="flex flex-col gap-4 text-surface-dark lg:w-[251px] lg:shrink-0">
           <h2 className="text-3xl font-bold leading-[1.3] lg:text-[36px]">
             한 해동안
             <br />
@@ -44,7 +44,7 @@ export function KpiSection() {
             </div>
             {/* 누적 봉사자 수 카드 */}
             <div className="flex flex-1 items-start justify-between gap-6 rounded-[20px] bg-kpi-gray px-6 py-5">
-              <div className="flex flex-col gap-1 text-[#343434]">
+              <div className="flex flex-col gap-1 text-ink-strong-mid">
                 <p className="text-[20px] font-semibold">누적 봉사자 수</p>
                 <p className="text-[52px] font-bold leading-none tabular-nums">
                   45,217명+
@@ -79,7 +79,7 @@ export function KpiSection() {
             <div className="flex w-[607px] shrink-0 flex-col gap-4">
               <div className="flex gap-4">
                 {/* 누적 봉사 기간 */}
-                <div className="flex flex-1 flex-col justify-between rounded-[20px] bg-kpi-gray px-[30px] py-5 text-[#343434]">
+                <div className="flex flex-1 flex-col justify-between rounded-[20px] bg-kpi-gray px-[30px] py-5 text-ink-strong-mid">
                   <p className="text-[20px] font-semibold">누적 봉사 기간</p>
                   <p className="text-[45px] font-bold leading-none tabular-nums">
                     38년 5개월
@@ -98,7 +98,7 @@ export function KpiSection() {
                 </div>
               </div>
               {/* 봉사활동 횟수 */}
-              <div className="flex flex-1 flex-col justify-end gap-6 rounded-[20px] bg-kpi-lime px-6 py-5 text-[#3B4700]">
+              <div className="flex flex-1 flex-col justify-end gap-6 rounded-[20px] bg-kpi-lime px-6 py-5 text-ink-on-lime">
                 <p className="text-[20px] font-semibold">봉사활동 횟수</p>
                 <div className="flex items-end justify-between">
                   {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}

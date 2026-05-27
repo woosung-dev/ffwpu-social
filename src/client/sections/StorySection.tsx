@@ -8,7 +8,7 @@ const RESULTS = [
 
 export function StorySection() {
   return (
-    <section id="story" className="w-full bg-[#FAF4FF] py-16 lg:py-24">
+    <section id="story" className="w-full bg-surface-tint-faint py-16 lg:py-24">
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10 px-4 lg:flex-row lg:items-center lg:gap-[70px] lg:px-0">
         {/* 좌측 이미지 2장 — 큰 + 작은 */}
         <div className="relative grid w-full grid-cols-2 gap-3 lg:w-[560px] lg:shrink-0">
@@ -39,8 +39,8 @@ export function StorySection() {
         </div>
 
         {/* 우측 텍스트 + Result */}
-        <div className="flex flex-1 flex-col gap-6 text-[#242424] lg:items-end lg:text-right">
-          <span className="self-start rounded-full bg-surface-dark px-4 py-2 text-base font-semibold text-[#E4BDFF] lg:self-end">
+        <div className="flex flex-1 flex-col gap-6 text-surface-dark lg:items-end lg:text-right">
+          <span className="self-start rounded-full bg-surface-dark px-4 py-2 text-base font-semibold text-ink-on-purple lg:self-end">
             쌀 나눔 활동
           </span>
 
