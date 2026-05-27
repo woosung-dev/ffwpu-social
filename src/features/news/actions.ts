@@ -1,15 +1,33 @@
-// 소식(news) Server Actions — 얇은 진입점. Zod 검증 + auth + service 위임 (fullstack.md §3·§5)
+// 소식(news) Server Actions — 얇은 진입점. Zod 검증 + super 가드 (requireSuperAdmin) + service 위임 (fullstack.md §3·§5)
 "use server";
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/auth";
+import { requireSuperAdmin } from "@/lib/auth-guards";
+import {
+  type PresignedUploadResult,
+  createPresignedPost,
+  isAllowedImageMime,
+  MAX_IMAGE_BYTES,
+} from "@/features/storage";
 import * as newsService from "./service";
-import { listNewsQuerySchema, newsInputSchema, type NewsInput } from "./schemas";
+import {
+  listNewsQuerySchema,
+  newsInputSchema,
+  type NewsInput,
+} from "./schemas";
 
 export type ActionResult<T, Input = unknown> =
   | { success: true; data: T }
   | { success: false; error: string | z.ZodError<Input> };
+
+// 가드 실패를 ActionResult 로 변환 — 모든 admin action 첫 줄에 사용 (codex P1#2 통일 패턴)
+function authError(e: unknown): { success: false; error: string } {
+  if (e instanceof Error) return { success: false, error: e.message };
+  return { success: false, error: "Unauthorized" };
+}
+
+// ─── 사용자 사이트 (인증 불필요, 읽기 전용) ─────────────────────────────────
 
 export async function listNewsAction(rawQuery: Record<string, unknown>) {
   const parsed = listNewsQuerySchema.safeParse(rawQuery);
@@ -26,20 +44,79 @@ export async function getNewsDetailAction(id: string) {
   return { success: true as const, data };
 }
 
-// 어드민 전용 — D-2에서 service.createNews/updateNews 구현 후 활성화
+// ─── 어드민 CRUD (super 가드) ──────────────────────────────────────────────
+// service.createNews / updateNews / deleteNews 는 T7 에서 transaction 패턴으로 구현
+
 export async function createNewsAction(
   _prevState: ActionResult<unknown, NewsInput> | null,
   formData: FormData,
 ): Promise<ActionResult<{ id: string }, NewsInput>> {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "super") {
-    return { success: false, error: "Unauthorized" };
+  try {
+    await requireSuperAdmin();
+  } catch (e) {
+    return authError(e);
   }
   const parsed = newsInputSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { success: false, error: parsed.error };
   }
-  // TODO(D-2): newsService.createNews(parsed.data, session.user.id)
+  // TODO(T7): newsService.createNews(parsed.data, session.user.id)
   revalidatePath("/news");
-  return { success: false, error: "Not Implemented (D-2 작업)" };
+  revalidatePath("/admin/news");
+  return { success: false, error: "Not Implemented (T7 작업)" };
+}
+
+// ─── 이미지 업로드 Presigned POST 발급 (codex P1#4 + 결정 #16) ────────────
+
+const uploadInputSchema = z
+  .object({
+    filename: z.string().min(1).max(200),
+    mime: z.string().min(1).max(50),
+    size: z.number().int().positive(),
+    target: z.enum(["cover", "body"]),
+    // 작성 모드(newsId 미존재) → tempId. 수정 모드 → newsId. 둘 중 정확히 하나.
+    newsId: z.uuid().optional(),
+    tempId: z.uuid().optional(),
+  })
+  .refine((v) => Boolean(v.newsId) !== Boolean(v.tempId), {
+    message: "newsId 또는 tempId 둘 중 정확히 하나 필요",
+  });
+
+export type UploadImageInput = z.infer<typeof uploadInputSchema>;
+
+export async function uploadImageAction(
+  input: UploadImageInput,
+): Promise<ActionResult<PresignedUploadResult, UploadImageInput>> {
+  try {
+    await requireSuperAdmin();
+  } catch (e) {
+    return authError(e);
+  }
+  const parsed = uploadInputSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error };
+  }
+  const { filename, mime, size, newsId, tempId } = parsed.data;
+  if (!isAllowedImageMime(mime)) {
+    return {
+      success: false,
+      error: `허용되지 않은 이미지 형식: ${mime} (JPG/PNG/WEBP 만)`,
+    };
+  }
+  if (size > MAX_IMAGE_BYTES) {
+    return {
+      success: false,
+      error: `이미지 용량이 5MB 를 초과합니다 (${Math.round(size / 1024)}KB)`,
+    };
+  }
+  const scope = newsId ? { newsId } : { tempId: tempId! };
+  try {
+    const result = await createPresignedPost({ scope, filename, mime, size });
+    return { success: true, data: result };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "업로드 URL 발급 실패",
+    };
+  }
 }
