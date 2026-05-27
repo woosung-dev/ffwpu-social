@@ -181,13 +181,25 @@ mcp__plugin_figma_figma__get_variable_defs({});
 | `96:7964` (`image 39`) | 파트너 로고 4 (86×33) | PNG 172B | `public/images/s5-partner4.png` |
 | `96:7966` (`image 41`) | 파트너 로고 5 (173×52) | PNG 181B | `public/images/s5-partner5.png` |
 
-### FeaturedSection — D-3 진입 직전 별도 수집
+### FeaturedSection (`125:8985`) — news-list 의 Featured Card 영역
 
-> 우리 D-4 `FeaturedStoryCard.tsx` 는 designer agent 명세 ("좌 텍스트 / 우 이미지 612×411 캐러셀") 기반. Figma 실제 노드 위치 미파악 — 후보:
-> - `news-list` (`125:8904`) 캐러셀 영역
-> - 또는 다른 페이지·섹션
->
-> 작업: `get_metadata(125:8904)` → 캐러셀 구조 자식 노드 식별 → `get_design_context` → 자산 다운로드.
+> 배경 `bg-[#fafafa]` (`--color-surface-card`). 좌-우 2단 (좌 텍스트 + 우 이미지 612×411 rounded-16). 좌측: 미니 로고 98×65 + 헤딩 SUIT Bold 34px `text-ink-strong` + 본문 SUIT Regular 20px tracking-[-0.4px] + 자세히 보기 보라 알약 버튼 + 4 막대 인디케이터.
+> **우리 D-4 `FeaturedStoryCard.tsx` 의 designer agent 명세 (612×411 + 22/17px 인디케이터) 와 Figma 실 명세 일치 ✅.**
+
+| Figma 노드 (이름) | 명칭 | 파일 형식 | 코드 위치 |
+|---|---|---|---|
+| `125:8989` (`_레이어_1`) | 좌측 상단 미니 로고 (98×65) | SVG 23KB | `public/icons/featured-mini-logo.svg` |
+| `I125:9045;928:9475` (`Icon`) | "자세히 보기" CTA 화살표 (20×20) | SVG 374B | `public/icons/featured-cta-arrow.svg` |
+| `125:9054` (`image 50`) | 우측 본문 이미지 (916×786 → 612×411 표시, retina 자산) | PNG 1.1MB | `public/images/featured-image50.png` |
+
+### 인디케이터 명세 (FeaturedSection)
+
+| State | 가로 | 세로 | 색 | Tailwind |
+|---|---|---|---|---|
+| Active (2번째) | 22px | 3px | `#b35feb` (brand-vivid) | `bg-brand-vivid h-[3px] w-[22px]` |
+| Inactive | 17px | 3px | `rgba(75,85,99,0.15)` | `bg-foreground/15 h-[3px] w-[17px]` |
+
+> 우리 D-4 코드 `FeaturedStoryCard.tsx:112` 의 inactive 색 `bg-tag-default/40 (#AC86D0)` 은 Figma 와 불일치 — designer P1 (`#color-carousel-inactive` 토큰 추출 권고) 처리 시 본 명세로 정합.
 
 ### 자산 다운로드 표준 절차
 
