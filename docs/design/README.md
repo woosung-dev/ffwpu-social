@@ -151,9 +151,43 @@ mcp__plugin_figma_figma__get_variable_defs({});
 | `96:7857` (`Vector`) | 우하단 데코 3 (꽃 22.2°) | SVG 52KB | `public/icons/story-deco3.svg` |
 | `96:7853` (`Vector`) | 상단 데코 4 (잎 -11.83°) | SVG 73KB | `public/icons/story-deco4.svg` |
 
-### ArticleGrid (`96:7877`), Section5 (`96:7897`), FeaturedSection — 미수집
+### ArticleGrid (`96:7877`) — "고소한 사랑의 향기가 퍼져나가고 있어요"
 
-> 다음 세션 (D-3 진입 직전) `mcp__plugin_figma_figma__get_design_context(nodeId, fileKey)` 일괄 호출 + 다운로드.
+> 좌측 다크 블록 (`#242424`, 319×) — 헤딩 (SUIT ExtraBold 31px `text-brand-lavender #E9CFFF`) + 부제 (SUIT SemiBold 18px) + "아티클 더 보러가기" CTA. 우측 마조네리 3열 — 6 카드 (256·425·425·337·278·381px 다양한 높이). 카드 = ArticleCard 컴포넌트, 본문은 검은 그라디언트 오버레이 + 흰 텍스트.
+
+| Figma 노드 (이름) | 명칭 | 파일 형식 | 코드 위치 |
+|---|---|---|---|
+| `I96:7885;928:9475` (`Icon`) | "아티클 더 보러가기" CTA 화살표 (20×20) | SVG 376B | `public/icons/article-cta-arrow.svg` |
+| `96:7888` (`Card` 256h) | 마조네리 카드 1 사진 | PNG 465KB (556×436) | `public/images/articlegrid-card1.png` |
+| `96:7889` (`Card` 425h) | 마조네리 카드 2 사진 | PNG 5.5MB (1768×2358, 대용량) | `public/images/articlegrid-card2.png` |
+| `96:7891` (`Card` 425h) | "동작구립 흑석종합사회복지관 쌀 60Kg 기부" | PNG 933KB (556×830) | `public/images/articlegrid-card3.png` |
+| `96:7892` (`Card` 337h) | 마조네리 카드 4 사진 | PNG 645KB (556×648) | `public/images/articlegrid-card4.png` |
+| `96:7894` (`Card` 278h) | "삼태기마을에도 고소한 사랑이 도착했어요" | PNG 531KB (556×544) | `public/images/articlegrid-card5.png` |
+| `96:7895` (`Card` 381h) | 마조네리 카드 6 사진 | PNG 788KB (556×830) | `public/images/articlegrid-card6.png` |
+
+> ⚠️ 사진 6개는 D-3 시드 데이터의 `cover_image_url` 로 사용 가능. ArticleCard 컴포넌트는 이미 D-4 에 완성.
+
+### Section5 (`96:7897`) — "Sow Good 과 함께하고 있는 파트너"
+
+> 배경 그라디언트 `from-#f8f1ff to-white`. 아이콘 박스 (92×92, `#dbb4ff` + 다크 border 2px) + Sow Good 로고 (100×66) + "과 함께하고 있는 파트너" + 파트너 로고 5개 (opacity-23 흐리게).
+
+| Figma 노드 (이름) | 명칭 | 파일 형식 | 코드 위치 |
+|---|---|---|---|
+| `96:7900` (`Group`) | 92×92 보라 박스 안 일러스트 | SVG 1.7KB | `public/icons/s5-icon-group.svg` |
+| `96:7904` (`_레이어_1`) | Sow Good 로고 (100×66, 헤더와 다른 크기) | SVG 23KB | `public/icons/s5-sow-good-logo.svg` |
+| `96:7958` (`image 42`) | 파트너 로고 1 (218×31) | PNG 185B | `public/images/s5-partner1.png` |
+| `96:7960` (`image 37`) | 파트너 로고 2 (183×53) | PNG 332B | `public/images/s5-partner2.png` |
+| `96:7962` (`image 38`) | 파트너 로고 3 (164×38) | PNG 1.1KB | `public/images/s5-partner3.png` |
+| `96:7964` (`image 39`) | 파트너 로고 4 (86×33) | PNG 172B | `public/images/s5-partner4.png` |
+| `96:7966` (`image 41`) | 파트너 로고 5 (173×52) | PNG 181B | `public/images/s5-partner5.png` |
+
+### FeaturedSection — D-3 진입 직전 별도 수집
+
+> 우리 D-4 `FeaturedStoryCard.tsx` 는 designer agent 명세 ("좌 텍스트 / 우 이미지 612×411 캐러셀") 기반. Figma 실제 노드 위치 미파악 — 후보:
+> - `news-list` (`125:8904`) 캐러셀 영역
+> - 또는 다른 페이지·섹션
+>
+> 작업: `get_metadata(125:8904)` → 캐러셀 구조 자식 노드 식별 → `get_design_context` → 자산 다운로드.
 
 ### 자산 다운로드 표준 절차
 
