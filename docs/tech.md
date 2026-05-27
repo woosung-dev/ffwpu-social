@@ -79,97 +79,119 @@
 >
 > **D-4 PR에서 신규 생성**: `src/client/{layouts,sections,hooks}/`, `src/admin/{layouts,components}/`, `src/features/news/components/`, `src/components/ui/` (shadcn 초기화 시), `src/lib/`, `src/hooks/`, `app/(public)/`, `app/admin/(auth)/`, `app/admin/(panel)/`.
 >
-> 즉 *temporal drift*는 의도된 시간차 — ADR-024는 *결정 잠금* 시점, 실제 *코드 적용*은 D-4 PR.
+> 즉 *temporal drift*는 의도된 시간차 — ADR-024는 *결정 잠금* 시점, 실제 *코드 적용*은 D-4/D-3/D-2 PR.
+>
+> **다이어그램 마커 범례**: `✅ D-5` 현재 PR에 존재 · `🆕 D-4` D-4 PR에 신규 · `🆕 D-3` D-3 신규 · `🆕 D-2` D-2 신규 · `🆕 D-1` D-1 신규
+>
+> 임시 홈 `src/app/page.tsx` (✅ D-5)는 D-4 진입 시 `app/(public)/page.tsx`로 *이동·교체*됨.
 
 ```
 src/
-├── app/                              # 라우팅만 (얇음). 비즈니스 로직 ❌
-│   ├── layout.tsx                    # 루트 — <html lang="ko"><body> 최소
-│   ├── globals.css
-│   ├── not-found.tsx
+├── app/                                            # 라우팅만 (얇음). 비즈니스 로직 ❌
+│   ├── layout.tsx                                  # ✅ D-5  루트 <html><body>
+│   ├── globals.css                                 # ✅ D-5  Tailwind + 디자인 토큰 (토큰 보강 🆕 D-4)
+│   ├── not-found.tsx                               # 🆕 D-4  404
 │   │
-│   ├── (public)/                     # Route Group — URL에 안 나옴
-│   │   ├── layout.tsx                # <PublicHeader/> + main + <PublicFooter/>
-│   │   ├── page.tsx                  # /  (랜딩 6 섹션)
+│   ├── (public)/                                   # 🆕 D-4  Route Group (URL에 안 나옴)
+│   │   ├── layout.tsx                              # 🆕 D-4  <PublicHeader/> + main + <PublicFooter/>
+│   │   ├── page.tsx                                # 🆕 D-3  /  (랜딩 6 섹션) — D-5 임시 홈을 교체
 │   │   └── news/
-│   │       ├── page.tsx              # /news 목록
-│   │       └── [id]/page.tsx         # /news/[id] 상세
+│   │       ├── page.tsx                            # 🆕 D-2  /news 목록
+│   │       └── [id]/page.tsx                       # 🆕 D-2  /news/[id] 상세
 │   │
-│   ├── admin/                        # /admin 경로 — admin 서브도메인 라우팅 대상
+│   ├── admin/                                      # /admin 경로 (admin 서브도메인 라우팅 대상)
 │   │   ├── (auth)/
-│   │   │   ├── layout.tsx            # 중앙 카드 (Sidebar 없음, noindex)
-│   │   │   └── login/page.tsx        # /admin/login
+│   │   │   ├── layout.tsx                          # 🆕 D-4  중앙 카드 (noindex)
+│   │   │   └── login/page.tsx                      # 🆕 D-3  /admin/login (NextAuth SignIn)
 │   │   └── (panel)/
-│   │       ├── layout.tsx            # <AdminSidebar/> wrap (noindex)
-│   │       ├── page.tsx              # /admin (대시보드)
+│   │       ├── layout.tsx                          # 🆕 D-4  <AdminSidebar/> wrap (noindex)
+│   │       ├── page.tsx                            # 🆕 D-3  /admin 대시보드
 │   │       └── news/
-│   │           ├── page.tsx
-│   │           ├── new/page.tsx
-│   │           └── [id]/edit/page.tsx
+│   │           ├── page.tsx                        # 🆕 D-3  글 목록
+│   │           ├── new/page.tsx                    # 🆕 D-2  글 작성
+│   │           └── [id]/edit/page.tsx              # 🆕 D-2  글 수정
 │   │
 │   └── api/
-│       ├── auth/[...nextauth]/route.ts
-│       └── heart/route.ts            # 익명 좋아요 토글
+│       ├── auth/[...nextauth]/route.ts             # ✅ D-5  NextAuth handlers
+│       └── heart/route.ts                          # 🆕 D-2  익명 좋아요 토글 (IP+세션)
 │
-├── auth.ts                           # NextAuth v5
-├── proxy.ts                          # /admin 보호 + (D-1) hostname 분기
+├── auth.ts                                         # ✅ D-5  NextAuth v5 Credentials
+├── proxy.ts                                        # ✅ D-5  /admin 보호 (🆕 D-1 hostname 분기 추가)
 │
-├── client/                           # ★ 사용자 전용 UI
+├── client/                                         # 🆕 D-4  ★ 사용자 전용 UI (폴더 전체 신규)
 │   ├── layouts/
-│   │   ├── PublicHeader.tsx          # 스크롤스파이 4메뉴 + 반응형 4 BP
-│   │   ├── PublicFooter.tsx
-│   │   └── Banner.tsx                # Sow Good 안내 띠 (사용자 페이지 전용)
-│   ├── sections/                     # 랜딩 6 섹션
-│   │   ├── HeroBanner.tsx
-│   │   ├── KpiSection.tsx
-│   │   ├── StorySection.tsx
-│   │   ├── ArticleGrid.tsx
-│   │   ├── PartnerSection.tsx
-│   │   └── PageFooterCta.tsx
+│   │   ├── PublicHeader.tsx                        # 🆕 D-4  스크롤스파이 4메뉴 + 4 BP
+│   │   ├── PublicFooter.tsx                        # 🆕 D-4  다크 카피라이트
+│   │   └── Banner.tsx                              # 🆕 D-4  Sow Good 안내 띠
+│   ├── sections/                                   # 랜딩 6 섹션
+│   │   ├── HeroBanner.tsx                          # 🆕 D-3  Gmarket Sans 슬로건
+│   │   ├── KpiSection.tsx                          # 🆕 D-3  4 KPI 카드
+│   │   ├── StorySection.tsx                        # 🆕 D-3  밥이 사랑입니다
+│   │   ├── ArticleGrid.tsx                         # 🆕 D-2  마조네리 3열
+│   │   ├── PartnerSection.tsx                      # 🆕 D-2  파트너 로고
+│   │   └── PageFooterCta.tsx                       # 🆕 D-2
 │   └── hooks/
-│       └── useScrollSpy.ts
+│       └── useScrollSpy.ts                         # 🆕 D-4  Intersection Observer
 │
-├── admin/                            # ★ 어드민 전용 UI
+├── admin/                                          # 🆕 D-4  ★ 어드민 전용 UI (폴더 전체 신규)
 │   ├── layouts/
-│   │   └── AdminSidebar.tsx
+│   │   └── AdminSidebar.tsx                        # 🆕 D-4
 │   └── components/
-│       ├── NewsEditor.tsx            # Tiptap rich text
-│       ├── ImageUploader.tsx         # MinIO presigned upload
-│       ├── NewsForm.tsx              # 제목·카테고리·태그 입력
-│       └── DashboardStats.tsx
+│       ├── NewsEditor.tsx                          # 🆕 D-2  Tiptap rich text
+│       ├── ImageUploader.tsx                       # 🆕 D-2  MinIO presigned upload
+│       ├── NewsForm.tsx                            # 🆕 D-2  제목·카테고리·태그 입력
+│       └── DashboardStats.tsx                      # 🆕 D-3  최근 글 5건
 │
-├── features/                         # ★ 도메인 로직 SSOT (양쪽 공유)
+├── features/                                       # ★ 도메인 로직 SSOT (양쪽 공유)
 │   └── news/
-│       ├── actions.ts                # Server Action (auth + Zod)
-│       ├── service.ts                # 비즈니스 (db ❌)
-│       ├── db.ts                     # Drizzle 쿼리 (DAL)
-│       ├── schemas.ts                # Zod + drizzle-zod
-│       ├── components/               # 공개·어드민 양쪽 사용
-│       │   ├── ArticleCard.tsx
-│       │   ├── FeaturedStoryCard.tsx
-│       │   ├── StoryCard.tsx
-│       │   ├── Heart.tsx
-│       │   ├── CategoryTabs.tsx
-│       │   ├── Pagination.tsx
-│       │   └── KpiCard.tsx
-│       └── index.ts                  # public API (외부 import 진입점, D 패턴 흡수)
+│       ├── actions.ts                              # ✅ D-5  Server Action (auth + Zod)
+│       ├── service.ts                              # ✅ D-5  비즈니스 (db ❌)
+│       ├── db.ts                                   # ✅ D-5  Drizzle 쿼리 (DAL)
+│       ├── schemas.ts                              # ✅ D-5  Zod + drizzle-zod
+│       ├── index.ts                                # ✅ D-5  public API (db.ts 격리)
+│       └── components/                             # 🆕 D-4  공개·어드민 양쪽 사용
+│           ├── ArticleCard.tsx                     # 🆕 D-4  12 variants
+│           ├── FeaturedStoryCard.tsx               # 🆕 D-4
+│           ├── StoryCard.tsx                       # 🆕 D-4
+│           ├── Heart.tsx                           # 🆕 D-4  Client (익명 좋아요)
+│           ├── CategoryTabs.tsx                    # 🆕 D-4
+│           ├── Pagination.tsx                      # 🆕 D-4
+│           └── KpiCard.tsx                         # 🆕 D-4
 │
 ├── components/
-│   └── ui/                           # shadcn primitive (양쪽 공유)
+│   └── ui/                                         # 🆕 D-4  shadcn init 후 primitive
 │
-├── db/                               # Drizzle (양쪽 공유)
-│   ├── index.ts
-│   ├── schema/                       # 5 테이블 (ADR-022)
-│   └── seed.ts
+├── db/                                             # ✅ D-5  Drizzle (양쪽 공유)
+│   ├── index.ts                                    # ✅ D-5
+│   ├── schema/                                     # ✅ D-5  5 테이블 (ADR-022)
+│   └── seed.ts                                     # ✅ D-5
 │
-├── lib/                              # 순수 함수 (ipHash, format, s3 등)
-├── types/                            # next-auth.d.ts 등 augmentation
-drizzle/                              # 마이그레이션 SQL
-drizzle.config.ts
-docker-compose.yml                    # postgres + minio
+├── lib/                                            # 🆕 D-4 ~ D-2  순수 함수
+│   ├── ip-hash.ts                                  # 🆕 D-2  좋아요 IP 해시
+│   ├── format.ts                                   # 🆕 D-4  dayjs 날짜 포맷
+│   └── s3.ts                                       # 🆕 D-2  MinIO/R2 클라이언트
+│
+├── hooks/                                          # 🆕 D-4  전역 공용 훅 (필요 시)
+│
+└── types/
+    └── next-auth.d.ts                              # ✅ D-5  Session/User/JWT augmentation
+
+drizzle/                                            # ✅ D-5  마이그레이션 SQL
+drizzle.config.ts                                   # ✅ D-5
+docker-compose.yml                                  # ✅ D-5  postgres + minio
 public/
-  robots.txt                          # Disallow: /admin/ (D-1 추가)
+  robots.txt                                        # 🆕 D-1  Disallow: /admin/
 ```
+
+### 다이어그램 진척 요약
+
+| 단계 | 마커 항목 수 | 작업 |
+|---|---|---|
+| ✅ D-5 (완료, 본 PR) | 15 | 인프라·DB·Auth·3-Layer·public API·임시 홈 |
+| 🆕 D-4 | 22 | F3 폴더 신규 + 공통 컴포넌트 + shadcn + Route Group layouts |
+| 🆕 D-3 | 9 | 랜딩 page.tsx 교체 + 사용자 sections 4개 + 어드민 대시보드·login |
+| 🆕 D-2 | 11 | 소식 목록·상세 + 어드민 글 CRUD + heart route + Tiptap + s3 |
+| 🆕 D-1 | 2 | proxy.ts hostname 분기 + robots.txt |
 
 ### F3 결정 규칙 (5초 위치 결정)
 
