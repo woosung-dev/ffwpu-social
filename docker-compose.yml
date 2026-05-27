@@ -1,0 +1,59 @@
+# 로컬 개발 스택 — Postgres 16-alpine + MinIO(S3 호환). ADR-020 셀프호스팅.
+# 컨테이너 내부 포트는 표준값 고정(5432/9000/9001), 호스트 포트만 .env로 변수화.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ffwpu-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ffwpu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ffwpu_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-ffwpu_social}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ffwpu} -d ${POSTGRES_DB:-ffwpu_social}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: ffwpu-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 초기 버킷 자동 생성 — minio 컨테이너 healthy 후 1회 실행
+  minio-init:
+    image: minio/mc:latest
+    container_name: ffwpu-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
+      mc mb -p local/${S3_BUCKET:-ffwpu-social} || true;
+      mc anonymous set download local/${S3_BUCKET:-ffwpu-social};
+      exit 0;
+      "
+
+volumes:
+  postgres_data:
+  minio_data:
