@@ -1,10 +1,10 @@
-// 사용자 사이트 헤더 — 4 메뉴 스크롤스파이 (랜딩) / "활동 스토리" 고정 (그 외 페이지), 1024↓ 햄버거. ADR-009·ADR-011 검색 미구현 (아이콘만)
+// 사용자 사이트 헤더 — Figma node 98:7101 정합 (bg-brand-bright #B769FF + 알약 active + SUIT Bold 흰 메뉴 + 검색 SVG). 4 메뉴 스크롤스파이 (랜딩) / "활동 스토리" 고정 (그 외 페이지), 1024↓ 햄버거. ADR-009·ADR-011 검색 미구현
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, Search, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 import { useScrollSpy } from "@/client/hooks/useScrollSpy";
 import { cn } from "@/lib/utils";
@@ -36,8 +36,8 @@ export function PublicHeader() {
   const activeId = isLanding ? scrollActive : "stories";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-white/90 backdrop-blur-md">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:h-20 lg:px-8">
+    <header className="sticky top-0 z-40 bg-brand-bright">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:h-20 lg:px-20">
         <Link href="/" aria-label="Sow Good 홈으로" className="block shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset, next/image SVG dangerouslyAllowSVG 회피 */}
           <img
@@ -49,21 +49,24 @@ export function PublicHeader() {
           />
         </Link>
 
-        <nav className="hidden items-center gap-8 lg:flex">
-          {MENU.map((m) => (
-            <Link
-              key={m.id}
-              href={m.href}
-              className={cn(
-                "text-sm transition-colors",
-                activeId === m.id
-                  ? "font-extrabold text-brand-primary"
-                  : "font-bold text-foreground hover:text-brand-primary",
-              )}
-            >
-              {m.label}
-            </Link>
-          ))}
+        <nav className="hidden items-center gap-6 lg:flex">
+          {MENU.map((m) => {
+            const isActive = activeId === m.id;
+            return (
+              <Link
+                key={m.id}
+                href={m.href}
+                className={cn(
+                  "rounded-full px-5 py-2.5 text-base transition-colors",
+                  isActive
+                    ? "border-[1.6px] border-brand-primary bg-white font-extrabold text-brand-primary"
+                    : "font-bold text-white hover:bg-white/10",
+                )}
+              >
+                {m.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-3">
@@ -71,15 +74,23 @@ export function PublicHeader() {
             type="button"
             disabled
             aria-label="검색"
-            className="cursor-not-allowed text-foreground/40"
+            className="cursor-not-allowed text-white/60"
           >
-            <Search className="size-5" aria-hidden />
+            {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
+            <img
+              src="/icons/search-icon.svg"
+              alt=""
+              width={20}
+              height={20}
+              aria-hidden
+              className="size-5"
+            />
           </button>
           <button
             type="button"
             aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
             aria-expanded={open}
-            className="text-foreground hover:text-brand-primary lg:hidden"
+            className="text-white hover:text-brand-lavender lg:hidden"
             onClick={() => setOpen((prev) => !prev)}
           >
             {open ? (
@@ -92,24 +103,27 @@ export function PublicHeader() {
       </div>
 
       {open && (
-        <nav className="border-t border-border bg-white lg:hidden">
+        <nav className="border-t border-white/20 bg-brand-bright lg:hidden">
           <ul className="container mx-auto flex flex-col gap-1 px-4 py-3">
-            {MENU.map((m) => (
-              <li key={m.id}>
-                <Link
-                  href={m.href}
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    "block py-2 text-base",
-                    activeId === m.id
-                      ? "font-extrabold text-brand-primary"
-                      : "font-bold text-foreground",
-                  )}
-                >
-                  {m.label}
-                </Link>
-              </li>
-            ))}
+            {MENU.map((m) => {
+              const isActive = activeId === m.id;
+              return (
+                <li key={m.id}>
+                  <Link
+                    href={m.href}
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "block rounded-md px-3 py-2.5 text-base transition-colors",
+                      isActive
+                        ? "bg-white font-extrabold text-brand-primary"
+                        : "font-bold text-white hover:bg-white/10",
+                    )}
+                  >
+                    {m.label}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       )}
