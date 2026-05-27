@@ -83,39 +83,19 @@ export function ArticleCard({
   const config = SIZE_CONFIG[size];
 
   if (state === "none") {
+    // Figma (114:8164) 명세: 카드 전체가 그라디언트 + 중앙 "보도자료" 큰 텍스트만 (카테고리 라벨·제목·날짜 본문 영역 없음)
     return (
       <div
         className={cn(
-          "flex flex-col overflow-hidden rounded-[14px] border border-border bg-white",
+          "flex items-center justify-center overflow-hidden rounded-[14px] text-white",
           config.container,
           className,
         )}
+        style={{ ...GRADIENT_STYLE, aspectRatio: "1 / 1" }}
       >
-        <div
-          className={cn(
-            "relative flex items-center justify-center text-white",
-            config.aspectRatio,
-          )}
-          style={GRADIENT_STYLE}
-        >
-          <span className="text-sm font-bold tracking-wide opacity-90">
-            보도자료
-          </span>
-        </div>
-        <div className="flex flex-col gap-2 p-4">
-          <span
-            className={cn(
-              "self-start rounded-full bg-brand-vivid px-2.5 py-0.5 font-semibold text-white",
-              config.categoryClass,
-            )}
-          >
-            보도자료
-          </span>
-          <p className={cn("font-bold text-foreground", config.titleClass)}>
-            준비 중인 콘텐츠
-          </p>
-          <p className="text-xs text-ink-date">—</p>
-        </div>
+        <span className="text-xl font-extrabold tracking-wide lg:text-2xl">
+          보도자료
+        </span>
       </div>
     );
   }

@@ -66,7 +66,7 @@ export function PublicHeader() {
           <button
             type="button"
             disabled
-            aria-label="검색 (준비 중)"
+            aria-label="검색"
             className="cursor-not-allowed text-foreground/40"
           >
             <Search className="size-5" aria-hidden />
