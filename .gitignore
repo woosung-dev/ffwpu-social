@@ -8,6 +8,9 @@ AGENTS.override.md
 # Claude Code per-project local settings
 .claude/settings.local.json
 
+# Codex consult 세션 ID (로컬 전용)
+.context/
+
 # === 환경 변수 ===
 # global.md §4 강제: .env* 무시, .env.example 만 예외
 .env*
