@@ -56,3 +56,4 @@ d4-bp*.png
 
 # codex/스킬 세션 로컬 상태
 .context/
+.gstack/
