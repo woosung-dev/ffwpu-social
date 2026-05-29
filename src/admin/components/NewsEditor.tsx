@@ -56,11 +56,10 @@ export function NewsEditor({ mode, categories, initial }: Props) {
   const router = useRouter();
   const isEdit = mode === "edit";
 
-  // 새 글 작성 모드 — 본문/커버 이미지 임시 prefix 용 tempId. 1회 생성
-  const tempId = useMemo(() => crypto.randomUUID(), []);
-  const scope = isEdit
-    ? { newsId: initial!.id }
-    : { tempId };
+  // 새 글도 client 에서 UUID 생성 → 업로드 prefix(news/{id}/) 와 news.id 를 동일하게 (codex v2 P2#2, temp prefix 제거)
+  const generatedId = useMemo(() => crypto.randomUUID(), []);
+  const newsId = isEdit ? initial!.id : generatedId;
+  const scope = { newsId };
 
   // body 는 RHF 외부 useState — Tiptap 무한 루프 방지 (codex P1#6)
   const [body, setBody] = useState<JSONContent>(
@@ -96,7 +95,7 @@ export function NewsEditor({ mode, categories, initial }: Props) {
       startTransition(async () => {
         const result = isEdit
           ? await updateNewsAction(initial!.id, payload)
-          : await createNewsAction(payload);
+          : await createNewsAction(newsId, payload);
         if (!result.success) {
           const msg =
             typeof result.error === "string"

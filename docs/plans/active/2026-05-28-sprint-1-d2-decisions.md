@@ -266,4 +266,38 @@
 - **이유**: (A) 는 jsdom 셋업 + testing-library 의존성 추가 + Image 컴포넌트 mock 필요 (next/image 가 DOM 의존). (C) 는 단위 보장 안 됨 (구조적 차단 vs 시각 차단). (B) 는 sanitize.ts 가 React/next 의존 0 → 순수 단위 테스트 + node 환경에서 즉시 실행. 빠르고 가볍다.
 - **영향**: `src/features/news/render/sanitize.ts` (pure 함수) + `news-body-renderer.tsx` (React) + `sanitize.test.ts` (5 시나리오). vitest@4 + `vitest.config.ts` (path alias @ → src). `test` npm script 추가.
 
+## [리뷰 후속] codex consult v2 + /review 교차 → 수정 4건 (2026-05-29)
+
+PR #5 생성 후 codex consult v2 + Claude /review 교차. 두 모델 합의 P1 1건 + P2 3건. 새 critical XSS/injection/draft-leak 은 양쪽 모두 없음 확인 (sanitize.ts whitelist·draft 분리·upload 안전 검증됨).
+
+### 수정 #R1 — proxy.ts role 가드 (P1, cross-model 확인)
+- **질문**: 어드민 read 경로(page Server Component)가 `role !== super` 에 미가드. proxy.ts 가 로그인 여부만 검사.
+- **옵션**: (A) proxy.ts 에 role==="super" 단일 가드 / (B) 각 page 데이터 fetch 에 requireSuperAdmin 추가 / (C) 둘 다
+- **선택**: (A) proxy.ts 단일 지점
+- **이유**: 어드민 라우트 전체 subtree 를 한 곳에서 게이트. read 는 페이지 렌더로만 진입하므로 proxy 가 완전 커버. mutation 은 이미 requireSuperAdmin. 무한 루프(비-super → /admin/login → /admin) 는 "super 만 login→/admin 바운스" 로 차단.
+- **영향**: `src/proxy.ts` — `isSuper` 체크 추가. v1.0 단일 super 계정에선 미악용이나 schema 가 role 지원하므로 defense-in-depth.
+
+### 수정 #R2 — server-only barrel 강제 (P2#1)
+- **선택**: `server-only` 패키지 설치 + features/{news,categories,storage}/index.ts 에 `import "server-only"`
+- **이유**: T10 에서 이미 client bundle 유입(drizzle-zod) 으로 빌드 깨진 전례 → 이 가드가 입증된 가치. build 통과 = 현재 client import 위반 0 확인.
+
+### 수정 #R3 — coverImageUrl 서버측 prefix 검증 (P2#3, Claude 보강)
+- **질문**: coverImageUrl 이 any string 수용. CoverImageUploader 가 `next/image unoptimized` 라 `remotePatterns` 우회 → 변조 URL 외부 도메인도 렌더.
+- **선택**: createNewsAction/updateNewsAction 에 `isAllowedImagePublicUrl` 검증 추가 (null/empty 는 허용)
+- **이유**: body 이미지는 sanitize 되는데 커버만 미검증이었음. unoptimized 가 remotePatterns 우회하므로 codex 평가보다 실질적. requireSuperAdmin 뒤이나 defense-in-depth + 실수 방지.
+
+### 수정 #R4 — temp 업로드 prefix 제거: client-generated newsId (P2#2)
+- **질문**: 새 글이 `news/temp-{tempId}/` 로 업로드 → createNews 가 `news/{id}/` 로 승격 안 함. delete cleanup `news/{id}/` 가 못 잡음 + 향후 temp cleanup job 이 live article 깨뜨림.
+- **기존 결정**: [T7 temp prefix] "그대로 두고 v1.1 cleanup job" — codex v2 가 "향후 cleanup 이 live 깨뜨림" 지적으로 전제 변경.
+- **옵션**: (A) S3 copy+delete 승격 / (B) client UUID 생성 → 업로드 prefix·news.id 동일 → temp 자체 제거 / (C) v1.1 연기 유지
+- **선택**: (B) client-generated newsId
+- **이유**: (A) 는 비동기 copy 실패 시 일관성 깨짐. (C) 는 codex 지적한 future-cleanup 위험 잔존. (B) 는 새 글도 NewsEditor 가 crypto.randomUUID() 생성 → 업로드 scope { newsId } → createNewsAction(id, input) 이 명시 id 로 insert. temp prefix 소멸 = orphan·future-cleanup 위험 동시 제거. requireSuperAdmin + z.uuid() 검증 + PK conflict 시 에러 처리로 안전.
+- **영향**: NewsEditor(generatedId) / actions.createNewsAction(id, input) / service.createNews(id, ...) / db.insertNews(id 허용). upload.ts 의 tempId scope 는 미사용(generic 유지).
+
+### Claude 단독 발견 (P3, 미수정 — 코스메틱)
+- `db.ts::searchTags` LIKE 와일드카드(`%`/`_`) 미이스케이프. SQL injection 아님(drizzle 파라미터화). 사용자가 `%` 입력 시 전체 매칭. v1.1 백로그.
+
+### Verify
+- pnpm tsc/lint/test(5/5)/build 모두 0 error. 어드민 5 페이지 ◐ Partial Prerender 유지.
+
 ## 추가 분기점 (T13 진행 중 발생 시 본 파일에 누적)

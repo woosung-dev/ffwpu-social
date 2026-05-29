@@ -247,11 +247,9 @@ export async function findActiveHeartEvent(newsId: string, sessionId: string) {
 
 // ─── Mutation — transaction 안에서만 호출 (codex P1#5, tx 인자 강제) ────────
 
-type NewsInsertData = Omit<
-  typeof news.$inferInsert,
-  "id" | "createdAt" | "updatedAt"
->;
-type NewsUpdateData = Partial<NewsInsertData>;
+// id 포함 가능 — 새 글은 client 생성 UUID 를 명시 전달 (업로드 prefix 정합, codex v2 P2#2)
+type NewsInsertData = Omit<typeof news.$inferInsert, "createdAt" | "updatedAt">;
+type NewsUpdateData = Partial<Omit<NewsInsertData, "id">>;
 
 // 글 신규 — service 가 tx 안에서 호출. 태그는 replaceNewsTags 별도
 export async function insertNews(tx: Tx, data: NewsInsertData) {

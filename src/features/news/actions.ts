@@ -4,6 +4,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireSuperAdmin } from "@/lib/auth-guards";
+import { isAllowedImagePublicUrl } from "@/lib/s3";
 import {
   type PresignedUploadResult,
   createPresignedPost,
@@ -25,6 +26,11 @@ export type ActionResult<T, Input = unknown> =
 function authError(e: unknown): { success: false; error: string } {
   if (e instanceof Error) return { success: false, error: e.message };
   return { success: false, error: "Unauthorized" };
+}
+
+// 커버 이미지 URL 서버측 검증 — S3 public prefix 만 허용 (codex v2 P2#3, next/image unoptimized 가 remotePatterns 우회하므로 필수)
+function isInvalidCover(url: string | null | undefined): boolean {
+  return Boolean(url) && !isAllowedImagePublicUrl(url as string);
 }
 
 // 어드민 CRUD revalidate 묶음 — 글 변경 시 사용자 사이트 + 어드민 캐시 무효화
@@ -59,15 +65,30 @@ export async function getNewsDetailAction(id: string) {
 // ─── 어드민 CRUD (super 가드) — RHF handleSubmit 의 values 객체 직접 수신 (결정 로그 [T7 시그니처]) ──
 
 export async function createNewsAction(
+  id: string,
   input: NewsInput,
 ): Promise<ActionResult<{ id: string }, NewsInput>> {
   try {
     const session = await requireSuperAdmin();
+    // 새 글 id 는 client 생성 UUID — 업로드 prefix(news/{id}/) 와 동일하게 (codex v2 P2#2, temp prefix 제거)
+    if (!z.uuid().safeParse(id).success) {
+      return { success: false, error: "잘못된 글 ID 형식입니다." };
+    }
     const parsed = newsInputSchema.safeParse(input);
     if (!parsed.success) {
       return { success: false, error: parsed.error };
     }
-    const created = await newsService.createNews(parsed.data, session.user.id);
+    if (isInvalidCover(parsed.data.coverImageUrl)) {
+      return {
+        success: false,
+        error: "커버 이미지 URL 이 허용된 스토리지 경로가 아닙니다.",
+      };
+    }
+    const created = await newsService.createNews(
+      id,
+      parsed.data,
+      session.user.id,
+    );
     revalidateNewsRoutes(created.id);
     return { success: true, data: created };
   } catch (e) {
@@ -84,6 +105,12 @@ export async function updateNewsAction(
     const parsed = newsInputSchema.safeParse(input);
     if (!parsed.success) {
       return { success: false, error: parsed.error };
+    }
+    if (isInvalidCover(parsed.data.coverImageUrl)) {
+      return {
+        success: false,
+        error: "커버 이미지 URL 이 허용된 스토리지 경로가 아닙니다.",
+      };
     }
     const updated = await newsService.updateNews(id, parsed.data);
     if (!updated) return { success: false, error: "Not Found" };

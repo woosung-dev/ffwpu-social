@@ -70,14 +70,16 @@ function normalizeTags(tags: string[]): string[] {
   return Array.from(new Set(cleaned));
 }
 
-// 글 신규 — news + news_tags 트랜잭션. actorUserId 가 null 이면 createdBy null (시스템 seed 등)
+// 글 신규 — news + news_tags 트랜잭션. id 는 client 생성 UUID (업로드 prefix 정합). actorUserId null 이면 createdBy null
 export async function createNews(
+  id: string,
   input: NewsInput,
   actorUserId: string | null,
 ) {
   const normalized = normalizeTags(input.tags);
   return db.transaction(async (tx) => {
     const created = await newsDb.insertNews(tx, {
+      id,
       title: input.title,
       body: input.body,
       categoryId: input.categoryId,
