@@ -12,7 +12,7 @@ export default function AdminAuthLayout({
 }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface-cool p-6">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-white p-8 shadow-sm">
+      <div className="w-full max-w-md rounded-xl border border-border bg-white p-8 shadow-md">
         {children}
       </div>
     </div>

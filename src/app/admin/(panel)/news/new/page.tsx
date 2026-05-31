@@ -19,7 +19,7 @@ export default function AdminNewsNewPage() {
     <div className="space-y-6">
       <BackLink />
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold text-ink-strong">새 글 작성</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-ink-strong">새 글 작성</h1>
         <p className="text-sm text-ink-subtle">
           임시 저장하거나 즉시 발행할 수 있습니다.
         </p>

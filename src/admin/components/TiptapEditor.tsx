@@ -179,7 +179,7 @@ export function TiptapEditor({
   };
 
   return (
-    <div className="overflow-hidden rounded-md border">
+    <div className="overflow-hidden rounded-lg border border-border focus-within:border-brand-primary/40 focus-within:ring-2 focus-within:ring-brand-primary/20 transition-colors">
       <Toolbar
         editor={editor}
         onSetLink={setLink}
@@ -257,7 +257,7 @@ function Toolbar({
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b bg-muted/30 px-2 py-1.5">
+    <div className="flex flex-wrap items-center gap-1 border-b border-border bg-surface-cool px-2 py-1.5">
       {buttons.map(({ icon: Icon, label, active, onClick }) => (
         <button
           key={label}

@@ -24,7 +24,7 @@ export default function AdminNewsEditPage(props: {
     <div className="space-y-6">
       <BackLink />
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold text-ink-strong">글 수정</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-ink-strong">글 수정</h1>
       </header>
       <Suspense fallback={<EditorLoading />}>
         <EditNewsData paramsPromise={props.params} />
