@@ -134,7 +134,7 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
           <button
             type="button"
             onClick={() => setError(null)}
-            className="text-xs underline"
+            className="rounded text-xs underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-2"
             aria-label="닫기"
           >
             닫기
@@ -167,11 +167,14 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
                   {rows.map((row) => {
                     const isPublished = row.publishedAt !== null;
                     return (
-                      <tr key={row.id} className="border-b last:border-b-0">
+                      <tr
+                        key={row.id}
+                        className="border-b last:border-b-0 transition-colors hover:bg-surface-soft/60"
+                      >
                         <td className="py-3 pr-4 font-medium text-ink-strong">
                           <Link
                             href={`/admin/news/${row.id}/edit`}
-                            className="hover:text-brand-primary"
+                            className="rounded transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2"
                           >
                             {row.title}
                           </Link>
@@ -184,7 +187,7 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
                             className={
                               isPublished
                                 ? "rounded-full bg-brand-primary/10 px-2 py-1 text-xs font-medium text-brand-primary"
-                                : "rounded-full bg-muted px-2 py-1 text-xs font-medium text-ink-subtle"
+                                : "rounded-full bg-warm/15 px-2 py-1 text-xs font-medium text-amber-700"
                             }
                           >
                             {isPublished ? "발행" : "임시 저장"}

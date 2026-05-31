@@ -93,7 +93,7 @@ function CreateForm({ onError }: { onError: (msg: string | null) => void }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">새 카테고리 추가</CardTitle>
+        <CardTitle className="text-xl">새 카테고리 추가</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -188,7 +188,7 @@ function CategoriesTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">카테고리 목록</CardTitle>
+        <CardTitle className="text-xl">카테고리 목록</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -205,22 +205,27 @@ function CategoriesTable({
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.id} className="border-b last:border-b-0">
+                <tr
+                  key={row.id}
+                  className="border-b last:border-b-0 transition-colors hover:bg-surface-soft/60"
+                >
                   <td className="py-3 pr-4 font-medium text-ink-strong">
                     {row.name}
                   </td>
-                  <td className="py-3 pr-4 font-mono text-xs text-ink-subtle">
+                  <td className="py-3 pr-4 font-mono text-xs text-ink-date">
                     {row.slug}
                   </td>
-                  <td className="py-3 pr-4 text-ink-strong">
+                  <td className="py-3 pr-4 text-ink-strong tabular-nums">
                     {row.newsCount}건
                   </td>
-                  <td className="py-3 pr-4 text-ink-strong">{row.sortOrder}</td>
+                  <td className="py-3 pr-4 text-ink-strong tabular-nums">
+                    {row.sortOrder}
+                  </td>
                   <td className="py-3 pr-4">
                     <span
                       className={
                         row.isActive
-                          ? "rounded-full bg-brand-primary/10 px-2 py-1 text-xs font-medium text-brand-primary"
+                          ? "rounded-full bg-kpi-lime/40 px-2 py-1 text-xs font-medium text-ink-strong"
                           : "rounded-full bg-muted px-2 py-1 text-xs font-medium text-ink-subtle"
                       }
                     >
@@ -399,7 +404,7 @@ function ErrorBanner({
       <button
         type="button"
         onClick={onClose}
-        className="text-xs underline"
+        className="rounded text-xs underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-2"
         aria-label="닫기"
       >
         닫기
