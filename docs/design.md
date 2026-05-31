@@ -721,3 +721,37 @@ StorySection 우측 결과 통계 — 라벨 + 숫자 짧은 묶음 3개를 세�
 2. 카피·레이아웃은 임의로 추측하지 않는다. Figma에 없는 건 사회공헌국에 확인.
 3. 디자인 토큰 변경은 큰 영향이 있으므로 `docs/decisions.md`에 ADR 추가.
 4. BI 시안 A/B 최종 확정 시 디자인 토큰·로고 자산 ADR로 기록.
+
+---
+
+# 어드민 디자인 (Sow Good Admin)
+
+> 사회공헌국 1인 운영자(50대·IT 비숙련) 대상 CMS. 사용자 사이트와 *분리된 디자인 시스템* — 톤은 공통(보라 brand-primary + warm + kpi 4색), 위계·인터랙션 규약은 어드민 전용.
+> SSoT: **`docs/design/admin-system.md`** (Phase 0 산출, 2026-06-01).
+
+## 핵심 위계 (admin-system.md §2 요약)
+
+- **보라(brand-primary) ≤ 50%** — sidebar active + 발행 CTA + focus ring 한정
+- **warm(#F4B600)** — 임시 저장 상태 칩 (발행 전 단계 명도 분리)
+- **kpi-lime** — 활성 상태 토글, 카테고리 chip 분배
+- **kpi-purple / brand-mid** — Dashboard 카테고리 칩 4분배
+
+## 컴포넌트별 적용 (Phase 2, 2026-06-01)
+
+| 화면 | 적용 |
+|---|---|
+| **NewsEditor** | 좌 본문 (lg:col-span-8) + 우 sticky sidebar (lg:col-span-4) — 발행 CTA·카테고리 chip group·커버·태그. 발행 가시성 30초 확보 (evaluator B+보강). |
+| **NewsTable** | 행 hover `bg-surface-soft/60`, 상태 칩 발행=brand-primary/10 / 임시=warm/15. |
+| **Dashboard** | 카테고리 칩 4색 분배 (brand-primary/warm/kpi-lime/brand-mid index 회전), 최근 글 행 hover. |
+| **AdminSidebar** | bg-surface-cool, active = bg-brand-primary/10 + before:bg-brand-primary 좌측 2px bar, focus ring 일관. |
+| **LoginForm** | 헤더에 "Sow Good Admin" eyebrow caps, divider, 카드 rounded-xl + shadow-md. |
+| **CategoryManager** | 행 hover, 활성 칩 = kpi-lime/40 (보라 과의존 회피). |
+| **TiptapEditor** | rounded-lg + focus-within ring, toolbar bg-surface-cool. |
+| **(panel)/layout** | main `max-w-6xl mx-auto`, sidebar bg-surface-cool 정합. |
+| **(auth)/layout** | rounded-xl + shadow-md (베이스 polish §4-2). |
+
+## Follow-up (v1.1 / 별도 PR)
+
+- 발행 확인 모달 (Radix Dialog) — ceo Critical
+- URL 슬러그 자동 생성 + `<details>` 숨김 — schemas 변경 필요
+- NewsEditor 모바일에서 sidebar → 상단 collapsible bar (반응형 fallback)
