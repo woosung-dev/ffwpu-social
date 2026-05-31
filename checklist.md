@@ -115,3 +115,36 @@
 - [ ] ESLint flat config 정식 셋업 (eslint-config-next 16 flat 패턴) — 현재 빈 config
 - [ ] next-auth peer dep 경고 검증 — next 16 호환 확인 또는 별도 패치
 - [ ] 임시 비밀번호 변경 — 첫 어드민 로그인 후 즉시
+
+## Sprint 1 D-2 (2026-05-28) — 어드민 페이지 본격 구현
+
+> 별도 worktree `ffwpu-social-d2` / 브랜치 `feat/sprint-1-d2-admin`. plan: `~/.claude/plans/ffwpu-social-sprint-1-d-2-ticklish-fox.md` (다음 세션 `docs/plans/active/2026-05-28-sprint-1-d2-admin.md` 로 승격 예정). 13 task, 4 구간.
+
+**구간 1 — 인증·인프라** (commit `6acaa8e`)
+- [x] T1 — 의존성 (`@tiptap/extension-image@2.27.2`, `@tiptap/extension-link@2.27.2`, `@aws-sdk/s3-presigned-post`) + docker-compose 검증 (main worktree 의 ffwpu-postgres + ffwpu-minio 공유)
+- [x] T2 — `src/lib/s3.ts` (S3Client MinIO endpoint + forcePathStyle + isAllowedImagePublicUrl) + `src/lib/auth-guards.ts::requireSuperAdmin()` + `src/features/storage/upload.ts::createPresignedPost` (content-length-range 5MB + Content-Type 정확 매치 + 60s expiry, ADR-017 MIME) + `features/news/actions.ts::uploadImageAction` Server Action + 기존 createNewsAction auth 가드 helper 교체
+- [x] T3 — `src/admin/components/LoginForm.tsx` (RHF + zodResolver + signIn credentials + useTransition + router.refresh) + `app/admin/(auth)/login/page.tsx` (placeholder auth() 중복 제거, proxy.ts 가 처리)
+
+**구간 2 — 카테고리 도메인** (commit `2a9448d`)
+- [x] T4 — `features/categories/{db,service,schemas,actions,index}.ts` (3-Layer + CATEGORY_SLUG_REGEX + UpdateCategoryData 타입 slug 제외 강제 + requireSuperAdmin + revalidate 4곳)
+- [x] T5 — `src/admin/components/CategoryManager.tsx` (CreateForm + CategoriesTable + EditDialog + ErrorBanner) + shadcn Switch primitive 추가 + `app/admin/(panel)/categories/page.tsx` (Suspense boundary 안에 listAllForAdmin — Cache Components 정합)
+
+**구간 3 — 뉴스 CRUD** (commit `e7e7f7d` · `cde954e` · `33b638b` · `4137ae3`)
+- [x] T6 — `features/news/db.ts` query 분리 (`listPublicNews`/`getPublicNewsById` vs `listForAdmin`/`getAdminNewsById`) + mutation 함수 모두 `tx` 인자 + `listLatest(5)`·`countNewsByCategory()`·`searchTags(prefix)`·`replaceNewsTags(tx, id, tags)`
+- [x] T7 — `features/news/service.ts` (createNews/updateNews/deleteNews 모두 `db.transaction` + 태그 normalize + dedupe + S3 best-effort prefix 청소) + `actions.ts` (requireSuperAdmin + revalidatePath + createNewsAction values object 시그니처) + publishNewsAction (publishedAt 토글) + searchTagsAction
+- [x] T8 — `TiptapEditor.tsx` (StarterKit+Image+Link http(s)+`useEditor` 1회 + onUpdate 만 + 드래그앤드롭/paste 업로드 + 툴바) + `CoverImageUploader.tsx` (실패 시 기존 url 유지) + `TagsInput.tsx` (칩+autocomplete debounce 200ms + Enter/Comma 둘 다)
+- [x] T9 — `NewsEditor.tsx` (RHF + Controller + body useState 별도 + [임시 저장]/[발행] 버튼 + 비활성 categoryId "(비활성)" 라벨 유지) + `NewsTable.tsx` (상태 탭 + URL searchParams 페이지네이션 + publishNewsAction 토글 + confirm Dialog 삭제)
+- [x] T10 — `app/admin/(panel)/news/{page,new/page,[id]/edit/page}.tsx` Server Components + Suspense (Cache Components 호환, top-level await 금지) + `(panel)/layout.tsx` AdminSidebar Suspense 격리 + drizzle-zod 제거 (schemas.ts 순수 Zod)
+
+**구간 4 — 대시보드 + 본문 렌더러 + verify** (commit `4000045` · `eecc992`)
+- [x] T11 — `app/admin/(panel)/page.tsx` (환영 + 최근 5건 + 카테고리 카운트 칩 활성만) + AdminSidebar 로그아웃 form action (`features/auth/actions.ts::logoutAction` Server Action)
+- [x] T12 — `src/features/news/render/{sanitize.ts,news-body-renderer.tsx}` pure 함수 분리 + Tiptap JSON walker + Link http(s) only + Image src prefix DI 주입 + `sanitize.test.ts` 5 단위 테스트 (javascript:/data:/외부 이미지/정상 bold+italic/정상 image+link+알 수 없는 노드)
+- [x] T13 — 종합 verify — pnpm tsc/lint/build/test 모두 0 error. 어드민 4 페이지 (◐ Partial Prerender) + /admin/login (○ static). Playwright smoke 는 사용자 사이트 D-3 미완으로 D-3/`/qa` 세션 연기
+
+**검증 절차 (Heavy 분류, methodology §5)**
+- [x] codex consult v1 (plan 단계) — P1 7건 + P2 5건 모두 plan 반영
+- [ ] codex consult v2 (구현 종료 후 PR diff 재교차) — PR 생성 후 선택적
+- [ ] `/review` PR diff 리뷰 — PR 생성 후 선택
+- [ ] `/qa` Standard — D-3 통합 시 함께
+- [ ] `/design-review` — 어드민 Figma 시안 없음, anti-slop 자체 점검 완료
+- [ ] `/finishing-a-development-branch` → push (자동, 본 세션 사용자 사전 승인) → PR (자동) → merge (사용자 승인 후)

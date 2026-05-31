@@ -616,3 +616,189 @@ D 패턴 흡수: `src/features/<도메인>/index.ts` public API — 외부에서
 
 - Heart 컴포넌트가 클라 localStorage UUID 생성 → toggleHeart action 인자. unique 충돌 시 기존 row deleted_at 토글 (insert 재시도 금지).
 - 어드민 카테고리 관리 UI (`src/admin/components/CategoryManager`) — 추가·수정·비활성화·정렬.
+
+---
+
+## 2026-05-28 (D-2 진입 — 어드민 페이지 plan 확정 + 의존성 셋업)
+
+> 별도 worktree `ffwpu-social-d2` 에서 진행 (브랜치 `feat/sprint-1-d2-admin`). main worktree (`ffwpu-social`) 의 docker-compose (postgres 5433 + minio 9000-9001) 공유 사용 — d2 자체 compose up 시도 시 컨테이너 이름 충돌이라 main 의 인스턴스 그대로 활용.
+
+### Plan 위치
+
+- 개인 brainstorm: `~/.claude/plans/ffwpu-social-sprint-1-d-2-ticklish-fox.md` (Stage 3 plan 본문 + codex consult 결과 + 결정 #1~#16)
+- 공유 plan: `docs/plans/active/2026-05-28-sprint-1-d2-admin.md` *다음 세션에 ~/.claude 본문 옮겨 작성 예정 (global.md plans 라이프사이클 정합)*
+
+### Stage 1 Brainstorm 결정 16건 (요약)
+
+- **범위**: 로그인 + 뉴스 CRUD + 카테고리 관리만. toggleHeart D-3 이월, audit_logs v1.1 백로그.
+- **UI**: 사용자 사이트 보라 그대로 (새 토큰 추가 0). 대시보드 = 최근 글 5건 + 카테고리 카운트 칩. 뉴스 URL = UUID id 그대로. 발행 = publishedAt nullable 2 버튼 ([임시 저장]/[발행]). 카테고리 UI = 리스트 + 상단 추가 폼 + row Dialog. 카테고리 삭제 = is_active 토글만.
+- **폼 패턴**: RHF + Controller + handleSubmit → action. Tiptap StarterKit + Image + Link + 드래그앤드롭. 자동 저장 0. 태그 = 칩 + autocomplete. 커버 이미지 = 별도 필드.
+
+### codex consult 1차 결과 (Heavy 분류, session 019e6a2f)
+
+P1 7건 + P2 5건. P1 모두 plan 내 명시 처리:
+1. **`/api/upload` Route Handler 미보호** → 결정 #16 Route Handler 자체 생성 안 함. `uploadImageAction` Server Action 만 사용.
+2. **role check 복붙** → `src/lib/auth-guards.ts::requireSuperAdmin()` helper 일원화.
+3. **Tiptap XSS 위험** → 결정 #13 React renderer whitelist (`NewsBodyRenderer.tsx` 자체 walker, DOMPurify 의존성 0). Link http(s) only, Image src `NEXT_PUBLIC_S3_PUBLIC_URL` prefix 매칭 강제. 5 단위 테스트.
+4. **5MB 우회** → 결정 #14 Presigned POST + `content-length-range` policy. `@aws-sdk/s3-presigned-post` 신규 설치.
+5. **news + news_tags transaction** → service 가 `db.transaction(async tx => ...)` 안에서 insertNews + replaceNewsTags 호출. db.ts mutation 함수 모두 tx 인자 받음.
+6. **Tiptap + RHF 무한 루프** → quant-bridge LESSON-004 강화. `useEditor` 1회 + `onUpdate` 만 onChange + content 재주입 금지 + **body 는 RHF register 안 함, useState 별도 + submit 시 병합** (codex 추가 권장).
+7. **공개 목록 draft 노출 위험** → 결정 #15 `listPublicNews` (publishedAt IS NOT NULL) / `listForAdmin` 분리. type-safe — admin 함수는 server-only barrel 만 export.
+
+codex Recommendation: "D-2 반드시 결정: auth helper / public-admin query 분리 / Tiptap sanitize 전략 / upload size enforcement / transaction 방식". 모두 결정 #13~#16 + 위험표 6 행 + Task 분해 갱신으로 확정.
+
+### 의존성 추가 (T1)
+
+```bash
+pnpm add @tiptap/extension-image@^2.10.3 @tiptap/extension-link@^2.10.3 @aws-sdk/s3-presigned-post
+```
+
+Tiptap 은 기존 2.x 와 통일 (peer dep 충돌 회피 — 3.x 설치 시 starter-kit/react/pm 모두 업그레이드 필요).
+
+### Task 분해 (13 task, 4 구간)
+
+1. **구간 1 인증·인프라** (T1~T3): 의존성·docker 검증 ✅ / lib/s3 + auth-guards + storage upload + uploadImageAction / LoginForm
+2. **구간 2 카테고리** (T4~T5): features/categories 3-Layer / CategoryManager + /admin/categories
+3. **구간 3 뉴스 CRUD** (T6~T10): db.ts query 분리 + tx / service + actions / TiptapEditor + CoverImageUploader + TagsInput / NewsEditor + NewsTable / /admin/news routes
+4. **구간 4 대시보드 + body renderer** (T11~T13): Dashboard / NewsBodyRenderer + 5 단위 테스트 / 종합 verify
+
+### 다음 세션 (T2 진입 시) 첫 작업
+
+1. `docs/plans/active/2026-05-28-sprint-1-d2-admin.md` 작성 (~/.claude 본문 옮김 — global.md 승격 경로 정합)
+2. T2 — `src/lib/s3.ts` + `src/lib/auth-guards.ts` + `src/features/storage/upload.ts` + `src/features/news/actions.ts::uploadImageAction`
+3. T3 — `src/admin/components/LoginForm.tsx` + `app/admin/(auth)/login/page.tsx` 통합
+4. 구간 1 종료 시 commit + 사용자 보고
+
+---
+
+## 2026-05-28 (D-2 진행 — 구간 1+2 완료, T1~T5)
+
+### 구간 1 — 인증·인프라 (commit `6acaa8e`)
+
+**T1 의존성**: `@tiptap/extension-image@2.27.2` + `@tiptap/extension-link@2.27.2` + `@aws-sdk/s3-presigned-post`. main worktree 의 docker (postgres 5433 + minio 9000-9001) 공유 사용.
+
+**T2 인프라**: 
+- `src/lib/auth-guards.ts::requireSuperAdmin()` — 모든 admin Server Action 첫 줄 helper (codex P1#1+#2 통일).
+- `src/lib/s3.ts` — S3Client (MinIO/R2 호환, `forcePathStyle`) + `getPublicUrl(key)` + `isAllowedImagePublicUrl(url)` (NewsBodyRenderer T12 정합).
+- `src/features/storage/upload.ts::createPresignedPost` — content-length-range [1, 5MB] + Content-Type 정확 매치 + 60s 만료 (codex P1#4). object key `news/{newsId|temp-{uuid}}/{uuid}.{ext}` (orphan 청소 친화).
+- `src/features/news/actions.ts::uploadImageAction` — Server Action (결정 #16). requireSuperAdmin → Zod 검증 → createPresignedPost → `{ uploadUrl, fields, publicUrl, key }` 반환. 기존 createNewsAction 의 auth 검사도 helper 로 교체.
+
+**T3 LoginForm**: 
+- `src/admin/components/LoginForm.tsx` — RHF + zodResolver + `signIn("credentials", { redirect: false })` + `router.refresh()`. useTransition + inline authError.
+- `app/admin/(auth)/login/page.tsx` — placeholder 의 `await auth()` 체크 제거 (proxy.ts 가 already-logged-in /admin/login → /admin 처리 중이라 중복). Cache Components 환경에서 prerender block 회피.
+
+### 구간 2 — 카테고리 도메인 (commit `2a9448d`)
+
+**T4 features/categories 3-Layer**:
+- `db.ts`: listAllCategoriesForAdmin + countNewsPerCategory + getCategoryBySlug + insertCategory + updateCategoryById. `UpdateCategoryData` 타입에 slug 제외 (ADR-025 immutable 컴파일 단계 강제 + codex P2#1).
+- `schemas.ts`: `CATEGORY_SLUG_REGEX` (영문 소문자·숫자·하이픈) + createCategorySchema + updateCategorySchema (slug 제외).
+- `service.ts`: listAllForAdmin (글 수 join Map merge) + createCategory (slug 중복 사전 검증) + updateCategory (필드 변경 0 거절).
+- `actions.ts`: requireSuperAdmin + revalidatePath (`/admin/categories` + `/admin/news` + `/news` + `/`).
+
+**T5 CategoryManager UI**:
+- shadcn Switch primitive 추가.
+- `src/admin/components/CategoryManager.tsx` — 상단 [+ 새 카테고리] 폼 + 리스트 (이름·slug·글수·정렬·활성 chip) + row [수정] → Dialog (name/sortOrder/isActive, slug readonly 안내). useTransition + inline ErrorBanner.
+- `app/admin/(panel)/categories/page.tsx` — Server Component + Suspense 안에 listAllForAdmin 호출. Cache Components 환경에서 uncached data 는 Suspense boundary 필수.
+
+### 결정 / 함정
+
+**결정 #17 — Cache Components 환경 admin 페이지는 Suspense boundary 패턴 (force-dynamic 미사용)**
+- `export const dynamic = "force-dynamic"` 는 `cacheComponents: true` 와 호환 X (Next.js 16 빌드 에러: "Route segment config 'dynamic' is not compatible with `nextConfig.cacheComponents`").
+- 정답 — 정적 헤더 + Suspense 로 data fetch 분리: `<Suspense fallback={<Loading />}><AsyncDataComp /></Suspense>`.
+- `/admin/categories` 가 ◐ Partial Prerender 로 빌드 (정적 헤더 prerender + 동적 데이터 스트림).
+- 다음 admin 페이지 (`/admin`, `/admin/news`, `/admin/news/new`, `/admin/news/[id]/edit`) 모두 같은 패턴 적용.
+
+**결정 #18 — Client Component 는 features/<domain> index.ts barrel 우회 (D-4 패턴 재확인)**
+- `from "@/features/categories"` 에서 import 하면 service.ts → db.ts → pg 가 client bundle 로 끌려옴 (module-not-found build 에러).
+- Client Component (CategoryManager 등) 는 직접 path import: `from "@/features/categories/actions"` + `from "@/features/categories/schemas"`.
+- index.ts 는 server-only barrel (Server Component 에서만 사용).
+
+### 다음 세션 (T6 진입) 첫 작업
+
+1. T6 — `features/news/db.ts` 보강:
+   - `findAllNews` → `listPublicNews` rename + `WHERE published_at IS NOT NULL` (P1#7)
+   - `findNewsById` → `getPublicNewsById` (published 강제) + `getAdminNewsById` (모두)
+   - 신규: `listForAdmin({ page, size, status })`, `getAdminNewsById`, `listLatest(5)`, `countNewsByCategory()`, `searchTags(prefix)`
+   - mutation: `insertNews(tx, data)`, `updateNews(tx, id, data)`, `deleteNews(tx, id)`, `replaceNewsTags(tx, id, tags)` — **모두 tx 인자 받음** (P1#5)
+   - 호출 측 (CategoryTabs / 사용자 사이트 routes / 어드민 routes) 의 import 도 함께 변경
+2. T7 — service.ts createNews/updateNews/deleteNews 모두 `db.transaction` 안에서 insertNews + replaceNewsTags. tags normalize + dedupe. actions.ts requireSuperAdmin + publishNewsAction
+3. 구간 3 (T6~T10) 모두 끝나는 시점에 사용자 보고 + commit
+
+---
+
+## 2026-05-28 (D-2 자동 진행 — T6~T13 + PR, 사용자 사전 승인 "멈추지 말고 PR까지 + 추천 자동 선택 + 결정 로그")
+
+### 진행 모드
+
+- 사용자가 본 세션 시작 시 명시: "쭉 진행을 하는데 가능한 멈추지말고 PR생성까지 끝까지 했으면 좋겠고, 물어보지 않는다면 문제가 선택부분인데 추천으로 자동 선택, 대신 해당 목록 및 선택 항목에 대한 기록을 해두고 PR생성할때 어떤 목록이 있었고 어떤 것을 선택했는지 남겨줘".
+- `docs/plans/active/2026-05-28-sprint-1-d2-decisions.md` 신규 — T6~T13 진행 중 발생한 12개 분기점 누적 (각 [질문/옵션/선택/이유/영향]). PR 본문에 링크.
+- `~/.claude/projects/.../memory/autoexecute_to_pr_mode.md` 신규 — 본 운영 모드를 feedback memory 로 영속화. 향후 동일 요청 시 재사용.
+
+### 구간 3 — 뉴스 백엔드 (T6+T7, commit `e7e7f7d`)
+
+- `db.ts` codex P1#7 분리: `findAllNews → listPublicNews + publishedAt IS NOT NULL`, `findNewsById → getPublicNewsById + 동일 조건`. 어드민용 `listForAdmin / countForAdmin / getAdminNewsById / listLatest / countNewsByCategory / searchTags` 신규 (정렬키 `createdAt DESC` — 결정 로그 [T6]).
+- mutation `insertNews/updateNews/deleteNews/replaceNewsTags` 모두 `tx: Tx` (drizzle transaction callback param 추론) 인자 강제. service 가 db.transaction 안에서 호출 → 호출자 실수 차단.
+- service.ts: createNews/updateNews 가 db.transaction. tags normalize (# 제거 + trim + lowercase + dedupe). deleteNews 후 features/storage/cleanup::deleteByPrefix(`news/{id}/`) best-effort (DB 삭제 성공 보장, S3 실패는 v1.1 cleanup job 백업).
+- actions.ts: createNewsAction 시그니처를 `(input: NewsInput)` values object 직접 수신 (FormData 미사용, 결정 로그 [T7]). body=jsonb + tags=array 의 RHF handleSubmit 자연 통합. updateNewsAction/deleteNewsAction/publishNewsAction/searchTagsAction 추가. 모두 requireSuperAdmin + revalidatePath 통일.
+
+### 구간 3 — UI 컴포넌트 (T8+T9, commit `cde954e` + `33b638b`)
+
+- TiptapEditor: `useEditor` 1회만 + onUpdate 만 onChange + content 재주입 금지 (codex P1#6). body 는 NewsEditor 의 useState 별도 + submit 시 병합. 드래그앤드롭/paste 자동 업로드 (uploadImageAction → presigned POST → editor.setImage). 툴바 8 버튼 (B/I/H2/H3/UL/OL/Link/Image). `immediatelyRender:false` (Next.js SSR hydration mismatch 회피).
+- CoverImageUploader: 클릭/드래그앤드롭, 업로드 실패 시 기존 url 유지 (결정 로그 [T8]). next/image `unoptimized` (MinIO 로컬 + R2 prod 호환).
+- TagsInput: 칩 + autocomplete (빈도순, 결정 로그 [T6]). Enter+Comma 둘 다 (결정 로그 [T8]). debounce 200ms inline setTimeout (의존성 0). Backspace 로 마지막 태그 제거.
+- NewsEditor: RHF + Controller 4 필드 (title/categoryId/tags/coverImageUrl) + body useState 별도. tempId useMemo 1회 (새 글 본문 이미지 prefix). [임시 저장]/[발행] 2 버튼 — [발행] 누르면 publishedAt=now(또는 기존 timestamp 유지), [임시 저장]=null. new mode 성공 시 /admin/news/[id]/edit redirect.
+- NewsTable: 상태 탭 (전체/임시/발행) + queryString 페이지네이션 (결정 로그 [T10 URL]) + publishNewsAction inline 토글 + deleteNewsAction confirm Dialog.
+
+### 구간 3 — 라우트 (T10, commit `4137ae3`) + 빌드 함정 해결
+
+- **drizzle-zod 제거** (schemas.ts 순수 Zod) — drizzle-zod@0.7.1 ↔ drizzle-orm@0.36.4 버전 불일치로 `isView` export 누락 + Client Component 가 drizzle-zod 끌어와 build 실패. 순수 Zod 로 재작성, body=z.unknown() (구조 검증은 NewsBodyRenderer T12 담당).
+- **Cache Components 패턴 학습**:
+  1. Page 가 `async` + top-level `await params/searchParams` → "Uncached data was accessed outside of <Suspense>" 빌드 에러. 해결 — Page sync 유지, promise 를 Suspense 자식으로 전달 + 자식이 await.
+  2. AdminSidebar 의 `usePathname()` 이 dynamic route prerender 시 uncached → 같은 에러. 해결 — layout 에서 `<Suspense fallback={SidebarSkeleton}><AdminSidebar/></Suspense>` 격리. 모든 어드민 페이지가 ◐ Partial Prerender 로 빌드 (정적 헤더 prerender + 동적 데이터 스트림).
+- 3 페이지 (`/admin/news`, `/admin/news/new`, `/admin/news/[id]/edit`) 정상 ◐ 빌드.
+
+### 구간 4 — 대시보드·로그아웃 (T11, commit `4000045`) + 본문 렌더러 (T12, commit `eecc992`)
+
+- `/admin` page placeholder 교체: 최근 5건 + 카테고리 카운트 (활성만, 결정 로그 [T11]) + [+ 새 글 작성] 우측 상단.
+- AdminSidebar 의 `<Link href="/admin/logout">` placeholder → `<form action={logoutAction}>` Server Action (`features/auth/actions.ts::logoutAction` — NextAuth signOut + /admin/login redirect). Route Handler 자체 생성 안 함 (결정 #16 일관).
+- NewsBodyRenderer 분리: `sanitize.ts` (pure 함수, React/next 의존 0) + `news-body-renderer.tsx` (Server Component, next/image 사용). 단위 테스트 5건 모두 `sanitize.test.ts` 에서 pure 함수만 검증 — vitest 단독 (testing-library/jsdom 미설치).
+- `vitest@4` 설치 + `vitest.config.ts` (alias `@` → `src`) + `test: "vitest run"` npm script.
+
+### 결정 / 함정 (본 세션 신규)
+
+**결정 #19 — drizzle-zod 제거, 순수 Zod**
+- Client Component (NewsEditor) 가 `@/features/news/schemas` import → drizzle-zod 가 client bundle 로 끌려옴 + drizzle-orm 0.36.4 에 `isView` 미존재 build 실패.
+- schemas.ts 가 `createInsertSchema(news)` 의존하지 않고 plain Zod `z.object({ title, body: z.unknown(), categoryId, coverImageUrl, publishedAt, tags })` 로 표현. body 의 구조 안전성은 NewsBodyRenderer (sanitize.ts) 가 별도 책임.
+
+**결정 #20 — Cache Components Suspense 패턴 일반화**
+- `cacheComponents: true` 환경에서:
+  1. Page 본체는 sync, params/searchParams promise 를 Suspense 자식으로 전달
+  2. layout 의 Client Component (usePathname/useState 등) 는 Suspense 로 격리
+  3. `export const dynamic = "force-dynamic"` 미사용 (cacheComponents 와 비호환, 결정 #17)
+- 모든 어드민 페이지 ◐ Partial Prerender 로 통일.
+
+**결정 #21 — 본문 정화는 pure 함수 + DI**
+- `sanitize.ts` 가 `isAllowedImageSrc: (url: string) => boolean` 을 인자로 받아 검증. 실제 사용처는 `isAllowedImagePublicUrl` (s3.ts) 주입. 테스트는 mock 주입.
+- 모듈 로드 시점의 `process.env.NEXT_PUBLIC_S3_PUBLIC_URL` 캡처 회피 + 테스트 격리.
+
+### Verify 결과
+
+- `pnpm tsc --noEmit`: 0 error
+- `pnpm lint`: 0 error
+- `pnpm test`: 5/5 통과 (sanitize.test.ts)
+- `pnpm build`: success. 어드민 5 페이지 (login=○, dashboard/categories/news/news/[id]/edit/news/new=◐), 사용자 사이트 / / dev/components=○, /api/auth/[...nextauth]=ƒ
+- `cacheComponents [71007]` (Client Component function props) warning 5건 — TiptapEditor·CoverImageUploader·TagsInput 의 onChange/onError. 호출자가 모두 Client Component(NewsEditor) 라 실제 RSC boundary 안 넘음. 빌드 통과로 false positive 확인. 결정 로그 [T8].
+
+### 본 세션 핵심 commit (`8b3e0cc` 이후 7개)
+
+- `e7e7f7d` feat(d2): 뉴스 백엔드 query 분리 + transaction (T6~T7)
+- `cde954e` feat(d2): Tiptap + 커버이미지 + 태그 입력 UI (T8)
+- `33b638b` feat(d2): NewsEditor + NewsTable (T9)
+- `4137ae3` feat(d2): /admin/news 라우트 3 페이지 (T10) + Cache Components 호환 패턴
+- `4000045` feat(d2): 어드민 대시보드 + 로그아웃 (T11)
+- `eecc992` feat(d2): NewsBodyRenderer + 5 단위 테스트 (T12)
+- (다음 commit) docs(d2): Atomic Update + 결정 로그 최종 + checklist + context-notes (T13)
+
+### 다음 — PR 생성
+
+`feat/sprint-1-d2-admin` 브랜치를 `main` 으로 PR. 본문에 결정 로그 (`docs/plans/active/2026-05-28-sprint-1-d2-decisions.md`) 링크 + commit 11개 요약 + verify 결과 + codex consult v2 / `/qa` / `/review` 는 PR 생성 후 사용자가 선택.

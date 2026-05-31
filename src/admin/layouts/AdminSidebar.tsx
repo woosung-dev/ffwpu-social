@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { LayoutDashboard, LogOut, Menu, Newspaper, X } from "lucide-react";
 
+import { logoutAction } from "@/features/auth/actions";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -89,13 +90,15 @@ export function AdminSidebar() {
         </nav>
 
         <div className="border-t border-border px-3 py-4">
-          <Link
-            href="/admin/logout"
-            className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-ink-subtle transition-colors hover:bg-surface-soft hover:text-foreground"
-          >
-            <LogOut className="size-4" aria-hidden />
-            로그아웃
-          </Link>
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-ink-subtle transition-colors hover:bg-surface-soft hover:text-foreground"
+            >
+              <LogOut className="size-4" aria-hidden />
+              로그아웃
+            </button>
+          </form>
         </div>
       </aside>
     </>
