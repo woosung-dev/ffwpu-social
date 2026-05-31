@@ -1,0 +1,14 @@
+{
+  "extends": "@myorg/config/tsconfig/library.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "outDir": "dist",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["index.ts", "components/**/*", "lib/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

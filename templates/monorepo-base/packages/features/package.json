@@ -1,0 +1,39 @@
+{
+  "name": "@myorg/features",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./index.ts",
+    "./news": "./news/index.ts",
+    "./news/actions": "./news/actions/index.ts",
+    "./news/service": "./news/service/index.ts",
+    "./news/db": "./news/db/index.ts",
+    "./news/schemas": "./news/schemas/index.ts",
+    "./news/components/*": "./news/components/*.tsx",
+    "./auth/admin": "./auth/admin/index.ts",
+    "./auth/public": "./auth/public/index.ts",
+    "./auth/shared": "./auth/shared/index.ts",
+    "./storage": "./storage/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "zod": "^4.0.0",
+    "@myorg/db": "workspace:*",
+    "@myorg/ui-base": "workspace:*"
+  },
+  "devDependencies": {
+    "@myorg/config": "workspace:*",
+    "typescript": "^5.7.2",
+    "@types/react": "^19.0.0"
+  },
+  "peerDependencies": {
+    "next": "^16.0.0",
+    "next-auth": "5.0.0-beta.25"
+  }
+}
