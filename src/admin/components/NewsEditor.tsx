@@ -1,4 +1,4 @@
-// 어드민 뉴스 작성·수정 — RHF + Controller. body 는 useState 별도 (codex P1#6). 발행/임시 저장 2 버튼 (plan v2 결정 #6)
+// 어드민 뉴스 작성·수정 — RHF + Controller. body 는 useState 별도 (codex P1#6). 좌 본문 + 우 sticky sidebar (발행 CTA·카테고리 chip·커버·태그)
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
@@ -19,13 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 export type NewsCategoryOption = {
   id: string;
@@ -112,18 +106,20 @@ export function NewsEditor({ mode, categories, initial }: Props) {
       });
     })();
 
+  const isPublished = Boolean(isEdit && initial?.publishedAt);
+
   return (
     <form className="space-y-6" noValidate>
       {error && (
         <div
           role="alert"
-          className="flex items-start justify-between gap-4 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+          className="flex items-start justify-between gap-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
         >
           <span>{error}</span>
           <button
             type="button"
             onClick={() => setError(null)}
-            className="text-xs underline"
+            className="text-xs underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-2 rounded"
             aria-label="닫기"
           >
             닫기
@@ -131,134 +127,186 @@ export function NewsEditor({ mode, categories, initial }: Props) {
         </div>
       )}
 
-      <Card>
-        <CardContent className="space-y-6 pt-6">
-          {/* 제목 */}
-          <div className="space-y-2">
-            <Label htmlFor="news-title">제목</Label>
-            <Input
-              id="news-title"
-              placeholder="제목을 입력하세요"
-              disabled={isPending}
-              {...form.register("title")}
-            />
-            {form.formState.errors.title && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.title.message}
-              </p>
-            )}
-          </div>
-
-          {/* 카테고리 */}
-          <div className="space-y-2">
-            <Label htmlFor="news-category">카테고리</Label>
-            <Controller
-              control={form.control}
-              name="categoryId"
-              render={({ field }) => (
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  disabled={isPending}
-                >
-                  <SelectTrigger id="news-category" className="w-full">
-                    <SelectValue placeholder="카테고리 선택" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+      <div className="grid gap-6 lg:grid-cols-12">
+        {/* 좌 — 본문 (lg 8/12) */}
+        <Card className="lg:col-span-8">
+          <CardContent className="space-y-8 pt-6">
+            {/* 제목 */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="news-title"
+                className="text-sm font-semibold text-ink-strong"
+              >
+                제목
+              </Label>
+              <Input
+                id="news-title"
+                placeholder="제목을 입력하세요"
+                disabled={isPending}
+                className="h-11 text-base"
+                {...form.register("title")}
+              />
+              {form.formState.errors.title && (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.title.message}
+                </p>
               )}
-            />
-            {form.formState.errors.categoryId && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.categoryId.message}
-              </p>
-            )}
-          </div>
+            </div>
 
-          {/* 커버 이미지 */}
-          <div className="space-y-2">
-            <Label>커버 이미지</Label>
-            <Controller
-              control={form.control}
-              name="coverImageUrl"
-              render={({ field }) => (
-                <CoverImageUploader
-                  value={field.value ?? null}
-                  onChange={field.onChange}
-                  scope={scope}
-                  onError={setError}
-                  disabled={isPending}
+            {/* 본문 — useState 별도 (codex P1#6) */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-ink-strong">
+                본문
+              </Label>
+              <TiptapEditor
+                defaultValue={initial?.body}
+                onChange={setBody}
+                scope={scope}
+                onError={setError}
+                disabled={isPending}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 우 — 메타 sidebar (lg 4/12) */}
+        <aside className="lg:col-span-4">
+          <div className="space-y-4 lg:sticky lg:top-6">
+            {/* 발행 CTA — human persona "30초 가시성" + evaluator P0 */}
+            <Card>
+              <CardContent className="space-y-3 pt-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium uppercase tracking-wide text-ink-date">
+                    상태
+                  </span>
+                  <span
+                    className={cn(
+                      "rounded-full px-2.5 py-1 text-xs font-medium",
+                      isPublished
+                        ? "bg-brand-primary/10 text-brand-primary"
+                        : "bg-warm/15 text-amber-700",
+                    )}
+                  >
+                    {isPublished ? "발행" : "임시 저장"}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => submit(false)}
+                    disabled={isPending}
+                    className="flex-1 active:scale-[0.98]"
+                  >
+                    {isPending ? "저장 중..." : "임시 저장"}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => submit(true)}
+                    disabled={isPending}
+                    className="flex-1 active:scale-[0.98]"
+                  >
+                    {isPending ? "처리 중..." : "발행"}
+                  </Button>
+                </div>
+                {isEdit && initial?.publishedAt && (
+                  <p className="text-xs text-ink-date">
+                    발행일 · {initial.publishedAt.toLocaleDateString("ko-KR")}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* 카테고리 — chip group (ceo P0: 선택값 항상 보임) */}
+            <Card>
+              <CardContent className="space-y-3 pt-6">
+                <h3 className="text-sm font-semibold text-ink-strong">
+                  카테고리
+                </h3>
+                <Controller
+                  control={form.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <div
+                      aria-label="카테고리 선택"
+                      className="flex flex-wrap gap-1.5"
+                    >
+                      {categories.map((c) => {
+                        const active = field.value === c.id;
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => field.onChange(c.id)}
+                            disabled={isPending}
+                            className={cn(
+                              "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/60 focus-visible:ring-offset-2",
+                              "active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50",
+                              active
+                                ? "border-brand-primary/60 bg-brand-primary/10 text-brand-primary"
+                                : "border-border bg-white text-ink-subtle hover:border-brand-primary/30 hover:bg-surface-soft hover:text-ink-strong",
+                            )}
+                          >
+                            {c.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 />
-              )}
-            />
-          </div>
+                {form.formState.errors.categoryId && (
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.categoryId.message}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
 
-          {/* 태그 */}
-          <div className="space-y-2">
-            <Label>태그</Label>
-            <Controller
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <TagsInput
-                  value={field.value ?? []}
-                  onChange={field.onChange}
-                  disabled={isPending}
+            {/* 커버 이미지 */}
+            <Card>
+              <CardContent className="space-y-3 pt-6">
+                <h3 className="text-sm font-semibold text-ink-strong">
+                  커버 이미지
+                </h3>
+                <Controller
+                  control={form.control}
+                  name="coverImageUrl"
+                  render={({ field }) => (
+                    <CoverImageUploader
+                      value={field.value ?? null}
+                      onChange={field.onChange}
+                      scope={scope}
+                      onError={setError}
+                      disabled={isPending}
+                    />
+                  )}
                 />
-              )}
-            />
-          </div>
+              </CardContent>
+            </Card>
 
-          {/* 본문 — useState 별도 (codex P1#6) */}
-          <div className="space-y-2">
-            <Label>본문</Label>
-            <TiptapEditor
-              defaultValue={initial?.body}
-              onChange={setBody}
-              scope={scope}
-              onError={setError}
-              disabled={isPending}
-            />
+            {/* 태그 */}
+            <Card>
+              <CardContent className="space-y-3 pt-6">
+                <h3 className="text-sm font-semibold text-ink-strong">
+                  태그
+                </h3>
+                <Controller
+                  control={form.control}
+                  name="tags"
+                  render={({ field }) => (
+                    <TagsInput
+                      value={field.value ?? []}
+                      onChange={field.onChange}
+                      disabled={isPending}
+                    />
+                  )}
+                />
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* 액션 버튼 */}
-      <div className="flex items-center justify-between">
-        <div className="text-xs text-ink-subtle">
-          {isEdit && initial?.publishedAt && (
-            <span>
-              현재 상태: <span className="font-medium text-brand-primary">발행</span>{" "}
-              ({initial.publishedAt.toLocaleDateString("ko-KR")})
-            </span>
-          )}
-          {isEdit && !initial?.publishedAt && (
-            <span>현재 상태: 임시 저장 (draft)</span>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => submit(false)}
-            disabled={isPending}
-          >
-            {isPending ? "저장 중..." : "임시 저장"}
-          </Button>
-          <Button
-            type="button"
-            onClick={() => submit(true)}
-            disabled={isPending}
-          >
-            {isPending ? "처리 중..." : "발행"}
-          </Button>
-        </div>
+        </aside>
       </div>
     </form>
   );
