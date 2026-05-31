@@ -37,7 +37,7 @@
 
 | # | 페이지 | 라우트(잠정) | 디자인 상태 | 사용 컴포넌트 |
 |---|---|---|---|---|
-| — | **홈/랜딩** | `/` | ✅ 1920px(`126:11815`) + 1440px(`96:7689`) 두 픽셀 폭 디자인 (A/B 아님) | Header, StoryCard, ArticleCard 등 |
+| — | **홈/랜딩** | `/` | ✅ 1920px(`331:7984`, 2026-05-30 ID 변경) + 1440px(`96:7689`) 두 픽셀 폭 디자인 (A/B 아님) | Header, StoryCard, ArticleCard 등 |
 | 1 | **임팩트 데이터** | `/impact-data` | ⚠️ 별도 페이지 미디자인, 단 랜딩 KpiSection이 같은 콘텐츠일 가능성 | KpiCard 4종, ResultStatGroup |
 | 2 | **활동 스토리** | (랜딩 섹션 앵커, ADR-009) | ⚠️ 별도 페이지 미디자인. 메뉴 클릭 시 랜딩 ArticleGrid 섹션 앵커로 스크롤 | StoryCard 마조네리 그리드 |
 | 3 | **쌀 나눔 소식** | `/news` (목록) / `/news/:id` (상세) | ✅ 목록 `125:8904` + 상세 `93:8810` (1440) | ArticleCard, FeaturedStoryCard, Banner, CategoryTabs, Pagination, CategoryChip, Tag, SocialShare, RelatedStories, ScrollTopButton, Heart |

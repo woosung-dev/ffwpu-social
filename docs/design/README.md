@@ -12,9 +12,26 @@
 - **URL:** https://www.figma.com/design/lmjjU4UxUpK2pDi67BGRiW/사회공헌국
 - **File Key:** `lmjjU4UxUpK2pDi67BGRiW` (영구. URL 의 `/design/<key>/` 부분)
 - **권한:** Viewer (사회공헌국 → 개발자)
-- **마지막 동기화:** 2026-05-26 (`docs/design.md` 상단 참조)
+- **마지막 동기화:** **2026-05-30** (이전 2026-05-26) — 사용자 노드 ID 3건 재공유 기반 디자인 변경 반영.
 
 > ⚠️ Figma 가 업데이트되면 `docs/design.md` 상단의 "마지막 확인 날짜" 갱신 필수.
+
+### 🔄 2026-05-30 동기화 — 핵심 변경 사항
+
+| 영역 | 변동 | 처리 |
+|---|---|---|
+| 부모 3 노드 (`97:10250` / `96:5908` / `95:9359`) | 없음 | — |
+| 홈(`96:5908`) 자식 1920 BP frame | `126:11815` → `331:7984` | 본 표 §"screenshots/ 매핑" 신 ID 라인 추가, 옛 PNG 는 `legacy/` 권장 |
+| 홈 자식 1439 BP frame | `126:11398` 삭제 | 1025 시안으로 통합 |
+| 홈 자식 1024 BP frame | `126:10980` → `332:9254` | 신 ID 라인 추가 |
+| 소식(`95:9359`) 상단 Banner 띠 | **정식 등장** (이전 D-4 에 *사용자 지적으로 제거*) | 사용자 결정 2026-05-30 "신 Figma 정식 도입" → 본 §"핵심 컴포넌트 노드 ID" Banner 카피 갱신 + 코드 `src/client/layouts/Banner.tsx` 재작성 작업 등록 (`docs/TODO.md`) |
+| Banner 카피 | "Sow Good — 따뜻한 진심을 담아…" → **"Sow Good 가족이 아니어도, 같은 동네가 아니어도, 밥상을 함께하는 사람이 있다면 우리는 이미 식구입니다."** | 동일 카피가 `docs/design.md:486` 에 이미 적혀있던 *잠재 정답*. SSOT 일관화. |
+| 컴포넌트(`97:10250`) 자식 ID (Menu/Header/Card/Heart) | 변동 없음 | — |
+| 소식(`95:9359`) 자식 BP ID (목록 4 BP + 상세 1) | 변동 없음 | — |
+| 자산 매핑 (KPI 사진·Story 카드·ArticleGrid 카드·파트너 로고·Featured 이미지) | 변동 없음 | 단, 디자이너 시안 더미가 아닌 **사회공헌국 원본 사진 11장 + 파트너 BI 5장 사용자 조달 대기** (`docs/TODO.md` 신규 항목, 사용자 결정 2026-05-30) |
+| 홈 핵심 카피 11종 | 변동 없음 | D-3 작업이 이미 정합 |
+
+> **카피 폐기 처리** — "Sow Good — 따뜻한 진심을 담아 / 나누는 진실의 활동들을 소개합니다" 는 폐기. 본 파일 §"핵심 컴포넌트 노드 ID" + `docs/design.md:57` + `docs/TODO.md:72` 에서 신 카피로 갱신.
 
 ---
 
@@ -41,20 +58,20 @@ mcp__plugin_figma_figma__get_libraries       ← 라이브러리 목록
 ```ts
 // 1) 노드 코드 컨텍스트 (CSS·레이아웃·variables 매핑)
 mcp__plugin_figma_figma__get_design_context({
-  nodeId: "126:11815",  // 1920 랜딩 노드 (파일명 기준)
-  // 또는 figma URL: https://www.figma.com/design/.../?node-id=126-11815
+  nodeId: "331:7984",  // 1920 랜딩 노드 (2026-05-30 갱신, 옛 126:11815 폐기)
+  // 또는 figma URL: https://www.figma.com/design/.../?node-id=331-7984
 });
 
 // 2) 노드 스크린샷 (시각 확인)
 mcp__plugin_figma_figma__get_screenshot({
-  nodeId: "126:11815",
+  nodeId: "331:7984",
 });
 
 // 3) Variables 토큰 (KeyColor 등)
 mcp__plugin_figma_figma__get_variable_defs({});
 ```
 
-> 노드 ID 표기: `126:11815` (콜론) 또는 `126-11815` (대시) 모두 인식. 파일명은 대시 사용.
+> 노드 ID 표기: `331:7984` (콜론) 또는 `331-7984` (대시) 모두 인식. 파일명은 대시 사용.
 
 ---
 
@@ -69,10 +86,12 @@ mcp__plugin_figma_figma__get_variable_defs({});
 | `landing-97-9014-768px.png` | 97:9014 | 768 | 태블릿 |
 | `landing-97-8573-1025px.png` | 97:8573 | 1025 | 작은 데스크탑 |
 | `landing-126-12232-767px.png` | 126:12232 | 767 | (대안 모바일) |
-| `landing-126-10980-1024px.png` | 126:10980 | 1024 | (대안 1024) |
-| `landing-126-11398-1439px.png` | 126:11398 | 1439 | 노트북 |
+| `landing-332-9254-1024px.png` ✅ | 332:9254 | 1024 | (대안 1024) — **2026-05-31 캡처 완료** |
+| ~~`legacy/landing-126-10980-1024px.png`~~ | ~~126:10980~~ | 1024 | **legacy** (2026-05-31 이동 완료, 노드 폐기) |
+| ~~`legacy/landing-126-11398-1439px.png`~~ | ~~126:11398~~ | 1439 | **legacy** (자식 frame 삭제, 1025에 통합) |
 | `landing-96-7689-1440px.png` | 96:7689 | 1440 | (대안 1440) |
-| `landing-126-11815-1920px.png` | 126:11815 | 1920 | **데스크탑 마스터** ⭐ |
+| `landing-331-7984-1920px.png` ✅ | 331:7984 | 1920 | **데스크탑 마스터** ⭐ (2026-05-31 캡처 완료) |
+| ~~`legacy/landing-126-11815-1920px.png`~~ | ~~126:11815~~ | 1920 | **legacy** (2026-05-31 이동 완료, 노드 폐기) |
 | **news-list-* (소식 목록)** | | | |
 | `news-list-135-11268-375px.png` | 135:11268 | 375 | 모바일 |
 | `news-list-135-12490-767px.png` | 135:12490 | 767 | 태블릿 |
@@ -99,6 +118,8 @@ mcp__plugin_figma_figma__get_variable_defs({});
 **자산 폴더 분리:**
 - `public/icons/` — 작은 SVG 아이콘·일러스트
 - `public/images/` — 큰 PNG 사진·이미지
+
+> 🟡 **2026-05-30 — 사진 16장 회색 placeholder 상태.** 사용자 결정 (도메인 §7 "스톡 톤 금지" 강제 준수) — Figma 디자이너 더미 16장을 `public/images/` 에서 **1×1 #E5E7EB 회색 PNG (69B) 로 교체**. 원본 디자이너 더미는 `docs/design/figma-dummy-backup/` 에 영구 보존 (URL 7일 만료 대비, .gitignore 등록 권장). 사회공헌국 봉사 현장 원본 11장 + 파트너 BI 5장 = 16장 사용자 조달 완료 시 1:1 교체. 본 §"자산 매핑" 표의 *PNG 파일* 줄(▲ 마크) 은 모두 *현재 placeholder, 슬롯 명세는 명세 그대로*.
 
 ### Header (HeroBanner Header `98:7101`)
 
@@ -131,7 +152,7 @@ mcp__plugin_figma_figma__get_variable_defs({});
 | `96:9902` (`_레이어_1`) | 노란 카드 Sow Good 워드마크 (204×49) | SVG 12KB | `public/icons/kpi-yellow-card-wordmark.svg` |
 | `96:9916` | 연두 카드 일러스트 (198×206) | SVG 47KB | `public/icons/kpi-lime-card-illustration.svg` |
 | `96:9924` | 보라 카드 vector (285×422) | SVG 486B | `public/icons/kpi-purple-card-vector.svg` |
-| `96:9925` (`image (1) 1`) | 보라 카드 사람 사진 (1920×2571) | PNG 1.4MB | `public/images/kpi-purple-card-photo.png` |
+| `96:9925` (`image (1) 1`) ▲ | 보라 카드 사람 사진 (1920×2571) | PNG 1.4MB → **placeholder 69B** | `public/images/kpi-purple-card-photo.png` (사용자 조달 대기) |
 
 ### StorySection (`96:7834`) — "밥이 사랑입니다 / 나누는 우리는 식구입니다"
 
@@ -139,8 +160,8 @@ mcp__plugin_figma_figma__get_variable_defs({});
 
 | Figma 노드 (이름) | 명칭 | 파일 형식 | 코드 위치 |
 |---|---|---|---|
-| `97:7549` (`Card`) | 좌측 카드 1 (큰 사진) | PNG 1.3MB (916×786) | `public/images/story-card1.png` |
-| `97:7548` (`Card`) | 좌측 카드 2 (작은 사진) | PNG 908KB (572×768) | `public/images/story-card2.png` |
+| `97:7549` (`Card`) ▲ | 좌측 카드 1 (큰 사진) | PNG 1.3MB (916×786) → **placeholder 69B** | `public/images/story-card1.png` (사용자 조달 대기) |
+| `97:7548` (`Card`) ▲ | 좌측 카드 2 (작은 사진) | PNG 908KB (572×768) → **placeholder 69B** | `public/images/story-card2.png` (사용자 조달 대기) |
 | `96:7855` (`Vector`) | 카드 우하단 화살표 (43×56) | SVG 45KB | `public/icons/story-arrow.svg` |
 | `96:7869`·`96:7873` (`Line 1251`) | Result 통계 구분선 (세로 44px) | SVG 259B | `public/icons/story-divider.svg` |
 | `97:7244` (`heart`) | 좌상단 하트 일러스트 (-24.69° rotate) | SVG 40KB | `public/icons/story-heart.svg` |
@@ -158,12 +179,12 @@ mcp__plugin_figma_figma__get_variable_defs({});
 | Figma 노드 (이름) | 명칭 | 파일 형식 | 코드 위치 |
 |---|---|---|---|
 | `I96:7885;928:9475` (`Icon`) | "아티클 더 보러가기" CTA 화살표 (20×20) | SVG 376B | `public/icons/article-cta-arrow.svg` |
-| `96:7888` (`Card` 256h) | 마조네리 카드 1 사진 | PNG 465KB (556×436) | `public/images/articlegrid-card1.png` |
-| `96:7889` (`Card` 425h) | 마조네리 카드 2 사진 | PNG 5.5MB (1768×2358, 대용량) | `public/images/articlegrid-card2.png` |
-| `96:7891` (`Card` 425h) | "동작구립 흑석종합사회복지관 쌀 60Kg 기부" | PNG 933KB (556×830) | `public/images/articlegrid-card3.png` |
-| `96:7892` (`Card` 337h) | 마조네리 카드 4 사진 | PNG 645KB (556×648) | `public/images/articlegrid-card4.png` |
-| `96:7894` (`Card` 278h) | "삼태기마을에도 고소한 사랑이 도착했어요" | PNG 531KB (556×544) | `public/images/articlegrid-card5.png` |
-| `96:7895` (`Card` 381h) | 마조네리 카드 6 사진 | PNG 788KB (556×830) | `public/images/articlegrid-card6.png` |
+| `96:7888` (`Card` 256h) ▲ | 마조네리 카드 1 사진 | PNG 465KB (556×436) → **placeholder 69B** | `public/images/articlegrid-card1.png` (사용자 조달 대기) |
+| `96:7889` (`Card` 425h) ▲ | 마조네리 카드 2 사진 | PNG 5.5MB (1768×2358, 대용량) → **placeholder 69B** | `public/images/articlegrid-card2.png` (사용자 조달 대기) |
+| `96:7891` (`Card` 425h) ▲ | "동작구립 흑석종합사회복지관 쌀 60Kg 기부" | PNG 933KB (556×830) → **placeholder 69B** | `public/images/articlegrid-card3.png` (사용자 조달 대기) |
+| `96:7892` (`Card` 337h) ▲ | 마조네리 카드 4 사진 | PNG 645KB (556×648) → **placeholder 69B** | `public/images/articlegrid-card4.png` (사용자 조달 대기) |
+| `96:7894` (`Card` 278h) ▲ | "삼태기마을에도 고소한 사랑이 도착했어요" | PNG 531KB (556×544) → **placeholder 69B** | `public/images/articlegrid-card5.png` (사용자 조달 대기) |
+| `96:7895` (`Card` 381h) ▲ | 마조네리 카드 6 사진 | PNG 788KB (556×830) → **placeholder 69B** | `public/images/articlegrid-card6.png` (사용자 조달 대기) |
 
 > ⚠️ 사진 6개는 D-3 시드 데이터의 `cover_image_url` 로 사용 가능. ArticleCard 컴포넌트는 이미 D-4 에 완성.
 
@@ -175,11 +196,11 @@ mcp__plugin_figma_figma__get_variable_defs({});
 |---|---|---|---|
 | `96:7900` (`Group`) | 92×92 보라 박스 안 일러스트 | SVG 1.7KB | `public/icons/s5-icon-group.svg` |
 | `96:7904` (`_레이어_1`) | Sow Good 로고 (100×66, 헤더와 다른 크기) | SVG 23KB | `public/icons/s5-sow-good-logo.svg` |
-| `96:7958` (`image 42`) | 파트너 로고 1 (218×31) | PNG 185B | `public/images/s5-partner1.png` |
-| `96:7960` (`image 37`) | 파트너 로고 2 (183×53) | PNG 332B | `public/images/s5-partner2.png` |
-| `96:7962` (`image 38`) | 파트너 로고 3 (164×38) | PNG 1.1KB | `public/images/s5-partner3.png` |
-| `96:7964` (`image 39`) | 파트너 로고 4 (86×33) | PNG 172B | `public/images/s5-partner4.png` |
-| `96:7966` (`image 41`) | 파트너 로고 5 (173×52) | PNG 181B | `public/images/s5-partner5.png` |
+| `96:7958` (`image 42`) ▲ | 파트너 로고 1 (218×31) | PNG 185B (**Figma 도 placeholder**) → **placeholder 69B** | `public/images/s5-partner1.png` (사용자 조달 필수) |
+| `96:7960` (`image 37`) ▲ | 파트너 로고 2 (183×53) | PNG 332B (**Figma 도 placeholder**) → **placeholder 69B** | `public/images/s5-partner2.png` (사용자 조달 필수) |
+| `96:7962` (`image 38`) ▲ | 파트너 로고 3 (164×38) | PNG 1.1KB (**Figma 도 placeholder**) → **placeholder 69B** | `public/images/s5-partner3.png` (사용자 조달 필수) |
+| `96:7964` (`image 39`) ▲ | 파트너 로고 4 (86×33) | PNG 172B (**Figma 도 placeholder**) → **placeholder 69B** | `public/images/s5-partner4.png` (사용자 조달 필수) |
+| `96:7966` (`image 41`) ▲ | 파트너 로고 5 (173×52) | PNG 181B (**Figma 도 placeholder**) → **placeholder 69B** | `public/images/s5-partner5.png` (사용자 조달 필수) |
 
 ### FeaturedSection (`125:8985`) — news-list 의 Featured Card 영역
 
@@ -190,7 +211,7 @@ mcp__plugin_figma_figma__get_variable_defs({});
 |---|---|---|---|
 | `125:8989` (`_레이어_1`) | 좌측 상단 미니 로고 (98×65) | SVG 23KB | `public/icons/featured-mini-logo.svg` |
 | `I125:9045;928:9475` (`Icon`) | "자세히 보기" CTA 화살표 (20×20) | SVG 374B | `public/icons/featured-cta-arrow.svg` |
-| `125:9054` (`image 50`) | 우측 본문 이미지 (916×786 → 612×411 표시, retina 자산) | PNG 1.1MB | `public/images/featured-image50.png` |
+| `125:9054` (`image 50`) ▲ | 우측 본문 이미지 (916×786 → 612×411 표시, retina 자산) | PNG 1.1MB → **placeholder 69B** | `public/images/featured-image50.png` (사용자 조달 대기 — `story-card1` 과 *동일 사진 재사용* 정황) |
 
 ### 인디케이터 명세 (FeaturedSection)
 
@@ -233,9 +254,9 @@ mv public/icons/<asset-name>.tmp public/icons/<asset-name>.<ext>
 
 | 세션 이름 | 노드 ID | 설명 | dev mode URL |
 |---|---|---|---|
-| **컴포넌트 세션** | `97:10250` | 헤더 4 BP variants + 소식 목록 카드 | `?node-id=97-10250&m=dev` |
-| **홈 반응형** | `96:5908` | 랜딩 페이지 전체 4 BP (1920~1440 / 1025~1439 / 768~1024 / 375~767) | `?node-id=96-5908&m=dev` |
-| **소식 전체·상세** | `95:9359` | 소식 목록 + 상세 4 BP | `?node-id=95-9359&m=dev` |
+| **컴포넌트 세션** | `97:10250` | 헤더 4 BP variants + 소식 목록 카드. 2026-05-30 변동 없음 | `?node-id=97-10250&m=dev` |
+| **홈 반응형** | `96:5908` | 랜딩 페이지 전체 4 BP (1920·1440 / 1025 / 768·1024 / 375·767). 2026-05-30 자식 BP 일부 갱신 — 위 §"🔄 2026-05-30 동기화" 참조 | `?node-id=96-5908&m=dev` |
+| **소식 전체·상세** | `95:9359` | 소식 목록 + 상세 4 BP. 2026-05-30 상단 Banner 띠 정식 추가 (카피 변경) | `?node-id=95-9359&m=dev` |
 
 ---
 
@@ -314,7 +335,7 @@ Dashboard (flex-col h-760 gap-16):
 | Header 메뉴 (inactive) | `I98:7101;97:10253~10255` | 배경 없음 + px-5/py-2.5 + SUIT Bold 16px text-white |
 | Header 검색 버튼 | `I98:7101;97:10078` | 42×42 size, 28×28 IconSet, 18.667×18.667 Icon |
 | ArticleCard (12 variants) | `114:8164` (마스터) | size 1~4 × default/hover/none. None state: 보라 그라디언트 + 중앙 "보도자료" 텍스트만 (본문 영역 없음) |
-| Banner (소식 페이지 전용) | `125:8915` (1440×132) | "Sow Good — 따뜻한 진심을 담아 / 나누는 진실의 활동들을 소개합니다" 가로 띠 |
+| Banner (소식 페이지 전용) | `125:8915` (1440×132, 4 BP 인스턴스 = `106:9112`/`125:10430`/`125:13075`/`135:11713`/`135:12492`) | **"Sow Good 가족이 아니어도, 같은 동네가 아니어도, 밥상을 함께하는 사람이 있다면 우리는 이미 식구입니다."** 가로 띠. 2026-05-30 신 Figma 정식 등장 + 카피 갱신. CTA(참여하기 버튼) **삭제** — H-3 의미 합의 자동 종결 |
 | Footer (단순) | `93:8810` 내부 | 다크 띠 #242424, Sow Good 로고 + "COPYRIGHT 2026 © Sow Good All rights reserved." |
 | HeroBanner (전체) | `96:7690` | 740 height, 헤더 + 슬로건 + 해바라기 일러스트 |
 
@@ -341,6 +362,8 @@ Dashboard (flex-col h-760 gap-16):
 
 위반 사례 (D-4): 상단 보라 Banner 띠 (Figma 미존재) / 홈 "준비 중" placeholder 카피 / Footer "© 2026 FFWPU Korea ... All rights reserved." (Figma 미확인).
 **처리:** 2026-05-27 사용자 지적 → 정합 작업 진행.
+
+> 🔄 **2026-05-30 후속 변화** — 위 "상단 보라 Banner 띠" 케이스는 신 Figma 동기화 결과 **정식 디자인으로 등장**(부모 노드 `125:8915`, 카피·구조 변경). D-4 의 *임의 추가가 우연히 미래 디자인을 선행*한 셈. 이 사례의 *원칙*(Figma 없으면 코드 없음)은 그대로 유지 — 우연한 결과 일치가 사전 임의 추가를 정당화하지 않는다. 향후에도 동일 원칙 적용.
 
 ---
 

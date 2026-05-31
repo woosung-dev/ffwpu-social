@@ -90,7 +90,7 @@
 - [x] shadcn/ui 초기화 (Neutral base, RSC, css variables) + primitive 9종 (button/input/label/card/select/dialog/form/separator/carousel)
 - [x] `src/client/layouts/PublicHeader.tsx` (4 BP variants + 스크롤스파이 hook + 햄버거 1024↓ + 검색 disabled)
 - [x] `src/client/layouts/PublicFooter.tsx` (--color-surface-dark + © 2026 정적)
-- [~] `src/client/layouts/Banner.tsx` — **삭제됨** (2026-05-27). Figma 명세는 소식 페이지 (목록·상세) 전용 Banner (`125:8915`, 카피 "Sow Good — 따뜻한 진심을 담아 / 나누는 진실의 활동들을 소개합니다"). D-2 소식 페이지 구현 시 정확한 Figma 명세로 재작성
+- [~] `src/client/layouts/Banner.tsx` — **삭제됨** (2026-05-27). Figma 명세는 소식 페이지 (목록·상세) 전용 Banner (`125:8915`, 카피 **"Sow Good 가족이 아니어도, 같은 동네가 아니어도, 밥상을 함께하는 사람이 있다면 우리는 이미 식구입니다."** — 2026-05-30 신 Figma 동기화로 카피 갱신, CTA 버튼 없음). 소식 페이지 구현 시 정확한 Figma 명세로 재작성
 - [x] `src/client/hooks/useScrollSpy.ts` (IntersectionObserver, idsKey join 으로 dep 안정화)
 - [x] `src/admin/layouts/AdminSidebar.tsx` (Client, 대시보드·소식·로그아웃, 1024↓ 토글 + 오버레이)
 - [x] `src/features/news/components/ArticleCard.tsx` (size 1~4 × state default/hover/none = 12 variants 통합 컴포넌트)
