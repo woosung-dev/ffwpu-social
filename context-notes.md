@@ -556,7 +556,7 @@ D 패턴 흡수: `src/features/<도메인>/index.ts` public API — 외부에서
 
 1. **상단 보라 Banner 띠 — 완전 삭제**
    - 위반: `(public)/layout.tsx` 최상단에 Banner 렌더 (모든 페이지에 노출). Figma 1920 landing 에 해당 띠 없음.
-   - Figma 실제 명세: Banner (`125:8915`, 1440×132) 는 **소식 페이지 (목록·상세) 전용** 가로 띠. 카피 "Sow Good — 따뜻한 진심을 담아 / 나누는 진실의 활동들을 소개합니다".
+   - Figma 실제 명세: Banner (`125:8915`, 1440×132) 는 **소식 페이지 (목록·상세) 전용** 가로 띠. 카피 **"Sow Good 가족이 아니어도, 같은 동네가 아니어도, 밥상을 함께하는 사람이 있다면 우리는 이미 식구입니다."** (2026-05-30 신 Figma 정식 카피 — 이전 회의 회고 시점엔 다른 카피로 추정했으나 신 Figma 동기화 결과 본 카피로 확정).
    - 조치: `src/client/layouts/Banner.tsx` 파일 삭제 + barrel export 제거 + layout import 제거. D-2 소식 페이지 구현 시 정확한 Figma 명세로 재작성.
 
 2. **홈 페이지 "준비 중" placeholder 카피 — 완전 비우기**
