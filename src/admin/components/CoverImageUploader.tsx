@@ -99,10 +99,11 @@ export function CoverImageUploader({
           }
         }}
         className={cn(
-          "relative flex aspect-[16/9] w-full max-w-xl cursor-pointer items-center justify-center overflow-hidden rounded-md border-2 border-dashed transition-colors",
+          "relative flex aspect-[16/9] w-full max-w-xl cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed transition-colors",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2",
           isDragOver
             ? "border-brand-primary bg-brand-primary/5"
-            : "border-border bg-muted/30 hover:bg-muted/50",
+            : "border-border bg-surface-soft/60 hover:bg-surface-soft",
           (disabled || isUploading) && "cursor-not-allowed opacity-60",
         )}
       >

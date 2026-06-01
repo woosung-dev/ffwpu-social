@@ -19,7 +19,9 @@ export default function AdminPanelLayout({
       <Suspense fallback={<SidebarSkeleton />}>
         <AdminSidebar />
       </Suspense>
-      <main className="flex-1 px-4 py-6 lg:px-8 lg:py-10">{children}</main>
+      <main className="min-w-0 flex-1 px-4 pb-6 pt-16 lg:px-10 lg:pb-10 lg:pt-10">
+        <div className="mx-auto w-full max-w-6xl">{children}</div>
+      </main>
     </div>
   );
 }
@@ -28,12 +30,12 @@ function SidebarSkeleton() {
   return (
     <aside
       aria-hidden
-      className="fixed inset-y-0 left-0 z-40 hidden w-60 border-r border-border bg-white lg:sticky lg:top-0 lg:h-screen lg:block"
+      className="fixed inset-y-0 left-0 z-40 hidden w-60 border-r border-border bg-surface-cool lg:sticky lg:top-0 lg:h-screen lg:block"
     >
-      <div className="h-16 animate-pulse border-b border-border bg-muted/40" />
+      <div className="h-16 animate-pulse border-b border-border bg-white/60" />
       <div className="space-y-2 p-3">
-        <div className="h-10 animate-pulse rounded-md bg-muted/40" />
-        <div className="h-10 animate-pulse rounded-md bg-muted/40" />
+        <div className="h-10 animate-pulse rounded-md bg-white/60" />
+        <div className="h-10 animate-pulse rounded-md bg-white/60" />
       </div>
     </aside>
   );

@@ -40,7 +40,7 @@ export default function AdminNewsListPage(props: {
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold text-ink-strong">뉴스 관리</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-ink-strong">뉴스 관리</h1>
         <p className="text-sm text-ink-subtle">
           발행된 글과 임시 저장 글을 한 곳에서 관리합니다.
         </p>

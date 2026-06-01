@@ -32,7 +32,11 @@ export function AdminSidebar() {
         type="button"
         aria-label={open ? "사이드바 닫기" : "사이드바 열기"}
         aria-expanded={open}
-        className="fixed left-4 top-4 z-50 rounded-md border border-border bg-white p-2 text-foreground shadow-sm lg:hidden"
+        className="fixed left-3 top-3 z-50 inline-flex size-11 items-center justify-center rounded-md border border-border bg-white text-foreground shadow-sm transition-colors hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2 lg:hidden"
+        style={{
+          marginTop: "env(safe-area-inset-top)",
+          marginLeft: "env(safe-area-inset-left)",
+        }}
         onClick={() => setOpen((prev) => !prev)}
       >
         {open ? (
@@ -53,7 +57,7 @@ export function AdminSidebar() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-border bg-white transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-border bg-surface-cool transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
@@ -61,7 +65,7 @@ export function AdminSidebar() {
           <p className="text-base font-extrabold tracking-tight text-brand-primary">
             Sow Good 어드민
           </p>
-          <p className="mt-0.5 text-xs text-ink-subtle">사회공헌국 전용</p>
+          <p className="mt-0.5 text-xs text-ink-date">사회공헌국 전용</p>
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
@@ -76,10 +80,11 @@ export function AdminSidebar() {
                     href={item.href}
                     onClick={() => setOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+                      "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-cool",
                       isActive
-                        ? "bg-brand-primary text-white font-semibold"
-                        : "font-medium text-foreground hover:bg-surface-soft",
+                        ? "bg-brand-primary/10 text-brand-primary font-semibold before:absolute before:left-0 before:top-1/2 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-brand-primary"
+                        : "font-medium text-ink-subtle hover:bg-white hover:text-ink-strong",
                     )}
                   >
                     <Icon className="size-4" aria-hidden />
@@ -95,7 +100,7 @@ export function AdminSidebar() {
           <form action={logoutAction}>
             <button
               type="submit"
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-ink-subtle transition-colors hover:bg-surface-soft hover:text-foreground"
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-ink-subtle transition-colors hover:bg-white hover:text-ink-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-cool"
             >
               <LogOut className="size-4" aria-hidden />
               로그아웃

@@ -55,11 +55,14 @@ export function LoginForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-ink-strong">
+        <div className="space-y-2 border-b border-border pb-6">
+          <p className="text-xs font-medium uppercase tracking-wider text-brand-primary">
+            Sow Good Admin
+          </p>
+          <h1 className="text-3xl font-extrabold tracking-tight tracking-tight text-ink-strong">
             사회공헌단 어드민
           </h1>
-          <p className="text-sm text-ink-subtle">
+          <p className="text-sm text-ink-date">
             관리자 계정으로 로그인하세요.
           </p>
         </div>
@@ -112,7 +115,11 @@ export function LoginForm() {
           </div>
         )}
 
-        <Button type="submit" className="w-full" disabled={isPending}>
+        <Button
+          type="submit"
+          className="w-full active:scale-[0.98]"
+          disabled={isPending}
+        >
           {isPending ? "로그인 중..." : "로그인"}
         </Button>
       </form>

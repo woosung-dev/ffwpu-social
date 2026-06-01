@@ -130,7 +130,7 @@ export function TagsInput({
         <div className="relative">
           <ul
             role="listbox"
-            className="absolute z-10 max-h-48 w-full overflow-y-auto rounded-md border bg-background shadow-lg"
+            className="absolute z-10 max-h-48 w-full overflow-y-auto rounded-md border bg-background shadow-md"
           >
             {suggestions.map((tag) => (
               <li key={tag}>
