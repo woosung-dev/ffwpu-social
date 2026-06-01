@@ -1,7 +1,7 @@
 // 메인 랜딩 DB 쿼리 — KPI 지표 + StorySection 상단 슬롯 (news.story_slot) + ArticleGrid 하단 슬롯 (news.featured_rank) 큐레이션 + 자동 fallback
 import "server-only";
 
-import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, isNull, notInArray } from "drizzle-orm";
 
 import { db } from "@/db";
 import { categories, kpiMetrics, news } from "@/db/schema";
@@ -121,7 +121,8 @@ export async function listFeaturedGrid(slotCount = 7) {
             isNotNull(news.publishedAt),
             isNull(news.featuredRank),
             eq(categories.slug, RICE_SHARING_SLUG),
-            pinnedIds.size > 0 ? sql`${news.id} NOT IN ${Array.from(pinnedIds)}` : sql`TRUE`,
+            // notInArray(col, []) === TRUE 라 pin 없을 때도 안전 (codex: raw NOT IN 은 tuple 생성 실패 위험)
+            notInArray(news.id, Array.from(pinnedIds)),
           ),
         )
         .orderBy(desc(news.publishedAt))
@@ -140,4 +141,26 @@ export async function listFeaturedGrid(slotCount = 7) {
     }
   }
   return result;
+}
+
+// 어드민 큐레이션 후보 — 발행된 쌀 나눔 글 전체(최신순). story/featured 슬롯 점유 현황(storySlot·featuredRank) 포함.
+// page 에서 슬롯 배열로 매핑(점유 글만 — fallback 은 공개 listFeaturedGrid 전용, 어드민은 자기 pin 만 표시: codex D2).
+// 어드민 page 의 인라인 Drizzle 제거용(3계층 경계 정합: ADR-024)
+export async function listRiceSharingCandidates() {
+  return db
+    .select({
+      id: news.id,
+      title: news.title,
+      categoryName: categories.name,
+      categorySlug: categories.slug,
+      publishedAt: news.publishedAt,
+      storySlot: news.storySlot,
+      featuredRank: news.featuredRank,
+    })
+    .from(news)
+    .innerJoin(categories, eq(news.categoryId, categories.id))
+    .where(
+      and(isNotNull(news.publishedAt), eq(categories.slug, RICE_SHARING_SLUG)),
+    )
+    .orderBy(desc(news.publishedAt));
 }

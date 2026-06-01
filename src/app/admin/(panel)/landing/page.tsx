@@ -1,10 +1,7 @@
 // 어드민 랜딩 큐레이션 — StorySection 2 슬롯 (직접 지정 only) + ArticleGrid 7 슬롯 (수동 pin + 자동 fallback). 쌀 나눔 카테고리 필터
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
 
-import { db } from "@/db";
-import { categories, news } from "@/db/schema";
 import { landingDb } from "@/features/landing";
 import { listStoryStatsForAdmin } from "@/features/kpi";
 import {
@@ -39,56 +36,25 @@ export default function AdminLandingPage() {
 }
 
 async function LandingCurationData() {
-  const [riceSharing, storyRows, featuredSlots, storyStats] = await Promise.all([
-    // 발행된 쌀 나눔 카테고리 글 — 큐레이션 후보. 최신순
-    db
-      .select({
-        id: news.id,
-        title: news.title,
-        categoryName: categories.name,
-        categorySlug: categories.slug,
-        publishedAt: news.publishedAt,
-        storySlot: news.storySlot,
-        featuredRank: news.featuredRank,
-      })
-      .from(news)
-      .innerJoin(categories, eq(news.categoryId, categories.id))
-      .where(
-        and(isNotNull(news.publishedAt), eq(categories.slug, "rice_sharing")),
-      )
-      .orderBy(desc(news.publishedAt)),
-    // StorySection 슬롯 (1~2) 현 점유 — 자동 fallback 없음
-    db
-      .select({
-        id: news.id,
-        title: news.title,
-        categoryName: categories.name,
-        categorySlug: categories.slug,
-        publishedAt: news.publishedAt,
-        storySlot: news.storySlot,
-        featuredRank: news.featuredRank,
-      })
-      .from(news)
-      .innerJoin(categories, eq(news.categoryId, categories.id))
-      .where(
-        and(
-          isNotNull(news.publishedAt),
-          isNotNull(news.storySlot),
-          eq(categories.slug, "rice_sharing"),
-        ),
-      )
-      .orderBy(asc(news.storySlot)),
-    // ArticleGrid 슬롯 (1~7) 자동 fallback 포함 — landing service 재사용
-    landingDb.listFeaturedGrid(7),
+  const [candidates, storyStats] = await Promise.all([
+    // 발행된 쌀 나눔 글 전체(최신순) — 슬롯 점유 현황 포함. 3계층 경계 정합으로 db 레이어 위임 (D2)
+    landingDb.listRiceSharingCandidates(),
     // StorySection 통계 (후원기관·지원가정·지역시설) — section='story'
     listStoryStatsForAdmin(),
   ]);
 
-  // 상단 슬롯 배열 (2 자리) — storySlot 1~2 매핑
+  // 슬롯 배열 매핑 — 점유 글만(pinned-only). 어드민은 자기 pin 만 표시, 자동 fallback 은 공개 페이지 전용 (codex D2)
   const storySlots: Array<CurationNews | null> = [null, null];
-  for (const r of storyRows) {
-    if (r.storySlot != null && r.storySlot >= 1 && r.storySlot <= 2) {
-      storySlots[r.storySlot - 1] = r;
+  const featuredSlots: Array<CurationNews | null> = Array.from(
+    { length: 7 },
+    () => null,
+  );
+  for (const c of candidates) {
+    if (c.storySlot != null && c.storySlot >= 1 && c.storySlot <= 2) {
+      storySlots[c.storySlot - 1] = c;
+    }
+    if (c.featuredRank != null && c.featuredRank >= 1 && c.featuredRank <= 7) {
+      featuredSlots[c.featuredRank - 1] = c;
     }
   }
 
@@ -96,7 +62,7 @@ async function LandingCurationData() {
     <div className="space-y-6">
       <StoryStatsEditor initialStats={storyStats} />
       <LandingSlotManager
-        riceSharingPublished={riceSharing}
+        riceSharingPublished={candidates}
         storySlots={storySlots}
         featuredSlots={featuredSlots}
       />

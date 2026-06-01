@@ -4,8 +4,8 @@ import "server-only"; // client bundle 유입 시 빌드 에러 (codex v2 P2 —
 export {
   createCategoryAction,
   updateCategoryAction,
-  type ActionResult,
 } from "./actions";
+export { type ActionResult } from "@/lib/action-result";
 export {
   CATEGORY_SLUG_REGEX,
   createCategorySchema,

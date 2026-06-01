@@ -4,6 +4,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireSuperAdmin } from "@/lib/auth-guards";
+import { type ActionResult, toActionError } from "@/lib/action-result";
 import * as service from "./service";
 import {
   type CreateCategoryInput,
@@ -11,15 +12,6 @@ import {
   createCategorySchema,
   updateCategorySchema,
 } from "./schemas";
-
-export type ActionResult<T, Input = unknown> =
-  | { success: true; data: T }
-  | { success: false; error: string | z.ZodError<Input> };
-
-function authError(e: unknown): { success: false; error: string } {
-  if (e instanceof Error) return { success: false, error: e.message };
-  return { success: false, error: "Unauthorized" };
-}
 
 // 카테고리 변경은 사용자 사이트 탭/필터·어드민 폼 선택지에 즉시 반영 필요
 function revalidateAffected() {
@@ -34,20 +26,14 @@ export async function createCategoryAction(
 ): Promise<ActionResult<{ id: string }, CreateCategoryInput>> {
   try {
     await requireSuperAdmin();
-  } catch (e) {
-    return authError(e);
-  }
-  const parsed = createCategorySchema.safeParse(input);
-  if (!parsed.success) return { success: false, error: parsed.error };
-  try {
+    const parsed = createCategorySchema.safeParse(input);
+    if (!parsed.success) return { success: false, error: parsed.error };
     const row = await service.createCategory(parsed.data);
     revalidateAffected();
     return { success: true, data: { id: row.id } };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "카테고리 생성 실패",
-    };
+  } catch (e) {
+    // slug 중복 등 DomainError 는 사용자 메시지 보존, DB 오류는 generic 은닉
+    return toActionError(e, "categoryAction");
   }
 }
 
@@ -57,20 +43,16 @@ export async function updateCategoryAction(
 ): Promise<ActionResult<{ id: string }, UpdateCategoryInput>> {
   try {
     await requireSuperAdmin();
-  } catch (e) {
-    return authError(e);
-  }
-  const parsed = updateCategorySchema.safeParse(input);
-  if (!parsed.success) return { success: false, error: parsed.error };
-  try {
+    if (!z.uuid().safeParse(id).success) {
+      return { success: false, error: "잘못된 카테고리 ID 형식입니다." };
+    }
+    const parsed = updateCategorySchema.safeParse(input);
+    if (!parsed.success) return { success: false, error: parsed.error };
     const row = await service.updateCategory(id, parsed.data);
     if (!row) return { success: false, error: "Not Found" };
     revalidateAffected();
     return { success: true, data: { id: row.id } };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "카테고리 수정 실패",
-    };
+  } catch (e) {
+    return toActionError(e, "categoryAction");
   }
 }
