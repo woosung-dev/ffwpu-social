@@ -290,3 +290,29 @@ export async function replaceNewsTags(
   const deduped = Array.from(new Set(tags));
   await tx.insert(newsTags).values(deduped.map((tag) => ({ newsId, tag })));
 }
+
+// 메인 랜딩 슬롯 설정 — StorySection (story_slot 1~2) / ArticleGrid (featured_rank 1~7).
+// UNIQUE WHERE NOT NULL 충돌 회피 — 같은 slot 점유자 있으면 자동 해제 후 새 점유 (transaction 안전)
+export async function setLandingSlot(
+  tx: Tx,
+  newsId: string,
+  kind: "story" | "featured",
+  slot: number | null,
+) {
+  const column = kind === "story" ? news.storySlot : news.featuredRank;
+  const fieldName = kind === "story" ? "storySlot" : "featuredRank";
+  // 1. slot != null 이면 기존 점유자 해제 (같은 글이 점유 중이어도 안전 — 같은 값으로 또 set)
+  if (slot != null) {
+    await tx
+      .update(news)
+      .set({ [fieldName]: null, updatedAt: new Date() })
+      .where(eq(column, slot));
+  }
+  // 2. 대상 글 slot 설정 (null = 해제)
+  const [updated] = await tx
+    .update(news)
+    .set({ [fieldName]: slot, updatedAt: new Date() })
+    .where(eq(news.id, newsId))
+    .returning({ id: news.id });
+  return updated ?? null;
+}
