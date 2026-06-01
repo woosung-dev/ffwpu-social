@@ -109,7 +109,7 @@ export function NewsEditor({ mode, categories, initial }: Props) {
   const isPublished = Boolean(isEdit && initial?.publishedAt);
 
   return (
-    <form className="space-y-6" noValidate>
+    <form className="space-y-6 pb-24 lg:pb-0" noValidate>
       {error && (
         <div
           role="alert"
@@ -172,8 +172,8 @@ export function NewsEditor({ mode, categories, initial }: Props) {
         {/* 우 — 메타 sidebar (lg 4/12) */}
         <aside className="lg:col-span-4">
           <div className="space-y-4 lg:sticky lg:top-6">
-            {/* 발행 CTA — human persona "30초 가시성" + evaluator P0 */}
-            <Card>
+            {/* 발행 CTA — desktop sidebar 안 (모바일은 하단 fixed bar 별도) */}
+            <Card className="hidden lg:block">
               <CardContent className="space-y-3 pt-6">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium uppercase tracking-wide text-ink-date">
@@ -307,6 +307,44 @@ export function NewsEditor({ mode, categories, initial }: Props) {
             </Card>
           </div>
         </aside>
+      </div>
+
+      {/* 모바일 fixed bottom bar — 발행 가시성 1탭 확보 (lg 이상은 sidebar 발행 카드 사용) */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 lg:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="mx-auto flex max-w-md items-center gap-2 px-4 py-3">
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 text-xs font-medium",
+              isPublished
+                ? "bg-brand-primary/10 text-brand-primary"
+                : "bg-warm/15 text-amber-700",
+            )}
+          >
+            {isPublished ? "발행" : "임시 저장"}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => submit(false)}
+            disabled={isPending}
+            className="ml-auto active:scale-[0.98]"
+          >
+            {isPending ? "저장 중..." : "임시 저장"}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => submit(true)}
+            disabled={isPending}
+            className="active:scale-[0.98]"
+          >
+            {isPending ? "처리 중..." : "발행"}
+          </Button>
+        </div>
       </div>
     </form>
   );

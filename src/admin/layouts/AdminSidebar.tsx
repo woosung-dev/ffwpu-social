@@ -32,7 +32,11 @@ export function AdminSidebar() {
         type="button"
         aria-label={open ? "사이드바 닫기" : "사이드바 열기"}
         aria-expanded={open}
-        className="fixed left-4 top-4 z-50 rounded-md border border-border bg-white p-2 text-foreground shadow-sm lg:hidden"
+        className="fixed left-3 top-3 z-50 inline-flex size-11 items-center justify-center rounded-md border border-border bg-white text-foreground shadow-sm transition-colors hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2 lg:hidden"
+        style={{
+          marginTop: "env(safe-area-inset-top)",
+          marginLeft: "env(safe-area-inset-left)",
+        }}
         onClick={() => setOpen((prev) => !prev)}
       >
         {open ? (

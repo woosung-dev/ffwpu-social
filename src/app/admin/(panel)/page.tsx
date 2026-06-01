@@ -54,8 +54,8 @@ const CATEGORY_CHIP_PALETTE = [
 async function DashboardData() {
   const data = await getAdminDashboard(5);
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      <Card className="lg:col-span-2">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <Card className="min-w-0 lg:col-span-2">
         <CardHeader>
           <CardTitle className="text-xl">최근 글 5건</CardTitle>
         </CardHeader>
@@ -86,7 +86,7 @@ async function DashboardData() {
                         {item.title}
                       </span>
                     </div>
-                    <span className="shrink-0 text-xs text-ink-date">
+                    <span className="hidden shrink-0 text-xs text-ink-date sm:inline">
                       {item.categoryName} · {formatDate(item.createdAt)}
                     </span>
                   </Link>
@@ -96,7 +96,7 @@ async function DashboardData() {
           )}
         </CardContent>
       </Card>
-      <Card>
+      <Card className="min-w-0">
         <CardHeader>
           <CardTitle className="text-xl">카테고리별 글 수</CardTitle>
         </CardHeader>
@@ -113,9 +113,9 @@ async function DashboardData() {
                 return (
                   <li
                     key={c.categoryId}
-                    className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 ${palette}`}
+                    className={`flex min-w-0 items-center justify-between gap-3 rounded-lg border px-3 py-2 ${palette}`}
                   >
-                    <span className="truncate text-sm font-medium">
+                    <span className="min-w-0 truncate text-sm font-medium">
                       {c.categoryName}
                     </span>
                     <span className="shrink-0 text-sm font-semibold tabular-nums">
@@ -134,7 +134,7 @@ async function DashboardData() {
 
 function DashboardLoading() {
   return (
-    <div className="grid gap-6 lg:grid-cols-3" aria-busy>
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3" aria-busy>
       <div className="h-64 animate-pulse rounded-md bg-muted/60 lg:col-span-2" />
       <div className="h-64 animate-pulse rounded-md bg-muted/60" />
     </div>

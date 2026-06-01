@@ -19,7 +19,7 @@ export default function AdminPanelLayout({
       <Suspense fallback={<SidebarSkeleton />}>
         <AdminSidebar />
       </Suspense>
-      <main className="flex-1 px-4 py-6 lg:px-10 lg:py-10">
+      <main className="min-w-0 flex-1 px-4 pb-6 pt-16 lg:px-10 lg:pb-10 lg:pt-10">
         <div className="mx-auto w-full max-w-6xl">{children}</div>
       </main>
     </div>
