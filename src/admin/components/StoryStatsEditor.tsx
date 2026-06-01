@@ -153,7 +153,7 @@ export function StoryStatsEditor({ initialStats }: Props) {
                       {form.formState.errors.rows[idx]?.value?.message}
                     </p>
                   ) : (
-                    <p className="text-xs text-ink-date">
+                    <p className="text-xs text-ink-subtle">
                       {hidden
                         ? "메인에서 숨김 (값 없음)"
                         : `메인 노출: ${current}${stat.unit ?? ""}`}
@@ -168,7 +168,7 @@ export function StoryStatsEditor({ initialStats }: Props) {
             <p className="mr-auto text-xs text-ink-date">
               저장 시 메인 페이지에 즉시 반영됩니다.
             </p>
-            <Button type="submit" disabled={isPending} className="active:scale-[0.98]">
+            <Button type="submit" disabled={isPending}>
               {isPending ? "저장 중..." : "통계 저장"}
             </Button>
           </div>

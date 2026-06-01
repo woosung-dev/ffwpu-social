@@ -92,6 +92,11 @@
 - [ ] `ArticleCard.tsx:102,112` "보도자료" hardcode → 중립 표현 (ADR-007 더미 라벨).
 - [ ] `AdminSidebar.tsx:67-68` active matching `startsWith` → exact match (codex P3).
 
+### Sprint 2 (어드민 마무리) 후속 — 전역/저우선
+
+- [ ] 에러 박스 대비 검증 — `text-destructive` on `bg-destructive/5` 가 WCAG AA(4.5:1) 경계선. NewsTable·KpiEditor·AccountManager·StoryStatsEditor·HeroOrderManager 공통 패턴 (신규 파일 고유 아님). 전역 1회 검증 후 필요 시 `font-medium` 또는 토큰 1단계 상향. (designer Slice4 Should-fix #2)
+- [ ] `NewsTable.tsx` 페이지네이션 윈도잉 — 현재 `Array.from({length: totalPages})` 전체 렌더. 글이 30+ 페이지가 되면 모바일 가로 오버플로. 현재 9건(1페이지)이라 미발현. first/prev/…/next/last 윈도잉으로 교체. (latent, 데이터 증가 시)
+
 ### v1.1+ 백로그
 
 - [ ] PublicFooter © 연도 자동 갱신 — BUILD_TIME 환경변수 또는 빌드 스크립트.

@@ -181,11 +181,7 @@ export function KpiEditor({ initialRows }: Props) {
         <p className="mr-auto text-xs text-ink-date">
           저장 시 사용자 사이트 메인에 즉시 반영됩니다.
         </p>
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="active:scale-[0.98]"
-        >
+        <Button type="submit" disabled={isPending}>
           {isPending ? "저장 중..." : "저장 + 발행"}
         </Button>
       </div>
