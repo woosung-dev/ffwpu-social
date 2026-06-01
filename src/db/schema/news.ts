@@ -20,6 +20,8 @@ export const news = pgTable(
     storySlot: integer("story_slot"),
     // 메인 랜딩 ArticleGridSection 하단 슬롯 (1~7). NULL = 자동 fallback (최신순). 운영자 pin
     featuredRank: integer("featured_rank"),
+    // /news 소식 페이지 상단 Hero 슬롯 (1~4). NULL = 비노출. 전 카테고리 대상, 자동 fallback 없음. 드래그 정렬
+    heroRank: integer("hero_rank"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     createdBy: uuid("created_by").references(() => users.id, {
@@ -33,6 +35,9 @@ export const news = pgTable(
     uniqueIndex("news_featured_rank_uniq")
       .on(table.featuredRank)
       .where(sql`${table.featuredRank} IS NOT NULL`),
+    uniqueIndex("news_hero_rank_uniq")
+      .on(table.heroRank)
+      .where(sql`${table.heroRank} IS NOT NULL`),
   ],
 );
 

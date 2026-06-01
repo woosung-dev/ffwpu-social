@@ -12,6 +12,7 @@ export {
   publishNewsAction,
   searchTagsAction,
   uploadImageAction,
+  setHeroOrderAction,
   type ActionResult,
   type UploadImageInput,
 } from "./actions";
@@ -23,6 +24,9 @@ export {
   getAdminNewsDetail,
   listNewsForAdmin,
   getAdminDashboard,
+  setHeroOrder,
+  getHeroNews,
+  getHeroCandidates,
 } from "./service";
 
 export {

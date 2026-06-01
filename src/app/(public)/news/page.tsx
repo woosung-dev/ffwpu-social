@@ -9,6 +9,7 @@ import { ALL_CATEGORY_SLUG } from "@/features/news/constants";
 
 import { NewsCategoryTabs } from "./news-filters";
 import { SubBanner } from "./sub-banner";
+import { NewsHero } from "./news-hero";
 
 export const metadata: Metadata = {
   title: "쌀 나눔 소식 | 사회공헌단 Sow Good",
@@ -32,7 +33,10 @@ export default function NewsListPage({
     <>
       <SubBanner />
 
-      {/* Featured Story Hero — PR B 에서 featured 글 연결. 본 PR 은 자리 비움 */}
+      {/* 소식 히어로 — /admin/news-hero 에서 지정한 우선 글 (없으면 비노출) */}
+      <Suspense fallback={null}>
+        <NewsHero />
+      </Suspense>
 
       <section className="container mx-auto px-4 py-10 lg:px-20 lg:py-16">
         <h2 className="text-2xl font-bold tracking-tight text-ink-strong lg:text-[32px]">

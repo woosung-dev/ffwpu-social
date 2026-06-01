@@ -200,6 +200,42 @@ export async function setLandingSlotAction(
   }
 }
 
+// /news Hero 정렬 저장 — 최대 4개, 중복 불가. 명시 Save (드롭마다 자동저장 아님). revalidate /news + 어드민
+const setHeroOrderInputSchema = z
+  .object({
+    orderedNewsIds: z
+      .array(z.uuid())
+      .max(4, "Hero 는 최대 4개까지 지정할 수 있습니다."),
+  })
+  .refine(
+    (v) => new Set(v.orderedNewsIds).size === v.orderedNewsIds.length,
+    { message: "중복된 글이 포함되어 있습니다." },
+  );
+type SetHeroOrderInput = z.infer<typeof setHeroOrderInputSchema>;
+
+export async function setHeroOrderAction(
+  input: SetHeroOrderInput,
+): Promise<ActionResult<{ count: number }, SetHeroOrderInput>> {
+  try {
+    await requireSuperAdmin();
+    const parsed = setHeroOrderInputSchema.safeParse(input);
+    if (!parsed.success) return { success: false, error: parsed.error };
+
+    const result = await newsService.setHeroOrder(parsed.data.orderedNewsIds);
+    if (result.kind === "has_unpublished") {
+      return {
+        success: false,
+        error: "발행된 글만 히어로에 지정할 수 있습니다.",
+      };
+    }
+    revalidatePath("/news");
+    revalidatePath("/admin/news-hero");
+    return { success: true, data: { count: parsed.data.orderedNewsIds.length } };
+  } catch (e) {
+    return authError(e);
+  }
+}
+
 // ─── 이미지 업로드 Presigned POST 발급 (codex P1#4 + 결정 #16) ────────────
 
 const uploadInputSchema = z
