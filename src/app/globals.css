@@ -95,14 +95,21 @@
 
   /* 텍스트 다단계 */
   --color-ink-strong: #1f2937; /* 제목 강조 */
+  --color-ink-strong-mid: #343434; /* KpiCard 본문 텍스트 (gray 카드 위) */
   --color-ink-subtle: #6b7280; /* 비활성 */
   --color-ink-date: #959ba9; /* 날짜·메타 */
+  --color-ink-on-lime: #3b4700; /* dcef7d 라임 카드 위 텍스트 */
+
+  /* 보라 위 라벤더 텍스트 — Hero CTA / ArticleGrid 다크 헤딩 / StorySection 태그 / Footer 카피라이트 5종은 시각 차 미세하여 단일 토큰으로 통합 */
+  --color-ink-on-purple: #f0e1ff;
 
   /* 배경 다단계 */
   --color-surface-soft: #f6f6f6;
   --color-surface-card: #fafafa;
   --color-surface-cool: #f5f6f8;
-  --color-surface-dark: #242424; /* Footer·ArticleGrid 좌블록 */
+  --color-surface-dark: #242424; /* Footer·ArticleGrid 좌블록·StorySection 헤딩 색 겸용 */
+  --color-surface-tint-soft: #f8f1ff; /* Hero·Partners 그라디언트 시작 */
+  --color-surface-tint-faint: #faf4ff; /* StorySection 배경 */
 
   /* 태그 */
   --color-tag-default: #ac86d0;
