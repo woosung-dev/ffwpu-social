@@ -3,6 +3,6 @@ export { ArticleCard, type ArticleLite } from "./ArticleCard";
 export { StoryCard } from "./StoryCard";
 export { FeaturedStoryCard, type FeaturedStory } from "./FeaturedStoryCard";
 export { Heart } from "./Heart";
-export { CategoryTabs } from "./CategoryTabs";
+export { CategoryTabs, type CategoryTabItem } from "./CategoryTabs";
 export { Pagination } from "./Pagination";
 export { KpiCard } from "./KpiCard";

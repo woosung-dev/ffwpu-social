@@ -6,10 +6,12 @@ import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
 import { categories, news } from "@/db/schema";
 import { landingDb } from "@/features/landing";
+import { listStoryStatsForAdmin } from "@/features/kpi";
 import {
   LandingSlotManager,
   type CurationNews,
 } from "@/admin/components/LandingSlotManager";
+import { StoryStatsEditor } from "@/admin/components/StoryStatsEditor";
 
 export const metadata: Metadata = {
   title: "메인 랜딩 큐레이션 | 사회공헌단 어드민",
@@ -37,7 +39,7 @@ export default function AdminLandingPage() {
 }
 
 async function LandingCurationData() {
-  const [riceSharing, storyRows, featuredSlots] = await Promise.all([
+  const [riceSharing, storyRows, featuredSlots, storyStats] = await Promise.all([
     // 발행된 쌀 나눔 카테고리 글 — 큐레이션 후보. 최신순
     db
       .select({
@@ -78,6 +80,8 @@ async function LandingCurationData() {
       .orderBy(asc(news.storySlot)),
     // ArticleGrid 슬롯 (1~7) 자동 fallback 포함 — landing service 재사용
     landingDb.listFeaturedGrid(7),
+    // StorySection 통계 (후원기관·지원가정·지역시설) — section='story'
+    listStoryStatsForAdmin(),
   ]);
 
   // 상단 슬롯 배열 (2 자리) — storySlot 1~2 매핑
@@ -89,11 +93,14 @@ async function LandingCurationData() {
   }
 
   return (
-    <LandingSlotManager
-      riceSharingPublished={riceSharing}
-      storySlots={storySlots}
-      featuredSlots={featuredSlots}
-    />
+    <div className="space-y-6">
+      <StoryStatsEditor initialStats={storyStats} />
+      <LandingSlotManager
+        riceSharingPublished={riceSharing}
+        storySlots={storySlots}
+        featuredSlots={featuredSlots}
+      />
+    </div>
   );
 }
 

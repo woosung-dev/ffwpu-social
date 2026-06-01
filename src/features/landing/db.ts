@@ -8,7 +8,7 @@ import { categories, kpiMetrics, news } from "@/db/schema";
 
 const RICE_SHARING_SLUG = "rice_sharing";
 
-// 활성 KPI — 정렬 순. 어드민 KPI 입력 폼 + 사용자 사이트 KpiSection
+// 활성 impact KPI — KpiSection "한 해동안 만들어낸 변화" (4행). section='impact' 필수 — 없으면 story 3행이 섞여 7개로 깨짐
 export async function listActiveKpiMetrics() {
   return db
     .select({
@@ -21,7 +21,23 @@ export async function listActiveKpiMetrics() {
       sortOrder: kpiMetrics.sortOrder,
     })
     .from(kpiMetrics)
-    .where(eq(kpiMetrics.isActive, true))
+    .where(and(eq(kpiMetrics.isActive, true), eq(kpiMetrics.section, "impact")))
+    .orderBy(asc(kpiMetrics.sortOrder));
+}
+
+// 활성 story 통계 — StorySection (후원기관·지원가정·지역시설). hide-when-empty 는 렌더 시 value>0 필터
+export async function listStoryStats() {
+  return db
+    .select({
+      slug: kpiMetrics.slug,
+      label: kpiMetrics.label,
+      value: kpiMetrics.value,
+      displayValue: kpiMetrics.displayValue,
+      unit: kpiMetrics.unit,
+      sortOrder: kpiMetrics.sortOrder,
+    })
+    .from(kpiMetrics)
+    .where(and(eq(kpiMetrics.isActive, true), eq(kpiMetrics.section, "story")))
     .orderBy(asc(kpiMetrics.sortOrder));
 }
 

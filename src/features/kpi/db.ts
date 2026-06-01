@@ -8,12 +8,13 @@ import { kpiMetrics } from "@/db/schema";
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// 어드민 — 활성·비활성 모두 (단 비활성도 운영자가 다시 활성 가능)
-export async function listAllForAdmin() {
+// 어드민 — 섹션별 활성·비활성 모두 (비활성도 운영자가 다시 활성 가능). 기본 'impact' (KpiSection)
+export async function listForAdmin(section: "impact" | "story" = "impact") {
   return db
     .select({
       id: kpiMetrics.id,
       slug: kpiMetrics.slug,
+      section: kpiMetrics.section,
       label: kpiMetrics.label,
       value: kpiMetrics.value,
       displayValue: kpiMetrics.displayValue,
@@ -23,6 +24,7 @@ export async function listAllForAdmin() {
       updatedAt: kpiMetrics.updatedAt,
     })
     .from(kpiMetrics)
+    .where(eq(kpiMetrics.section, section))
     .orderBy(asc(kpiMetrics.sortOrder));
 }
 

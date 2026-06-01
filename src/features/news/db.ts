@@ -1,5 +1,5 @@
 // 소식(news) Drizzle 쿼리 전담 — DAL. db import는 여기서만 (fullstack.md §3). 공개(published_at IS NOT NULL) / 어드민(모두) 분리 (codex P1#7). mutation 은 tx 인자 강제 (codex P1#5)
-import { and, desc, eq, isNotNull, isNull, like, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull, like, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { categories, heartEvents, news, newsTags } from "@/db/schema";
 import { ALL_CATEGORY_SLUG } from "./constants";
@@ -315,4 +315,83 @@ export async function setLandingSlot(
     .where(eq(news.id, newsId))
     .returning({ id: news.id });
   return updated ?? null;
+}
+
+// hero 정렬 전용 트랜잭션 advisory lock — 동시 setHeroOrder 직렬화 (READ COMMITTED 인터리빙 race 차단, codex Slice3 C3.6).
+// raw SQL 정당화: pg_advisory_xact_lock 은 Drizzle 헬퍼 부재 + 동시성 제어 목적. 커밋/롤백 시 자동 해제
+const HERO_ORDER_LOCK_KEY = 740031;
+export async function acquireHeroOrderLock(tx: Tx) {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(${HERO_ORDER_LOCK_KEY})`);
+}
+
+// /news Hero 일괄 정렬 — 2-phase: (1) 기존 hero_rank 전부 해제 → partial unique index 비움 (충돌 원천 제거),
+// (2) 새 순서대로 1..N 부여 (N ≤ 4). 단일 트랜잭션, 실패 시 롤백. 호출 전 acquireHeroOrderLock 으로 직렬화 필수.
+// Phase2 는 publishedAt IS NOT NULL 가드 — 검증 후 미발행 전환된 글이 pin 되는 TOCTOU 차단 (Slice3 W-1)
+export async function setHeroOrder(tx: Tx, orderedNewsIds: string[]) {
+  await tx
+    .update(news)
+    .set({ heroRank: null, updatedAt: new Date() })
+    .where(isNotNull(news.heroRank));
+  for (let i = 0; i < orderedNewsIds.length; i++) {
+    await tx
+      .update(news)
+      .set({ heroRank: i + 1, updatedAt: new Date() })
+      .where(and(eq(news.id, orderedNewsIds[i]), isNotNull(news.publishedAt)));
+  }
+}
+
+// 단일 글 hero 슬롯 해제 — 발행 해제 시 고아 heroRank 방지 (Slice3 C-2)
+export async function clearHeroRank(tx: Tx, id: string) {
+  await tx
+    .update(news)
+    .set({ heroRank: null, updatedAt: new Date() })
+    .where(eq(news.id, id));
+}
+
+// 주어진 id 중 발행된 글 수 — hero 에 draft pin 차단 검증용 (C3.5)
+export async function countPublishedIn(tx: Tx, ids: string[]) {
+  if (ids.length === 0) return 0;
+  const [row] = await tx
+    .select({ count: sql<number>`count(*)::int` })
+    .from(news)
+    .where(and(inArray(news.id, ids), isNotNull(news.publishedAt)));
+  return row?.count ?? 0;
+}
+
+// /news Hero 노출 — 발행 + hero_rank NOT NULL, rank 순. 전 카테고리 (랜딩 featured 의 rice_sharing 제한 없음). body 포함 (공개 히어로 발췌용, ≤4행)
+export async function listHeroNews() {
+  return db
+    .select({
+      id: news.id,
+      title: news.title,
+      body: news.body,
+      categoryName: categories.name,
+      categorySlug: categories.slug,
+      coverImageUrl: news.coverImageUrl,
+      publishedAt: news.publishedAt,
+      heroRank: news.heroRank,
+    })
+    .from(news)
+    .innerJoin(categories, eq(news.categoryId, categories.id))
+    .where(and(isNotNull(news.publishedAt), isNotNull(news.heroRank)))
+    .orderBy(asc(news.heroRank));
+}
+
+// 어드민 Hero picker 후보 — 발행 + hero_rank NULL (아직 미지정), 최신순
+export async function listHeroCandidates(limit = 50) {
+  return db
+    .select({
+      id: news.id,
+      title: news.title,
+      categoryName: categories.name,
+      categorySlug: categories.slug,
+      coverImageUrl: news.coverImageUrl,
+      publishedAt: news.publishedAt,
+      heroRank: news.heroRank,
+    })
+    .from(news)
+    .innerJoin(categories, eq(news.categoryId, categories.id))
+    .where(and(isNotNull(news.publishedAt), isNull(news.heroRank)))
+    .orderBy(desc(news.publishedAt))
+    .limit(limit);
 }

@@ -1136,3 +1136,77 @@ ADR-010에서 익명 좋아요를 `(news_id, ip_hash, session_id)` 조합 unique
 - ✅ **개인정보 보호 강화** — IP 관련 데이터 미저장 (ADR-004 개인정보 보호 절대 제약).
 - ⚠️ **어뷰징 가능** — localStorage 클리어·시크릿창으로 우회 가능. 단 좋아요가 가벼운 반응이라 허용 범위 (codex 동의).
 - ⚠️ **D-2 toggleHeart 구현 시** — Heart 컴포넌트가 클라 localStorage UUID 생성 → toggleHeart action 인자로 전달. unique 충돌 시 기존 row deleted_at 토글 (insert 재시도 아님).
+
+---
+
+## ADR-027: 쌀나눔 통계(StorySection) — kpi_metrics.section 판별 컬럼 재사용
+
+- **Status**: Accepted
+- **Date**: 2026-06-01
+
+### Context
+
+StorySection의 후원기관·지원가정·지역시설 통계(16개·23가정·2시설)가 `constants/story.ts` + `StorySection.tsx`에 코드 상수로 중복 박혀 있었음. 사용자가 운영자 숫자 입력 + hide-when-empty(0/빈값 시 숨김)를 요구. 별도 `story_stats` 테이블 vs `kpi_metrics` 재사용을 검토.
+
+### Decision
+
+- 별도 테이블 대신 `kpi_metrics`에 `section`('impact'|'story', default 'impact') 판별 컬럼 추가. shape(slug/label/value/displayValue/unit/sortOrder/isActive)가 KPI와 100% 동일 → 근접-중복 모듈 회피 (anti-slop §추상화·중복).
+- `updateKpisAction`은 slug 키 기반이라 section-agnostic → **신규 mutation 0**. 통계 입력은 `/admin/landing` StoryStatsEditor에서 동일 액션 재사용.
+- `listActiveKpiMetrics`에 `section='impact'` 필터 추가(필수 — 없으면 KpiSection이 7행으로 깨짐). 신규 `listStoryStats(section='story')`.
+- StorySection은 propless→`StorySectionWithData` Suspense 래퍼로 DB 연결. render-time `value>0` 필터로 hide-when-empty (useEffect 금지).
+- 마이그레이션 0003(section 컬럼 + story 3행 시드) + 0004(section CHECK 제약, codex 권고 — TS enum DB 강제).
+
+### Consequences
+
+- ✅ DRY — KPI 인프라(테이블·액션·검증) 전부 재사용. 신규 코드 최소.
+- ✅ 운영 자율성 — 운영자가 통계 숫자 직접 입력, 0이면 자동 숨김.
+- ⚠️ `kpi_metrics` 테이블이 KPI 아닌 행도 보유 — `section` 컬럼 + 주석으로 명시. 통계가 향후 분기(이름 목록 등)하면 별도 테이블로 승격 (ADR 트리거).
+
+---
+
+## ADR-028: 소식 히어로 — news.heroRank 컬럼 + advisory lock 동시성
+
+- **Status**: Accepted
+- **Date**: 2026-06-01
+
+### Context
+
+`/news` 소식 페이지 상단에 운영자가 최대 4개 글을 드래그로 정렬해 우선 노출하는 히어로 요구. 기존 `news.storySlot`(랜딩 1~2)·`featuredRank`(랜딩 1~7)와 별개 surface. 컬럼 추가 vs 통합 curation 테이블 검토.
+
+### Decision
+
+- `news.heroRank`(1~4, nullable, partial unique index where not null) 신규 컬럼 — 기존 storySlot/featuredRank 컬럼 패턴 일관. curation 통합 테이블은 기존 동작 코드 대거 재작성 필요 → 보류(4번째 surface 등장 시 ADR 트리거). 마이그레이션 0005(additive).
+- `/news` 히어로는 전 카테고리 발행 글 대상(랜딩 featured의 rice_sharing 제한 없음). pin 없으면 비노출(자동 fallback 없음 — "수동 우선 노출" 의도).
+- `setHeroOrder` 2-phase(전체 null 해제 → 순서대로 1..N): setLandingSlot(1개씩 release)은 swap 시 partial unique index 충돌하므로 재사용 불가.
+- **동시성(codex Slice3 C3.6)**: 2-phase는 READ COMMITTED에서 직렬화 미보장(Tx B의 Phase1 WHERE가 Tx A 미커밋 행을 안 잡음) → `pg_advisory_xact_lock`으로 setHeroOrder 전체 직렬화. Phase2에 `publishedAt IS NOT NULL` 가드(TOCTOU). 발행 해제 시 `clearHeroRank` 동반(고아 슬롯 방지).
+- 어드민 UI: @dnd-kit/sortable(Pointer 8px·Touch 200ms·Keyboard 센서 + 한국어 aria-live + reduced-motion), dirty 기반 명시 Save. `/news`는 기존 FeaturedStoryCard(탭 슬라이더) 재사용 + extractExcerpt(body).
+
+### Consequences
+
+- ✅ 기존 큐레이션 패턴 일관, 마이그레이션 additive.
+- ✅ 동시 저장·draft pin·발행해제 고아 슬롯 race 전부 봉합 (cross-check 검증).
+- ⚠️ advisory lock은 협력적 — `db.setHeroOrder` 우회 호출 시 미보호. service 경유만 허용(현 코드 준수).
+
+---
+
+## ADR-029: 멀티 super 관리자 계정 — ADR-020 "super 단일 계정" supersede
+
+- **Status**: Accepted (Supersedes ADR-020 super 단일 계정 부분)
+- **Date**: 2026-06-01
+
+### Context
+
+ADR-020에서 v1.0 어드민을 super 단일 계정으로 잠갔으나, 사용자가 운영자가 추가 관리자 계정을 만들 수 있어야 한다고 요구. 역할 차등(editor/viewer 권한 게이팅)은 v1.1 보류 — 추가 계정은 모두 super.
+
+### Decision
+
+- 마이그레이션 0 — 기존 `users`(role enum 보유) 재사용. 신규 `features/accounts` 모듈. 모든 신규 계정 `role:"super"` **서버 고정**(input에서 role 미수용 = 권한 상승 차단).
+- 가드: 본인 삭제 차단(actor=세션 한정), 마지막 super 삭제 차단(`lockAndCountSupers` SELECT FOR UPDATE 행잠금으로 동시 삭제 TOCTOU 직렬화 — codex Slice2 C1.4).
+- 이메일 정규화 단일출처 `normalizeEmail`(trim+lowercase) → 생성 스키마 transform + `auth.ts` authorize() + seed.ts 일관 적용(대소문자 불일치 로그인 실패 방지).
+- 보안: passwordHash select 제외(직렬화 누출 차단), 중복이메일 사전체크+23505 백스톱(500 금지), 비번 72바이트(TextEncoder) 검증, toActionError 내부정보 미노출.
+
+### Consequences
+
+- ✅ 운영 자율성 — 사회공헌국이 추가 운영자 계정 직접 관리.
+- ✅ 보안 — 권한 상승·계정 lockout·정보 누출 cross-check 검증 통과.
+- ⚠️ 역할 차등 게이팅(editor/viewer 권한 분리)은 v1.1 — 현재 모든 계정 동일 super 권한.

@@ -1,0 +1,1 @@
+ALTER TABLE "kpi_metrics" ADD CONSTRAINT "kpi_metrics_section_check" CHECK ("kpi_metrics"."section" in ('impact', 'story'));

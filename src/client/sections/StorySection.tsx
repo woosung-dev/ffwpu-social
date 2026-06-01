@@ -1,12 +1,20 @@
-// 사용자 랜딩 Story 섹션 — Figma 96:7834 (1440×573). 배경 #FAF4FF, 좌측 이미지 2장 + 우측 TagChip+헤딩+설명+Result 3통계. ADR-009 #story 앵커 (쌀나눔 프로젝트 메뉴 매핑). 4 BP: lg+ 좌-우 / 1024↓ 세로 스택 (Result 라인은 모바일 가로 → 데스크탑 세로)
+// 사용자 랜딩 Story 섹션 — Figma 96:7834 (1440×573). 배경 #FAF4FF, 좌측 이미지 2장 + 우측 TagChip+헤딩+설명+Result 통계. ADR-009 #story 앵커 (쌀나눔 프로젝트 메뉴 매핑). 4 BP: lg+ 좌-우 / 1024↓ 세로 스택 (Result 라인은 모바일 가로 → 데스크탑 세로)
+// 통계는 kpi_metrics(section='story') DB 연결 — 운영자가 /admin/landing 에서 입력. value 0/null 인 항목은 hide-when-empty 로 숨김
 
-const RESULTS = [
-  { value: "16개", label: "후원 기관" },
-  { value: "23가정", label: "지원 가정" },
-  { value: "2시설", label: "지역 시설" },
-] as const;
+export type StoryStat = {
+  slug: string;
+  label: string;
+  displayValue: string;
+  value: number | null;
+};
 
-export function StorySection() {
+type Props = {
+  stats: StoryStat[];
+};
+
+export function StorySection({ stats }: Props) {
+  // hide-when-empty — value 0/null 항목 제외. 전부 숨으면 통계 블록 자체 비노출
+  const visibleStats = stats.filter((s) => s.value != null && s.value > 0);
   return (
     <section id="story" className="w-full bg-surface-tint-faint py-16 lg:py-24">
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10 px-4 lg:flex-row lg:items-center lg:gap-[70px] lg:px-0">
@@ -55,23 +63,23 @@ export function StorySection() {
             모두 식구가 됩니다.
           </p>
 
-          {/* Result 3통계 — Bold 24px #9257CA value / Medium 15px label, lg+ 가로 라인 / 모바일 세로 라인 */}
-          <ul className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-0">
-            {RESULTS.map((r, idx) => (
-              <li
-                key={r.label}
-                className="flex flex-col gap-1 lg:px-8 lg:text-right [&:not(:first-child)]:border-t [&:not(:first-child)]:border-brand-mid/30 [&:not(:first-child)]:pt-4 lg:[&:not(:first-child)]:border-l lg:[&:not(:first-child)]:border-t-0 lg:[&:not(:first-child)]:pt-0"
-                aria-label={`${r.label} ${r.value}`}
-              >
-                <p className="text-brand-mid text-2xl font-bold tabular-nums">
-                  {r.value}
-                </p>
-                <p className="text-[15px] font-medium">{r.label}</p>
-                {/* idx 사용 없이 nth selector로 처리 - eslint */}
-                <span aria-hidden className="hidden">{idx}</span>
-              </li>
-            ))}
-          </ul>
+          {/* Result 통계 — Bold 24px #9257CA value / Medium 15px label, lg+ 가로 라인 / 모바일 세로 라인. hide-when-empty 적용 */}
+          {visibleStats.length > 0 && (
+            <ul className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-0">
+              {visibleStats.map((stat) => (
+                <li
+                  key={stat.slug}
+                  className="flex flex-col gap-1 lg:px-8 lg:text-right [&:not(:first-child)]:border-t [&:not(:first-child)]:border-brand-mid/30 [&:not(:first-child)]:pt-4 lg:[&:not(:first-child)]:border-l lg:[&:not(:first-child)]:border-t-0 lg:[&:not(:first-child)]:pt-0"
+                  aria-label={`${stat.label} ${stat.displayValue}`}
+                >
+                  <p className="text-brand-mid text-2xl font-bold tabular-nums">
+                    {stat.displayValue}
+                  </p>
+                  <p className="text-[15px] font-medium">{stat.label}</p>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </section>

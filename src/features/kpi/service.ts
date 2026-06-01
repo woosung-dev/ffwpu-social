@@ -6,7 +6,12 @@ import * as kpiDb from "./db";
 import type { KpiUpdateInput } from "./schemas";
 
 export async function listKpisForAdmin() {
-  return kpiDb.listAllForAdmin();
+  return kpiDb.listForAdmin("impact");
+}
+
+// StorySection 통계 (후원기관·지원가정·지역시설) — 어드민 입력 폼. updateKpis 와 동일 액션 재사용 (slug 키)
+export async function listStoryStatsForAdmin() {
+  return kpiDb.listForAdmin("story");
 }
 
 // 4 row 일괄 갱신 — transaction 안에서 한 row 라도 실패 시 전체 롤백

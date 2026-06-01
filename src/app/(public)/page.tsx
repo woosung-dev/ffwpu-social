@@ -10,7 +10,7 @@ import {
   PartnersSection,
   StorySection,
 } from "@/client/sections";
-import { getLandingData } from "@/features/landing";
+import { getLandingData, landingDb } from "@/features/landing";
 
 export const metadata: Metadata = {
   title: "Sow Good — 가치를 삶으로, 변화를 꽃피우는 동행",
@@ -32,7 +32,9 @@ export default function Home() {
       <Suspense fallback={<KpiLoading />}>
         <KpiSectionWithData />
       </Suspense>
-      <StorySection />
+      <Suspense fallback={<StoryLoading />}>
+        <StorySectionWithData />
+      </Suspense>
       <Suspense fallback={<ArticleGridLoading />}>
         <ArticleGridSection />
       </Suspense>
@@ -52,10 +54,23 @@ async function KpiSectionWithData() {
   return <KpiSection metricsBySlug={metricsBySlug} />;
 }
 
+async function StorySectionWithData() {
+  const stats = await landingDb.listStoryStats();
+  return <StorySection stats={stats} />;
+}
+
 function KpiLoading() {
   return (
     <section className="w-full bg-white py-16 lg:py-24" aria-busy>
       <div className="mx-auto h-[400px] w-full max-w-[1200px] animate-pulse rounded-2xl bg-surface-soft px-4 lg:px-0" />
+    </section>
+  );
+}
+
+function StoryLoading() {
+  return (
+    <section className="w-full bg-surface-tint-faint py-16 lg:py-24" aria-busy>
+      <div className="mx-auto h-[420px] w-full max-w-[1200px] animate-pulse rounded-2xl bg-white/60 px-4 lg:px-0" />
     </section>
   );
 }

@@ -122,13 +122,18 @@ export async function deleteNews(id: string) {
   return deleted;
 }
 
-// 발행 상태 변경 — publishNewsAction 전용. true → now, false → null
+// 발행 상태 변경 — publishNewsAction 전용. true → now, false → null.
+// 미발행 전환 시 heroRank 동반 해제 — 고아 슬롯(보이지 않는 점유) 방지 (Slice3 C-2)
 export async function setPublishedAt(id: string, publish: boolean) {
-  return db.transaction(async (tx) =>
-    newsDb.updateNews(tx, id, {
+  return db.transaction(async (tx) => {
+    const updated = await newsDb.updateNews(tx, id, {
       publishedAt: publish ? new Date() : null,
-    }),
-  );
+    });
+    if (updated && !publish) {
+      await newsDb.clearHeroRank(tx, id);
+    }
+    return updated;
+  });
 }
 
 // 메인 랜딩 슬롯 설정 — /admin/landing 큐레이션. story (1~2) / featured (1~7). null = 해제
@@ -140,4 +145,30 @@ export async function setLandingSlot(
   return db.transaction(async (tx) =>
     newsDb.setLandingSlot(tx, newsId, kind, slot),
   );
+}
+
+// /news Hero 정렬 저장 — 발행 글만 허용(draft pin 차단, C3.5). 2-phase setHeroOrder.
+// advisory lock 으로 동시 저장 직렬화 (READ COMMITTED 인터리빙 race 차단, C3.6)
+export async function setHeroOrder(orderedNewsIds: string[]) {
+  return db.transaction(async (tx) => {
+    await newsDb.acquireHeroOrderLock(tx);
+    if (orderedNewsIds.length > 0) {
+      const publishedCount = await newsDb.countPublishedIn(tx, orderedNewsIds);
+      if (publishedCount !== orderedNewsIds.length) {
+        return { kind: "has_unpublished" as const };
+      }
+    }
+    await newsDb.setHeroOrder(tx, orderedNewsIds);
+    return { kind: "ok" as const };
+  });
+}
+
+// /news Hero 현재 노출 글 (rank 순) — 공개 /news + 어드민 미리보기
+export async function getHeroNews() {
+  return newsDb.listHeroNews();
+}
+
+// 어드민 Hero picker 후보 (발행·미지정 글)
+export async function getHeroCandidates() {
+  return newsDb.listHeroCandidates();
 }

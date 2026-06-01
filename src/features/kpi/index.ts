@@ -1,5 +1,5 @@
 // KPI 도메인 server-only barrel
-export { listKpisForAdmin, updateKpis } from "./service";
+export { listKpisForAdmin, listStoryStatsForAdmin, updateKpis } from "./service";
 export {
   kpiUpdateInputSchema,
   kpiUpdateRowSchema,

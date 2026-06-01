@@ -92,14 +92,13 @@ pnpm drizzle-kit studio        # DB 브라우저
 
 ### 현재 작업
 
-- 진행 중: **Sprint 1 D-2 (어드민 페이지)** — 구간 1+2 완료 (T1~T5). 인증 인프라 + S3 presigned POST + LoginForm + categories 3-Layer + CategoryManager UI. 5/13 task (2026-05-28)
-- 디테일: `~/.claude/plans/ffwpu-social-sprint-1-d-2-ticklish-fox.md` (plan 본문) / `context-notes.md` (D-2 구간 1+2 결정 #17·#18) / `checklist.md`
-- 워크트리: `/Users/woosung/project/agy-project/ffwpu-social-d2` (브랜치 `feat/sprint-1-d2-admin`). main worktree 의 docker (postgres 5433 + minio 9000-9001) 공유 사용
-- 다음 (T6~T13, 새 세션): news db.ts query 분리 (`listPublicNews`/`getPublicNewsById` vs `listForAdmin`/`getAdminNewsById`, mutation tx 시그니처) → service transaction + actions auth helper → TiptapEditor + CoverImageUploader + TagsInput → NewsEditor + NewsTable → /admin/news routes → Dashboard + 로그아웃 → NewsBodyRenderer (Tiptap JSON walker XSS-safe, D-3 사용자 사이트 사용 예정) + 5 단위 테스트 → 종합 verify (Playwright smoke 5)
-- 로컬 가동: `docker compose ps` (이미 healthy) → `pnpm dev` (포트 5433)
+- 완료: **Sprint 2 (어드민 마무리)** — PR #14 (`feat/sprint-2-admin-finish`). 계정 관리(3) + 쌀나눔 통계 DB화(4-2) + 소식 히어로 드래그(4-3) + /news 통합(PR #11 흡수) + 디자인·반응형 감사. 슬라이스별 qa∥codex→evaluator 교차검증 (NO-GO/ITERATE 2건 포착·수정). 단위테스트 22, 마이그레이션 0003/0004/0005 (배포 시 `pnpm drizzle-kit migrate` 필요)
+- 디테일: `~/.claude/plans/compressed-sprouting-salamander.md` (plan 본문) / ADR-027·028·029 (`docs/decisions.md`)
+- 어드민 surface (7): /admin · /admin/news · /admin/news-hero · /admin/categories · /admin/kpi · /admin/landing · /admin/accounts
+- 로컬 가동: `docker compose ps` (postgres 5433 + minio) → `pnpm dev`
 - 임시 어드민: `admin@ffwpu-social.local` / `bRhHR2CWkqrMnj0L` (배포 전 변경 필수)
-- 사회공헌국 escalation 대기: H-2 푸터 종교 법인명 위치, H-3 Banner "참여하기" 카피 (`docs/TODO.md` 참조)
-- D-3 평행 (사용자 랜딩) — 별 세션 진행. 본 worktree 와 무관
+- 후속 (`docs/TODO.md`): 에러박스 대비 전역검증 · NewsTable 페이지네이션 윈도잉(latent) · `/news/[id]` 상세 · templates/ 빌드(PR #9)
+- 사회공헌국 escalation 대기: H-2 푸터 종교 법인명 위치, H-3 Banner "참여하기" 카피
 
 ---
 
