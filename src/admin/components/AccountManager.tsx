@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "./PasswordInput";
 
 export type AccountRow = {
   id: string;
@@ -137,6 +138,41 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
     });
   };
 
+  // 행 액션 버튼 — 데스크탑 테이블/모바일 카드 공용 (본인·마지막 super 삭제 비활성)
+  const renderRowActions = (account: AccountRow) => {
+    const isSelf = account.id === currentUserId;
+    const isLastSuper = account.role === "super" && superCount <= 1;
+    const deleteDisabled = isPending || isSelf || isLastSuper;
+    const deleteReason = isSelf
+      ? "본인 계정은 삭제할 수 없습니다"
+      : isLastSuper
+        ? "마지막 관리자는 삭제할 수 없습니다"
+        : undefined;
+    return (
+      <div className="flex justify-end gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => openReset(account)}
+          disabled={isPending}
+        >
+          비밀번호 재설정
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setDeleteTarget(account)}
+          disabled={deleteDisabled}
+          title={deleteReason}
+          aria-disabled={deleteDisabled}
+          className="text-destructive hover:text-destructive"
+        >
+          삭제
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -165,7 +201,8 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
 
       <Card>
         <CardContent className="pt-6">
-          <div className="overflow-x-auto">
+          {/* 데스크탑 — 테이블 (md 이상) */}
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[640px] text-sm">
               <thead className="border-b text-ink-subtle">
                 <tr className="text-left">
@@ -179,14 +216,6 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
               <tbody>
                 {accounts.map((account) => {
                   const isSelf = account.id === currentUserId;
-                  const isLastSuper =
-                    account.role === "super" && superCount <= 1;
-                  const deleteDisabled = isPending || isSelf || isLastSuper;
-                  const deleteReason = isSelf
-                    ? "본인 계정은 삭제할 수 없습니다"
-                    : isLastSuper
-                      ? "마지막 관리자는 삭제할 수 없습니다"
-                      : undefined;
                   return (
                     <tr
                       key={account.id}
@@ -212,27 +241,7 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
                         {formatDate(account.createdAt)}
                       </td>
                       <td className="py-3 text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openReset(account)}
-                            disabled={isPending}
-                          >
-                            비밀번호 재설정
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDeleteTarget(account)}
-                            disabled={deleteDisabled}
-                            title={deleteReason}
-                            aria-disabled={deleteDisabled}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            삭제
-                          </Button>
-                        </div>
+                        {renderRowActions(account)}
                       </td>
                     </tr>
                   );
@@ -240,6 +249,40 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
               </tbody>
             </table>
           </div>
+
+          {/* 모바일 — 카드 (md 미만, 가로 스크롤 없이 액션 도달) */}
+          <ul className="space-y-3 md:hidden">
+            {accounts.map((account) => {
+              const isSelf = account.id === currentUserId;
+              return (
+                <li
+                  key={account.id}
+                  className="space-y-2 rounded-lg border border-border p-4"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium text-ink-strong">
+                      {account.name}
+                      {isSelf && (
+                        <span className="ml-1 text-xs text-ink-subtle">
+                          (나)
+                        </span>
+                      )}
+                    </span>
+                    <span className="shrink-0 rounded-full bg-brand-primary/10 px-2 py-1 text-xs font-medium text-brand-primary">
+                      {account.role}
+                    </span>
+                  </div>
+                  <p className="break-all text-sm text-ink-subtle">
+                    {account.email}
+                  </p>
+                  <p className="text-xs text-ink-date">
+                    {formatDate(account.createdAt)}
+                  </p>
+                  {renderRowActions(account)}
+                </li>
+              );
+            })}
+          </ul>
         </CardContent>
       </Card>
 
@@ -261,62 +304,100 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
             className="space-y-4"
           >
             <div className="space-y-2">
-              <Label htmlFor="add-email">이메일</Label>
+              <Label htmlFor="add-email">
+                이메일 <span className="text-destructive" aria-hidden>*</span>
+              </Label>
               <Input
                 id="add-email"
                 type="email"
                 autoComplete="off"
+                required
+                aria-required
+                aria-invalid={!!addForm.formState.errors.email}
+                aria-describedby={
+                  addForm.formState.errors.email ? "add-email-error" : undefined
+                }
                 disabled={isPending}
                 {...addForm.register("email")}
               />
               {addForm.formState.errors.email && (
-                <p className="text-xs text-destructive">
+                <p id="add-email-error" className="text-xs text-destructive">
                   {addForm.formState.errors.email.message}
                 </p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="add-name">이름</Label>
+              <Label htmlFor="add-name">
+                이름 <span className="text-destructive" aria-hidden>*</span>
+              </Label>
               <Input
                 id="add-name"
+                required
+                aria-required
+                aria-invalid={!!addForm.formState.errors.name}
+                aria-describedby={
+                  addForm.formState.errors.name ? "add-name-error" : undefined
+                }
                 disabled={isPending}
                 {...addForm.register("name")}
               />
               {addForm.formState.errors.name && (
-                <p className="text-xs text-destructive">
+                <p id="add-name-error" className="text-xs text-destructive">
                   {addForm.formState.errors.name.message}
                 </p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="add-password">비밀번호</Label>
-              <Input
+              <Label htmlFor="add-password">
+                비밀번호 <span className="text-destructive" aria-hidden>*</span>
+              </Label>
+              <PasswordInput
                 id="add-password"
-                type="password"
                 autoComplete="new-password"
+                required
+                aria-required
+                aria-invalid={!!addForm.formState.errors.password}
+                aria-describedby={
+                  addForm.formState.errors.password
+                    ? "add-password-hint add-password-error"
+                    : "add-password-hint"
+                }
                 disabled={isPending}
                 {...addForm.register("password")}
               />
-              <p className="text-xs text-ink-date">
+              <p id="add-password-hint" className="text-xs text-ink-date">
                 최소 10자, 영문과 숫자를 포함해야 합니다.
               </p>
               {addForm.formState.errors.password && (
-                <p className="text-xs text-destructive">
+                <p id="add-password-error" className="text-xs text-destructive">
                   {addForm.formState.errors.password.message}
                 </p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="add-password-confirm">비밀번호 확인</Label>
-              <Input
+              <Label htmlFor="add-password-confirm">
+                비밀번호 확인{" "}
+                <span className="text-destructive" aria-hidden>*</span>
+              </Label>
+              <PasswordInput
                 id="add-password-confirm"
-                type="password"
                 autoComplete="new-password"
+                required
+                aria-required
+                aria-invalid={!!addForm.formState.errors.passwordConfirm}
+                aria-describedby={
+                  addForm.formState.errors.passwordConfirm
+                    ? "add-password-confirm-error"
+                    : undefined
+                }
                 disabled={isPending}
                 {...addForm.register("passwordConfirm")}
               />
               {addForm.formState.errors.passwordConfirm && (
-                <p className="text-xs text-destructive">
+                <p
+                  id="add-password-confirm-error"
+                  className="text-xs text-destructive"
+                >
                   {addForm.formState.errors.passwordConfirm.message}
                 </p>
               )}
@@ -359,34 +440,56 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
           >
             <input type="hidden" {...resetForm.register("userId")} />
             <div className="space-y-2">
-              <Label htmlFor="reset-password">새 비밀번호</Label>
-              <Input
+              <Label htmlFor="reset-password">
+                새 비밀번호 <span className="text-destructive" aria-hidden>*</span>
+              </Label>
+              <PasswordInput
                 id="reset-password"
-                type="password"
                 autoComplete="new-password"
+                required
+                aria-required
+                aria-invalid={!!resetForm.formState.errors.password}
+                aria-describedby={
+                  resetForm.formState.errors.password
+                    ? "reset-password-hint reset-password-error"
+                    : "reset-password-hint"
+                }
                 disabled={isPending}
                 {...resetForm.register("password")}
               />
-              <p className="text-xs text-ink-date">
+              <p id="reset-password-hint" className="text-xs text-ink-date">
                 최소 10자, 영문과 숫자를 포함해야 합니다.
               </p>
               {resetForm.formState.errors.password && (
-                <p className="text-xs text-destructive">
+                <p id="reset-password-error" className="text-xs text-destructive">
                   {resetForm.formState.errors.password.message}
                 </p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reset-password-confirm">새 비밀번호 확인</Label>
-              <Input
+              <Label htmlFor="reset-password-confirm">
+                새 비밀번호 확인{" "}
+                <span className="text-destructive" aria-hidden>*</span>
+              </Label>
+              <PasswordInput
                 id="reset-password-confirm"
-                type="password"
                 autoComplete="new-password"
+                required
+                aria-required
+                aria-invalid={!!resetForm.formState.errors.passwordConfirm}
+                aria-describedby={
+                  resetForm.formState.errors.passwordConfirm
+                    ? "reset-password-confirm-error"
+                    : undefined
+                }
                 disabled={isPending}
                 {...resetForm.register("passwordConfirm")}
               />
               {resetForm.formState.errors.passwordConfirm && (
-                <p className="text-xs text-destructive">
+                <p
+                  id="reset-password-confirm-error"
+                  className="text-xs text-destructive"
+                >
                   {resetForm.formState.errors.passwordConfirm.message}
                 </p>
               )}

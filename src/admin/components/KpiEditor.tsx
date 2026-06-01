@@ -92,30 +92,54 @@ export function KpiEditor({ initialRows }: Props) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor={`label-${idx}`}>라벨</Label>
+                <Label htmlFor={`label-${idx}`}>
+                  라벨 <span className="text-destructive" aria-hidden>*</span>
+                </Label>
                 <Input
                   id={`label-${idx}`}
+                  required
+                  aria-required
+                  aria-invalid={!!form.formState.errors.rows?.[idx]?.label}
+                  aria-describedby={
+                    form.formState.errors.rows?.[idx]?.label
+                      ? `label-${idx}-error`
+                      : undefined
+                  }
                   disabled={isPending}
                   {...form.register(`rows.${idx}.label` as const)}
                 />
                 {form.formState.errors.rows?.[idx]?.label && (
-                  <p className="text-xs text-destructive">
+                  <p id={`label-${idx}-error`} className="text-xs text-destructive">
                     {form.formState.errors.rows[idx]?.label?.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor={`display-${idx}`}>표시 값 (메인 노출)</Label>
+                <Label htmlFor={`display-${idx}`}>
+                  표시 값 (메인 노출){" "}
+                  <span className="text-destructive" aria-hidden>*</span>
+                </Label>
                 <Input
                   id={`display-${idx}`}
                   placeholder="예: 45,217명+"
+                  required
+                  aria-required
+                  aria-invalid={!!form.formState.errors.rows?.[idx]?.displayValue}
+                  aria-describedby={
+                    form.formState.errors.rows?.[idx]?.displayValue
+                      ? `display-${idx}-error`
+                      : undefined
+                  }
                   disabled={isPending}
                   className="text-base font-semibold"
                   {...form.register(`rows.${idx}.displayValue` as const)}
                 />
                 {form.formState.errors.rows?.[idx]?.displayValue && (
-                  <p className="text-xs text-destructive">
+                  <p
+                    id={`display-${idx}-error`}
+                    className="text-xs text-destructive"
+                  >
                     {form.formState.errors.rows[idx]?.displayValue?.message}
                   </p>
                 )}

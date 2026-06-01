@@ -191,7 +191,8 @@ function CategoriesTable({
         <CardTitle className="text-xl">카테고리 목록</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
+        {/* 데스크탑 — 테이블 (md 이상) */}
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="border-b text-ink-subtle">
               <tr className="text-left">
@@ -246,6 +247,38 @@ function CategoriesTable({
             </tbody>
           </table>
         </div>
+
+        {/* 모바일 — 카드 (md 미만) */}
+        <ul className="space-y-3 md:hidden">
+          {rows.map((row) => (
+            <li
+              key={row.id}
+              className="space-y-2 rounded-lg border border-border p-4"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium text-ink-strong">{row.name}</span>
+                <span
+                  className={
+                    row.isActive
+                      ? "shrink-0 rounded-full bg-kpi-lime/40 px-2 py-1 text-xs font-medium text-ink-strong"
+                      : "shrink-0 rounded-full bg-muted px-2 py-1 text-xs font-medium text-ink-subtle"
+                  }
+                >
+                  {row.isActive ? "활성" : "비활성"}
+                </span>
+              </div>
+              <p className="font-mono text-xs text-ink-date">{row.slug}</p>
+              <p className="text-xs text-ink-subtle tabular-nums">
+                글 {row.newsCount}건 · 정렬 {row.sortOrder}
+              </p>
+              <div className="flex justify-end">
+                <Button variant="ghost" size="sm" onClick={() => onEdit(row)}>
+                  수정
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
       </CardContent>
     </Card>
   );

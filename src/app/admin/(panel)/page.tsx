@@ -48,7 +48,7 @@ const CATEGORY_CHIP_PALETTE = [
   "bg-brand-primary/10 text-brand-primary border-brand-primary/20",
   "bg-warm/15 text-amber-700 border-warm/30",
   "bg-kpi-lime/30 text-ink-strong border-kpi-lime/60",
-  "bg-brand-mid/15 text-brand-mid border-brand-mid/30",
+  "bg-brand-mid/15 text-brand-primary border-brand-mid/30", // text-brand-mid(3.91:1)→brand-primary(9.56:1) WCAG AA
 ] as const;
 
 async function DashboardData() {

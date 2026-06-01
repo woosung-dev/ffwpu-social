@@ -137,17 +137,23 @@ export function NewsEditor({ mode, categories, initial }: Props) {
                 htmlFor="news-title"
                 className="text-sm font-semibold text-ink-strong"
               >
-                제목
+                제목 <span className="text-destructive" aria-hidden>*</span>
               </Label>
               <Input
                 id="news-title"
                 placeholder="제목을 입력하세요"
+                required
+                aria-required
+                aria-invalid={!!form.formState.errors.title}
+                aria-describedby={
+                  form.formState.errors.title ? "news-title-error" : undefined
+                }
                 disabled={isPending}
                 className="h-11 text-base"
                 {...form.register("title")}
               />
               {form.formState.errors.title && (
-                <p className="text-xs text-destructive">
+                <p id="news-title-error" className="text-xs text-destructive">
                   {form.formState.errors.title.message}
                 </p>
               )}
@@ -221,14 +227,21 @@ export function NewsEditor({ mode, categories, initial }: Props) {
             <Card>
               <CardContent className="space-y-3 pt-6">
                 <h3 className="text-sm font-semibold text-ink-strong">
-                  카테고리
+                  카테고리 <span className="text-destructive" aria-hidden>*</span>
                 </h3>
                 <Controller
                   control={form.control}
                   name="categoryId"
                   render={({ field }) => (
                     <div
+                      role="group"
                       aria-label="카테고리 선택"
+                      aria-invalid={!!form.formState.errors.categoryId}
+                      aria-describedby={
+                        form.formState.errors.categoryId
+                          ? "news-category-error"
+                          : undefined
+                      }
                       className="flex flex-wrap gap-1.5"
                     >
                       {categories.map((c) => {
@@ -257,7 +270,7 @@ export function NewsEditor({ mode, categories, initial }: Props) {
                   )}
                 />
                 {form.formState.errors.categoryId && (
-                  <p className="text-xs text-destructive">
+                  <p id="news-category-error" className="text-xs text-destructive">
                     {form.formState.errors.categoryId.message}
                   </p>
                 )}
