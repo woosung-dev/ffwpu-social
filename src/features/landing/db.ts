@@ -62,6 +62,7 @@ export async function listFeaturedGrid(slotCount = 7) {
       categorySlug: categories.slug,
       coverImageUrl: news.coverImageUrl,
       publishedAt: news.publishedAt,
+      storySlot: news.storySlot,
       featuredRank: news.featuredRank,
     })
     .from(news)
@@ -94,6 +95,7 @@ export async function listFeaturedGrid(slotCount = 7) {
           categorySlug: categories.slug,
           coverImageUrl: news.coverImageUrl,
           publishedAt: news.publishedAt,
+          storySlot: news.storySlot,
           featuredRank: news.featuredRank,
         })
         .from(news)
