@@ -22,6 +22,20 @@
       "when": 1780309208952,
       "tag": "0002_giant_archangel",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780317422619,
+      "tag": "0003_large_doctor_strange",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1780318232094,
+      "tag": "0004_far_sasquatch",
+      "breakpoints": true
     }
   ]
 }

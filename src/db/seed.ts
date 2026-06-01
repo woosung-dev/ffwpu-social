@@ -57,6 +57,35 @@ async function seed() {
       unit: "회",
       sortOrder: 4,
     },
+    // StorySection 통계 (section: story) — 후원기관·지원가정·지역시설. hide-when-empty: value 0/null 이면 메인 비노출
+    // ⚠️ 초기값은 drizzle/0003_*.sql 의 INSERT 와 동기화 필요 (운영 DB 는 마이그레이션, 개발 DB 는 이 seed)
+    {
+      slug: "story_supported_orgs",
+      section: "story" as const,
+      label: "후원 기관",
+      value: 16,
+      displayValue: "16개",
+      unit: "개",
+      sortOrder: 1,
+    },
+    {
+      slug: "story_supported_households",
+      section: "story" as const,
+      label: "지원 가정",
+      value: 23,
+      displayValue: "23가정",
+      unit: "가정",
+      sortOrder: 2,
+    },
+    {
+      slug: "story_local_facilities",
+      section: "story" as const,
+      label: "지역 시설",
+      value: 2,
+      displayValue: "2시설",
+      unit: "시설",
+      sortOrder: 3,
+    },
   ]);
 
   console.log("[seed] inserting categories...");
