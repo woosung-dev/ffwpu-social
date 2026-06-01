@@ -2,13 +2,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
-import {
-  requireSuperAdmin,
-  UnauthorizedError,
-  ForbiddenError,
-} from "@/lib/auth-guards";
+import { requireSuperAdmin } from "@/lib/auth-guards";
+import { type ActionResult, toActionError } from "@/lib/action-result";
 import * as accountService from "./service";
 import {
   createAccountSchema,
@@ -17,21 +13,6 @@ import {
   type CreateAccountInput,
   type ResetPasswordInput,
 } from "./schemas";
-
-export type ActionResult<T, Input = unknown> =
-  | { success: true; data: T }
-  | { success: false; error: string | z.ZodError<Input> };
-
-// 가드 예외만 메시지 노출, 그 외(DB 등)는 내부 로그 + generic — 내부 정보 누출 방지 (anti-slop §1)
-function toActionError(e: unknown): { success: false; error: string } {
-  if (e instanceof UnauthorizedError) return { success: false, error: "Unauthorized" };
-  if (e instanceof ForbiddenError) return { success: false, error: "Forbidden" };
-  console.error("[accountAction]", e);
-  return {
-    success: false,
-    error: "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-  };
-}
 
 export async function createAccountAction(
   input: CreateAccountInput,
@@ -48,7 +29,7 @@ export async function createAccountAction(
     revalidatePath("/admin/accounts");
     return { success: true, data: { id: result.account.id } };
   } catch (e) {
-    return toActionError(e);
+    return toActionError(e, "accountAction");
   }
 }
 
@@ -65,7 +46,7 @@ export async function resetPasswordAction(
     revalidatePath("/admin/accounts");
     return { success: true, data: { id: updated.id } };
   } catch (e) {
-    return toActionError(e);
+    return toActionError(e, "accountAction");
   }
 }
 
@@ -101,6 +82,6 @@ export async function deleteAccountAction(
         return { success: false, error: "알 수 없는 오류가 발생했습니다." };
     }
   } catch (e) {
-    return toActionError(e);
+    return toActionError(e, "accountAction");
   }
 }
