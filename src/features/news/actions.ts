@@ -164,6 +164,42 @@ export async function searchTagsAction(
   }
 }
 
+// 메인 랜딩 슬롯 설정 — /admin/landing 큐레이션. story (1~2) / featured (1~7). null = 해제. revalidate / 메인 + 어드민 landing
+const setLandingSlotInputSchema = z.object({
+  newsId: z.uuid(),
+  kind: z.enum(["story", "featured"]),
+  slot: z.number().int().min(1).max(7).nullable(),
+});
+type SetLandingSlotInput = z.infer<typeof setLandingSlotInputSchema>;
+
+export async function setLandingSlotAction(
+  input: SetLandingSlotInput,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireSuperAdmin();
+    const parsed = setLandingSlotInputSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error };
+    }
+    // story 슬롯은 1~2 만 허용 (UI 강제 보강 — DB 컬럼 제약 외 비즈니스 룰)
+    if (parsed.data.kind === "story" && parsed.data.slot != null && parsed.data.slot > 2) {
+      return { success: false, error: "StorySection 슬롯은 1 또는 2 만 가능합니다." };
+    }
+    const updated = await newsService.setLandingSlot(
+      parsed.data.newsId,
+      parsed.data.kind,
+      parsed.data.slot,
+    );
+    if (!updated) return { success: false, error: "Not Found" };
+    // 메인 / 사용자 사이트 + 어드민 큐레이션 페이지 동시 revalidate
+    revalidatePath("/");
+    revalidatePath("/admin/landing");
+    return { success: true, data: updated };
+  } catch (e) {
+    return authError(e);
+  }
+}
+
 // ─── 이미지 업로드 Presigned POST 발급 (codex P1#4 + 결정 #16) ────────────
 
 const uploadInputSchema = z

@@ -130,3 +130,14 @@ export async function setPublishedAt(id: string, publish: boolean) {
     }),
   );
 }
+
+// 메인 랜딩 슬롯 설정 — /admin/landing 큐레이션. story (1~2) / featured (1~7). null = 해제
+export async function setLandingSlot(
+  newsId: string,
+  kind: "story" | "featured",
+  slot: number | null,
+) {
+  return db.transaction(async (tx) =>
+    newsDb.setLandingSlot(tx, newsId, kind, slot),
+  );
+}
