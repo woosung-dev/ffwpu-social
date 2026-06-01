@@ -1,0 +1,125 @@
+// 메인 랜딩 DB 쿼리 — KPI 지표 + StorySection 상단 슬롯 (news.story_slot) + ArticleGrid 하단 슬롯 (news.featured_rank) 큐레이션 + 자동 fallback
+import "server-only";
+
+import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
+
+import { db } from "@/db";
+import { categories, kpiMetrics, news } from "@/db/schema";
+
+const RICE_SHARING_SLUG = "rice_sharing";
+
+// 활성 KPI — 정렬 순. 어드민 KPI 입력 폼 + 사용자 사이트 KpiSection
+export async function listActiveKpiMetrics() {
+  return db
+    .select({
+      id: kpiMetrics.id,
+      slug: kpiMetrics.slug,
+      label: kpiMetrics.label,
+      value: kpiMetrics.value,
+      displayValue: kpiMetrics.displayValue,
+      unit: kpiMetrics.unit,
+      sortOrder: kpiMetrics.sortOrder,
+    })
+    .from(kpiMetrics)
+    .where(eq(kpiMetrics.isActive, true))
+    .orderBy(asc(kpiMetrics.sortOrder));
+}
+
+// StorySection 상단 슬롯 — 운영자 직접 지정 (1~2). 자동 fallback 없음 (사용자 결정 2026-06-01)
+// 쌀 나눔 카테고리 + 발행된 글 + story_slot NOT NULL
+export async function listStorySlots() {
+  return db
+    .select({
+      id: news.id,
+      title: news.title,
+      categoryName: categories.name,
+      categorySlug: categories.slug,
+      coverImageUrl: news.coverImageUrl,
+      publishedAt: news.publishedAt,
+      storySlot: news.storySlot,
+    })
+    .from(news)
+    .innerJoin(categories, eq(news.categoryId, categories.id))
+    .where(
+      and(
+        isNotNull(news.publishedAt),
+        isNotNull(news.storySlot),
+        eq(categories.slug, RICE_SHARING_SLUG),
+      ),
+    )
+    .orderBy(asc(news.storySlot));
+}
+
+// ArticleGrid 하단 슬롯 — 운영자 pin (featured_rank) + 자동 fallback (쌀 나눔 카테고리 최신순)
+// 결과: 1~7 자리 채워진 배열 (null 가능)
+export async function listFeaturedGrid(slotCount = 7) {
+  // 1. 운영자 pin
+  const pinned = await db
+    .select({
+      id: news.id,
+      title: news.title,
+      categoryName: categories.name,
+      categorySlug: categories.slug,
+      coverImageUrl: news.coverImageUrl,
+      publishedAt: news.publishedAt,
+      featuredRank: news.featuredRank,
+    })
+    .from(news)
+    .innerJoin(categories, eq(news.categoryId, categories.id))
+    .where(
+      and(
+        isNotNull(news.publishedAt),
+        isNotNull(news.featuredRank),
+        eq(categories.slug, RICE_SHARING_SLUG),
+      ),
+    )
+    .orderBy(asc(news.featuredRank));
+
+  const pinnedIds = new Set(pinned.map((p) => p.id));
+  const filledSlots = new Map<number, (typeof pinned)[number]>();
+  for (const p of pinned) {
+    if (p.featuredRank != null && p.featuredRank >= 1 && p.featuredRank <= slotCount) {
+      filledSlots.set(p.featuredRank, p);
+    }
+  }
+  const emptySlots = slotCount - filledSlots.size;
+
+  // 2. 자동 fallback — 쌀 나눔 카테고리 최신순, pin 된 글 제외
+  const autoCandidates = emptySlots > 0
+    ? await db
+        .select({
+          id: news.id,
+          title: news.title,
+          categoryName: categories.name,
+          categorySlug: categories.slug,
+          coverImageUrl: news.coverImageUrl,
+          publishedAt: news.publishedAt,
+          featuredRank: news.featuredRank,
+        })
+        .from(news)
+        .innerJoin(categories, eq(news.categoryId, categories.id))
+        .where(
+          and(
+            isNotNull(news.publishedAt),
+            isNull(news.featuredRank),
+            eq(categories.slug, RICE_SHARING_SLUG),
+            pinnedIds.size > 0 ? sql`${news.id} NOT IN ${Array.from(pinnedIds)}` : sql`TRUE`,
+          ),
+        )
+        .orderBy(desc(news.publishedAt))
+        .limit(emptySlots)
+    : [];
+
+  // 3. 슬롯 결합 — pin 자리 우선, 빈 자리 fallback
+  const result: Array<(typeof pinned)[number] | null> = [];
+  let autoIdx = 0;
+  for (let pos = 1; pos <= slotCount; pos++) {
+    const pinnedAt = filledSlots.get(pos);
+    if (pinnedAt) {
+      result.push(pinnedAt);
+    } else {
+      result.push(autoCandidates[autoIdx++] ?? null);
+    }
+  }
+  return result;
+}
