@@ -4,9 +4,14 @@ import { config } from "dotenv";
 import bcrypt from "bcryptjs";
 import { sql } from "drizzle-orm";
 
+import { normalizeEmail } from "../features/accounts/schemas";
+
 config({ path: ".env.local" });
 
-const adminEmail = process.env.ADMIN_EMAIL ?? "admin@ffwpu-social.local";
+// 로그인 정규화(normalizeEmail)와 동일 적용 — 대문자 ADMIN_EMAIL 로 seed 시 로그인 불가 방지 (C1.6)
+const adminEmail = normalizeEmail(
+  process.env.ADMIN_EMAIL ?? "admin@ffwpu-social.local",
+);
 const adminPassword = process.env.ADMIN_PASSWORD;
 if (!adminPassword) {
   console.error("[seed] ADMIN_PASSWORD 환경변수가 필요합니다.");

@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { BarChart3, LayoutDashboard, LogOut, Menu, Newspaper, Sparkles, X } from "lucide-react";
+import { BarChart3, LayoutDashboard, LogOut, Menu, Newspaper, Sparkles, Users, X } from "lucide-react";
 
 import { logoutAction } from "@/features/auth/actions";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ const NAV: readonly NavItem[] = [
   { href: "/admin/news", label: "소식 관리", icon: Newspaper },
   { href: "/admin/kpi", label: "KPI 관리", icon: BarChart3 },
   { href: "/admin/landing", label: "메인 큐레이션", icon: Sparkles },
+  { href: "/admin/accounts", label: "계정 관리", icon: Users },
 ] as const;
 
 export function AdminSidebar() {
