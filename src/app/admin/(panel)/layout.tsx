@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { AdminSidebar } from "@/admin/layouts";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -22,6 +23,7 @@ export default function AdminPanelLayout({
       <main className="min-w-0 flex-1 px-4 pb-6 pt-16 lg:px-10 lg:pb-10 lg:pt-10">
         <div className="mx-auto w-full max-w-6xl">{children}</div>
       </main>
+      <Toaster richColors position="top-center" />
     </div>
   );
 }
