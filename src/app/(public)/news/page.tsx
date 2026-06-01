@@ -54,7 +54,8 @@ async function NewsListContent({
 }) {
   const { category, page } = await searchParams;
   const categorySlug = category && category.length > 0 ? category : ALL_CATEGORY_SLUG;
-  const pageNum = Math.max(1, Number(page) || 1);
+  // float / NaN / 0 / 음수 입력 차단 — DB OFFSET 에 정수 보장
+  const pageNum = Math.max(1, Math.floor(Number(page) || 1));
 
   const [categoriesAll, list] = await Promise.all([
     listCategories(),
