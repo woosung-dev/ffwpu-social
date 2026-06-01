@@ -15,13 +15,49 @@ if (!adminPassword) {
 }
 
 const { db } = await import("./index");
-const { users, categories, news, newsTags } = await import("./schema");
+const { users, categories, news, newsTags, kpiMetrics } = await import("./schema");
 
 async function seed() {
   console.log("[seed] truncating existing rows...");
   await db.execute(
-    sql`TRUNCATE TABLE news_tags, heart_events, audit_logs, news, categories, users RESTART IDENTITY CASCADE`,
+    sql`TRUNCATE TABLE news_tags, heart_events, audit_logs, news, categories, users, kpi_metrics RESTART IDENTITY CASCADE`,
   );
+
+  console.log("[seed] inserting KPI metrics (디자이너 더미 — 사회공헌국 정확값 수령 후 어드민에서 교체)...");
+  await db.insert(kpiMetrics).values([
+    {
+      slug: "volunteer_count",
+      label: "누적 봉사자 수",
+      value: 45217,
+      displayValue: "45,217명+",
+      unit: "명",
+      sortOrder: 1,
+    },
+    {
+      slug: "volunteer_period",
+      label: "누적 봉사 기간",
+      value: null, // 기간 비숫자 (38년 5개월)
+      displayValue: "38년 5개월",
+      unit: null,
+      sortOrder: 2,
+    },
+    {
+      slug: "helped_household_count",
+      label: "도움을 주게 된 가정 수",
+      value: 80257,
+      displayValue: "80,257개+",
+      unit: "개",
+      sortOrder: 3,
+    },
+    {
+      slug: "event_count",
+      label: "봉사활동 횟수",
+      value: 3614,
+      displayValue: "3,614회+",
+      unit: "회",
+      sortOrder: 4,
+    },
+  ]);
 
   console.log("[seed] inserting categories...");
   const categoryRows = await db

@@ -5,3 +5,4 @@ export * from "./news";
 export * from "./news-tags";
 export * from "./heart-events";
 export * from "./audit-logs";
+export * from "./kpi-metrics";

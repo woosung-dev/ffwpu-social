@@ -15,6 +15,13 @@
       "when": 1779861124640,
       "tag": "0001_categories_and_heart_simplify",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780309208952,
+      "tag": "0002_giant_archangel",
+      "breakpoints": true
     }
   ]
 }
