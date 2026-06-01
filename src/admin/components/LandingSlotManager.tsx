@@ -122,7 +122,7 @@ export function LandingSlotManager({
             }
             disabled={isPending}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full" aria-label={`${slotLabel} 글 선택`}>
               <SelectValue
                 placeholder={
                   kind === "featured"
@@ -190,7 +190,7 @@ export function LandingSlotManager({
         <CardHeader>
           <CardTitle className="text-xl">상단 — 쌀 나눔 활동 (StorySection)</CardTitle>
           <p className="text-sm text-ink-subtle">
-            ※ 지정한 글만 노출됩니다. 미지정 자리는 비노출 (자동 fallback 없음)
+            ※ 지정한 글의 대표 이미지가 메인 상단 사진 2장에 노출됩니다(클릭 시 해당 소식으로 이동). 미지정 자리는 기본 사진.
           </p>
         </CardHeader>
         <CardContent className="space-y-3">

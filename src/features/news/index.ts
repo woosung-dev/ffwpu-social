@@ -13,9 +13,10 @@ export {
   searchTagsAction,
   uploadImageAction,
   setHeroOrderAction,
-  type ActionResult,
   type UploadImageInput,
 } from "./actions";
+
+export { type ActionResult } from "@/lib/action-result";
 
 export {
   listNews,

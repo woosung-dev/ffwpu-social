@@ -9,6 +9,7 @@ import {
   KpiSection,
   PartnersSection,
   StorySection,
+  type StorySlotItem,
 } from "@/client/sections";
 import { getLandingData, landingDb } from "@/features/landing";
 
@@ -55,8 +56,22 @@ async function KpiSectionWithData() {
 }
 
 async function StorySectionWithData() {
-  const stats = await landingDb.listStoryStats();
-  return <StorySection stats={stats} />;
+  const [stats, slotRows] = await Promise.all([
+    landingDb.listStoryStats(),
+    landingDb.listStorySlots(),
+  ]);
+  // 상단 슬롯 2자리 매핑 — 운영자가 /admin/landing 에서 지정한 글 (story_slot 1~2)
+  const slots: Array<StorySlotItem | null> = [null, null];
+  for (const r of slotRows) {
+    if (r.storySlot != null && r.storySlot >= 1 && r.storySlot <= 2) {
+      slots[r.storySlot - 1] = {
+        id: r.id,
+        title: r.title,
+        coverImageUrl: r.coverImageUrl,
+      };
+    }
+  }
+  return <StorySection stats={stats} slots={slots} />;
 }
 
 function KpiLoading() {

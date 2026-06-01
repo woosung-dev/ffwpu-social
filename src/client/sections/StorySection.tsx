@@ -1,5 +1,9 @@
 // 사용자 랜딩 Story 섹션 — Figma 96:7834 (1440×573). 배경 #FAF4FF, 좌측 이미지 2장 + 우측 TagChip+헤딩+설명+Result 통계. ADR-009 #story 앵커 (쌀나눔 프로젝트 메뉴 매핑). 4 BP: lg+ 좌-우 / 1024↓ 세로 스택 (Result 라인은 모바일 가로 → 데스크탑 세로)
+// 상단 이미지 2장 = 운영자가 /admin/landing 상단 슬롯(story_slot 1~2)에 지정한 글의 대표 이미지(미지정 시 기본 디자인 사진). 클릭 시 해당 소식으로 이동. (R7 — 어드민 큐레이션 공개 반영)
 // 통계는 kpi_metrics(section='story') DB 연결 — 운영자가 /admin/landing 에서 입력. value 0/null 인 항목은 hide-when-empty 로 숨김
+import Link from "next/link";
+
+import { cn } from "@/lib/utils";
 
 export type StoryStat = {
   slug: string;
@@ -8,33 +12,93 @@ export type StoryStat = {
   value: number | null;
 };
 
-type Props = {
-  stats: StoryStat[];
+// 상단 슬롯 글 — coverImageUrl 있으면 대표 이미지+소식 링크, 없으면 기본 사진
+export type StorySlotItem = {
+  id: string;
+  title: string;
+  coverImageUrl: string | null;
 };
 
-export function StorySection({ stats }: Props) {
+type Props = {
+  stats: StoryStat[];
+  slots: Array<StorySlotItem | null>; // [상단 1번(큰), 상단 2번(작은)]
+};
+
+const FALLBACK_IMAGES = [
+  "/images/story-card1.png",
+  "/images/story-card2.png",
+] as const;
+
+// 상단 슬롯 이미지 — 지정 글의 대표 이미지(글 링크) 또는 기본 디자인 사진
+function StoryImage({
+  slot,
+  fallback,
+  colSpanClass,
+  aspectClass,
+  width,
+  height,
+}: {
+  slot: StorySlotItem | null;
+  fallback: string;
+  colSpanClass: string;
+  aspectClass: string;
+  width: number;
+  height: number;
+}) {
+  const hasArticleImage = Boolean(slot?.coverImageUrl);
+  const src = slot?.coverImageUrl ?? fallback;
+  const alt = hasArticleImage ? slot!.title : "";
+  const imgClass = cn(aspectClass, "w-full rounded-lg object-cover");
+
+  if (slot && hasArticleImage) {
+    return (
+      <Link
+        href={`/news/${slot.id}`}
+        className={cn(
+          colSpanClass,
+          "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/60 focus-visible:ring-offset-2",
+        )}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- S3/public asset */}
+        <img src={src} alt={alt} width={width} height={height} className={imgClass} />
+      </Link>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- public asset
+    <img
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      className={cn(colSpanClass, imgClass)}
+    />
+  );
+}
+
+export function StorySection({ stats, slots }: Props) {
   // hide-when-empty — value 0/null 항목 제외. 전부 숨으면 통계 블록 자체 비노출
   const visibleStats = stats.filter((s) => s.value != null && s.value > 0);
   return (
     <section id="story" className="w-full bg-surface-tint-faint py-16 lg:py-24">
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10 px-4 lg:flex-row lg:items-center lg:gap-[70px] lg:px-0">
-        {/* 좌측 이미지 2장 — 큰 + 작은 */}
+        {/* 좌측 이미지 2장 — 큰 + 작은. 운영자 지정 글 대표 이미지 (미지정 시 기본 사진) */}
         <div className="relative grid w-full grid-cols-2 gap-3 lg:w-[560px] lg:shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element -- public asset */}
-          <img
-            src="/images/story-card1.png"
-            alt=""
+          <StoryImage
+            slot={slots[0] ?? null}
+            fallback={FALLBACK_IMAGES[0]}
+            colSpanClass="col-span-2"
+            aspectClass="aspect-[4/3]"
             width={560}
             height={420}
-            className="col-span-2 aspect-[4/3] w-full rounded-lg object-cover"
           />
-          {/* eslint-disable-next-line @next/next/no-img-element -- public asset */}
-          <img
-            src="/images/story-card2.png"
-            alt=""
+          <StoryImage
+            slot={slots[1] ?? null}
+            fallback={FALLBACK_IMAGES[1]}
+            colSpanClass="col-span-1"
+            aspectClass="aspect-square"
             width={280}
             height={280}
-            className="col-span-1 aspect-square w-full rounded-lg object-cover"
           />
           {/* 장식 — 데스크탑에만 */}
           {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}

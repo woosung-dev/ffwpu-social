@@ -148,3 +148,24 @@
 - [ ] `/qa` Standard — D-3 통합 시 함께
 - [ ] `/design-review` — 어드민 Figma 시안 없음, anti-slop 자체 점검 완료
 - [ ] `/finishing-a-development-branch` → push (자동, 본 세션 사용자 사전 승인) → PR (자동) → merge (사용자 승인 후)
+
+---
+
+## 어드민 v1.0 ship-전 하드닝 (2026-06-01, branch `feat/admin-ship-hardening`)
+
+> plan: `docs/plans/active/2026-06-01-admin-ship-hardening.md`. 다단 검토 GO-WITH-FIXES + codex v2.
+
+- [x] D0 — 시작 전 문서화 (plan 승격·TODO·CLAUDE 포인터·checklist)
+- [x] A1/A1b/A2 — 랜딩 슬롯 eligibility 최종 검증(row FOR UPDATE) 강제 + 상태전이 고아 슬롯 정리(hero·landing) + LANDING_SLOT_LOCK_KEY + 전이판정 헬퍼 단위테스트(9)
+- [x] A3 — JWT 세션 무효화 (auth.ts jwt 콜백 DB 재조회, 삭제/role 변경 시 return null)
+- [x] A4/A5 — ink-date 색대비 AA(#6f7682) + 대시보드 카테고리 칩(brand-primary)
+- [x] A6/A8 — landing notInArray 교체 + 사이드바 카테고리 NAV
+- [x] B1~B4 — 필드에러 aria(News/Kpi/Account)·Select 접근명·필수표시·비번 토글(PasswordInput)
+- [x] C1 — 모바일 테이블 카드뷰 폴백 (NewsTable·Account·Category) + 페이지네이션 flex-wrap
+- [x] D1 — src/lib/action-result.ts + lib/errors.ts(DomainError) 통합 + mutation id z.uuid()
+- [x] D2 — landing page 인라인 Drizzle 이관(listRiceSharingCandidates) + 어드민 pinned-only 분리
+- [x] R7 — story 슬롯 공개 연결(버그 수정) — StorySection 지정 글 대표 이미지+미지정 폴백, listStorySlots 연결
+- [x] #1 — tsconfig `exclude` templates → `pnpm tsc`·`pnpm build` 그린(pre-existing PR #9 블로커 해소)
+- [ ] A7 — Vercel Firewall rate-limit (배포 설정, 코드 0) — `docs/TODO.md` 배포 전 필수
+- [~] 검증 — 자동 전부 통과(`pnpm tsc` 0·`pnpm build` exit 0·lint 0·vitest 31). 라이브 수동(A1 5케이스·A2·A3·C1 375px·R7 메인반영) 잔여
+- [x] DX — ADR-030/031/032·context-notes·TODO·lessons·CLAUDE 포인터

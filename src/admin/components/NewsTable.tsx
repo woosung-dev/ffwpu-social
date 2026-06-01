@@ -103,6 +103,32 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
     });
   };
 
+  // 행 액션 — 데스크탑 테이블/모바일 카드 공용
+  const renderRowActions = (row: NewsRow, isPublished: boolean) => (
+    <div className="flex justify-end gap-1">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => togglePublish(row.id, isPublished)}
+        disabled={isPending}
+      >
+        {isPublished ? "해제" : "발행"}
+      </Button>
+      <Button asChild variant="ghost" size="sm">
+        <Link href={`/admin/news/${row.id}/edit`}>수정</Link>
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setConfirmId(row.id)}
+        disabled={isPending}
+        className="text-destructive hover:text-destructive"
+      >
+        삭제
+      </Button>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
       {/* 상태 탭 */}
@@ -152,91 +178,104 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
                 : `${STATUS_LABEL[status]} 상태의 글이 없습니다.`}
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-sm">
-                <thead className="border-b text-ink-subtle">
-                  <tr className="text-left">
-                    <th className="py-3 pr-4 font-medium">제목</th>
-                    <th className="py-3 pr-4 font-medium">카테고리</th>
-                    <th className="py-3 pr-4 font-medium">상태</th>
-                    <th className="py-3 pr-4 font-medium">작성일</th>
-                    <th className="py-3 font-medium text-right">관리</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => {
-                    const isPublished = row.publishedAt !== null;
-                    return (
-                      <tr
-                        key={row.id}
-                        className="border-b last:border-b-0 transition-colors hover:bg-surface-soft/60"
-                      >
-                        <td className="py-3 pr-4 font-medium text-ink-strong">
-                          <Link
-                            href={`/admin/news/${row.id}/edit`}
-                            className="rounded transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2"
-                          >
-                            {row.title}
-                          </Link>
-                        </td>
-                        <td className="py-3 pr-4 text-ink-subtle">
-                          {row.categoryName}
-                        </td>
-                        <td className="py-3 pr-4">
-                          <span
-                            className={
-                              isPublished
-                                ? "rounded-full bg-brand-primary/10 px-2 py-1 text-xs font-medium text-brand-primary"
-                                : "rounded-full bg-warm/15 px-2 py-1 text-xs font-medium text-amber-700"
-                            }
-                          >
-                            {isPublished ? "발행" : "임시 저장"}
-                          </span>
-                        </td>
-                        <td className="py-3 pr-4 text-ink-subtle">
-                          {formatDate(row.createdAt)}
-                        </td>
-                        <td className="py-3 text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                togglePublish(row.id, isPublished)
+            <>
+              {/* 데스크탑 — 테이블 (md 이상) */}
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full min-w-[720px] text-sm">
+                  <thead className="border-b text-ink-subtle">
+                    <tr className="text-left">
+                      <th className="py-3 pr-4 font-medium">제목</th>
+                      <th className="py-3 pr-4 font-medium">카테고리</th>
+                      <th className="py-3 pr-4 font-medium">상태</th>
+                      <th className="py-3 pr-4 font-medium">작성일</th>
+                      <th className="py-3 font-medium text-right">관리</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row) => {
+                      const isPublished = row.publishedAt !== null;
+                      return (
+                        <tr
+                          key={row.id}
+                          className="border-b last:border-b-0 transition-colors hover:bg-surface-soft/60"
+                        >
+                          <td className="py-3 pr-4 font-medium text-ink-strong">
+                            <Link
+                              href={`/admin/news/${row.id}/edit`}
+                              className="rounded transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2"
+                            >
+                              {row.title}
+                            </Link>
+                          </td>
+                          <td className="py-3 pr-4 text-ink-subtle">
+                            {row.categoryName}
+                          </td>
+                          <td className="py-3 pr-4">
+                            <span
+                              className={
+                                isPublished
+                                  ? "rounded-full bg-brand-primary/10 px-2 py-1 text-xs font-medium text-brand-primary"
+                                  : "rounded-full bg-warm/15 px-2 py-1 text-xs font-medium text-amber-700"
                               }
-                              disabled={isPending}
                             >
-                              {isPublished ? "해제" : "발행"}
-                            </Button>
-                            <Button asChild variant="ghost" size="sm">
-                              <Link href={`/admin/news/${row.id}/edit`}>
-                                수정
-                              </Link>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setConfirmId(row.id)}
-                              disabled={isPending}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              삭제
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                              {isPublished ? "발행" : "임시 저장"}
+                            </span>
+                          </td>
+                          <td className="py-3 pr-4 text-ink-subtle">
+                            {formatDate(row.createdAt)}
+                          </td>
+                          <td className="py-3 text-right">
+                            {renderRowActions(row, isPublished)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* 모바일 — 카드 (md 미만, 가로 스크롤 없이 관리 버튼 도달) */}
+              <ul className="space-y-3 md:hidden">
+                {rows.map((row) => {
+                  const isPublished = row.publishedAt !== null;
+                  return (
+                    <li
+                      key={row.id}
+                      className="space-y-2 rounded-lg border border-border p-4"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <Link
+                          href={`/admin/news/${row.id}/edit`}
+                          className="rounded font-medium text-ink-strong transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2"
+                        >
+                          {row.title}
+                        </Link>
+                        <span
+                          className={
+                            isPublished
+                              ? "shrink-0 rounded-full bg-brand-primary/10 px-2 py-1 text-xs font-medium text-brand-primary"
+                              : "shrink-0 rounded-full bg-warm/15 px-2 py-1 text-xs font-medium text-amber-700"
+                          }
+                        >
+                          {isPublished ? "발행" : "임시 저장"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-ink-subtle">
+                        {row.categoryName} · {formatDate(row.createdAt)}
+                      </p>
+                      {renderRowActions(row, isPublished)}
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* 페이지네이션 */}
       {totalPages > 1 && (
-        <div className="flex justify-center gap-1">
+        <div className="flex flex-wrap justify-center gap-1">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <Button
               key={p}

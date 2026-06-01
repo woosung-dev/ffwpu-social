@@ -3,6 +3,7 @@ import { and, asc, desc, eq, inArray, isNotNull, isNull, like, sql } from "drizz
 import { db } from "@/db";
 import { categories, heartEvents, news, newsTags } from "@/db/schema";
 import { ALL_CATEGORY_SLUG } from "./constants";
+import { RICE_SHARING_SLUG } from "./slot-rules";
 
 // service.ts 가 db.transaction 콜백에서 받는 tx 와 동일 — mutation 함수 시그니처로 그대로 노출 (T6 결정 로그 [tx alias])
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -291,30 +292,76 @@ export async function replaceNewsTags(
   await tx.insert(newsTags).values(deduped.map((tag) => ({ newsId, tag })));
 }
 
+// 쌀 나눔 카테고리 id — 슬롯 eligibility 검증용. slug 는 immutable(ADR-025)이라 캐시 불필요
+export async function getRiceSharingCategoryId(tx: Tx) {
+  const [row] = await tx
+    .select({ id: categories.id })
+    .from(categories)
+    .where(eq(categories.slug, RICE_SHARING_SLUG))
+    .limit(1);
+  return row?.id ?? null;
+}
+
+// 단일 글의 랜딩 슬롯(story·featured) 동반 해제 — 발행 해제·카테고리 이탈 시 고아 슬롯 정리 (A1b)
+export async function clearLandingSlots(tx: Tx, id: string) {
+  await tx
+    .update(news)
+    .set({ storySlot: null, featuredRank: null, updatedAt: new Date() })
+    .where(eq(news.id, id));
+}
+
+export type SetLandingSlotResult =
+  | { kind: "ok"; id: string }
+  | { kind: "ineligible" }
+  | { kind: "not_found" };
+
 // 메인 랜딩 슬롯 설정 — StorySection (story_slot 1~2) / ArticleGrid (featured_rank 1~7).
-// UNIQUE WHERE NOT NULL 충돌 회피 — 같은 slot 점유자 있으면 자동 해제 후 새 점유 (transaction 안전)
+// slot != null 점유는 발행 + 쌀 나눔 카테고리만 허용(TOCTOU 차단: 대상 row FOR UPDATE 잠금 후 검증, 호출 전 acquireLandingSlotLock 직렬화 필수).
+// slot == null 해제는 ineligible 글도 허용 — 고아 슬롯 정리 경로. UNIQUE WHERE NOT NULL 충돌은 점유자 선해제로 회피.
 export async function setLandingSlot(
   tx: Tx,
   newsId: string,
   kind: "story" | "featured",
   slot: number | null,
-) {
+): Promise<SetLandingSlotResult> {
   const column = kind === "story" ? news.storySlot : news.featuredRank;
   const fieldName = kind === "story" ? "storySlot" : "featuredRank";
-  // 1. slot != null 이면 기존 점유자 해제 (같은 글이 점유 중이어도 안전 — 같은 값으로 또 set)
+
+  // 대상 글 row 잠금 — 동시 updateNews 의 미발행/카테고리 변경을 우리 tx 커밋까지 차단
+  const [target] = await tx
+    .select({
+      id: news.id,
+      publishedAt: news.publishedAt,
+      categoryId: news.categoryId,
+    })
+    .from(news)
+    .where(eq(news.id, newsId))
+    .for("update")
+    .limit(1);
+  if (!target) return { kind: "not_found" };
+
   if (slot != null) {
+    // 점유 — eligibility(발행 + 쌀 나눔) 확인 후에만 기존 점유자 해제(검증 실패 시 기존 슬롯 보존)
+    const riceId = await getRiceSharingCategoryId(tx);
+    const eligible = target.publishedAt != null && target.categoryId === riceId;
+    if (!eligible) return { kind: "ineligible" };
     await tx
       .update(news)
       .set({ [fieldName]: null, updatedAt: new Date() })
       .where(eq(column, slot));
+    await tx
+      .update(news)
+      .set({ [fieldName]: slot, updatedAt: new Date() })
+      .where(eq(news.id, newsId));
+    return { kind: "ok", id: target.id };
   }
-  // 2. 대상 글 slot 설정 (null = 해제)
-  const [updated] = await tx
+
+  // 해제 — ineligible 글도 허용
+  await tx
     .update(news)
-    .set({ [fieldName]: slot, updatedAt: new Date() })
-    .where(eq(news.id, newsId))
-    .returning({ id: news.id });
-  return updated ?? null;
+    .set({ [fieldName]: null, updatedAt: new Date() })
+    .where(eq(news.id, newsId));
+  return { kind: "ok", id: target.id };
 }
 
 // hero 정렬 전용 트랜잭션 advisory lock — 동시 setHeroOrder 직렬화 (READ COMMITTED 인터리빙 race 차단, codex Slice3 C3.6).
@@ -322,6 +369,13 @@ export async function setLandingSlot(
 const HERO_ORDER_LOCK_KEY = 740031;
 export async function acquireHeroOrderLock(tx: Tx) {
   await tx.execute(sql`SELECT pg_advisory_xact_lock(${HERO_ORDER_LOCK_KEY})`);
+}
+
+// 랜딩 슬롯 전용 advisory lock — 동시 setLandingSlot 직렬화 (점유자 선해제→대상 set 2-step 의 23505 unique violation 차단).
+// 히어로와 다른 키 — 랜딩/히어로 저장이 서로 불필요하게 직렬화되지 않도록 (codex)
+const LANDING_SLOT_LOCK_KEY = 740032;
+export async function acquireLandingSlotLock(tx: Tx) {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(${LANDING_SLOT_LOCK_KEY})`);
 }
 
 // /news Hero 일괄 정렬 — 2-phase: (1) 기존 hero_rank 전부 해제 → partial unique index 비움 (충돌 원천 제거),

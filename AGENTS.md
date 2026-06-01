@@ -92,6 +92,7 @@ pnpm drizzle-kit studio        # DB 브라우저
 
 ### 현재 작업
 
+- 진행 중: **어드민 v1.0 ship-전 하드닝** (branch `feat/admin-ship-hardening`) — 디테일 `docs/plans/active/2026-06-01-admin-ship-hardening.md`. HIGH 6(슬롯 eligibility·JWT 무효화·색대비·rate-limit·동시성) + 접근성 + 모바일 카드뷰 + 아키텍처 옵션1. 다단 검토 GO-WITH-FIXES + codex v2. **스키마 변경 없음.**
 - 완료: **Sprint 2 (어드민 마무리)** — PR #14 (`feat/sprint-2-admin-finish`). 계정 관리(3) + 쌀나눔 통계 DB화(4-2) + 소식 히어로 드래그(4-3) + /news 통합(PR #11 흡수) + 디자인·반응형 감사. 슬라이스별 qa∥codex→evaluator 교차검증 (NO-GO/ITERATE 2건 포착·수정). 단위테스트 22, 마이그레이션 0003/0004/0005 (배포 시 `pnpm drizzle-kit migrate` 필요)
 - 디테일: `~/.claude/plans/compressed-sprouting-salamander.md` (plan 본문) / ADR-027·028·029 (`docs/decisions.md`)
 - 어드민 surface (7): /admin · /admin/news · /admin/news-hero · /admin/categories · /admin/kpi · /admin/landing · /admin/accounts

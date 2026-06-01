@@ -4,6 +4,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireSuperAdmin } from "@/lib/auth-guards";
+import { type ActionResult, toActionError } from "@/lib/action-result";
 import { isAllowedImagePublicUrl } from "@/lib/s3";
 import {
   type PresignedUploadResult,
@@ -18,26 +19,19 @@ import {
   type NewsInput,
 } from "./schemas";
 
-export type ActionResult<T, Input = unknown> =
-  | { success: true; data: T }
-  | { success: false; error: string | z.ZodError<Input> };
-
-// 가드 실패를 ActionResult 로 변환 — 모든 admin action 첫 줄에 사용 (codex P1#2 통일 패턴)
-function authError(e: unknown): { success: false; error: string } {
-  if (e instanceof Error) return { success: false, error: e.message };
-  return { success: false, error: "Unauthorized" };
-}
-
 // 커버 이미지 URL 서버측 검증 — S3 public prefix 만 허용 (codex v2 P2#3, next/image unoptimized 가 remotePatterns 우회하므로 필수)
 function isInvalidCover(url: string | null | undefined): boolean {
   return Boolean(url) && !isAllowedImagePublicUrl(url as string);
 }
 
-// 어드민 CRUD revalidate 묶음 — 글 변경 시 사용자 사이트 + 어드민 캐시 무효화
+// 어드민 CRUD revalidate 묶음 — 글 변경 시 사용자 사이트 + 어드민 캐시 무효화.
+// 발행 해제·카테고리 변경 시 hero·landing 슬롯이 동반 정리되므로(A1b) 큐레이션 페이지도 함께 무효화
 function revalidateNewsRoutes(id?: string) {
   revalidatePath("/news");
   revalidatePath("/admin/news");
   revalidatePath("/admin");
+  revalidatePath("/admin/news-hero");
+  revalidatePath("/admin/landing");
   revalidatePath("/");
   if (id) {
     revalidatePath(`/news/${id}`);
@@ -92,7 +86,7 @@ export async function createNewsAction(
     revalidateNewsRoutes(created.id);
     return { success: true, data: created };
   } catch (e) {
-    return authError(e);
+    return toActionError(e, "newsAction");
   }
 }
 
@@ -102,6 +96,9 @@ export async function updateNewsAction(
 ): Promise<ActionResult<{ id: string }, NewsInput>> {
   try {
     await requireSuperAdmin();
+    if (!z.uuid().safeParse(id).success) {
+      return { success: false, error: "잘못된 글 ID 형식입니다." };
+    }
     const parsed = newsInputSchema.safeParse(input);
     if (!parsed.success) {
       return { success: false, error: parsed.error };
@@ -117,7 +114,7 @@ export async function updateNewsAction(
     revalidateNewsRoutes(id);
     return { success: true, data: updated };
   } catch (e) {
-    return authError(e);
+    return toActionError(e, "newsAction");
   }
 }
 
@@ -126,12 +123,15 @@ export async function deleteNewsAction(
 ): Promise<ActionResult<{ id: string }>> {
   try {
     await requireSuperAdmin();
+    if (!z.uuid().safeParse(id).success) {
+      return { success: false, error: "잘못된 글 ID 형식입니다." };
+    }
     const deleted = await newsService.deleteNews(id);
     if (!deleted) return { success: false, error: "Not Found" };
     revalidateNewsRoutes(id);
     return { success: true, data: deleted };
   } catch (e) {
-    return authError(e);
+    return toActionError(e, "newsAction");
   }
 }
 
@@ -142,12 +142,15 @@ export async function publishNewsAction(
 ): Promise<ActionResult<{ id: string }>> {
   try {
     await requireSuperAdmin();
+    if (!z.uuid().safeParse(id).success) {
+      return { success: false, error: "잘못된 글 ID 형식입니다." };
+    }
     const updated = await newsService.setPublishedAt(id, publish);
     if (!updated) return { success: false, error: "Not Found" };
     revalidateNewsRoutes(id);
     return { success: true, data: updated };
   } catch (e) {
-    return authError(e);
+    return toActionError(e, "newsAction");
   }
 }
 
@@ -160,7 +163,7 @@ export async function searchTagsAction(
     const tags = await newsService.searchTags(prefix);
     return { success: true, data: tags };
   } catch (e) {
-    return authError(e);
+    return toActionError(e, "newsAction");
   }
 }
 
@@ -185,18 +188,26 @@ export async function setLandingSlotAction(
     if (parsed.data.kind === "story" && parsed.data.slot != null && parsed.data.slot > 2) {
       return { success: false, error: "StorySection 슬롯은 1 또는 2 만 가능합니다." };
     }
-    const updated = await newsService.setLandingSlot(
+    const result = await newsService.setLandingSlot(
       parsed.data.newsId,
       parsed.data.kind,
       parsed.data.slot,
     );
-    if (!updated) return { success: false, error: "Not Found" };
+    if (result.kind === "not_found") {
+      return { success: false, error: "글을 찾을 수 없습니다." };
+    }
+    if (result.kind === "ineligible") {
+      return {
+        success: false,
+        error: "발행된 쌀 나눔 글만 메인에 노출할 수 있습니다.",
+      };
+    }
     // 메인 / 사용자 사이트 + 어드민 큐레이션 페이지 동시 revalidate
     revalidatePath("/");
     revalidatePath("/admin/landing");
-    return { success: true, data: updated };
+    return { success: true, data: { id: result.id } };
   } catch (e) {
-    return authError(e);
+    return toActionError(e, "newsAction");
   }
 }
 
@@ -232,7 +243,7 @@ export async function setHeroOrderAction(
     revalidatePath("/admin/news-hero");
     return { success: true, data: { count: parsed.data.orderedNewsIds.length } };
   } catch (e) {
-    return authError(e);
+    return toActionError(e, "newsAction");
   }
 }
 
@@ -260,7 +271,7 @@ export async function uploadImageAction(
   try {
     await requireSuperAdmin();
   } catch (e) {
-    return authError(e);
+    return toActionError(e, "newsAction");
   }
   const parsed = uploadInputSchema.safeParse(input);
   if (!parsed.success) {

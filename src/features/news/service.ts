@@ -2,6 +2,7 @@
 import { db } from "@/db";
 import { deleteByPrefix } from "@/features/storage";
 import * as newsDb from "./db";
+import { slotsToClearOnTransition } from "./slot-rules";
 import type { ListNewsQuery, NewsInput } from "./schemas";
 
 export async function listNews(query: ListNewsQuery) {
@@ -92,7 +93,8 @@ export async function createNews(
   });
 }
 
-// 글 수정 — news + news_tags 트랜잭션. tags 는 전체 교체 (diff 계산 X)
+// 글 수정 — news + news_tags 트랜잭션. tags 는 전체 교체 (diff 계산 X).
+// 상태 전이(발행 해제·쌀 나눔 외 카테고리 변경) 시 ineligible 해진 hero·landing 슬롯 동반 해제 — 고아 슬롯(보이지 않는 점유) 방지 (A1b)
 export async function updateNews(id: string, input: NewsInput) {
   const normalized = normalizeTags(input.tags);
   return db.transaction(async (tx) => {
@@ -104,6 +106,15 @@ export async function updateNews(id: string, input: NewsInput) {
       publishedAt: input.publishedAt ?? null,
     });
     if (!updated) return null;
+
+    const riceId = await newsDb.getRiceSharingCategoryId(tx);
+    const clear = slotsToClearOnTransition({
+      isPublished: input.publishedAt != null,
+      isRiceSharing: input.categoryId === riceId,
+    });
+    if (clear.hero) await newsDb.clearHeroRank(tx, id);
+    if (clear.landing) await newsDb.clearLandingSlots(tx, id);
+
     await newsDb.replaceNewsTags(tx, id, normalized);
     return updated;
   });
@@ -123,7 +134,7 @@ export async function deleteNews(id: string) {
 }
 
 // 발행 상태 변경 — publishNewsAction 전용. true → now, false → null.
-// 미발행 전환 시 heroRank 동반 해제 — 고아 슬롯(보이지 않는 점유) 방지 (Slice3 C-2)
+// 미발행 전환 시 heroRank + landing 슬롯 동반 해제 — 고아 슬롯(보이지 않는 점유) 방지 (Slice3 C-2 + A1b)
 export async function setPublishedAt(id: string, publish: boolean) {
   return db.transaction(async (tx) => {
     const updated = await newsDb.updateNews(tx, id, {
@@ -131,20 +142,23 @@ export async function setPublishedAt(id: string, publish: boolean) {
     });
     if (updated && !publish) {
       await newsDb.clearHeroRank(tx, id);
+      await newsDb.clearLandingSlots(tx, id);
     }
     return updated;
   });
 }
 
-// 메인 랜딩 슬롯 설정 — /admin/landing 큐레이션. story (1~2) / featured (1~7). null = 해제
+// 메인 랜딩 슬롯 설정 — /admin/landing 큐레이션. story (1~2) / featured (1~7). null = 해제.
+// advisory lock 으로 동시 저장 직렬화(23505 차단), 점유는 발행 + 쌀 나눔만 허용 (db.setLandingSlot eligibility)
 export async function setLandingSlot(
   newsId: string,
   kind: "story" | "featured",
   slot: number | null,
 ) {
-  return db.transaction(async (tx) =>
-    newsDb.setLandingSlot(tx, newsId, kind, slot),
-  );
+  return db.transaction(async (tx) => {
+    await newsDb.acquireLandingSlotLock(tx);
+    return newsDb.setLandingSlot(tx, newsId, kind, slot);
+  });
 }
 
 // /news Hero 정렬 저장 — 발행 글만 허용(draft pin 차단, C3.5). 2-phase setHeroOrder.

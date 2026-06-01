@@ -1,4 +1,5 @@
 // 카테고리 비즈니스 로직 — db import 금지. DAL 함수만 호출 (fullstack.md §3)
+import { DomainError } from "@/lib/errors";
 import * as categoriesDb from "./db";
 import type { CreateCategoryInput, UpdateCategoryInput } from "./schemas";
 
@@ -14,7 +15,7 @@ export async function listAllForAdmin() {
 export async function createCategory(input: CreateCategoryInput) {
   const existing = await categoriesDb.getCategoryBySlug(input.slug);
   if (existing) {
-    throw new Error(`slug '${input.slug}' 가 이미 사용 중입니다.`);
+    throw new DomainError(`slug '${input.slug}' 가 이미 사용 중입니다.`);
   }
   return categoriesDb.insertCategory(input);
 }
@@ -25,7 +26,7 @@ export async function updateCategory(id: string, input: UpdateCategoryInput) {
     input.sortOrder === undefined &&
     input.isActive === undefined
   ) {
-    throw new Error("수정할 필드가 없습니다.");
+    throw new DomainError("수정할 필드가 없습니다.");
   }
   return categoriesDb.updateCategoryById(id, input);
 }

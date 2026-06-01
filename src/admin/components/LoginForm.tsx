@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "./PasswordInput";
 
 const loginSchema = z.object({
   email: z.email("이메일 형식을 확인해주세요"),
@@ -94,8 +95,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>비밀번호</FormLabel>
               <FormControl>
-                <Input
-                  type="password"
+                <PasswordInput
                   autoComplete="current-password"
                   disabled={isPending}
                   {...field}
