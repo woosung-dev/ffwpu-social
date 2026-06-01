@@ -4,6 +4,20 @@
 
 > **목적:** AI ↔ 사용자 매개. 차단 상태가 아닌 질문·확인 항목은 여기에 누적 후 자연스러운 타이밍에 일괄 전달.
 
+## 진행 중 (2026-06-01)
+
+- **어드민 v1.0 ship-전 하드닝** — `docs/plans/active/2026-06-01-admin-ship-hardening.md` (branch `feat/admin-ship-hardening`). HIGH 6 + 접근성 + 모바일 카드뷰 + 아키텍처 옵션1. 다단 검토 GO-WITH-FIXES + codex v2 교정. **스키마 변경 없음.**
+  - **상태: 코드 완료** — A1~A8·B1~B4·C1·D1·D2 구현. 자동 게이트 통과(src tsc 0·Next compile 성공·lint·단위테스트 31). ADR-030/031/032 기록. 커밋·수동 검증 대기.
+  - 잔여 수동 검증(`pnpm dev`, docker 가동 중): A1 5케이스(draft/타카테고리/발행해제/카테고리변경/null해제)·A2 동시저장·A3 계정삭제 후 세션 무효화·C1 375px 카드뷰.
+  - 아래 §"Sprint 2 후속"의 *에러박스 대비 AA*는 본 작업 A4(색대비 토큰 ink-date #959ba9→#6f7682)에서 함께 점검, *NewsTable 윈도잉*은 v1.1 유지(rank22 — flex-wrap 경미 완화만 적용).
+  - **[해결] R7** — story 슬롯(어드민이 고르는 글 2개)이 공개 StorySection에 미연결이던 버그 수정. 사용자 확인 "변경하면 반영돼야 함" → StorySection이 지정 글 대표 이미지 노출(클릭 시 소식 이동), 미지정 시 기본 사진 폴백. `StorySectionWithData`가 `listStorySlots` 연결. 4-2 이제 완전 FULLY.
+
+## 배포 전 필수 (🔴 차단성)
+
+- [x] **`next build` 타입체크 블로커 해소 (2026-06-01)** — pre-existing `templates/` 스캐폴드(PR #9)가 tsconfig `**/*.ts` 에 포함돼 빌드 실패하던 것 → tsconfig `exclude` 에 `templates` 추가. `pnpm tsc`·`pnpm build` 모두 그린(exit 0). **후속(v1.1): templates monorepo 구조 재정비(PR #9) — 사용자 메모 "추후 구조 다시 잡아야".**
+- [ ] **A7 — 로그인 rate limit** — Vercel Firewall rate-limit 룰을 `/api/auth/*` 에 적용(코드 0). 단일 super 브루트포스·credential stuffing 방어. 배포 대시보드 설정. (Vercel 배포 확정 — 2026-06-01)
+- [ ] **AUTH_SECRET 강도** — 32바이트+ 시크릿 강제·회전(rank20). 임시 어드민 비번 변경(`admin@ffwpu-social.local`).
+
 ## Completed (최근 3개)
 
 - [x] **Figma SSOT 재동기화 (2026-05-30)** — 사용자 3 노드 ID 재공유 기반. 홈 1920/1024 자식 frame ID 갱신 (`331:7984`·`332:9254`) + 1439 폐기 + 소식 Banner 정식 등장 카피 갱신. `docs/design.md` / `docs/design/README.md` / `docs/current.md` / `docs/TODO.md` 4파일 일관화. 사용자 조달 대기 항목 ↓ "Next Actions" 등록.

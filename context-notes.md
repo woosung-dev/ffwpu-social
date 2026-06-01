@@ -802,3 +802,33 @@ Tiptap 은 기존 2.x 와 통일 (peer dep 충돌 회피 — 3.x 설치 시 star
 ### 다음 — PR 생성
 
 `feat/sprint-1-d2-admin` 브랜치를 `main` 으로 PR. 본문에 결정 로그 (`docs/plans/active/2026-05-28-sprint-1-d2-decisions.md`) 링크 + commit 11개 요약 + verify 결과 + codex consult v2 / `/qa` / `/review` 는 PR 생성 후 사용자가 선택.
+
+---
+
+## 어드민 v1.0 ship-전 하드닝 (2026-06-01, branch `feat/admin-ship-hardening`)
+
+> plan `docs/plans/active/2026-06-01-admin-ship-hardening.md`. 다단 검토(ui-ux-pro-max·vercel·codex 독립·6축+evaluator) GO-WITH-FIXES → codex(gpt-5.5) plan v2 교정 3건 반영 후 실행.
+
+### 핵심 결정·근거
+
+- **A1 eligibility를 "검증 후 set"이 아니라 row FOR UPDATE + 확인 후 set으로** — codex가 "설정 시점 검증만으론 TOCTOU 잔존" 지적. 점유자 선해제 *전에* eligibility 확인해 검증 실패 시 기존 슬롯 보존(해제→실패 시 기존 점유자 유실 방지). 히어로 `setHeroOrder` 패턴 이식. → ADR-030.
+- **A1b 상태전이 정리** — `setLandingSlot` 입구만 막으면 `updateNews`로 발행해제/카테고리변경 시 슬롯 고아화. 히어로도 동일 잠재버그였음(publishNews 경로만 clear). `slot-rules.ts` 순수 모듈로 정리 판정 추출(단위테스트 9). 정리 규칙 차이: 히어로=발행만, 랜딩=발행+쌀나눔.
+- **A3 무효화는 `return null`** — codex 교정. `{}` 빈 토큰은 비-super 세션으로 남아 forbidden 루프. Auth.js는 null에서만 쿠키 정리. → ADR-031.
+- **D1 DomainError 분리** — accounts식 일괄 generic화 시 categories 도메인 메시지 소실(codex). `lib/errors.ts`(의존성 0 — service에 NextAuth 미유입) + `lib/action-result.ts`(toActionError가 DomainError만 메시지). → ADR-032.
+- **D2 어드민 pinned-only** — 공개 `listFeaturedGrid`(fallback 포함) 재사용 시 fallback 글이 "선택됨"+해제 no-op(codex). 어드민 page는 `listRiceSharingCandidates` 1쿼리 + pinned-only 매핑. 인라인 Drizzle 제거(3계층 정합).
+- **A4 색대비** — ink-date 토큰 1개 상향(#959ba9 2.79:1 → #6f7682 4.58:1)으로 17개 사용처 일괄 해소(전부 밝은 배경 위 실제 정보 확인).
+- **C1 모바일** — 3 테이블 `md` 분기(데스크탑 table / 모바일 카드). 액션 버튼 헬퍼 추출로 중복 회피.
+
+### 검증
+
+자동 게이트 통과: `src/` tsc 0·Next "Compiled successfully"·lint exit 0·vitest 31(기존 22 + slot-rules 9). **마이그레이션 0**(전부 로직·컴포넌트·토큰).
+
+### 후속 해결 (사용자 피드백 2026-06-01)
+
+- **#1 빌드 블로커 해결** — tsconfig `exclude` 에 `templates` 추가. `pnpm tsc`·`pnpm build` 그린(exit 0). 사용자: "추후 templates 구조 다시 잡아야"(v1.1, PR #9).
+- **R7 해결(버그였음)** — 사용자 확인 "관리자 변경이 메인에 반영돼야 함, 지금 안 바뀌는 건 잘못". StorySection 고정 사진 → 지정 글 대표 이미지(클릭 시 소식 이동)+미지정 폴백. `StorySectionWithData`가 `listStorySlots` 연결, 배럴에 `StorySlotItem` export.
+- **#3 rate limit** — Vercel 배포 확정 → Vercel Firewall 룰(코드 0, 배포 시) 확정. `docs/TODO.md` 배포 전 필수.
+
+### 잔여 (라이브 수동)
+
+- A1 5케이스·A2 동시저장·A3 세션무효화·C1 375px·R7 메인 반영을 `pnpm dev` UI 로 확인(tsx 단독은 `@/` alias 미해결). docker(postgres 5433 + minio) 가동 중.

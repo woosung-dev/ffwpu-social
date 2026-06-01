@@ -1210,3 +1210,70 @@ ADR-020에서 v1.0 어드민을 super 단일 계정으로 잠갔으나, 사용�
 - ✅ 운영 자율성 — 사회공헌국이 추가 운영자 계정 직접 관리.
 - ✅ 보안 — 권한 상승·계정 lockout·정보 누출 cross-check 검증 통과.
 - ⚠️ 역할 차등 게이팅(editor/viewer 권한 분리)은 v1.1 — 현재 모든 계정 동일 super 권한.
+
+---
+
+## ADR-030: 메인 노출 슬롯 eligibility 서버 강제 + 상태전이 고아 슬롯 정리
+
+- **Status**: Accepted
+- **Date**: 2026-06-01 (어드민 ship-전 하드닝, codex v2 교정)
+
+### Context
+
+랜딩 슬롯 지정 `setLandingSlot`이 서버에서 published·쌀나눔 카테고리를 강제하지 않아, Server Action 직접 호출(클라 우회) 시 draft·타카테고리 글이 슬롯을 점유 → 공개 쿼리에서 필터링돼 "보이지 않는 빈 슬롯"이 발생(운영 자율성 절대제약 저해). 또한 발행된 슬롯 점유 글을 편집으로 임시저장 전환하거나 카테고리를 쌀나눔 밖으로 바꾸면 슬롯이 잔존(히어로도 동일 잠재버그 — `publishNewsAction` 경로만 정리). codex 지적: "설정 시점" 검증만으론 TOCTOU 잔존.
+
+### Decision
+
+- **eligibility를 최종 검증/UPDATE에 박는다(TOCTOU 차단)**: `setLandingSlot`은 대상 row를 `FOR UPDATE`로 잠근 뒤 `publishedAt IS NOT NULL` + 쌀나눔 카테고리 확인, 충족 시에만 기존 점유자 해제 후 set. `slot=null` 해제는 ineligible 글도 허용(고아 정리 경로). 결과는 discriminated union `{kind: ok|ineligible|not_found}`.
+- **동시성**: 별도 `LANDING_SLOT_LOCK_KEY`(=740032, 히어로 740031과 분리) advisory lock 으로 동시 저장 직렬화 — 점유자 선해제→set 2-step의 23505 unique violation 차단.
+- **상태전이 정리(A1b)**: `updateNews`·`setPublishedAt`에서 발행 해제 시 hero+landing 슬롯, 쌀나눔 외 카테고리 변경 시 landing 슬롯 동반 clear. 정리 판정은 순수 모듈 `slot-rules.ts`(`slotsToClearOnTransition`)로 추출 — 단위 테스트(9 케이스).
+- 재사용: 히어로 `setHeroOrder`(WHERE에 `isNotNull(publishedAt)`) + `acquireHeroOrderLock` + `clearHeroRank` 패턴 이식.
+
+### Consequences
+
+- ✅ 공개 빈 슬롯·draft 노출 차단(운영 자율성). 동시 저장 안전. 마이그레이션 0.
+- ✅ story 슬롯(2) 공개 연결 완료(R7) — 사용자 확인("관리자 변경이 반영돼야 함") 후 `StorySection`이 지정 글 대표 이미지 노출(클릭 시 소식 이동), 미지정 시 기본 사진 폴백. `StorySectionWithData`가 `listStorySlots` 연결. 4-2 완전 FULLY.
+
+---
+
+## ADR-031: JWT 세션 무효화 — 계정 삭제·role 변경 즉시 반영
+
+- **Status**: Accepted
+- **Date**: 2026-06-01
+
+### Context
+
+NextAuth v5 JWT 전략에서 계정 삭제·강등 후에도 기존 토큰의 `role=super`가 남아 `/admin` 접근·Server Action 호출이 지속 → 계정관리(ADR-029) 삭제의 실효성 공백. codex: JWT 전략은 세션 접근마다 `jwt` 콜백 실행, `proxy.ts`의 `auth()`가 `/admin/:path*`마다 태우므로 DB 재조회 위치로 적합. 단 빈 객체(`{}`) 반환은 오답 — Auth.js는 `null` 반환 시에만 쿠키 정리, `{}`는 비-super 세션으로 남아 forbidden 루프.
+
+### Decision
+
+- `auth.ts` `jwt` 콜백: 최초 로그인(user 존재) 외 모든 호출에서 `token.id`로 users 재조회. 없으면(삭제) **`return null`**(쿠키 정리), 존재하면 `token.role`을 DB 값으로 갱신(강등 즉시 반영). `session` 콜백은 token 필드 부재 방어.
+- 트레이드오프: `/admin` 요청마다 DB 1~2회 조회(proxy `auth()` + RSC `requireSuperAdmin`). 단일 super·저빈도라 허용 — 성공기준은 부하가 아니라 "삭제·강등 즉시 차단".
+
+### Consequences
+
+- ✅ 계정 삭제·강등이 기존 세션에 즉시 적용. 토큰 위조 외 권한 잔존 제거.
+- ⚠️ 요청당 DB 조회 증가(저빈도 수용). 고빈도화 시 단기 캐시 검토 — v1.1.
+
+---
+
+## ADR-032: Server Action 결과/에러 통합 — `lib/action-result.ts` + DomainError 분리
+
+- **Status**: Accepted
+- **Date**: 2026-06-01 (아키텍처 옵션1)
+
+### Context
+
+`ActionResult<T,Input>` 타입이 news·categories·kpi·accounts 4개 actions에 중복 정의(kpi는 단일 제네릭으로 미세 불일치), 에러 변환도 accounts의 `toActionError`(가드 예외만 메시지, 그 외 generic — 보안 우수)와 나머지의 `authError`/`err.message`(DB 제약명·SQL 등 내부정보 노출)로 갈림. codex: 일괄 generic화 시 categories의 사용자 친화 메시지(slug 중복·수정 필드 없음)가 묻힘.
+
+### Decision
+
+- `src/lib/action-result.ts` — `ActionResult` 타입 + `toActionError(e, context)` 단일화. 가드(Unauthorized/Forbidden)·`DomainError`만 메시지 노출, 그 외 `console.error` 후 generic.
+- `src/lib/errors.ts` — 의존성 없는 `DomainError`(service가 import해도 NextAuth/DB 미유입). categories service가 도메인 검증 실패에 `throw new DomainError(...)` → 메시지 보존.
+- mutation id를 액션 진입점에서 `z.uuid()` 검증(잘못된 UUID의 DB 도달·원문 메시지 반환 차단).
+- 어드민 landing page의 인라인 Drizzle 2건을 `landing/db.ts`로 이관(3계층 경계 정합), 어드민 슬롯 상태는 공개용 `listFeaturedGrid`(fallback 포함)와 분리해 pinned-only(fallback 글 no-op 해제 제거).
+
+### Consequences
+
+- ✅ 중복 제거 + 내부정보 노출 표면 축소 + 도메인 메시지 보존. 기능 변화 0.
+- 손대지 않음: revalidate 헬퍼(무효화 경로 도메인별 상이)·kpi_metrics section 겸용(shape 동일)·src/client 분할·서브도메인 — 억지 추상화 회피(옵션2·3은 v1.1).
