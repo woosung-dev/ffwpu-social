@@ -15,6 +15,7 @@
 ## 배포 전 필수 (🔴 차단성)
 
 - [x] **`next build` 타입체크 블로커 해소 (2026-06-01)** — pre-existing `templates/` 스캐폴드(PR #9)가 tsconfig `**/*.ts` 에 포함돼 빌드 실패하던 것 → tsconfig `exclude` 에 `templates` 추가. `pnpm tsc`·`pnpm build` 모두 그린(exit 0). **후속(v1.1): templates monorepo 구조 재정비(PR #9) — 사용자 메모 "추후 구조 다시 잡아야".**
+- [x] **모노레포/폴더 구조 결정 (2026-06-02, ADR-033)** — velog 4부작(Nx·Turbo·pnpm) 교차검증 + 5옵션 점수화(AI-DevX 우선). 결론: 현행 **F3 단일앱 유지**가 v1.0/근미래 최적(OPT-2 8.34 > OPT-1 8.13, OPT-3/5 fails·OPT-4 weakened). velog와 **갈리지 않음**(직교+철학 수렴), template과도 거의 일치. **마이그레이션 부채(v1.1+, 보류)** — 복합 트리거(팀≥3 OR CI 빌드병목 실측 OR web/admin 독립배포 케이던스) 발화 시에만 F2(pnpm→측정후 Turbo, **Nx 금지**)로. 도메인수 7개 단독으로는 발화 금지. 상세 `docs/decisions.md` ADR-033.
 - [ ] **A7 — 로그인 rate limit** — Vercel Firewall rate-limit 룰을 `/api/auth/*` 에 적용(코드 0). 단일 super 브루트포스·credential stuffing 방어. 배포 대시보드 설정. (Vercel 배포 확정 — 2026-06-01)
 - [ ] **AUTH_SECRET 강도** — 32바이트+ 시크릿 강제·회전(rank20). 임시 어드민 비번 변경(`admin@ffwpu-social.local`).
 

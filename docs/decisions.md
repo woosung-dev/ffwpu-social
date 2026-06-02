@@ -1277,3 +1277,79 @@ NextAuth v5 JWT 전략에서 계정 삭제·강등 후에도 기존 토큰의 `r
 
 - ✅ 중복 제거 + 내부정보 노출 표면 축소 + 도메인 메시지 보존. 기능 변화 0.
 - 손대지 않음: revalidate 헬퍼(무효화 경로 도메인별 상이)·kpi_metrics section 겸용(shape 동일)·src/client 분할·서브도메인 — 억지 추상화 회피(옵션2·3은 v1.1).
+
+---
+
+## ADR-033: 모노레포/폴더 구조 — F3 유지 + 경계 lint, v1.1 F2 보류 (velog 4부작 교차검증·5옵션 점수화)
+
+- **Status**: Accepted
+- **Date**: 2026-06-02
+- **관계**: ADR-023(서브도메인·단일앱) 유지 / ADR-024(F3 폴더구조) 트리거 정밀화(supersede 아님, 해석 보강)
+
+### Context
+
+velog 4부작(`@tap_kim/translate-monorepo-insights-nx-turborepo-and-pnpm`, ekino-France 원문 번역)을 검토하며 "우리 template(`templates/lean-monorepo-base`·`templates/monorepo-base` + ADR-024 F3)이 이 글과 갈리는가" + "5개 구조로 추려 점수화"를 요청받았다. 다각도 리서치(8 소스) → 5옵션 도출 → 3렌즈×5 점수 → 5 소크라테스 반박 → 통합의 30-에이전트 워크플로우로 검토했다.
+
+결정 프레이밍은 사용자가 확정했다. **목적은 v1.1 마이그레이션 목표 확정이며 지금 코드이동 0**(현행 F3 단일앱은 그대로 ship). **점수 최우선 기준은 AI-DevX**(AI 에이전트 다수가 코드를 쓰는 환경)다.
+
+### 핵심 통찰 — 2축은 직교(orthogonal)
+
+질문이 헷갈렸던 이유가 여기 있다. 두 결정 축이 서로 다른 질문에 답한다.
+
+- **축1 = 레포 구조** — 단일 package(`src/` 폴더) vs 멀티패키지 workspace(`apps/*`+`packages/*`).
+- **축2 = 빌드 매니저** — none / pnpm workspace / Turborepo / Nx.
+
+velog는 **축2만** 비교한다(폴더구조 미언급). 우리 template은 **축1(F3/F2) + 축2(turbo+pnpm)** 둘 다 다룬다. 따라서 "충돌"이 아니라 **직교**이며, 철학(점진적 도입)은 오히려 **수렴**한다.
+
+velog 최종 처방은 "pnpm workspace 기준선 → 빌드성능 필요 시 Turbo 후행 → Nx 제외(과잉)"이고 인용 원칙은 "미리 최적화 마라", "단순함이 궁극의 정교함(다빈치)"이다.
+
+### 5개 옵션 점수표 (점수 우선순위 = AI-DevX)
+
+7기준 가중(이행비용 0.22·AI친화 0.18·팀규모 0.17·배포 0.13·경계 0.12·확장 0.10·생태계 0.08). 3렌즈(실용주의·아키텍트·AI-DevX) 평균.
+
+| 순위 | 옵션 | 구조·도구 | 균형 | **AI-DevX** | 소크라테스 | F3→전환비용 |
+|---|---|---|---|---|---|---|
+| 1 | **OPT-2 F3 + 경계 lint** | single-package + ESLint | 8.06 | **8.34** | survives-with-caveats | low |
+| 2 | OPT-1 F3 as-is (현행) | single-package + none | 7.62 | 8.13 | survives-with-caveats | none |
+| 3 | OPT-4 pnpm + Turborepo | turbo-monorepo | 5.29 | 5.74 | weakened | high |
+| 4 | OPT-3 pnpm workspace only | pnpm-workspace | 4.53 | 3.93 | **fails** | high |
+| 5 | OPT-5 Nx monorepo | nx-monorepo | 4.00 | 4.04 | **fails** | high |
+
+- AI-DevX 우선에서도 순위 동일(OPT-2 > OPT-1). 두 상위안은 둘 다 현행 F3 단일 package를 유지한다.
+- **OPT-3 fails** — 멀티패키지 비용은 즉시 지불하면서 핵심 이익(빌드 가속)은 Turbo를 빼 자진 포기. lean-monorepo-base의 `apps/web`+`apps/admin` 2앱 구조가 ADR-023(단일앱·proxy.ts host 분기)을 무효화. velog 인용도 축 바꿔치기(축2 처방을 축1 분할 근거로 오용).
+- **OPT-5 fails** — 유일 장점(경계 강제)이 허수(F3+ESLint로 동등 달성 가능). velog가 명시 배제한 선택지. 최악 타이밍·최대 침습. 미래 표준 경로(F2)와도 불일치.
+- **OPT-4 weakened** — "template 1:1" 장점은 인과 역전(template은 본 repo에서 추출한 우리 산출물). Turbo 효용은 멀티패키지 경계 0이라 미발화. v1.1+ 복합 트리거 도래 시 표준 마이그레이션 타깃으로만 보존.
+
+### Decision
+
+1. **v1.0 ship 게이트 = OPT-1** — 현행 F3 단일 `package.json` 그대로. 구조·도구 변경 0. ship을 빨갛게 만들 작업 추가 금지.
+2. **ship 직후 = OPT-2** — F3 단일 패키지 안에서 ESLint import 경계 lint 추가(별개 후속 PR). 굵은 경계 2~3개만 — `src/client` ↔ `src/admin` 직접 import 차단, `src/features/*/db.ts` 외부 import 차단. **warn 선도입 → 안정화 후 error 승격**. 폴더 이동·배포 변경 0이라 가역(한 파일 편집으로 롤백).
+3. **v1.1+ F2 마이그레이션은 복합 트리거 발화 시에만** — 도메인 수 단독 아님. 팀 ≥3명 OR CI 빌드병목 실측 OR `web`/`admin` 독립 배포 케이던스 필요. 순서는 pnpm workspace 먼저 → 측정 후 Turbo(velog "Turbo 후행" 정합). **Nx 진입 금지**(로드맵 어디에도 없음).
+4. **ADR-024 트리거 정밀화** — "도메인≥5 → F2"는 현재 7도메인으로 형식상 충족됐으나, 진짜 전제는 카운트가 아니라 "분리 가치 발생"(독립 배포 단위·릴리스 케이던스·팀 경계)이다. ADR-023이 독립 배포 단위를 0으로 못박았으므로, 트리거를 위 §3 복합 조건으로 해석 보강한다(ADR-024 supersede 아님).
+
+### 사용자 질문 직답 — "갈리는가?"
+
+- **velog와 갈리는가** — 갈리지 않는다. 직교 + 철학 수렴이다. Nx 제외·"미리 최적화 마라"·Turbo 후행이 우리 권고와 전부 일치한다. 미묘한 차이는 velog가 축2(도구)에만 적용한 "단순함" 원칙을 우리가 축1(레포 구조)에도 확장해 "단일 package.json 유지"를 강화한 것뿐이며, velog가 축1을 말하지 않았으므로 모순이 아니라 직교적 확장이다.
+- **template과 갈리는가** — 거의 일치한다. ADR-024가 이미 점수화한 F3 채택·F2 보류를 그대로 재확인한다(지금 F2·Nx 전부 NO-GO). 의도적으로 갈리는 단 한 곳은 트리거 정밀화(위 §4)다. 신규로, OPT-2의 "단일 패키지 안 ESLint 경계 lint"는 template(lean/monorepo-base 둘 다 물리 패키지 경계만 다룸)이 비워둔 공백을 메운다. template이 turbo.json을 기본 번들한 것은 downstream 복제 편의일 뿐 현 repo 적용 근거가 아니다(인과 역전 회피).
+
+### 검증된 사실 (코드 확인)
+
+- `eslint.config.mjs`는 6줄 stub(ignores만, rule 0개)이다. OPT-2의 "lint 강제 자체가 0" 주장이 사실로 확인됐다 — 부재한 것은 "import 경계 강제"가 아니라 "lint 강제 그 자체"이며, CLAUDE.md Golden Rule "import 경로 규칙 위반 금지"를 강제할 결정론적 수단이 현재 0이다. OPT-1은 종착지가 아니라 OPT-2로 가는 디딤돌이다.
+- `src/features/` 도메인 7개(accounts·auth·categories·kpi·landing·news·storage). 32개 파일이 `@/features`를 import한다.
+- `src/proxy.ts` 단일앱 host 분기 실재(ADR-023) → OPT-3/4의 `apps` 2분할은 이를 무효화한다.
+
+### 단계적 전환 경로 (4 phase)
+
+- **Phase 0 — v1.0 SHIP (지금)** — 현행 F3 단일 package.json 그대로(OPT-1). 구조·도구 변경 0. 검증은 `pnpm build && pnpm start`, `pnpm tsc --noEmit` 그린.
+- **Phase 1 — ship 직후 경계 lint (OPT-2, 후속 PR 1건)** — `eslint-config-next` 16 flat config 도입(이미 stub 주석이 약속한 "D-1 QA 보강") + `import/no-restricted-paths`로 굵은 경계 2~3개. warn 선도입 → 정리 후 error 승격.
+- **Phase 2 — 트리거 감시 (상시, 코드 작업 아님)** — `docs/TODO.md`에 "마이그레이션 부채"를 남기고 복합 트리거(팀≥3 / CI 빌드병목 실측 / 독립 배포 케이던스)를 감시. 도메인 카운트 단독으로는 발화 금지.
+- **Phase 3 — F2 마이그레이션 (트리거 발화 시, v1.1+)** — pnpm workspace 먼저 분해(`apps/web`·`apps/admin`·`packages/{db,features}`) → CI 병목 실측 후에만 Turbo 추가. Nx 진입 금지. ADR-023 단일앱 → 멀티앱 배포 전환은 별도 ADR로 선행 기록.
+
+### Consequences
+
+- ✅ ship 직전 리스크 0 — v1.0은 현행 구조 그대로 출시. "추가 리스크 최소화" 제약 충족.
+- ✅ AI 다수 환경의 유일 약점(에이전트가 `client`에서 `features/db`를 직접 호출하는 slop)을 Phase 1 경계 lint가 결정론적으로 메운다 — anti-slop.md의 빈 검증 앵커(ESLint custom rule "후속 PR 후보") 구멍 보강.
+- ✅ velog·외부 실무자·우리 ADR-023/024가 동일 결론(점진 도입·Nx 배제·F2 보류)으로 수렴 — 결정 신뢰도 높음.
+- ⚠️ OPT-2를 ship 블로커로 만들지 말 것. boundary 위반은 lessons.md에 실증 사고가 없어 ship 자격 없음. 반드시 ship 후 warn → error.
+- ⚠️ OPT-2 범위 self-limit. element-type 매트릭스·import/order·배럴 우회 차단까지 욕심내면 오탐·유지비·F2 폐기손실이 폭증해 8.0 점수가 무너진다. ADR-024가 이미 잡은 컨벤션(`index.ts`에서 `db.ts` 비공개)과 중복 룰은 넣지 않는다.
+- ⚠️ F2 시 Next 16 + NextAuth v5 beta 스택의 미검증 플러그인 호환성 주의(Nx 진입 금지 이유 중 하나).
