@@ -1,4 +1,0 @@
-# Lean monorepo workspace 정의 — apps/* + packages/* 만 단순 결합
-packages:
-  - "apps/*"
-  - "packages/*"
