@@ -11,6 +11,7 @@ import {
   StorySection,
   type StorySlotItem,
 } from "@/client/sections";
+import { SectionContainer } from "@/client/components/layout";
 import { getLandingData, landingDb } from "@/features/landing";
 
 export const metadata: Metadata = {
@@ -77,7 +78,9 @@ async function StorySectionWithData() {
 function KpiLoading() {
   return (
     <section className="w-full bg-white py-16 lg:py-24" aria-busy>
-      <div className="mx-auto h-[400px] w-full max-w-[1200px] animate-pulse rounded-2xl bg-surface-soft px-4 lg:px-0" />
+      <SectionContainer>
+        <div className="h-[400px] w-full animate-pulse rounded-2xl bg-surface-soft" />
+      </SectionContainer>
     </section>
   );
 }
@@ -85,7 +88,9 @@ function KpiLoading() {
 function StoryLoading() {
   return (
     <section className="w-full bg-surface-tint-faint py-16 lg:py-24" aria-busy>
-      <div className="mx-auto h-[420px] w-full max-w-[1200px] animate-pulse rounded-2xl bg-white/60 px-4 lg:px-0" />
+      <SectionContainer>
+        <div className="h-[420px] w-full animate-pulse rounded-2xl bg-white/60" />
+      </SectionContainer>
     </section>
   );
 }
@@ -93,7 +98,9 @@ function StoryLoading() {
 function ArticleGridLoading() {
   return (
     <section className="w-full bg-white py-16 lg:py-24" aria-busy>
-      <div className="mx-auto h-[500px] w-full max-w-[1200px] animate-pulse rounded-2xl bg-surface-soft px-4 lg:px-0" />
+      <SectionContainer>
+        <div className="h-[500px] w-full animate-pulse rounded-2xl bg-surface-soft" />
+      </SectionContainer>
     </section>
   );
 }

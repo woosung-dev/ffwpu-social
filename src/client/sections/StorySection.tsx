@@ -3,6 +3,7 @@
 // 통계는 kpi_metrics(section='story') DB 연결 — 운영자가 /admin/landing 에서 입력. value 0/null 인 항목은 hide-when-empty 로 숨김
 import Link from "next/link";
 
+import { SectionContainer } from "@/client/components/layout";
 import { cn } from "@/lib/utils";
 
 export type StoryStat = {
@@ -81,7 +82,7 @@ export function StorySection({ stats, slots }: Props) {
   const visibleStats = stats.filter((s) => s.value != null && s.value > 0);
   return (
     <section id="story" className="w-full bg-surface-tint-faint py-16 lg:py-24">
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10 px-4 lg:flex-row lg:items-center lg:gap-[70px] lg:px-0">
+      <SectionContainer className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-[70px]">
         {/* 좌측 이미지 2장 — 큰 + 작은. 운영자 지정 글 대표 이미지 (미지정 시 기본 사진) */}
         <div className="relative grid w-full grid-cols-2 gap-3 lg:w-[560px] lg:shrink-0">
           <StoryImage
@@ -145,7 +146,7 @@ export function StorySection({ stats, slots }: Props) {
             </ul>
           )}
         </div>
-      </div>
+      </SectionContainer>
     </section>
   );
 }

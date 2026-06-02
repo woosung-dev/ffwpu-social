@@ -1,6 +1,7 @@
 // 사용자 랜딩 ArticleGrid 섹션 — Figma 331:8155 (시안4) / 96:7877 (이전 시안). 좌측 다크 블록 + 우측 마조네리 6 슬롯. featured_rank 운영자 pin + 쌀 나눔 카테고리 최신순 자동 fallback (PR B 사용자 결정 2026-06-01)
 import Link from "next/link";
 
+import { SectionContainer } from "@/client/components/layout";
 import { StoryCard } from "@/features/news/components";
 import { landingDb } from "@/features/landing";
 import { cn } from "@/lib/utils";
@@ -34,7 +35,7 @@ export async function ArticleGridSection() {
 
   return (
     <section id="stories" className="w-full bg-white py-16 lg:py-24">
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10 px-4 lg:flex-row lg:items-start lg:gap-8 lg:px-0">
+      <SectionContainer className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-8">
         {/* 좌측 다크 블록 — 319px 폭, 라운드 12px, ExtraBold 31px #E9CFFF */}
         <div className="rounded-xl bg-surface-dark p-8 lg:w-[319px] lg:shrink-0 lg:self-start lg:p-10">
           <h2 className="text-2xl font-extrabold leading-tight text-ink-on-purple lg:text-[31px]">
@@ -80,7 +81,7 @@ export async function ArticleGridSection() {
             })}
           </div>
         </div>
-      </div>
+      </SectionContainer>
     </section>
   );
 }

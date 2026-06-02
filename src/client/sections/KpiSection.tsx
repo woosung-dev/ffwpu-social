@@ -1,4 +1,5 @@
 // 사용자 랜딩 KPI 섹션 — Figma 96:7773 (1440×952). 좌측 251px 헤딩 + gap-70 + 우측 dashboard 760px 비대칭 그리드. DB kpi_metrics props (PR B) — 운영자 어드민 갱신 (PR C)
+import { SectionContainer } from "@/client/components/layout";
 import { KpiCard } from "@/features/news/components";
 
 type Props = {
@@ -28,9 +29,9 @@ export function KpiSection({ metricsBySlug }: Props) {
   );
   return (
     <section id="kpi" className="w-full bg-white py-16 lg:py-24">
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10 px-4 lg:flex-row lg:items-start lg:gap-[70px] lg:px-0">
+      <SectionContainer className="flex flex-col gap-10 xl:flex-row xl:items-start xl:gap-[70px]">
         {/* 좌측 헤딩 */}
-        <div className="flex flex-col gap-4 text-surface-dark lg:w-[251px] lg:shrink-0">
+        <div className="flex flex-col gap-4 text-surface-dark xl:w-[251px] xl:shrink-0">
           <h2 className="text-3xl font-bold leading-[1.3] lg:text-[36px]">
             한 해동안
             <br />
@@ -42,8 +43,8 @@ export function KpiSection({ metricsBySlug }: Props) {
           </p>
         </div>
 
-        {/* 모바일/태블릿 (< 1024px): KpiCard 4 단순 grid — DB 갱신 displayValue */}
-        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:hidden">
+        {/* 모바일/태블릿 (< 1280px): KpiCard 4 단순 grid — DB 갱신 displayValue. xl↓ 단순 그리드(복합 대시보드는 폭 부족으로 가로 스크롤 유발 → xl+ 한정) */}
+        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 xl:hidden">
           <KpiCard variant="gray" label="누적 봉사자 수" value={volunteerCount} />
           <KpiCard variant="gray" label="누적 봉사 기간" value={volunteerPeriod} />
           <KpiCard variant="green" label="봉사활동 횟수" value={eventCount} />
@@ -54,8 +55,8 @@ export function KpiSection({ metricsBySlug }: Props) {
           />
         </div>
 
-        {/* 데스크탑 (lg+): Figma Dashboard 비대칭 그리드 760px */}
-        <div className="hidden h-[760px] flex-1 flex-col gap-4 lg:flex">
+        {/* 데스크탑 (xl+, 1280↑): Figma Dashboard 비대칭 그리드 760px — 내부 고정폭 607px 블록 때문에 ~812px 필요, 1024~1279 에선 폭 부족 → xl 부터 노출 */}
+        <div className="hidden h-[760px] flex-1 flex-col gap-4 xl:flex">
           {/* 상단 Wrap */}
           <div className="flex gap-4">
             {/* 보라 캐릭터 카드 */}
@@ -176,7 +177,7 @@ export function KpiSection({ metricsBySlug }: Props) {
             </div>
           </div>
         </div>
-      </div>
+      </SectionContainer>
     </section>
   );
 }
