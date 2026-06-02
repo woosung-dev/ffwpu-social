@@ -1,18 +1,18 @@
-// 사용자 랜딩 Hero 섹션 — Figma 96:7690 (1440×740 중 Header 88 제외한 612px Container). Header는 PublicLayout 외부 처리. 4 BP: lg(1024+) 가로 2단·1024↓ 세로 스택. Gmarket Sans Medium 미로드 시 SUIT Heavy fallback (TODO: woff2 자산 수령 시 layout.tsx 추가)
+// 사용자 랜딩 Hero 섹션 — Figma 96:7690(데스크탑 1440)·99:6951(모바일 375). lg+ 가로 2단(비겹침, flower 정상흐름 560). lg↓ Method B: 좌측 텍스트(z-10) + 우측 flower 를 absolute 배경 장식으로 겹침(z 아래·컴팩트). 폰트·flower 는 clamp 로 375↔1440 보간. Gmarket Sans Medium 미로드 시 SUIT fallback
 import Link from "next/link";
 
 export function HeroBanner() {
   return (
     <section
       id="hero"
-      className="relative w-full overflow-hidden bg-gradient-to-b from-surface-tint-soft to-white"
+      className="relative w-full overflow-hidden bg-brand-bright lg:bg-gradient-to-b lg:from-surface-tint-soft lg:to-white"
     >
-      {/* Banner background — Figma `imgBannerBackground` 1441×2875, lg 이상에서만 노출 (모바일은 그라디언트로 대체) */}
+      {/* 데스크탑 배경 곡선 — lg 이상만 (모바일은 그라디언트로 대체) */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-0 hidden -translate-x-1/2 lg:block"
+        className="pointer-events-none absolute top-0 left-1/2 hidden -translate-x-1/2 lg:block"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset, PublicHeader 패턴 */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
         <img
           src="/icons/hero-banner-background.svg"
           alt=""
@@ -22,11 +22,11 @@ export function HeroBanner() {
         />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-[1200px] flex-col items-center gap-8 px-4 pt-10 pb-12 lg:flex-row lg:items-end lg:justify-between lg:gap-0 lg:px-0 lg:pt-[100px] lg:pb-[100px]">
-        {/* Title 블록 — 좌측 (lg) / 중앙 (md↓) */}
-        <div className="flex flex-col items-center gap-5 lg:items-start">
+      <div className="relative mx-auto flex w-full max-w-[1200px] items-center justify-between px-4 py-10 lg:items-end lg:px-0 lg:py-[100px]">
+        {/* Title 블록 — 항상 좌측 정렬, flower 위(z-10) */}
+        <div className="relative z-10 flex flex-col items-start gap-4 lg:gap-5">
           <h1
-            className="whitespace-pre-line text-center text-[40px] leading-[1.25] text-brand-deep md:text-[48px] lg:text-left lg:text-[60px]"
+            className="text-[clamp(1.5rem,5vw,3.75rem)] leading-[1.25] whitespace-pre-line text-brand-deep"
             style={{
               fontFamily:
                 "'Gmarket Sans Medium', var(--font-suit), system-ui, sans-serif",
@@ -36,12 +36,12 @@ export function HeroBanner() {
             {"가치를 삶으로,\n변화를 꽃피우는 동행"}
           </h1>
 
-          {/* CTA — bg #3C1264, text #E9D1FF, SUIT Bold 20px, 알약 + 화살표 20 */}
+          {/* CTA — bg #3C1264, text #E9D1FF, 알약 + 화살표 */}
           <Link
             href="/news"
-            className="inline-flex items-center gap-2.5 rounded-full bg-brand-darkest px-[26px] py-3 transition-opacity hover:opacity-90"
+            className="inline-flex items-center gap-2 rounded-full bg-brand-darkest px-5 py-2.5 transition-opacity hover:opacity-90 lg:gap-2.5 lg:px-[26px] lg:py-3"
           >
-            <span className="text-[18px] font-bold text-ink-on-purple lg:text-[20px]">
+            <span className="text-sm font-bold text-ink-on-purple lg:text-xl">
               지난 활동 살펴보기
             </span>
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
@@ -51,22 +51,21 @@ export function HeroBanner() {
               width={20}
               height={20}
               aria-hidden
-              className="size-5"
+              className="size-4 lg:size-5"
             />
           </Link>
         </div>
 
-        {/* Flower 일러스트 — Figma 559.999×511.483, 모바일 240·태블릿 360·데스크탑 560 */}
-        <div className="shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
-          <img
-            src="/icons/hero-flower.svg"
-            alt="Sow Good 해바라기"
-            width={560}
-            height={511}
-            className="h-auto w-[240px] md:w-[360px] lg:w-[560px]"
-          />
-        </div>
+        {/* Flower — lg↓: 우측 배경 장식(absolute, z-0, 텍스트 뒤로 겹침). lg+: 정상 흐름 560 */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
+        <img
+          src="/icons/hero-flower.svg"
+          alt=""
+          aria-hidden
+          width={560}
+          height={511}
+          className="pointer-events-none absolute top-1/2 right-0 z-0 h-auto w-[clamp(150px,40vw,340px)] -translate-y-1/2 lg:relative lg:top-auto lg:right-auto lg:z-auto lg:w-[560px] lg:translate-y-0"
+        />
       </div>
     </section>
   );
