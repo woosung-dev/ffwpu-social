@@ -1,12 +1,17 @@
-// 사용자 사이트 헤더 — Figma node 98:7101 정합 (bg-brand-bright #B769FF + 알약 active + SUIT Bold 흰 메뉴 + 검색 SVG). 4 메뉴 스크롤스파이 (랜딩) / "활동 스토리" 고정 (그 외 페이지), 1024↓ 햄버거. ADR-009·ADR-011 검색 미구현
+// 사용자 사이트 헤더 — Figma node 98:7101(데스크탑)·99:6952(모바일) 정합. bg-brand-bright #B769FF + 알약 active. 4 메뉴 스크롤스파이(랜딩) / "활동 스토리" 고정(그 외). lg↑ 풀 내비, lg↓ 활성 섹션 pill→드롭다운(햄버거 대체). ADR-009·검색 미구현
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 import { useScrollSpy } from "@/client/hooks/useScrollSpy";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 type MenuItem = {
@@ -30,10 +35,11 @@ export function PublicHeader() {
   const pathname = usePathname();
   const isLanding = pathname === "/";
   const scrollActive = useScrollSpy(SCROLL_SECTIONS);
-  const [open, setOpen] = useState(false);
 
   // 랜딩: 스크롤스파이 결과 / 비랜딩: "활동 스토리" 고정 (ADR-009)
   const activeId = isLanding ? scrollActive : "stories";
+  // 모바일 pill 라벨 — 활성 섹션, 최상단(스파이 null)에서는 첫 메뉴로 폴백 (Figma 기본 상태)
+  const activeItem = MENU.find((m) => m.id === activeId) ?? MENU[0];
 
   return (
     <header className="sticky top-0 z-40 bg-brand-bright">
@@ -49,6 +55,7 @@ export function PublicHeader() {
           />
         </Link>
 
+        {/* 데스크탑(lg↑): 풀 내비 */}
         <nav className="hidden items-center gap-6 lg:flex">
           {MENU.map((m) => {
             const isActive = activeId === m.id;
@@ -56,6 +63,7 @@ export function PublicHeader() {
               <Link
                 key={m.id}
                 href={m.href}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "rounded-full px-5 py-2.5 text-base transition-colors",
                   isActive
@@ -69,64 +77,61 @@ export function PublicHeader() {
           })}
         </nav>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            disabled
-            aria-label="검색"
-            className="cursor-not-allowed text-white/60"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
-            <img
-              src="/icons/search-icon.svg"
-              alt=""
-              width={20}
-              height={20}
-              aria-hidden
-              className="size-5"
-            />
-          </button>
-          <button
-            type="button"
-            aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
-            aria-expanded={open}
-            className="text-white hover:text-brand-lavender lg:hidden"
-            onClick={() => setOpen((prev) => !prev)}
-          >
-            {open ? (
-              <X className="size-6" aria-hidden />
-            ) : (
-              <Menu className="size-6" aria-hidden />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {open && (
-        <nav className="border-t border-white/20 bg-brand-bright lg:hidden">
-          <ul className="container mx-auto flex flex-col gap-1 px-4 py-3">
+        {/* 모바일(lg↓): 활성 섹션 pill → 탭 시 전체 섹션 드롭다운 (햄버거 대체) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label={`현재 위치 ${activeItem.label} — 섹션 메뉴 열기`}
+              className="flex h-11 items-center gap-1.5 rounded-full border-[1.6px] border-brand-primary bg-white pr-3 pl-4 text-base font-extrabold text-brand-primary lg:hidden"
+            >
+              <span>{activeItem.label}</span>
+              <ChevronDown className="size-4 shrink-0" aria-hidden />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" sideOffset={8} className="min-w-[200px]">
             {MENU.map((m) => {
-              const isActive = activeId === m.id;
+              const isActive = activeItem.id === m.id;
               return (
-                <li key={m.id}>
+                <DropdownMenuItem
+                  key={m.id}
+                  asChild
+                  className={cn(
+                    "min-h-11 cursor-pointer px-3 text-base",
+                    isActive
+                      ? "font-extrabold text-brand-primary focus:text-brand-primary"
+                      : "font-medium",
+                  )}
+                >
                   <Link
                     href={m.href}
-                    onClick={() => setOpen(false)}
-                    className={cn(
-                      "block rounded-md px-3 py-2.5 text-base transition-colors",
-                      isActive
-                        ? "bg-white font-extrabold text-brand-primary"
-                        : "font-bold text-white hover:bg-white/10",
-                    )}
+                    aria-current={isActive ? "page" : undefined}
                   >
                     {m.label}
                   </Link>
-                </li>
+                </DropdownMenuItem>
               );
             })}
-          </ul>
-        </nav>
-      )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <button
+          type="button"
+          disabled
+          aria-label="검색 (준비 중)"
+          className="shrink-0 cursor-not-allowed text-white/60"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
+          <img
+            src="/icons/search-icon.svg"
+            alt=""
+            width={20}
+            height={20}
+            aria-hidden
+            className="size-5"
+          />
+        </button>
+      </div>
     </header>
   );
 }
