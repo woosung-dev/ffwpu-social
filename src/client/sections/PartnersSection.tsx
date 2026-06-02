@@ -39,17 +39,17 @@ export function PartnersSection() {
         </div>
 
         {/* 하단 — 파트너 로고 5, opacity-23% */}
-        <div className="mt-12 grid grid-cols-2 items-center justify-items-center gap-8 sm:grid-cols-3 lg:mt-16 min-[1025px]:grid-cols-5">
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-x-12 gap-y-8 lg:mt-16 lg:flex-nowrap lg:justify-between lg:gap-x-6">
           {PARTNERS.map((n) => (
             // eslint-disable-next-line @next/next/no-img-element -- public asset
             <img
               key={n}
               src={`/images/s5-partner${n}.png`}
               alt=""
-              width={120}
-              height={60}
+              width={200}
+              height={72}
               aria-hidden
-              className="h-auto w-full max-w-[120px] opacity-[0.23]"
+              className="h-auto max-h-[72px] w-auto max-w-[200px]"
             />
           ))}
         </div>

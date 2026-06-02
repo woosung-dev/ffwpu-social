@@ -30,50 +30,51 @@ const FALLBACK_IMAGES = [
   "/images/story-card2.png",
 ] as const;
 
-// 상단 슬롯 이미지 — 지정 글의 대표 이미지(글 링크) 또는 기본 디자인 사진
+// 상단 슬롯 이미지 — wrapperClass 로 크기/비율 지정, 이미지는 컨테이너를 object-cover 로 채움(좌우 동일 높이 배치 지원). 지정 글 대표 이미지(글 링크) 또는 기본 사진
 function StoryImage({
   slot,
   fallback,
-  colSpanClass,
-  aspectClass,
+  wrapperClass,
   width,
   height,
 }: {
   slot: StorySlotItem | null;
   fallback: string;
-  colSpanClass: string;
-  aspectClass: string;
+  wrapperClass: string;
   width: number;
   height: number;
 }) {
   const hasArticleImage = Boolean(slot?.coverImageUrl);
   const src = slot?.coverImageUrl ?? fallback;
   const alt = hasArticleImage ? slot!.title : "";
-  const imgClass = cn(aspectClass, "w-full rounded-lg object-cover");
+  const img = (
+    // eslint-disable-next-line @next/next/no-img-element -- S3/public asset
+    <img
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      className="absolute inset-0 h-full w-full object-cover"
+    />
+  );
 
   if (slot && hasArticleImage) {
     return (
       <Link
         href={`/news/${slot.id}`}
         className={cn(
-          colSpanClass,
-          "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/60 focus-visible:ring-offset-2",
+          "relative block overflow-hidden rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/60 focus-visible:ring-offset-2",
+          wrapperClass,
         )}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element -- S3/public asset */}
-        <img src={src} alt={alt} width={width} height={height} className={imgClass} />
+        {img}
       </Link>
     );
   }
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- public asset
-    <img
-      src={src}
-      alt={alt}
-      width={width}
-      height={height}
-      className={cn(colSpanClass, imgClass)}
-    />
+    <div className={cn("relative overflow-hidden rounded-lg", wrapperClass)}>
+      {img}
+    </div>
   );
 }
 
@@ -83,31 +84,43 @@ export function StorySection({ stats, slots }: Props) {
   return (
     <section id="story" className="w-full bg-surface-tint-faint py-16 lg:py-24">
       <SectionContainer className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-[70px]">
-        {/* 좌측 이미지 2장 — 큰 + 작은. 운영자 지정 글 대표 이미지 (미지정 시 기본 사진) */}
-        <div className="relative grid w-full grid-cols-2 gap-3 lg:w-[560px] lg:shrink-0">
+        {/* 좌측 이미지 2장 — Figma 좌우 나란히(동일 높이), 모바일 세로 스택. 운영자 지정 글 대표 이미지(미지정 시 기본 사진) */}
+        <div className="relative flex w-full flex-col gap-3 sm:h-[340px] sm:flex-row lg:h-[420px] lg:flex-[1.8]">
           <StoryImage
             slot={slots[0] ?? null}
             fallback={FALLBACK_IMAGES[0]}
-            colSpanClass="col-span-2"
-            aspectClass="aspect-[4/3]"
+            wrapperClass="aspect-[4/3] w-full sm:aspect-auto sm:h-full sm:flex-1"
             width={560}
             height={420}
           />
           <StoryImage
             slot={slots[1] ?? null}
             fallback={FALLBACK_IMAGES[1]}
-            colSpanClass="col-span-1"
-            aspectClass="aspect-square"
+            wrapperClass="aspect-square w-full sm:aspect-auto sm:h-full sm:w-[42%] lg:w-[280px] lg:shrink-0"
             width={280}
             height={280}
           />
-          {/* 장식 — 데스크탑에만 */}
+          {/* 장식 — 별·하트 (데스크탑) */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
+          <img
+            src="/icons/story-star1.svg"
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute -top-6 -left-5 z-10 hidden size-12 lg:block"
+          />
           {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
           <img
             src="/icons/story-heart.svg"
             alt=""
             aria-hidden
-            className="absolute -right-4 -top-6 hidden size-16 lg:block"
+            className="pointer-events-none absolute -bottom-5 left-[30%] z-10 hidden size-14 lg:block"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
+          <img
+            src="/icons/story-star2.svg"
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute -top-4 -right-4 z-10 hidden size-12 lg:block"
           />
         </div>
 

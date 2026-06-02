@@ -150,7 +150,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                 <p className="text-[20px] font-semibold text-white">
                   도움을 주게 된 가정 수
                 </p>
-                <p className="text-[42px] font-bold tabular-nums text-white">
+                <p className="text-[40px] font-bold whitespace-nowrap tabular-nums text-white">
                   {helpedHousehold}
                 </p>
               </div>
