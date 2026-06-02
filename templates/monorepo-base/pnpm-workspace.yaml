@@ -1,5 +1,0 @@
-# pnpm workspace 정의 — apps/* + packages/* 만 워크스페이스 패키지로 인식
-
-packages:
-  - "apps/*"
-  - "packages/*"
