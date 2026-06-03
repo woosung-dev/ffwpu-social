@@ -1374,3 +1374,27 @@ velog 최종 처방은 "pnpm workspace 기준선 → 빌드성능 필요 시 Tur
 - ✅ fullstack.md §7 "자체 UI 조회는 RSC" 규칙의 명시 예외 1건 — 본 ADR 이 그 기록. 추가 RQ 확장은 "다중 소비 클라 패칭" 실증 필요 시에만.
 - ⚠️ Next 16 SSRF 가드가 localhost 이미지 최적화를 기본 차단 → `next.config.ts` `dangerouslyAllowLocalIP` dev 한정 허용(프로덕션 R2/S3 가드 유지).
 - ⚠️ /news 목록에 ErrorBoundary 미설치(기존 RSC 시절과 동일 리스크 프로파일) — v1.1 error.tsx 도입 검토.
+
+---
+
+## ADR-035: 랜딩 반응형 BP 정책 — 표준 Tailwind BP + clamp 보간, 커스텀 스크린 미추가
+
+- **상태**: 채택 (2026-06-03)
+- **맥락**: 랜딩 7면을 디자이너 4-BP(1920~1440/1439~1025/1024~768/767~375)에 정합. 디자이너는 각 범위 양끝 폭을 따로 그림. Figma 는 "스티커 이미지"라 CSS 직접 이식 금지(gap/margin/padding만 참고) — 사용자 메타 프롬프트. 7면 병렬 디자인 검증(fan-out→synthesis) 수행.
+
+### Decision
+
+1. **표준 Tailwind BP만** (sm640/md768/lg1024/xl1280). 커스텀 스크린·`min-[1025px]` arbitrary variant 금지. 디자이너 "1024 vs 1025" 1px 경계는 Figma 1024 시안이 *데스크탑 컴포지션*으로 확인돼 실제 충돌 없음 → 리플로우 경계 = `lg`(1024), 태블릿 전용 처리 = 768~1023(`md`).
+2. **밴드 내부 유동화 = `clamp()`** (타이포·간격·크기), **컴포지션 리플로우 = BP**. 1440~1920 여백 확장도 clamp(커스텀 BP 추가 대신). `max-w-[1200px]` 콘텐츠 캡 덕에 vw-clamp 가 1280+ 에서 동일 결과.
+3. **고정폭→유동 (서지컬)**: KPI 좌블록 `xl:w-[607px]` → `lg:flex-[1.7] xl:flex-[2.4]` (1440 ≈607px 재현 + 1024 값 가독폭). Story Result 전 폭 가로(`flex-row`, lg 축소 허용). Partners 전환점 `sm`(640)→`md`(768)=Figma 밴드 경계 정렬. ArticleGrid 다크블록 768 가로 배너(`md:flex`).
+4. **장식은 폭 부족 시 숨김**: KPI 그래프+별 데코는 1024~1279 카드 폭 부족 → `xl:flex`.
+5. **마조네리는 `columns-*` 유지** (`display:masonry` 미사용 — 브라우저 지원 불안정).
+6. **`docs/design.md` 매트릭스 정정** — 스크린샷 추정 매트릭스의 5개 셀 오류(1024 세로/2x2, Story 375 Result 세로, ArticleGrid 모바일 다크블록 제거, Hero 세로스택)를 Figma 기준 정정 노트로 supersede.
+
+### Consequences
+
+- ✅ 전 폭(320~1920 9폭) 가로스크롤 0 — Playwright `scrollWidth<=clientWidth` 어서션 통과. 768 H-scroll(KPI 별 아이콘) 해소.
+- ✅ 1280+/1440 기존 정합 뷰 무회귀(벤토 비율·값 크기 캡 보존). 1024~1279 Figma 데스크탑 side-by-side 신규 정합.
+- ✅ Figma "스티커 이미지" 원칙 준수 — synthesis 가 억지 CSS(매직 오프셋·xl 상향으로 Figma 1024 깨는 변경·추측성 flower 축소) 기각.
+- ⚠️ 디자이너 1px 경계(1024/1025)는 표준 BP 로 정확 표현 불가 — Figma 1024=데스크탑 귀결로 해소했으나, 차후 디자이너가 1025 를 태블릿으로 재정의하면 재검토 필요.
+- ⚠️ KPI `flex-[1.7]/[2.4]` 는 Figma 607:256 비율 근사(매직 비율 아님, 가용폭 분배) — 실콘텐츠/실사진 교체 후 1024·1440 재확인 권장.
