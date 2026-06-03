@@ -4,6 +4,7 @@
 import { Suspense } from "react";
 
 import { PublicFooter, PublicHeader } from "@/client/layouts";
+import { QueryProvider } from "@/client/providers/QueryProvider";
 
 export default function PublicLayout({
   children,
@@ -11,14 +12,16 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col">
-      <Suspense
-        fallback={<div className="sticky top-0 z-40 h-16 bg-brand-bright lg:h-20" />}
-      >
-        <PublicHeader />
-      </Suspense>
-      <main className="flex-1">{children}</main>
-      <PublicFooter />
-    </div>
+    <QueryProvider>
+      <div className="flex min-h-screen flex-col">
+        <Suspense
+          fallback={<div className="sticky top-0 z-40 h-16 bg-brand-bright lg:h-20" />}
+        >
+          <PublicHeader />
+        </Suspense>
+        <main className="flex-1">{children}</main>
+        <PublicFooter />
+      </div>
+    </QueryProvider>
   );
 }

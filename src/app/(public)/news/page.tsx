@@ -1,23 +1,26 @@
 // 소식 목록 페이지 — Figma node 125:8904 정합. SubBanner + (FeaturedStoryHero PR B) + CategoryTabs + 3x3 카드 그리드 + 페이지네이션
-// Next.js 16 Cache Components 패턴: searchParams + DB 호출을 Suspense 안 NewsListContent 로 격리 (prerender shell 우선)
+// 목록 영역은 RQ Streaming SSR: 서버 prefetch(no await) → HydrationBoundary → 클라 useSuspenseQuery (탭·페이지 왕복 캐시)
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
-import { listCategories, listNews } from "@/features/news";
-import { ArticleCard, Pagination } from "@/features/news/components";
-import { ALL_CATEGORY_SLUG } from "@/features/news/constants";
+import { listCategories } from "@/features/news";
+import {
+  fetchNewsList,
+  newsKeys,
+  normalizeNewsListFilters,
+} from "@/features/news/api";
+import { getQueryClient } from "@/lib/query/get-query-client";
 
-import { NewsCategoryTabs } from "./news-filters";
 import { SubBanner } from "./sub-banner";
 import { NewsHero } from "./news-hero";
+import { NewsListClient } from "./news-list-client";
 
 export const metadata: Metadata = {
   title: "쌀 나눔 소식 | 사회공헌단 Sow Good",
   description:
     "사회공헌단 Sow Good 의 쌀 나눔·가족 치유·지역 봉사·환경 캠페인 활동 소식.",
 };
-
-const PAGE_SIZE = 9; // 3x3 그리드
 
 type SearchParams = {
   category?: string;
@@ -44,88 +47,37 @@ export default function NewsListPage({
         </h2>
 
         <Suspense fallback={<NewsListLoading />}>
-          <NewsListContent searchParams={searchParams} />
+          <NewsListPrefetch searchParams={searchParams} />
         </Suspense>
       </section>
     </>
   );
 }
 
-async function NewsListContent({
+// 서버 prefetch — await 하지 않음: pending Promise 가 dehydrate 되어 Suspense 스트리밍 (TanStack Advanced SSR)
+async function NewsListPrefetch({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
 }) {
   const { category, page } = await searchParams;
-  const categorySlug = category && category.length > 0 ? category : ALL_CATEGORY_SLUG;
-  // float / NaN / 0 / 음수 입력 차단 — DB OFFSET 에 정수 보장
-  const pageNum = Math.max(1, Math.floor(Number(page) || 1));
+  const filters = normalizeNewsListFilters({ category, page });
 
-  const [categoriesAll, list] = await Promise.all([
-    listCategories(),
-    listNews({
-      page: pageNum,
-      limit: PAGE_SIZE,
-      categorySlug:
-        categorySlug === ALL_CATEGORY_SLUG ? undefined : categorySlug,
-    }),
-  ]);
-
+  const categoriesAll = await listCategories();
   const categoriesForTabs = categoriesAll
     .filter((c) => c.isActive)
     .map((c) => ({ slug: c.slug, name: c.name }));
 
-  // 페이지 변경 시 query 빌더 (카테고리는 변경 시 page 리셋 — client filter 가 처리)
-  const buildPageHref = (nextPage: number) => {
-    const params = new URLSearchParams();
-    if (categorySlug !== ALL_CATEGORY_SLUG) params.set("category", categorySlug);
-    if (nextPage !== 1) params.set("page", String(nextPage));
-    const q = params.toString();
-    return q ? `/news?${q}` : "/news";
-  };
+  const queryClient = getQueryClient();
+  void queryClient.prefetchQuery({
+    queryKey: newsKeys.list(filters),
+    queryFn: () => fetchNewsList(filters),
+  });
 
   return (
-    <>
-      <div className="mt-6 lg:mt-8">
-        <NewsCategoryTabs
-          categories={categoriesForTabs}
-          selected={categorySlug}
-        />
-      </div>
-
-      {list.items.length === 0 ? (
-        <p className="py-20 text-center text-sm text-ink-subtle">
-          아직 등록된 소식이 없습니다.
-        </p>
-      ) : (
-        <ul className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:mt-10 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-12">
-          {list.items.map((item) => (
-            <li key={item.id} className="flex justify-center">
-              <ArticleCard
-                size={1}
-                article={{
-                  id: item.id,
-                  title: item.title,
-                  categoryName: item.categoryName,
-                  coverImageUrl: item.coverImageUrl,
-                  publishedAt: item.publishedAt,
-                }}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {list.totalPages > 1 && (
-        <div className="mt-10 flex justify-center pb-4 pt-10 lg:mt-16 lg:pb-10 lg:pt-16">
-          <Pagination
-            page={pageNum}
-            totalPages={list.totalPages}
-            hrefForAction={buildPageHref}
-          />
-        </div>
-      )}
-    </>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <NewsListClient categories={categoriesForTabs} />
+    </HydrationBoundary>
   );
 }
 
