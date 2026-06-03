@@ -11,7 +11,7 @@ export function PartnersSection() {
     >
       <SectionContainer>
         {/* 상단 — 보라 아이콘 + Sow Good 로고 + 카피 */}
-        <div className="flex flex-col items-center gap-4 text-surface-dark lg:flex-row lg:justify-center lg:gap-6">
+        <div className="flex flex-col items-center gap-4 text-surface-dark lg:gap-6">
           <div className="flex size-[92px] items-center justify-center rounded-[20px] border-2 border-surface-dark bg-brand-pale">
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
             <img
