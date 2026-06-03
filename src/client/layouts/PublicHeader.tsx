@@ -89,7 +89,11 @@ export function PublicHeader() {
               <ChevronDown className="size-4 shrink-0" aria-hidden />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" sideOffset={8} className="min-w-[200px]">
+          <DropdownMenuContent
+            align="center"
+            sideOffset={8}
+            className="min-w-[200px]"
+          >
             {MENU.map((m) => {
               const isActive = activeItem.id === m.id;
               return (
