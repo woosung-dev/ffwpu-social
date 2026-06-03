@@ -32,8 +32,9 @@ export function KpiSection({ metricsBySlug }: Props) {
         {/* 좌측 헤딩 — lg↑ 사이드(1440 251px, 1024 축소 유동). content max-w-1200 캡이라 1280↑ 동일 */}
         <div className="flex flex-col gap-4 text-surface-dark lg:w-[clamp(216px,18vw,251px)] lg:shrink-0">
           <h2 className="text-3xl font-bold leading-[1.3] lg:text-[36px]">
-            한 해동안
-            <br />
+            {/* 768~1023: 1줄(full-width), lg+: 좁은 컬럼 자연 줄바꿈 보조 — {" "} 로 공백 명시 */}
+            한 해동안{" "}
+            <br className="md:hidden lg:block" />
             만들어낸 변화
           </h2>
           <p className="text-base font-medium leading-[1.5]">
