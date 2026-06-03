@@ -73,3 +73,32 @@ Story·ArticleGrid 섹션은 DB 배선(news.storySlot/featuredRank + kpi_metrics
 - 2026-06-03: `ReactQueryStreamedHydration` 미채택 — experimental + 네비게이션 워터폴. 안정 prefetch+HydrationBoundary 패턴 채택 (TanStack Advanced SSR 가이드).
 - 2026-06-03: 커스텀 브레이크포인트(2xl=1440) 철회 — 1440~1920 여백 확장은 clamp (사용자 모던 CSS 규약 정합).
 - 2026-06-03: KPI 보라 카드 사진은 news 커버가 아닌 public 자산 — 시드 스코프 분리.
+
+## 2차 충실도 (2026-06-03 후속 — 같은 브랜치/PR #20)
+
+WS5 가 768 가로스크롤 0 을 우선하느라 일부 시안 충실도를 희생한 것을 Figma 노드 크롭 직접 대조로 교정. **SSoT = Figma 노드 스크린샷**(design.md 매트릭스/정정 노트 불신).
+
+### 작업 그룹
+- **WS6 KPI 375~1023 벤토 복원** — WS5 의 "768=2x2 단순그리드" 가 오류였음(Figma 는 375/768/1024/1440 전 BP 벤토). `lg:hidden` 단순그리드 블록을 데스크탑 동형 유동 벤토로 교체(고정폭→clamp/%/aspect, 640↑ 2열·<640 1열, 데코 640↑). 데스크탑 벤토(lg:flex) 무수정. dead 가 된 KpiCard 제거.
+- **WS7 Hero 전 BP 단색 보라** — Figma 에 곡선/그라디언트 없음. lg+ `lg:bg-gradient` + 곡선 `hero-banner-background.svg`(상단 흰 코너 노치 유발) 제거 → 헤더와 seamless.
+- **WS8 ArticleGrid 768 헤딩** — 다크배너 헤딩 md 24px→31px(Figma 크기). 구조·2열 마조네리·카드는 이미 정합.
+- **WS9 재대조** — Story(768·375 3열 통계)·Partners(768 3+2)·Footer·Header(768 풀내비/375 pill) Figma 일치 확인. 미변경 → 회귀 0.
+
+### 체크리스트
+- [x] WS6 KPI 전 BP 벤토 복원 (41400b9) — 320~1023 가로스크롤 0, 1440 데스크탑 픽셀 무회귀 확인
+- [x] WS7 Hero 단색 보라 (8a23924) — 1440/768/375 헤더 seamless 확인
+- [x] WS8 ArticleGrid 768 헤딩 31px (34ab442)
+- [x] WS9 Story/Partners/Footer/Header 재대조 — 변경 불필요(이미 정합)
+- [x] 문서 2차 재정정 — design.md KPI·Hero 매트릭스 + 정정 노트, plan(본 섹션)
+- [x] 게이트: tsc 0 · lint 0 · test 31 · build 그린 · Playwright 10폭(320/375/767/768/773/1024/1025/1280/1440/1920) 가로스크롤 0
+
+### 사용자 결정 로그 (2차)
+- KPI 벤토 복원 범위: **375~1023 전체 (Figma 충실)** 선택 — <640 1열 스택, 640~1023 2열 reflow, 1024↑ 데스크탑 벤토 보존.
+- Hero: **전 구간 재점검** 선택 → 곡선/그라디언트가 Figma 에 없음을 확인하고 제거(전 BP 단색 보라).
+- ArticleGrid 768 헤딩 2줄 강제(max-width)는 "억지 CSS"라 미적용 — 크기(31px)만 정합.
+
+### Context Notes (2차)
+- 아키텍처: KPI 는 데스크탑 블록 무수정 보존(Arch A) — sub-lg 별도 유동 벤토 신설. 회귀 표면 0 우선(사용자 "서지컬" 규약). 카드 콘텐츠 일부 중복은 의도적 비용.
+- Figma 참조는 로컬 export 가 저해상 썸네일(768=426px폭)이라 python PIL 로 KPI/Hero 영역 크롭·확대해 컴포지션 확정 + 라이브 렌더로 정밀 반복(사용자 "Figma=스티커, 렌더 보고 추론" 규약).
+- 미참조 에셋: `public/icons/hero-banner-background.svg` (Hero 곡선 제거로 고아). `globals.css` surface-tint-soft 주석 "Hero·Partners" → 이제 Partners 만 사용. 후속 정리 대상(docs/TODO.md).
+- Figma MCP(`plugin:figma:figma`) 인증 시도(URL 발급) — 미완료. 신규 노드 `332:8837`(사용자 제공) 미보유.
