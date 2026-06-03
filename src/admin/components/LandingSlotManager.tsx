@@ -21,6 +21,7 @@ export type CurationNews = {
   title: string;
   categoryName: string;
   categorySlug: string;
+  coverImageUrl: string | null;
   publishedAt: Date | null;
   storySlot: number | null;
   featuredRank: number | null;
@@ -114,6 +115,24 @@ export function LandingSlotManager({
         <span className="w-20 shrink-0 text-sm font-medium text-ink-strong">
           {slotLabel}
         </span>
+        {/* 커버 썸네일 — 점유 글의 메인 노출 이미지 즉시 확인. 커버 없으면 기본 사진 폴백 안내 */}
+        {current &&
+          (current.coverImageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- S3 썸네일 (64×40)
+            <img
+              src={current.coverImageUrl}
+              alt=""
+              width={64}
+              height={40}
+              className="h-10 w-16 shrink-0 rounded-md border border-border object-cover"
+            />
+          ) : (
+            <span className="flex h-10 w-16 shrink-0 items-center justify-center rounded-md border border-dashed border-border bg-surface-soft text-center text-[10px] leading-tight text-ink-subtle">
+              기본 사진
+              <br />
+              노출
+            </span>
+          ))}
         <div className="min-w-0 flex-1">
           <Select
             value={current?.id ?? UNSET}
