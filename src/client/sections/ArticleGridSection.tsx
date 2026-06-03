@@ -44,7 +44,7 @@ export function ArticleGridSection({ items }: Props) {
         {/* 좌측 다크 블록 — 라운드 12px, ExtraBold 31px #E9CFFF. md(768~1023) 가로 배너(헤딩↔CTA 양끝), lg+ 319px 사이드 헤더, 모바일 세로 스택 (Figma 정합) */}
         <div className="rounded-xl bg-surface-dark p-8 md:flex md:items-center md:justify-between md:gap-6 lg:block lg:w-[319px] lg:shrink-0 lg:self-start lg:p-10">
           <div>
-            <h2 className="text-2xl font-extrabold leading-tight text-ink-on-purple lg:text-[31px]">
+            <h2 className="text-2xl font-extrabold leading-tight text-ink-on-purple md:text-[31px]">
               고소한 사랑의 향기가 퍼져나가고 있어요
             </h2>
             <p className="mt-3 text-base font-semibold text-ink-on-purple lg:text-lg">
