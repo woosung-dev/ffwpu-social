@@ -51,10 +51,16 @@ Story·ArticleGrid 섹션은 DB 배선(news.storySlot/featuredRank + kpi_metrics
 - [x] WS2 슬롯 썸네일 (ed00c35)
 - [x] WS3 ArticleGrid fetch 호이스트 (a0fb23b — getLandingData 고아 제거 포함)
 - [x] WS4 RQ /news 목록 (acbd03f + e277af6 — 캐시 왕복 POST 0건 검증, ADR-034)
-- [ ] WS5-A fan-out + synthesis (question_flags → 사용자 확인) — 진행 중 (wf_f73f55d6)
-- [ ] WS5-B 섹션 7건 순차 적용 + Playwright 검증 (섹션당 1커밋)
-- [ ] 문서 Atomic Update (decisions.md ADR-035 · design.md 날짜 · TODO.md · CLAUDE.md 포인터) — ADR-034 완료
-- [ ] 최종 게이트: tsc 0 · lint · test · build 그린
+- [x] WS5-A fan-out(7면 병렬·텍스트) + synthesis — 768 H-scroll 범인=KPI 별 아이콘 확정, 매트릭스 5셀 오류 발견
+- [x] WS5-B 섹션 적용 + Playwright 9폭(320~1920) 검증 — Partners(0231cbc)·Story(741eb2e)·KPI 버그픽스(42c2b51)·ArticleGrid 배너(8988ef7)·KPI side-by-side(58f65ba). 전 폭 가로스크롤 0
+- [x] 문서 Atomic Update — ADR-034(RQ)·ADR-035(BP 정책)·design.md 매트릭스 정정+날짜·AGENTS.md 포인터·TODO.md
+- [x] 최종 게이트: tsc 0 · lint 0 · test 31 · build 그린(15p, /news PPR)
+
+## 사용자 결정 로그 (2026-06-03)
+
+- ArticleGrid 다크블록 768~1023: **Figma 가로 배너 정합** 선택 → md:flex 배너 구현.
+- KPI 1024~1279: **풀 side-by-side 정합** 선택 → 벤토 lg 하향 + flex-[1.7]/[2.4] 유동 + 값 clamp + 데코 xl 한정.
+- 그 외(Hero flower 축소·Story xl 상향·매직 clamp 등)는 critic 이 "억지 CSS/Figma 1024 깨짐"으로 기각 — 사용자 "억지 CSS 금지" 규약 정합.
 
 ## 측정 사실 (WS5 입력)
 
