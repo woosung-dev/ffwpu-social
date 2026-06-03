@@ -49,10 +49,10 @@
 
 **codex 긍정**: @theme 색·폰트·radius 토큰 체계 있음 · `transition-all` 없음(transition-colors/opacity/transform) · 이모지 장식 없음 · AI slop 보라그라디언트는 placeholder 한정 · 카드 대부분 인터랙션/데이터(장식 아님) · Hero 좌정렬(AI 중앙 hero 회피) · SUIT 로컬(일반폰트 회피).
 
-### 수정 triage (제안)
-- **안전 a11y 수정(시안 무영향, 지금 가능)**: X3 focus-visible 링 추가 · `/news` smooth-scroll reduced-motion 가드 · X5 Partners 주석 정정.
-- **B/사용자 판단 필요(시안·브랜드 충돌)**: X1 헤더 대비(흰/보라 = 브랜드) · C2 Hero CTA 40→44px · X4 Gmarket(라이선스) · C5 H2 사이즈 · X2 Partners 로고 a11y.
-- **수용/latent**: X6 매직 px(ADR-035) · nowrap.
+### 수정 triage
+- ✅ **안전 a11y 수정 완료** (시안 무영향): X3 focus-visible 링(`cb9b68e`) · `/news` smooth-scroll reduced-motion 가드(`8b21a9e`) · X5 Partners 주석 정정(`933e70f`). lint·test 31·tsc 그린.
+- 🟡 **B/사용자 판단 대기**(시안·브랜드 충돌): X1 헤더 대비(흰/보라=브랜드) · C2 Hero CTA 40→44px · X4 Gmarket(라이선스) · C5 H2 사이즈 · X2 Partners 로고 a11y.
+- ⚪ **수용/latent**: X6 매직 px(ADR-035) · nowrap.
 
 ---
 
