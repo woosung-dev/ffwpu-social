@@ -28,16 +28,16 @@ export function KpiSection({ metricsBySlug }: Props) {
   );
   return (
     <section id="kpi" className="w-full bg-white py-16 lg:py-24">
-      <SectionContainer className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-[clamp(40px,5vw,70px)]">
-        {/* 좌측 헤딩 — lg↑ 사이드(1440 251px, 1024 축소 유동). content max-w-1200 캡이라 1280↑ 동일 */}
-        <div className="flex flex-col gap-4 text-surface-dark lg:w-[clamp(216px,18vw,251px)] lg:shrink-0">
-          <h2 className="text-3xl font-bold leading-[1.3] lg:text-[36px]">
-            {/* sub-lg: full-width라 1줄, lg+: 좁은 컬럼 자연 줄바꿈 보조 — 공백 명시 */}
+      <SectionContainer className="flex flex-col gap-10 wide:flex-row wide:items-start wide:gap-[clamp(40px,5vw,70px)]">
+        {/* 좌측 헤딩 — Figma 1024~1439 는 stacked(헤딩 top 풀폭), 1440(wide)만 251px 좌측 사이드. 375 는 중앙정렬 */}
+        <div className="flex flex-col gap-4 text-center text-surface-dark md:text-left wide:w-[clamp(216px,18vw,251px)] wide:shrink-0">
+          <h2 className="text-2xl font-bold leading-[1.3] md:text-3xl lg:text-[36px]">
+            {/* <wide: 풀폭 자연 줄바꿈 · wide+: 좁은 251 컬럼 강제 2줄 */}
             한 해동안{" "}
-            <br className="hidden lg:block" />
+            <br className="hidden wide:block" />
             만들어낸 변화
           </h2>
-          <p className="text-base font-medium leading-[1.5]">
+          <p className="text-base font-medium leading-[1.5] text-pretty">
             가정연합은 도움이 필요한 사람들에게 오랜기간 손을 건네왔습니다.
             앞으로도 변함없이 온기를 전하겠습니다.
           </p>
@@ -159,8 +159,8 @@ export function KpiSection({ metricsBySlug }: Props) {
           </div>
         </div>
 
-        {/* 데스크탑(lg↑, 1024↑): Figma Dashboard 데코 타일 비대칭 그리드. 고정폭 데코(별 83px 등)가 1023↓ 에서 가로 오버플로라 lg↑ 한정. 하단 블록은 xl↑ 에서 Figma 원안 좌(607)/우 가로 배치 */}
-        <div className="hidden flex-1 flex-col gap-4 lg:flex xl:h-[760px]">
+        {/* 데스크탑 벤토(lg↑, 1024↑): Figma Dashboard 비대칭 그리드. 1024~1439 는 헤딩 아래 풀폭 stacked, wide(1440)↑ 는 우측 컬럼. 고정폭 데코가 1023↓ 오버플로라 lg↑ 한정 */}
+        <div className="hidden flex-1 flex-col gap-4 lg:flex wide:h-[760px]">
           {/* 상단 Wrap */}
           <div className="flex gap-4">
             {/* 보라 캐릭터 카드 */}
@@ -183,8 +183,8 @@ export function KpiSection({ metricsBySlug }: Props) {
                   {volunteerCount}
                 </p>
               </div>
-              {/* 장식(그래프+별) — 1024~1279 좁은 카드에선 값 옆 공간 부족으로 숨김, 여유 있는 xl↑ 만 노출 */}
-              <div className="hidden items-end gap-[30px] self-end xl:flex">
+              {/* 장식(그래프+별) — 1024↑ 풀폭 stacked 라 회색 카드 넓어 노출 가능(Figma 정합). 1023↓ 만 숨김 */}
+              <div className="hidden items-end gap-[30px] self-end lg:flex">
                 {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
                 <img
                   src="/icons/kpi-graph-icon.svg"
@@ -209,8 +209,8 @@ export function KpiSection({ metricsBySlug }: Props) {
 
           {/* 하단 Wrap — lg↑ 좌/우 가로 (Figma 데스크탑). content max-w-1200 캡이라 flex-[2.4]:1 ≈ Figma 607:256 비율, 1440 좌블록 ≈607px 재현 */}
           <div className="flex flex-1 flex-col items-stretch gap-4 lg:flex-row">
-            {/* 좌측: 봉사 기간 + 노란 Sow Good + 봉사활동 횟수. lg(1024~1279) 1.7 (우측 보라 카드 값 가독 폭 확보) / xl↑ 2.4 (=Figma 1440 좌블록 ≈607px) */}
-            <div className="flex w-full flex-col gap-4 lg:flex-[1.7] xl:flex-[2.4]">
+            {/* 좌측: 봉사 기간 + 노란 Sow Good + 봉사활동 횟수. Figma 좌:우 ≈ 2.4:1 (좌블록 ≈607px) */}
+            <div className="flex w-full flex-col gap-4 lg:flex-[2.4]">
               <div className="flex gap-4">
                 {/* 누적 봉사 기간 */}
                 <div className="flex flex-1 flex-col justify-between rounded-[20px] bg-kpi-gray px-6 py-5 text-ink-strong-mid xl:px-[30px]">
@@ -261,7 +261,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                   {helpedHousehold}
                 </p>
               </div>
-              <div className="relative h-[423px]">
+              <div className="relative h-[clamp(280px,26vw,360px)] wide:h-[423px]">
                 {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
                 <img
                   src="/icons/kpi-purple-card-vector.svg"
