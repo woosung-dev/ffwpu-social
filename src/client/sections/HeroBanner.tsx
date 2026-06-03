@@ -7,23 +7,8 @@ export function HeroBanner() {
   return (
     <section
       id="hero"
-      className="relative w-full overflow-hidden bg-brand-bright lg:bg-gradient-to-b lg:from-surface-tint-soft lg:to-white"
+      className="relative w-full overflow-hidden bg-brand-bright"
     >
-      {/* 데스크탑 배경 곡선 — lg 이상만 (모바일은 그라디언트로 대체) */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute top-0 left-1/2 hidden -translate-x-1/2 lg:block"
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
-        <img
-          src="/icons/hero-banner-background.svg"
-          alt=""
-          width={2875}
-          height={1441}
-          className="block max-w-none"
-        />
-      </div>
-
       <SectionContainer className="relative flex items-center justify-between py-10 lg:items-end lg:py-[100px]">
         {/* Title 블록 — 항상 좌측 정렬, flower 위(z-10) */}
         <div className="relative z-10 flex flex-col items-start gap-4 lg:gap-5">
