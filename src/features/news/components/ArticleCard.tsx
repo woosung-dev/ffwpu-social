@@ -52,7 +52,8 @@ const SIZE_CONFIG: Record<
 };
 
 const GRADIENT_STYLE: React.CSSProperties = {
-  background: "linear-gradient(135deg, #7b2ac7, #ac69ea)",
+  background:
+    "linear-gradient(135deg, var(--color-gradient-from), var(--color-gradient-to))",
 };
 
 export function ArticleCard({
@@ -92,7 +93,7 @@ export function ArticleCard({
                 {article.title}
               </p>
             </div>
-            <span className="text-[16px] font-medium text-[#959ba9]">
+            <span className="text-[16px] font-medium text-ink-date">
               {article.publishedAt
                 ? dayjs(article.publishedAt).format("YYYY.MM.DD")
                 : "—"}
@@ -156,7 +157,7 @@ export function ArticleCard({
             {article.title}
           </p>
         </div>
-        <span className="text-[16px] font-medium text-[#959ba9]">
+        <span className="text-[16px] font-medium text-ink-date">
           {article.publishedAt
             ? dayjs(article.publishedAt).format("YYYY.MM.DD")
             : "—"}

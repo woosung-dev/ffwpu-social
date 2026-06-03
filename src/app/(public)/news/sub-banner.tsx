@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export function SubBanner() {
   return (
-    <section aria-label="Sow Good 소개" className="bg-[#f2eff4]">
+    <section aria-label="Sow Good 소개" className="bg-surface-news-banner">
       {/* 모바일 (< md): 세로 스택 — Figma 135:12492 정합 */}
       <div className="flex flex-col gap-4 px-4 py-6 md:hidden">
         <Image
