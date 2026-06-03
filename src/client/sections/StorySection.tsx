@@ -83,9 +83,9 @@ export function StorySection({ stats, slots }: Props) {
   const visibleStats = stats.filter((s) => s.value != null && s.value > 0);
   return (
     <section id="story" className="w-full bg-surface-tint-faint py-16 lg:py-24">
-      <SectionContainer className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-[70px]">
-        {/* 좌측 이미지 2장 — Figma 375~(flex-row 나란히), sm h-340, lg h-420 */}
-        <div className="relative flex w-full flex-row gap-3 h-[240px] sm:h-[340px] lg:h-[420px] lg:flex-[1.8]">
+      <SectionContainer className="flex flex-col gap-10 wide:flex-row wide:items-center wide:gap-[70px]">
+        {/* 좌측 이미지 2장 — Figma: 1024~1439 상단 풀폭 나란히(stacked), wide(1440)만 좌측 컬럼. sm h-340, lg h-420 */}
+        <div className="relative flex w-full flex-row gap-3 h-[240px] sm:h-[340px] lg:h-[420px] wide:flex-[1.8]">
           <StoryImage
             slot={slots[0] ?? null}
             fallback={FALLBACK_IMAGES[0]}
@@ -96,7 +96,7 @@ export function StorySection({ stats, slots }: Props) {
           <StoryImage
             slot={slots[1] ?? null}
             fallback={FALLBACK_IMAGES[1]}
-            wrapperClass="h-full w-[42%] shrink-0 lg:w-[280px] lg:shrink-0"
+            wrapperClass="h-full w-[42%] shrink-0 wide:w-[280px] wide:shrink-0"
             width={280}
             height={280}
           />
@@ -125,8 +125,8 @@ export function StorySection({ stats, slots }: Props) {
         </div>
 
         {/* 우측 텍스트 + Result */}
-        <div className="flex flex-1 flex-col gap-6 text-surface-dark lg:items-end lg:text-right">
-          <span className="self-start rounded-full bg-surface-dark px-4 py-2 text-base font-semibold text-ink-on-purple lg:self-end">
+        <div className="flex flex-1 flex-col gap-6 text-surface-dark wide:items-end wide:text-right">
+          <span className="self-start rounded-full bg-surface-dark px-4 py-2 text-base font-semibold text-ink-on-purple wide:self-end">
             쌀 나눔 활동
           </span>
 
@@ -147,7 +147,7 @@ export function StorySection({ stats, slots }: Props) {
               {visibleStats.map((stat) => (
                 <li
                   key={stat.slug}
-                  className="flex flex-1 flex-col gap-1 px-[clamp(0.75rem,2.5vw,2rem)] text-left lg:flex-initial lg:px-8 lg:text-right [&:not(:first-child)]:border-l [&:not(:first-child)]:border-brand-mid/30"
+                  className="flex flex-1 flex-col gap-1 px-[clamp(0.75rem,2.5vw,2rem)] text-left wide:flex-initial wide:px-8 wide:text-right [&:not(:first-child)]:border-l [&:not(:first-child)]:border-brand-mid/30"
                   aria-label={`${stat.label} ${stat.displayValue}`}
                 >
                   <p className="text-[15px] font-medium">{stat.label}</p>
