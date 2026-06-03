@@ -38,8 +38,8 @@ export function PartnersSection() {
           </div>
         </div>
 
-        {/* 하단 — 파트너 로고 5. 모바일(<768) 1열 / 태블릿(md~lg) 3+2 / lg+ 가로 1줄 (Figma 매트릭스, design.md 375~767=1열) */}
-        <div className="mt-12 grid grid-cols-1 place-items-center gap-x-8 gap-y-10 md:grid-cols-3 lg:mt-16 lg:flex lg:flex-nowrap lg:justify-between lg:gap-x-6">
+        {/* 하단 — 파트너 로고 5. 모바일(<768) 1열/gap-y-6 / 태블릿(md~lg) 3+2/gap-y-10 / lg+ 가로 1줄 */}
+        <div className="mt-8 grid grid-cols-1 place-items-center gap-x-8 gap-y-6 md:mt-12 md:grid-cols-3 md:gap-y-10 lg:mt-16 lg:flex lg:flex-nowrap lg:justify-between lg:gap-x-6">
           {PARTNERS.map((n) => (
             // eslint-disable-next-line @next/next/no-img-element -- public asset
             <img
@@ -49,7 +49,7 @@ export function PartnersSection() {
               width={200}
               height={72}
               aria-hidden
-              className="h-auto max-h-[72px] w-auto max-w-[200px]"
+              className="h-auto max-h-[45px] w-auto max-w-[200px] md:max-h-[72px]"
             />
           ))}
         </div>
