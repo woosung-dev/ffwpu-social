@@ -130,7 +130,7 @@ export function StorySection({ stats, slots }: Props) {
             쌀 나눔 활동
           </span>
 
-          <h2 className="text-2xl font-bold leading-tight md:text-3xl lg:text-[32px]">
+          <h2 className="break-keep text-2xl font-bold leading-tight md:text-3xl lg:text-[32px]">
             밥이 사랑입니다
             <br />
             나누는 우리는 식구입니다

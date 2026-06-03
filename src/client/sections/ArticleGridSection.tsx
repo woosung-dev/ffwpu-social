@@ -6,16 +6,16 @@ import { StoryCard } from "@/features/news/components";
 import { cn } from "@/lib/utils";
 
 // Figma 마조네리 6 카드 높이 비율:
-//  - base(375/1열 col≈343px): portrait→ ~350px(정사각형 근방) — aspect-[278/300]
-//  - md(768/2열 col≈360px): ~181px landscape — aspect-[278/140]
-//  - lg+(1440/3열 col≈272px): Figma 원안 portrait 복원
+//  - base(375/1열 col≈343px): portrait→ ~350px — aspect-[278/300]
+//  - sm+(640~/1열 col≈608-735px): landscape 단축 — aspect-[278/140] (767 극단 방지)
+//  - lg+(1024+/3열 col≈272px): Figma 원안 portrait 복원
 const CARD_ASPECTS = [
   "aspect-[278/256]",
-  "aspect-[278/300] md:aspect-[278/140] lg:aspect-[278/425]",
-  "aspect-[278/300] md:aspect-[278/140] lg:aspect-[278/425]",
-  "aspect-[278/300] md:aspect-[278/140] lg:aspect-[278/337]",
+  "aspect-[278/300] sm:aspect-[278/140] lg:aspect-[278/425]",
+  "aspect-[278/300] sm:aspect-[278/140] lg:aspect-[278/425]",
+  "aspect-[278/300] sm:aspect-[278/140] lg:aspect-[278/337]",
   "aspect-[278/278]",
-  "aspect-[278/300] md:aspect-[278/140] lg:aspect-[278/381]",
+  "aspect-[278/300] sm:aspect-[278/140] lg:aspect-[278/381]",
 ] as const;
 
 // 자산 fallback — DB cover_image_url 미설정 시 articlegrid 시안 자산 cycle
