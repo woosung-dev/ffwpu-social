@@ -71,6 +71,7 @@ export function NewsListClient({ categories }: Props) {
                   categoryName: item.categoryName,
                   coverImageUrl: item.coverImageUrl,
                   publishedAt: item.publishedAt,
+                  heartCount: item.heartCount,
                 }}
               />
             </li>

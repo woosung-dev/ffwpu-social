@@ -28,7 +28,7 @@ export function FeaturedStoryCard({ stories }: Props) {
   const story = stories[selected] ?? stories[0]!;
 
   return (
-    <section className="w-full rounded-2xl bg-surface-card px-2.5 pb-15 pt-7.5 lg:px-10">
+    <section className="w-full bg-[#fafafa] px-2.5 pb-[60px] pt-[20px] lg:px-10 lg:pt-[30px]">
       <div className="grid items-center gap-6 lg:grid-cols-2 lg:gap-10">
         <div className="order-2 flex flex-col gap-4 lg:order-1">
           {story.badge && (
@@ -42,13 +42,21 @@ export function FeaturedStoryCard({ stories }: Props) {
           <p className="text-base leading-relaxed text-foreground lg:text-xl">
             {story.description}
           </p>
-          <div className="mt-2 flex items-center justify-between">
+          <div className="mt-4 flex items-center justify-between">
             <Link
               href={story.href}
-              className="inline-flex items-center gap-1.5 rounded-full bg-brand-vivid px-5 py-3.5 text-base font-semibold text-white transition-colors hover:bg-brand-mid"
+              className="inline-flex items-center gap-1.5 rounded-full bg-brand-vivid px-5 py-[10px] text-[14px] font-semibold text-white transition-colors hover:bg-brand-mid lg:text-lg lg:py-3.5"
             >
               자세히 보기
-              <span aria-hidden>→</span>
+              {/* eslint-disable-next-line @next/next/no-img-element -- SVG icon */}
+              <img
+                src="/icons/article-cta-arrow.svg"
+                alt=""
+                width={20}
+                height={20}
+                aria-hidden
+                className="size-5"
+              />
             </Link>
           </div>
         </div>
@@ -79,7 +87,7 @@ export function FeaturedStoryCard({ stories }: Props) {
       <div
         role="tablist"
         aria-label="피처드 스토리 선택"
-        className="mt-6 flex items-center justify-center gap-0.5"
+        className="mt-6 flex items-center justify-end gap-0.5"
       >
         {stories.map((s, i) => {
           const isActive = i === selected;

@@ -35,6 +35,7 @@ export async function listPublicNews(opts: ListOpts) {
       coverImageUrl: news.coverImageUrl,
       publishedAt: news.publishedAt,
       createdAt: news.createdAt,
+      heartCount: sql<number>`(SELECT count(*)::int FROM heart_events WHERE news_id = ${news.id} AND deleted_at IS NULL)`,
     })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
