@@ -43,8 +43,8 @@ export function KpiSection({ metricsBySlug }: Props) {
           </p>
         </div>
 
-        {/* 모바일/태블릿 (< 1280px): KpiCard 4 단순 grid — DB 갱신 displayValue. xl↓ 단순 그리드(복합 대시보드는 폭 부족으로 가로 스크롤 유발 → xl+ 한정) */}
-        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 xl:hidden">
+        {/* 모바일 (< 768px): KpiCard 4 단순 grid — 좁은 폭에서 Dashboard 데코 타일 비대칭 그리드 불가 */}
+        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:hidden">
           <KpiCard variant="gray" label="누적 봉사자 수" value={volunteerCount} />
           <KpiCard variant="gray" label="누적 봉사 기간" value={volunteerPeriod} />
           <KpiCard variant="green" label="봉사활동 횟수" value={eventCount} />
@@ -55,8 +55,8 @@ export function KpiSection({ metricsBySlug }: Props) {
           />
         </div>
 
-        {/* 데스크탑 (xl+, 1280↑): Figma Dashboard 비대칭 그리드 760px — 내부 고정폭 607px 블록 때문에 ~812px 필요, 1024~1279 에선 폭 부족 → xl 부터 노출 */}
-        <div className="hidden h-[760px] flex-1 flex-col gap-4 xl:flex">
+        {/* 태블릿+(md↑, 768↑): Figma Dashboard 데코 타일 포함 비대칭 그리드. md~lg 는 하단 블록을 세로 스택(고정폭 607px 가로 배치 시 폭 부족 → 가로스크롤)하고, xl↑ 에서만 Figma 원안 좌(607)/우 가로 배치 */}
+        <div className="hidden flex-1 flex-col gap-4 md:flex xl:h-[760px]">
           {/* 상단 Wrap */}
           <div className="flex gap-4">
             {/* 보라 캐릭터 카드 */}
@@ -102,10 +102,10 @@ export function KpiSection({ metricsBySlug }: Props) {
             </div>
           </div>
 
-          {/* 하단 Wrap */}
-          <div className="flex flex-1 items-stretch gap-4">
-            {/* 좌측 (607px): 봉사 기간 + 노란 Sow Good + 봉사활동 횟수 */}
-            <div className="flex w-[607px] shrink-0 flex-col gap-4">
+          {/* 하단 Wrap — md~lg 세로 스택, xl↑ 좌(607)/우 가로 */}
+          <div className="flex flex-1 flex-col items-stretch gap-4 xl:flex-row">
+            {/* 좌측: 봉사 기간 + 노란 Sow Good + 봉사활동 횟수. xl↑ 고정 607px */}
+            <div className="flex w-full flex-col gap-4 xl:w-[607px] xl:shrink-0">
               <div className="flex gap-4">
                 {/* 누적 봉사 기간 */}
                 <div className="flex flex-1 flex-col justify-between rounded-[20px] bg-kpi-gray px-[30px] py-5 text-ink-strong-mid">
@@ -144,8 +144,8 @@ export function KpiSection({ metricsBySlug }: Props) {
               </div>
             </div>
 
-            {/* 우측 (flex-1): 도움 가정 수 보라 카드 */}
-            <div className="relative flex flex-1 flex-col gap-10 overflow-hidden rounded-[20px] bg-brand-bright">
+            {/* 우측: 도움 가정 수 보라 카드. xl↑ flex-1, 그 아래는 full-width */}
+            <div className="relative flex w-full flex-col gap-10 overflow-hidden rounded-[20px] bg-brand-bright xl:flex-1">
               <div className="px-6 py-5">
                 <p className="text-[20px] font-semibold text-white">
                   도움을 주게 된 가정 수

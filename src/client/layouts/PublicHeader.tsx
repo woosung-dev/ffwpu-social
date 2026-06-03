@@ -1,4 +1,4 @@
-// 사용자 사이트 헤더 — Figma node 98:7101(데스크탑)·99:6952(모바일) 정합. bg-brand-bright #B769FF + 알약 active. 4 메뉴 스크롤스파이(랜딩) / "활동 스토리" 고정(그 외). lg↑ 풀 내비, lg↓ 활성 섹션 pill→드롭다운(햄버거 대체). ADR-009·검색 미구현
+// 사용자 사이트 헤더 — Figma Header 컴포넌트 4 variant 정합. bg-brand-bright #B769FF + 알약 active. 4 메뉴 스크롤스파이(랜딩) / "활동 스토리" 고정(그 외). md↑(768~) 풀 4메뉴 내비, <768 활성 섹션 pill→드롭다운. ADR-009·검색 미구현
 "use client";
 
 import Link from "next/link";
@@ -55,17 +55,17 @@ export function PublicHeader() {
           />
         </Link>
 
-        {/* 데스크탑(lg↑): 풀 내비 */}
-        <nav className="hidden items-center gap-6 lg:flex">
+        {/* 데스크탑(md↑, 768~): 풀 4메뉴 내비 — Figma Header 768~1024 variant 도 풀 노출(단일 pill 은 <768 only). md 는 14px/좁은 간격(M size), lg↑ 16px(L size) */}
+        <nav className="hidden items-center gap-3 md:flex lg:gap-6">
           {MENU.map((m) => {
-            const isActive = activeId === m.id;
+            const isActive = activeItem.id === m.id;
             return (
               <Link
                 key={m.id}
                 href={m.href}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "rounded-full px-5 py-2.5 text-base transition-colors",
+                  "rounded-full px-3.5 py-2 text-sm transition-colors lg:px-5 lg:py-2.5 lg:text-base",
                   isActive
                     ? "border-[1.6px] border-brand-primary bg-white font-extrabold text-brand-primary"
                     : "font-bold text-white hover:bg-white/10",
@@ -77,13 +77,13 @@ export function PublicHeader() {
           })}
         </nav>
 
-        {/* 모바일(lg↓): 활성 섹션 pill → 탭 시 전체 섹션 드롭다운 (햄버거 대체) */}
+        {/* 모바일(<768): 활성 섹션 pill → 탭 시 전체 섹션 드롭다운 (Figma 375~767 variant) */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
               aria-label={`현재 위치 ${activeItem.label} — 섹션 메뉴 열기`}
-              className="flex h-11 items-center gap-1.5 rounded-full border-[1.6px] border-brand-primary bg-white pr-3 pl-4 text-base font-extrabold text-brand-primary lg:hidden"
+              className="flex h-11 items-center gap-1.5 rounded-full border-[1.6px] border-brand-primary bg-white pr-3 pl-4 text-base font-extrabold text-brand-primary md:hidden"
             >
               <span>{activeItem.label}</span>
               <ChevronDown className="size-4 shrink-0" aria-hidden />
