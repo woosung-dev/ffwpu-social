@@ -33,7 +33,8 @@ export function Heart({
   const [optimisticDelta, setOptimisticDelta] = useState(0);
   const [pending, startTransition] = useTransition();
 
-  const displayCount = count + optimisticDelta;
+  // SSR count 가 낮게 stale 인 상태에서 취소 시 음수 표시 방지 (codex loop2 LOW)
+  const displayCount = Math.max(0, count + optimisticDelta);
 
   const handleClick = () => {
     if (!interactive || pending) return;
