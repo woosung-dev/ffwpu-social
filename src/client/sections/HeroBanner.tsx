@@ -7,7 +7,7 @@ export function HeroBanner() {
   return (
     <section
       id="hero"
-      className="relative w-full overflow-hidden bg-brand-bright"
+      className="relative w-full overflow-x-clip bg-brand-bright [border-bottom-left-radius:50%_clamp(28px,6vw,90px)] [border-bottom-right-radius:50%_clamp(28px,6vw,90px)]"
     >
       <SectionContainer className="relative flex items-center justify-between py-10 lg:items-end lg:py-[100px]">
         {/* Title 블록 — 항상 좌측 정렬, flower 위(z-10) */}
