@@ -41,17 +41,19 @@ export function ArticleGridSection({ items }: Props) {
   return (
     <section id="stories" className="w-full bg-white py-16 lg:py-24">
       <SectionContainer className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-8">
-        {/* 좌측 다크 블록 — 319px 폭, 라운드 12px, ExtraBold 31px #E9CFFF */}
-        <div className="rounded-xl bg-surface-dark p-8 lg:w-[319px] lg:shrink-0 lg:self-start lg:p-10">
-          <h2 className="text-2xl font-extrabold leading-tight text-ink-on-purple lg:text-[31px]">
-            고소한 사랑의 향기가 퍼져나가고 있어요
-          </h2>
-          <p className="mt-3 text-base font-semibold text-ink-on-purple lg:text-lg">
-            사랑을 주고 받는 우리들의 이야기
-          </p>
+        {/* 좌측 다크 블록 — 라운드 12px, ExtraBold 31px #E9CFFF. md(768~1023) 가로 배너(헤딩↔CTA 양끝), lg+ 319px 사이드 헤더, 모바일 세로 스택 (Figma 정합) */}
+        <div className="rounded-xl bg-surface-dark p-8 md:flex md:items-center md:justify-between md:gap-6 lg:block lg:w-[319px] lg:shrink-0 lg:self-start lg:p-10">
+          <div>
+            <h2 className="text-2xl font-extrabold leading-tight text-ink-on-purple lg:text-[31px]">
+              고소한 사랑의 향기가 퍼져나가고 있어요
+            </h2>
+            <p className="mt-3 text-base font-semibold text-ink-on-purple lg:text-lg">
+              사랑을 주고 받는 우리들의 이야기
+            </p>
+          </div>
           <Link
             href="/news"
-            className="mt-6 inline-flex items-center gap-2 text-base font-semibold text-white hover:opacity-90"
+            className="mt-6 inline-flex shrink-0 items-center gap-2 text-base font-semibold text-white hover:opacity-90 md:mt-0 lg:mt-6"
           >
             아티클 더 보러가기
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
