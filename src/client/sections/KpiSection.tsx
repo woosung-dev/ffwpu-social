@@ -90,10 +90,10 @@ export function KpiSection({ metricsBySlug }: Props) {
             </div>
           </div>
 
-          {/* 하단: 좌 칼럼(봉사 기간·Sow Good·봉사 횟수) + 우 사진 카드. 640↑ 좌우(Figma 768), <640 세로 스택 */}
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="flex flex-col gap-4 sm:flex-[1.6]">
-              <div className="flex gap-4">
+          {/* 하단: 좌 칼럼(봉사 기간·Sow Good·봉사 횟수) + 우 사진 카드. 전 sub-lg 좌우 2열(Figma 768·375 동일 구조). Sow Good 은 640↑ 만(Figma 375 는 생략) */}
+          <div className="flex gap-3 sm:gap-4">
+            <div className="flex flex-[1.6] flex-col gap-3 sm:gap-4">
+              <div className="flex gap-3 sm:gap-4">
                 <div className="flex flex-1 flex-col justify-between gap-3 rounded-[20px] bg-kpi-gray px-[clamp(16px,3.2vw,24px)] py-5 text-ink-strong-mid">
                   <p className="text-[clamp(14px,3.2vw,20px)] font-semibold">
                     누적 봉사 기간
@@ -102,7 +102,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                     {volunteerPeriod}
                   </p>
                 </div>
-                <div className="flex flex-1 items-center justify-center rounded-[20px] bg-kpi-yellow py-[clamp(16px,4vw,28px)]">
+                <div className="hidden flex-1 items-center justify-center rounded-[20px] bg-kpi-yellow py-[clamp(16px,4vw,28px)] sm:flex">
                   {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
                   <img
                     src="/icons/kpi-yellow-card-wordmark.svg"
@@ -125,9 +125,9 @@ export function KpiSection({ metricsBySlug }: Props) {
                     width={172}
                     height={172}
                     aria-hidden
-                    className="size-[clamp(64px,16vw,172px)]"
+                    className="size-[clamp(48px,15vw,172px)]"
                   />
-                  <p className="text-[clamp(28px,6vw,52px)] font-bold tabular-nums">
+                  <p className="text-[clamp(22px,5.5vw,52px)] font-bold tabular-nums">
                     {eventCount}
                   </p>
                 </div>
@@ -139,7 +139,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                 <p className="text-[clamp(14px,3.2vw,20px)] font-semibold text-white">
                   도움을 주게 된 가정 수
                 </p>
-                <p className="text-[clamp(24px,5.5vw,40px)] font-bold leading-tight tabular-nums text-white">
+                <p className="text-[clamp(16px,4.8vw,40px)] font-bold leading-tight tabular-nums text-white">
                   {helpedHousehold}
                 </p>
               </div>

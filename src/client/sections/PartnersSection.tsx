@@ -38,7 +38,7 @@ export function PartnersSection() {
           </div>
         </div>
 
-        {/* 하단 — 파트너 로고 5. 모바일 2열 / 태블릿(sm~lg) 3+2 / lg+ 가로 1줄 (Figma 매트릭스) */}
+        {/* 하단 — 파트너 로고 5. 모바일(<768) 1열 / 태블릿(md~lg) 3+2 / lg+ 가로 1줄 (Figma 매트릭스, design.md 375~767=1열) */}
         <div className="mt-12 grid grid-cols-1 place-items-center gap-x-8 gap-y-10 md:grid-cols-3 lg:mt-16 lg:flex lg:flex-nowrap lg:justify-between lg:gap-x-6">
           {PARTNERS.map((n) => (
             // eslint-disable-next-line @next/next/no-img-element -- public asset

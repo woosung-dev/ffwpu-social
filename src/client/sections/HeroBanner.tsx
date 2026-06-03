@@ -7,7 +7,7 @@ export function HeroBanner() {
   return (
     <section
       id="hero"
-      className="relative w-full overflow-hidden bg-brand-bright"
+      className="relative w-full overflow-x-clip bg-brand-bright [border-bottom-left-radius:50%_clamp(28px,6vw,90px)] [border-bottom-right-radius:50%_clamp(28px,6vw,90px)]"
     >
       <SectionContainer className="relative flex items-center justify-between py-10 lg:items-end lg:py-[100px]">
         {/* Title 블록 — 항상 좌측 정렬, flower 위(z-10) */}
@@ -26,7 +26,7 @@ export function HeroBanner() {
           {/* CTA — bg #3C1264, text #E9D1FF, 알약 + 화살표 */}
           <Link
             href="/news"
-            className="inline-flex items-center gap-2 rounded-full bg-brand-darkest px-5 py-2.5 transition-opacity hover:opacity-90 lg:gap-2.5 lg:px-[26px] lg:py-3"
+            className="inline-flex items-center gap-2 rounded-full bg-brand-darkest px-5 py-2.5 transition-opacity outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bright lg:gap-2.5 lg:px-[26px] lg:py-3"
           >
             <span className="text-sm font-bold text-ink-on-purple lg:text-xl">
               지난 활동 살펴보기
@@ -51,7 +51,7 @@ export function HeroBanner() {
           aria-hidden
           width={560}
           height={511}
-          className="pointer-events-none absolute top-1/2 right-0 z-0 h-auto w-[clamp(150px,40vw,340px)] -translate-y-1/2 lg:relative lg:top-auto lg:right-auto lg:z-auto lg:w-[clamp(360px,40vw,560px)] lg:translate-y-0"
+          className="pointer-events-none absolute top-1/2 right-0 z-0 h-auto w-[clamp(150px,40vw,340px)] -translate-y-1/2 lg:relative lg:top-auto lg:right-auto lg:z-auto lg:w-[clamp(360px,40vw,560px)] lg:translate-y-[clamp(16px,3vw,48px)]"
         />
       </SectionContainer>
     </section>
