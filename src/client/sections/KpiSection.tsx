@@ -252,7 +252,7 @@ export function KpiSection({ metricsBySlug }: Props) {
             </div>
 
             {/* 우측: 도움 가정 수 보라 카드. lg↑ flex-1, 그 아래는 full-width */}
-            <div className="relative flex w-full flex-col gap-10 overflow-hidden rounded-[20px] bg-brand-bright lg:flex-1">
+            <div className="relative flex w-full flex-col gap-4 overflow-hidden rounded-[20px] bg-brand-bright lg:flex-1 wide:gap-10">
               <div className="px-6 py-5">
                 <p className="text-[20px] font-semibold text-white">
                   도움을 주게 된 가정 수
@@ -261,7 +261,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                   {helpedHousehold}
                 </p>
               </div>
-              <div className="relative h-[clamp(280px,26vw,360px)] wide:h-[423px]">
+              <div className="relative h-[clamp(240px,22vw,320px)] wide:h-[423px]">
                 {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
                 <img
                   src="/icons/kpi-purple-card-vector.svg"

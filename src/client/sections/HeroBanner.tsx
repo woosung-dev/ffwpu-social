@@ -51,7 +51,7 @@ export function HeroBanner() {
           aria-hidden
           width={560}
           height={511}
-          className="pointer-events-none absolute top-1/2 right-0 z-0 h-auto w-[clamp(150px,40vw,340px)] -translate-y-1/2 lg:relative lg:top-auto lg:right-auto lg:z-auto lg:w-[clamp(280px,28vw,420px)] lg:translate-y-[clamp(16px,3vw,48px)]"
+          className="pointer-events-none absolute top-1/2 right-0 z-0 h-auto w-[clamp(150px,40vw,340px)] -translate-y-1/2 lg:relative lg:top-auto lg:right-auto lg:z-auto lg:w-[clamp(330px,30vw,430px)] lg:translate-y-[clamp(16px,3vw,48px)]"
         />
       </SectionContainer>
     </section>
