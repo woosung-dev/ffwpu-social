@@ -4,7 +4,11 @@
 
 > **목적:** AI ↔ 사용자 매개. 차단 상태가 아닌 질문·확인 항목은 여기에 누적 후 자연스러운 타이밍에 일괄 전달.
 
-## 진행 중 (2026-06-01)
+## 진행 중 (2026-06-03)
+
+- **랜딩 실데이터화 + 반응형 4-BP 정합** — `docs/plans/active/2026-06-03-landing-data-responsive.md` (branch `feat/client-foundation`). WS1 시드 실데이터화(사진 11장→MinIO) + WS2 슬롯 썸네일 + WS3 ArticleGrid 호이스트 + WS4 RQ /news 목록 캐시(useSuspenseQuery 안정 패턴) + WS5 7면 4-BP 정합. **스키마 변경 없음.**
+  - 🔴 **사진 11장 수령 대기** — `src/db/seed-assets/`에 넣으면 시드가 자동 업로드 (아래 2026-05-30 조달 항목과 동일 건). KPI 보라 카드 1장만 `public/images/` 덮어쓰기.
+  - Gmarket Sans Medium: **라이선스 확인 필요** (사용자 결정 2026-06-03) — 확보 시 next/font/local 로드, 그 전까지 SUIT 폴백 + clamp 재튜닝.
 
 - **어드민 v1.0 ship-전 하드닝** — `docs/plans/active/2026-06-01-admin-ship-hardening.md` (branch `feat/admin-ship-hardening`). HIGH 6 + 접근성 + 모바일 카드뷰 + 아키텍처 옵션1. 다단 검토 GO-WITH-FIXES + codex v2 교정. **스키마 변경 없음.**
   - **상태: 코드 완료** — A1~A8·B1~B4·C1·D1·D2 구현. 자동 게이트 통과(src tsc 0·Next compile 성공·lint·단위테스트 31). ADR-030/031/032 기록. 커밋·수동 검증 대기.
