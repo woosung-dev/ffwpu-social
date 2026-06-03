@@ -43,8 +43,8 @@ export function KpiSection({ metricsBySlug }: Props) {
           </p>
         </div>
 
-        {/* 모바일 (< 768px): KpiCard 4 단순 grid — 좁은 폭에서 Dashboard 데코 타일 비대칭 그리드 불가 */}
-        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:hidden">
+        {/* 모바일·태블릿 (< 1024px): KpiCard 4 단순 grid (375~767 1열 / 768~1023 2x2). 좁은 폭에서 Dashboard 비대칭 벤토는 고정폭 데코로 가로 오버플로 → lg↑ 에서만 벤토 (768 H-scroll 해소) */}
+        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:hidden">
           <KpiCard variant="gray" label="누적 봉사자 수" value={volunteerCount} />
           <KpiCard variant="gray" label="누적 봉사 기간" value={volunteerPeriod} />
           <KpiCard variant="green" label="봉사활동 횟수" value={eventCount} />
@@ -55,8 +55,8 @@ export function KpiSection({ metricsBySlug }: Props) {
           />
         </div>
 
-        {/* 태블릿+(md↑, 768↑): Figma Dashboard 데코 타일 포함 비대칭 그리드. md~lg 는 하단 블록을 세로 스택(고정폭 607px 가로 배치 시 폭 부족 → 가로스크롤)하고, xl↑ 에서만 Figma 원안 좌(607)/우 가로 배치 */}
-        <div className="hidden flex-1 flex-col gap-4 md:flex xl:h-[760px]">
+        {/* 데스크탑(lg↑, 1024↑): Figma Dashboard 데코 타일 비대칭 그리드. 고정폭 데코(별 83px 등)가 1023↓ 에서 가로 오버플로라 lg↑ 한정. 하단 블록은 xl↑ 에서 Figma 원안 좌(607)/우 가로 배치 */}
+        <div className="hidden flex-1 flex-col gap-4 lg:flex xl:h-[760px]">
           {/* 상단 Wrap */}
           <div className="flex gap-4">
             {/* 보라 캐릭터 카드 */}
