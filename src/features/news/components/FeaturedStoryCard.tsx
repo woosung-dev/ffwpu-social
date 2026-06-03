@@ -42,7 +42,8 @@ export function FeaturedStoryCard({ stories }: Props) {
           <p className="text-base leading-relaxed text-foreground lg:text-xl">
             {story.description}
           </p>
-          <div className="mt-4 flex items-center justify-between">
+          {/* 하단: 버튼(좌) + 인디케이터(우) — Figma 125:9042 BottomBlock justify-between 정합 */}
+          <div className="mt-4 flex items-end justify-between">
             <Link
               href={story.href}
               className="inline-flex items-center gap-1.5 rounded-full bg-brand-vivid px-5 py-[10px] text-[14px] font-semibold text-white transition-colors hover:bg-brand-mid lg:text-lg lg:py-3.5"
@@ -58,6 +59,36 @@ export function FeaturedStoryCard({ stories }: Props) {
                 className="size-5"
               />
             </Link>
+            <div
+              role="tablist"
+              aria-label="피처드 스토리 선택"
+              className="flex items-center gap-0.5"
+            >
+              {stories.map((s, i) => {
+                const isActive = i === selected;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-label={`${i + 1}번째 스토리: ${s.title}`}
+                    onClick={() => setSelected(i)}
+                    className="px-1 py-2"
+                  >
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "block h-[3px] rounded-full transition-[width,background-color] duration-200",
+                        isActive
+                          ? "w-[22px] bg-brand-vivid"
+                          : "w-[17px] bg-foreground/15",
+                      )}
+                    />
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -82,37 +113,6 @@ export function FeaturedStoryCard({ stories }: Props) {
             )}
           </div>
         </div>
-      </div>
-
-      <div
-        role="tablist"
-        aria-label="피처드 스토리 선택"
-        className="mt-6 flex items-center justify-end gap-0.5"
-      >
-        {stories.map((s, i) => {
-          const isActive = i === selected;
-          return (
-            <button
-              key={s.id}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              aria-label={`${i + 1}번째 스토리: ${s.title}`}
-              onClick={() => setSelected(i)}
-              className="px-1 py-2"
-            >
-              <span
-                aria-hidden
-                className={cn(
-                  "block h-[3px] rounded-full transition-[width,background-color] duration-200",
-                  isActive
-                    ? "w-[22px] bg-brand-vivid"
-                    : "w-[17px] bg-foreground/15",
-                )}
-              />
-            </button>
-          );
-        })}
       </div>
     </section>
   );
