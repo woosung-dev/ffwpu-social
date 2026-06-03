@@ -7,15 +7,15 @@ import { cn } from "@/lib/utils";
 
 // Figma 마조네리 6 카드 높이 비율:
 //  - base(375/1열 col≈343px): portrait→ ~350px — aspect-[278/300]
-//  - sm+(640~/1열 col≈608-735px): landscape 단축 — aspect-[278/140] (767 극단 방지)
-//  - lg+(1024+/3열 col≈272px): Figma 원안 portrait 복원
+//  - sm(640~767/1열 col≈608-735px): landscape 단축 — aspect-[278/140] (767 극단 방지)
+//  - md+(768+/3열 col): Figma 원안 portrait 복원 (768 부터 3열)
 const CARD_ASPECTS = [
   "aspect-[278/256]",
-  "aspect-[278/300] sm:aspect-[278/140] lg:aspect-[278/425]",
-  "aspect-[278/300] sm:aspect-[278/140] lg:aspect-[278/425]",
-  "aspect-[278/300] sm:aspect-[278/140] lg:aspect-[278/337]",
+  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/425]",
+  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/425]",
+  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/337]",
   "aspect-[278/278]",
-  "aspect-[278/300] sm:aspect-[278/140] lg:aspect-[278/381]",
+  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/381]",
 ] as const;
 
 // 자산 fallback — DB cover_image_url 미설정 시 articlegrid 시안 자산 cycle
@@ -43,11 +43,11 @@ type Props = {
 export function ArticleGridSection({ items }: Props) {
   return (
     <section id="stories" className="w-full bg-white py-16 lg:py-24">
-      <SectionContainer className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-8">
-        {/* 좌측 다크 블록 — 라운드 12px, ExtraBold 31px #E9CFFF. md(768~1023) 가로 배너(헤딩↔CTA 양끝), lg+ 319px 사이드 헤더, 모바일 세로 스택 (Figma 정합) */}
-        <div className="rounded-xl bg-surface-dark p-8 md:flex md:items-center md:justify-between md:gap-6 lg:block lg:w-[319px] lg:shrink-0 lg:self-start lg:p-10">
+      <SectionContainer className="flex flex-col gap-10 wide:flex-row wide:items-start wide:gap-8">
+        {/* 좌측 다크 블록 — 라운드 12px, ExtraBold 31px #E9CFFF. Figma: md~1439 가로 배너(헤딩↔CTA 양끝, 풀폭 top), wide(1440)+ 만 319px 사이드 헤더, 모바일 세로 스택 */}
+        <div className="rounded-xl bg-surface-dark p-8 md:flex md:items-center md:justify-between md:gap-6 wide:block wide:w-[319px] wide:shrink-0 wide:self-start wide:p-10">
           <div>
-            <h2 className="text-2xl font-extrabold leading-tight text-ink-on-purple md:text-[31px]">
+            <h2 className="text-2xl font-extrabold leading-tight break-keep text-ink-on-purple md:text-[31px]">
               고소한 사랑의 향기가 퍼져나가고 있어요
             </h2>
             <p className="mt-3 text-base font-semibold text-ink-on-purple lg:text-lg">
@@ -56,7 +56,7 @@ export function ArticleGridSection({ items }: Props) {
           </div>
           <Link
             href="/news"
-            className="mt-6 inline-flex shrink-0 items-center gap-2 text-base font-semibold text-white hover:opacity-90 md:mt-0 lg:mt-6"
+            className="mt-6 inline-flex shrink-0 items-center gap-2 text-base font-semibold text-white hover:opacity-90 md:mt-0 wide:mt-6"
           >
             아티클 더 보러가기
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
@@ -71,9 +71,9 @@ export function ArticleGridSection({ items }: Props) {
           </Link>
         </div>
 
-        {/* 우측 마조네리 — columns로 자연스러운 높이 분배. 모바일 1·태블릿 2·데스크탑 3 */}
+        {/* 우측 마조네리 — columns로 자연스러운 높이 분배. 모바일 1·md+(768~) 3열 (Figma 정합) */}
         <div className="flex-1">
-          <div className="columns-1 gap-4 [&>*]:mb-4 md:columns-2 lg:columns-3">
+          <div className="columns-1 gap-4 [&>*]:mb-4 md:columns-3">
             {Array.from({ length: 6 }).map((_, idx) => {
               const item = items[idx];
               if (!item) return null;
