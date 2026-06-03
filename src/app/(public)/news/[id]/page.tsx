@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, List } from "lucide-react";
 
-import { getNewsDetail, getRelatedNews } from "@/features/news";
+import { getAdjacentNews, getNewsDetail, getRelatedNews } from "@/features/news";
 import { NewsBodyRenderer } from "@/features/news/render/news-body-renderer";
 
 import { SubBanner } from "../sub-banner";
@@ -59,6 +59,10 @@ async function NewsDetailContent({
   const item = await getNewsDetail(id);
   if (!item) notFound();
   const related = await getRelatedNews(id, item.categoryId, 3);
+  // 이전/다음 글 — publishedAt 인접 (발행 상세는 publishedAt non-null)
+  const adjacent = item.publishedAt
+    ? await getAdjacentNews(id, item.publishedAt)
+    : { prev: null, next: null };
 
   return (
     <div className="mx-auto w-full max-w-[900px] px-4 py-12 lg:py-20">
@@ -68,7 +72,7 @@ async function NewsDetailContent({
           <p className="text-lg font-bold text-brand-vivid">
             {item.categoryName}
           </p>
-          <h1 className="text-2xl font-semibold leading-snug text-ink-strong lg:text-[32px]">
+          <h1 className="break-keep text-2xl font-semibold leading-snug text-ink-strong lg:text-[32px]">
             {item.title}
           </h1>
         </div>
@@ -103,31 +107,53 @@ async function NewsDetailContent({
 
       <hr className="mt-12 border-border" />
 
-      {/* 목록 / 이전·다음 (이전·다음 인접 글 연결은 v1.1 — 현재 목록으로) */}
-      <nav className="mt-6 flex items-center justify-between text-base font-semibold text-ink-strong">
+      {/* 목록 / 이전·다음 — publishedAt 인접 글로 실제 연결, 없으면 비활성. 터치 타깃 ≥44px */}
+      <nav className="mt-6 flex items-center justify-between gap-2 text-base font-semibold text-ink-strong">
         <Link
           href="/news"
-          className="inline-flex items-center gap-2 hover:opacity-80"
+          className="-mx-2 inline-flex min-h-11 items-center gap-2 rounded-lg px-2 py-2 hover:opacity-80"
         >
           <List className="size-5" aria-hidden />
           목록 보기
         </Link>
-        <div className="flex items-center gap-4">
-          <Link
-            href="/news"
-            className="inline-flex items-center gap-1 hover:opacity-80"
-          >
-            <ArrowLeft className="size-5" aria-hidden />
-            이전글
-          </Link>
+        <div className="flex items-center gap-1">
+          {adjacent.prev ? (
+            <Link
+              href={`/news/${adjacent.prev.id}`}
+              aria-label={`이전글: ${adjacent.prev.title}`}
+              className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 py-2 hover:opacity-80"
+            >
+              <ArrowLeft className="size-5" aria-hidden />
+              이전글
+            </Link>
+          ) : (
+            <span
+              aria-disabled
+              className="inline-flex min-h-11 items-center gap-1 px-2 py-2 opacity-40"
+            >
+              <ArrowLeft className="size-5" aria-hidden />
+              이전글
+            </span>
+          )}
           <span aria-hidden className="h-4 w-px bg-border" />
-          <Link
-            href="/news"
-            className="inline-flex items-center gap-1 hover:opacity-80"
-          >
-            다음글
-            <ArrowRight className="size-5" aria-hidden />
-          </Link>
+          {adjacent.next ? (
+            <Link
+              href={`/news/${adjacent.next.id}`}
+              aria-label={`다음글: ${adjacent.next.title}`}
+              className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 py-2 hover:opacity-80"
+            >
+              다음글
+              <ArrowRight className="size-5" aria-hidden />
+            </Link>
+          ) : (
+            <span
+              aria-disabled
+              className="inline-flex min-h-11 items-center gap-1 px-2 py-2 opacity-40"
+            >
+              다음글
+              <ArrowRight className="size-5" aria-hidden />
+            </span>
+          )}
         </div>
       </nav>
 
@@ -137,7 +163,7 @@ async function NewsDetailContent({
           <h2 className="text-xl font-bold text-ink-strong">
             더 많은 소식 살펴보기
           </h2>
-          <ul className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
+          <ul className="mt-4 grid grid-cols-1 gap-7 sm:grid-cols-3 sm:gap-5">
             {related.map((r) => (
               <li key={r.id}>
                 <Link href={`/news/${r.id}`} className="group block">
@@ -157,7 +183,7 @@ async function NewsDetailContent({
                     <p className="text-sm font-bold text-brand-vivid">
                       {r.categoryName}
                     </p>
-                    <p className="line-clamp-2 text-lg font-bold leading-tight text-ink-strong">
+                    <p className="line-clamp-2 break-keep text-lg font-bold leading-tight text-ink-strong">
                       {r.title}
                     </p>
                     <p className="text-base text-ink-date">

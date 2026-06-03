@@ -29,6 +29,7 @@ export function DetailHeart({
     const sid = getAnonSessionId();
     const r = await toggleHeartAction(newsId, sid);
     if (!r.success) throw new Error(r.error);
+    return r.data; // { liked, count } — Heart 가 서버 권위 상태로 보정
   };
 
   // 세션 상태 로딩 전엔 표시 전용(카운트), 로딩 후 인터랙티브로 전환.

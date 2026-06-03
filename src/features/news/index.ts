@@ -29,6 +29,7 @@ export {
   getHeroNews,
   getHeroCandidates,
   getRelatedNews,
+  getAdjacentNews,
 } from "./service";
 
 export {

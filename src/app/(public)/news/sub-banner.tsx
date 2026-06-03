@@ -19,7 +19,7 @@ export function SubBanner() {
           aria-hidden
           className="hidden h-9 w-px shrink-0 bg-brand-soft/40 sm:block"
         />
-        <p className="text-center text-sm leading-relaxed text-brand-soft sm:text-left sm:text-base">
+        <p className="break-keep text-center text-sm leading-relaxed text-brand-soft sm:text-left sm:text-base">
           <span className="font-extrabold text-brand-primary">Sow Good</span>{" "}
           가족이 아니어도, 같은 동네가 아니어도,
           <br className="hidden sm:block" />

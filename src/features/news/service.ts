@@ -189,6 +189,10 @@ export async function getHeroCandidates() {
 
 // ─── 익명 좋아요 (ADR-026 — sessionId 토글, IP 미수집) ───────────────────
 export async function toggleHeart(newsId: string, sessionId: string) {
+  // 발행 글만 하트 허용 — UUID 추측으로 draft/비공개 글에 익명 row 생성하는 것 차단 (codex MED). 미발행은 no-op
+  if (!(await newsDb.isNewsPublished(newsId))) {
+    return { liked: false, count: 0 };
+  }
   const existing = await newsDb.findHeartEventAny(newsId, sessionId);
   let liked: boolean;
   if (!existing) {
@@ -233,4 +237,9 @@ export async function getRelatedNews(
       publishedAt: r.publishedAt,
     }));
   return [...sameCat, ...fill];
+}
+
+// 상세 페이지 이전/다음 글 — publishedAt 인접 (prev=더 최신 / next=더 과거)
+export async function getAdjacentNews(newsId: string, publishedAt: Date) {
+  return newsDb.findAdjacentNews(newsId, publishedAt);
 }
