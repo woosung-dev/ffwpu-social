@@ -143,11 +143,11 @@ export function StorySection({ stats, slots }: Props) {
 
           {/* Result 통계 — Bold 24px #9257CA value / Medium 15px label, lg+ 가로 라인 / 모바일 세로 라인. hide-when-empty 적용 */}
           {visibleStats.length > 0 && (
-            <ul className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-0">
+            <ul className="mt-2 flex flex-row items-stretch gap-0">
               {visibleStats.map((stat) => (
                 <li
                   key={stat.slug}
-                  className="flex flex-col gap-1 lg:px-8 lg:text-right [&:not(:first-child)]:border-t [&:not(:first-child)]:border-brand-mid/30 [&:not(:first-child)]:pt-4 lg:[&:not(:first-child)]:border-l lg:[&:not(:first-child)]:border-t-0 lg:[&:not(:first-child)]:pt-0"
+                  className="flex flex-1 flex-col gap-1 px-[clamp(0.75rem,2.5vw,2rem)] text-left lg:flex-initial lg:px-8 lg:text-right [&:not(:first-child)]:border-l [&:not(:first-child)]:border-brand-mid/30"
                   aria-label={`${stat.label} ${stat.displayValue}`}
                 >
                   <p className="text-brand-mid text-2xl font-bold tabular-nums">
