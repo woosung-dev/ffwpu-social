@@ -150,10 +150,10 @@ export function StorySection({ stats, slots }: Props) {
                   className="flex flex-1 flex-col gap-1 px-[clamp(0.75rem,2.5vw,2rem)] text-left lg:flex-initial lg:px-8 lg:text-right [&:not(:first-child)]:border-l [&:not(:first-child)]:border-brand-mid/30"
                   aria-label={`${stat.label} ${stat.displayValue}`}
                 >
+                  <p className="text-[15px] font-medium">{stat.label}</p>
                   <p className="text-brand-mid text-2xl font-bold tabular-nums">
                     {stat.displayValue}
                   </p>
-                  <p className="text-[15px] font-medium">{stat.label}</p>
                 </li>
               ))}
             </ul>
