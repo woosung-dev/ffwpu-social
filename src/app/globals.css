@@ -1,6 +1,16 @@
 /* Tailwind v4 CSS-first — shadcn Neutral 베이스 + ffwpu-social 디자인 토큰(Figma SSoT) + SUIT 폰트 */
 @import "tailwindcss";
 
+@theme {
+  /* shadcn이 사용하는 기본 breakpoint(sm/md/lg/xl/2xl)는 그대로 유지 */
+  /* 디자인 시스템 매핑 (min-width, 모바일 우선):
+     - 모바일   : base (0 ~ 767)
+     - 태블릿   : md   (768 ~ 1023)
+     - 데스크탑 : lg   (1024 ~ 1439)
+     - 와이드   : wide (1440 ~ )                         */
+  --breakpoint-wide: 1440px;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
