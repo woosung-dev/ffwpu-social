@@ -47,14 +47,19 @@ Story·ArticleGrid 섹션은 DB 배선(news.storySlot/featuredRank + kpi_metrics
 
 ## 체크리스트
 
-- [ ] WS1 seed-assets 스캔 + MinIO 업로드 + 슬롯 배정 + 본문 리치화
-- [ ] WS2 슬롯 썸네일
-- [ ] WS3 ArticleGrid fetch 호이스트
-- [ ] WS4 RQ /news 목록 (deps 설치 → 인프라 → 액션 → 클라 전환 → 캐시 왕복 검증)
-- [ ] WS5-A fan-out + synthesis (question_flags → 사용자 확인)
+- [x] WS1 seed-assets 스캔 + MinIO 업로드 + 슬롯 배정 + 본문 리치화 (d1cd86f — 14건·커버 9·슬롯 전배정, 랜딩·/news 렌더 검증)
+- [x] WS2 슬롯 썸네일 (ed00c35)
+- [x] WS3 ArticleGrid fetch 호이스트 (a0fb23b — getLandingData 고아 제거 포함)
+- [x] WS4 RQ /news 목록 (acbd03f + e277af6 — 캐시 왕복 POST 0건 검증, ADR-034)
+- [ ] WS5-A fan-out + synthesis (question_flags → 사용자 확인) — 진행 중 (wf_f73f55d6)
 - [ ] WS5-B 섹션 7건 순차 적용 + Playwright 검증 (섹션당 1커밋)
-- [ ] 문서 Atomic Update (decisions.md ADR 2건 · design.md 날짜 · TODO.md · CLAUDE.md 포인터)
+- [ ] 문서 Atomic Update (decisions.md ADR-035 · design.md 날짜 · TODO.md · CLAUDE.md 포인터) — ADR-034 완료
 - [ ] 최종 게이트: tsc 0 · lint · test · build 그린
+
+## 측정 사실 (WS5 입력)
+
+- 라이브 768px 가로 스크롤 발생 (scrollWidth 763 > clientWidth 753) — fan-out 에 원인 추적 지시 포함. 타 폭 클린.
+- /news 히어로 LCP 이미지 `loading="eager"` 권고 경고 (next/image priority 미지정) — WS5 또는 후속에서 처리.
 
 ## Context Notes (작업 중 결정 누적)
 
