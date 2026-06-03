@@ -1,9 +1,8 @@
-// 사용자 랜딩 ArticleGrid 섹션 — Figma 331:8155 (시안4) / 96:7877 (이전 시안). 좌측 다크 블록 + 우측 마조네리 6 슬롯. featured_rank 운영자 pin + 쌀 나눔 카테고리 최신순 자동 fallback (PR B 사용자 결정 2026-06-01)
+// 사용자 랜딩 ArticleGrid 섹션 — Figma 331:8155 (시안4) / 96:7877 (이전 시안). 좌측 다크 블록 + 우측 마조네리 6 슬롯. 데이터는 page.tsx ArticleGridSectionWithData 가 props 로 전달 (Kpi/Story 패턴 통일)
 import Link from "next/link";
 
 import { SectionContainer } from "@/client/components/layout";
 import { StoryCard } from "@/features/news/components";
-import { landingDb } from "@/features/landing";
 import { cn } from "@/lib/utils";
 
 // Figma 마조네리 6 카드 높이 비율 — 256 / 425 / 425 / 337 / 278 / 381
@@ -26,13 +25,19 @@ const FALLBACK_IMAGES = [
   "/images/articlegrid-card6.png",
 ] as const;
 
-export async function ArticleGridSection() {
-  // featured_rank 운영자 pin + 쌀 나눔 카테고리 최신순 자동 fallback. 7 슬롯 중 시안 4 6슬롯만 마조네리 노출 (1~6번)
-  const slots = await landingDb.listFeaturedGrid(7);
-  const items = slots
-    .slice(0, 6)
-    .filter((s): s is NonNullable<typeof s> => s != null);
+// 마조네리 카드 데이터 — listFeaturedGrid 결과에서 사용하는 필드만
+export type FeaturedGridItem = {
+  id: string;
+  title: string;
+  categoryName: string;
+  coverImageUrl: string | null;
+};
 
+type Props = {
+  items: FeaturedGridItem[];
+};
+
+export function ArticleGridSection({ items }: Props) {
   return (
     <section id="stories" className="w-full bg-white py-16 lg:py-24">
       <SectionContainer className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-8">

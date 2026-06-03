@@ -1,5 +1,5 @@
-// 사용자 랜딩 페이지 — Figma 96:7689 (1440) / 126:11815 (1920). 5섹션 (Hero / KPI / Story / ArticleGrid / Partners) + Footer는 PublicLayout 처리.
-// DB 연결 (PR B): kpi_metrics + news.story_slot/featured_rank → getLandingData. Suspense 격리 (Next.js 16 Cache Components)
+// 사용자 랜딩 페이지 — Figma 96:7689 (1440) / 331:7984 (1920). 5섹션 (Hero / KPI / Story / ArticleGrid / Partners) + Footer는 PublicLayout 처리.
+// DB 연결 (PR B): kpi_metrics + news.story_slot/featured_rank. 섹션별 *WithData 래퍼가 자기 데이터만 단독 쿼리 — Suspense 격리 (Next.js 16 Cache Components)
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -12,7 +12,7 @@ import {
   type StorySlotItem,
 } from "@/client/sections";
 import { SectionContainer } from "@/client/components/layout";
-import { getLandingData, landingDb } from "@/features/landing";
+import { landingDb } from "@/features/landing";
 
 export const metadata: Metadata = {
   title: "Sow Good — 가치를 삶으로, 변화를 꽃피우는 동행",
@@ -38,7 +38,7 @@ export default function Home() {
         <StorySectionWithData />
       </Suspense>
       <Suspense fallback={<ArticleGridLoading />}>
-        <ArticleGridSection />
+        <ArticleGridSectionWithData />
       </Suspense>
       <PartnersSection />
     </>
@@ -46,7 +46,7 @@ export default function Home() {
 }
 
 async function KpiSectionWithData() {
-  const { kpiMetrics } = await getLandingData();
+  const kpiMetrics = await landingDb.listActiveKpiMetrics();
   const metricsBySlug = new Map(
     kpiMetrics.map((m) => [
       m.slug,
@@ -54,6 +54,15 @@ async function KpiSectionWithData() {
     ]),
   );
   return <KpiSection metricsBySlug={metricsBySlug} />;
+}
+
+async function ArticleGridSectionWithData() {
+  // featured_rank 운영자 pin + 쌀 나눔 카테고리 최신순 자동 fallback. 7 슬롯 중 시안 6 슬롯만 마조네리 노출 (1~6번)
+  const slots = await landingDb.listFeaturedGrid(7);
+  const items = slots
+    .slice(0, 6)
+    .filter((s): s is NonNullable<typeof s> => s != null);
+  return <ArticleGridSection items={items} />;
 }
 
 async function StorySectionWithData() {
