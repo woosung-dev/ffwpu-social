@@ -1,6 +1,5 @@
 // 사용자 랜딩 KPI 섹션 — Figma 96:7773 (1440×952). 좌측 251px 헤딩 + gap-70 + 우측 dashboard 760px 비대칭 그리드. DB kpi_metrics props (PR B) — 운영자 어드민 갱신 (PR C)
 import { SectionContainer } from "@/client/components/layout";
-import { KpiCard } from "@/features/news/components";
 
 type Props = {
   metricsBySlug: ReadonlyMap<
@@ -43,16 +42,120 @@ export function KpiSection({ metricsBySlug }: Props) {
           </p>
         </div>
 
-        {/* 모바일·태블릿 (< 1024px): KpiCard 4 단순 grid (375~767 1열 / 768~1023 2x2). 좁은 폭에서 Dashboard 비대칭 벤토는 고정폭 데코로 가로 오버플로 → lg↑ 에서만 벤토 (768 H-scroll 해소) */}
-        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:hidden">
-          <KpiCard variant="gray" label="누적 봉사자 수" value={volunteerCount} />
-          <KpiCard variant="gray" label="누적 봉사 기간" value={volunteerPeriod} />
-          <KpiCard variant="green" label="봉사활동 횟수" value={eventCount} />
-          <KpiCard
-            variant="purple"
-            label="도움을 주게 된 가정 수"
-            value={helpedHousehold}
-          />
+        {/* 모바일·태블릿 (<1024): Figma 벤토 유동 복원 — 데스크탑 블록(lg:flex)과 상호배타(lg:hidden). 고정폭→clamp/%/aspect 로 375~1023 가로 오버플로 0. 데코는 좁은 폭(<640) 숨김, 하단 블록은 640↑ 좌우 배치(Figma 768) */}
+        <div className="flex w-full flex-col gap-4 lg:hidden">
+          {/* 상단: 보라 스마일 + 누적 봉사자 수(+데코) */}
+          <div className="flex gap-4">
+            <div className="flex flex-[0.62] items-center justify-center rounded-[20px] bg-brand-bright py-[clamp(20px,5vw,40px)]">
+              {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
+              <img
+                src="/icons/kpi-smile-illustration.svg"
+                alt=""
+                width={121}
+                height={86}
+                aria-hidden
+                className="h-auto w-[clamp(72px,16vw,121px)]"
+              />
+            </div>
+            <div className="flex flex-1 items-center justify-between gap-3 rounded-[20px] bg-kpi-gray px-[clamp(16px,3.2vw,24px)] py-5 text-ink-strong-mid">
+              <div className="flex min-w-0 flex-col gap-1">
+                <p className="text-[clamp(14px,3.2vw,20px)] font-semibold">
+                  누적 봉사자 수
+                </p>
+                <p className="text-[clamp(26px,6vw,40px)] font-bold leading-none tabular-nums">
+                  {volunteerCount}
+                </p>
+              </div>
+              {/* 데코(그래프+별): 640↑ 만 노출 — 좁은 폭 가로 오버플로 방지 */}
+              <div className="hidden shrink-0 items-center gap-[clamp(8px,2vw,20px)] sm:flex">
+                {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
+                <img
+                  src="/icons/kpi-graph-icon.svg"
+                  alt=""
+                  width={84}
+                  height={84}
+                  aria-hidden
+                  className="size-[clamp(40px,7vw,72px)]"
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
+                <img
+                  src="/icons/kpi-star-icon.svg"
+                  alt=""
+                  width={83}
+                  height={83}
+                  aria-hidden
+                  className="size-[clamp(40px,7vw,72px)]"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 하단: 좌 칼럼(봉사 기간·Sow Good·봉사 횟수) + 우 사진 카드. 640↑ 좌우(Figma 768), <640 세로 스택 */}
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <div className="flex flex-col gap-4 sm:flex-[1.6]">
+              <div className="flex gap-4">
+                <div className="flex flex-1 flex-col justify-between gap-3 rounded-[20px] bg-kpi-gray px-[clamp(16px,3.2vw,24px)] py-5 text-ink-strong-mid">
+                  <p className="text-[clamp(14px,3.2vw,20px)] font-semibold">
+                    누적 봉사 기간
+                  </p>
+                  <p className="text-[clamp(22px,4vw,40px)] font-bold leading-none tabular-nums">
+                    {volunteerPeriod}
+                  </p>
+                </div>
+                <div className="flex flex-1 items-center justify-center rounded-[20px] bg-kpi-yellow py-[clamp(16px,4vw,28px)]">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
+                  <img
+                    src="/icons/kpi-yellow-card-wordmark.svg"
+                    alt="Sow Good"
+                    width={204}
+                    height={49}
+                    className="h-auto w-[clamp(104px,42%,204px)]"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col justify-end gap-4 rounded-[20px] bg-kpi-lime px-[clamp(16px,3.2vw,24px)] py-5 text-ink-on-lime">
+                <p className="text-[clamp(14px,3.2vw,20px)] font-semibold">
+                  봉사활동 횟수
+                </p>
+                <div className="flex items-end justify-between gap-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
+                  <img
+                    src="/icons/kpi-lime-card-illustration.svg"
+                    alt=""
+                    width={172}
+                    height={172}
+                    aria-hidden
+                    className="size-[clamp(64px,16vw,172px)]"
+                  />
+                  <p className="text-[clamp(28px,6vw,52px)] font-bold tabular-nums">
+                    {eventCount}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative flex flex-1 flex-col gap-4 overflow-hidden rounded-[20px] bg-brand-bright">
+              <div className="px-[clamp(16px,3.2vw,24px)] pt-5">
+                <p className="text-[clamp(14px,3.2vw,20px)] font-semibold text-white">
+                  도움을 주게 된 가정 수
+                </p>
+                <p className="text-[clamp(24px,5.5vw,40px)] font-bold leading-tight tabular-nums text-white">
+                  {helpedHousehold}
+                </p>
+              </div>
+              <div className="relative min-h-[clamp(170px,40vw,280px)] flex-1">
+                {/* eslint-disable-next-line @next/next/no-img-element -- decorative photo */}
+                <img
+                  src="/images/kpi-purple-card-photo.png"
+                  alt=""
+                  width={366}
+                  height={423}
+                  aria-hidden
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 데스크탑(lg↑, 1024↑): Figma Dashboard 데코 타일 비대칭 그리드. 고정폭 데코(별 83px 등)가 1023↓ 에서 가로 오버플로라 lg↑ 한정. 하단 블록은 xl↑ 에서 Figma 원안 좌(607)/우 가로 배치 */}
