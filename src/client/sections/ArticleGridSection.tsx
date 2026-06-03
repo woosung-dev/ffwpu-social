@@ -5,14 +5,16 @@ import { SectionContainer } from "@/client/components/layout";
 import { StoryCard } from "@/features/news/components";
 import { cn } from "@/lib/utils";
 
-// Figma 마조네리 6 카드 높이 비율 — 256 / 425 / 425 / 337 / 278 / 381
+// Figma 마조네리 6 카드 높이 비율 — 기본(1440/3열 col≈272px): 256/425/425/337/278/381
+// md(768/2열 col≈360px): 세로 Portrait 카드(1,2,3,5)가 550+px로 과도히 커짐 → Figma 768 대비
+// md:aspect-[278/140] 로 landscape 단축 (~181px at 360px col), lg+에서 원래 비율 복원
 const CARD_ASPECTS = [
   "aspect-[278/256]",
-  "aspect-[278/425]",
-  "aspect-[278/425]",
-  "aspect-[278/337]",
+  "aspect-[278/425] md:aspect-[278/140] lg:aspect-[278/425]",
+  "aspect-[278/425] md:aspect-[278/140] lg:aspect-[278/425]",
+  "aspect-[278/337] md:aspect-[278/140] lg:aspect-[278/337]",
   "aspect-[278/278]",
-  "aspect-[278/381]",
+  "aspect-[278/381] md:aspect-[278/140] lg:aspect-[278/381]",
 ] as const;
 
 // 자산 fallback — DB cover_image_url 미설정 시 articlegrid 시안 자산 cycle
