@@ -34,7 +34,13 @@ export function ScrollTopButton() {
     <button
       type="button"
       aria-label="맨 위로"
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      onClick={() => {
+        // prefers-reduced-motion 존중 — 모션 민감 사용자에겐 즉시 이동
+        const reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+      }}
       className="fixed right-5 bottom-6 z-30 flex size-12 items-center justify-center rounded-full border border-brand-pale bg-white text-brand-primary shadow-md transition-opacity hover:opacity-90 lg:right-8 lg:bottom-8 lg:size-14"
     >
       <ArrowUp className="size-6" aria-hidden />
