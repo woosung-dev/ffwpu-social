@@ -24,7 +24,7 @@ export function StoryCard({
     <Wrapper
       href={href ?? "#"}
       className={cn(
-        "group relative block w-full max-w-[278px] overflow-hidden rounded-[12px] bg-brand-darkest",
+        "group relative block w-full max-w-[278px] overflow-hidden rounded-[12px] bg-brand-darkest outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/60 focus-visible:ring-offset-2",
         "aspect-[278/425]",
         className,
       )}

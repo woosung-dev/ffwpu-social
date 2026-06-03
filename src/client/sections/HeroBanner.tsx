@@ -26,7 +26,7 @@ export function HeroBanner() {
           {/* CTA — bg #3C1264, text #E9D1FF, 알약 + 화살표 */}
           <Link
             href="/news"
-            className="inline-flex items-center gap-2 rounded-full bg-brand-darkest px-5 py-2.5 transition-opacity hover:opacity-90 lg:gap-2.5 lg:px-[26px] lg:py-3"
+            className="inline-flex items-center gap-2 rounded-full bg-brand-darkest px-5 py-2.5 transition-opacity outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bright lg:gap-2.5 lg:px-[26px] lg:py-3"
           >
             <span className="text-sm font-bold text-ink-on-purple lg:text-xl">
               지난 활동 살펴보기

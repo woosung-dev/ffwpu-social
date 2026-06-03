@@ -65,7 +65,7 @@ export function PublicHeader() {
                 href={m.href}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "rounded-full px-3.5 py-2 text-sm transition-colors lg:px-5 lg:py-2.5 lg:text-base",
+                  "rounded-full px-3.5 py-2 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-brand-darkest focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bright lg:px-5 lg:py-2.5 lg:text-base",
                   isActive
                     ? "border-[1.6px] border-brand-primary bg-white font-extrabold text-brand-primary"
                     : "font-bold text-white hover:bg-white/10",
@@ -83,7 +83,7 @@ export function PublicHeader() {
             <button
               type="button"
               aria-label={`현재 위치 ${activeItem.label} — 섹션 메뉴 열기`}
-              className="flex h-11 items-center gap-1.5 rounded-full border-[1.6px] border-brand-primary bg-white pr-3 pl-4 text-base font-extrabold text-brand-primary md:hidden"
+              className="flex h-11 items-center gap-1.5 rounded-full border-[1.6px] border-brand-primary bg-white pr-3 pl-4 text-base font-extrabold text-brand-primary outline-none focus-visible:ring-2 focus-visible:ring-brand-darkest focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bright md:hidden"
             >
               <span>{activeItem.label}</span>
               <ChevronDown className="size-4 shrink-0" aria-hidden />
