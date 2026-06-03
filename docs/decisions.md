@@ -1353,3 +1353,24 @@ velog 최종 처방은 "pnpm workspace 기준선 → 빌드성능 필요 시 Tur
 - ⚠️ OPT-2를 ship 블로커로 만들지 말 것. boundary 위반은 lessons.md에 실증 사고가 없어 ship 자격 없음. 반드시 ship 후 warn → error.
 - ⚠️ OPT-2 범위 self-limit. element-type 매트릭스·import/order·배럴 우회 차단까지 욕심내면 오탐·유지비·F2 폐기손실이 폭증해 8.0 점수가 무너진다. ADR-024가 이미 잡은 컨벤션(`index.ts`에서 `db.ts` 비공개)과 중복 룰은 넣지 않는다.
 - ⚠️ F2 시 Next 16 + NextAuth v5 beta 스택의 미검증 플러그인 호환성 주의(Nx 진입 금지 이유 중 하나).
+
+---
+
+## ADR-034: TanStack Query 도입 범위 — /news 목록 클라 캐시 한정 (Streaming SSR + useSuspenseQuery)
+
+- **상태**: 채택 (2026-06-03)
+- **맥락**: 사용자 요청 "랜딩·소식 목록 호출에 캐시 용도 + 요즘 권장되는 Streaming·useSuspenseQuery 기법 조사 후 도입". TanStack 공식 Advanced SSR 가이드 조사 결과 — (a) 안정 패턴 = 서버 `prefetchQuery`(no await) → pending 포함 `dehydrate` → `HydrationBoundary` → 클라 `useSuspenseQuery` (b) `ReactQueryStreamedHydration`(`@tanstack/react-query-next-experimental`)은 experimental + 네비게이션 워터폴 단점 (c) Data Ownership 권고: *RSC만 소비하는 데이터에 RQ는 불필요 복잡도*.
+
+### Decision
+
+1. **/news 목록만 RQ 적용** — 탭(카테고리)·페이지네이션 왕복 시 방문 조합을 클라 캐시에서 즉시 복원(스켈레톤 재노출 0). 키·정규화·queryFn 은 `src/features/news/api.ts` 단일 출처(서버/클라 동일 import — drift 방지). queryFn 은 기존 `listNewsAction` 재사용(Route Handler 신설 없음, fullstack.md §6 유지).
+2. **랜딩은 RSC 유지** — 클라 재패칭·상호작용 0인 데이터(공식 권고 정합). 랜딩은 이미 RSC+Suspense 로 스트리밍 중.
+3. **하트는 현행 유지** — localStorage sessionId 외부동기화 useEffect 는 허용 패턴(anti-slop §2), RQ 전환 실익 없음 (사용자 확인 2026-06-03).
+4. **experimental 패키지 미채택** — 안정 prefetch+HydrationBoundary 패턴만. `staleTime: 60s`, pending 쿼리 dehydrate 포함(`shouldDehydrateQuery`), 서버 요청별 새 QueryClient/브라우저 싱글톤(`src/lib/query/get-query-client.ts`).
+
+### Consequences
+
+- ✅ 검증: 탭 전초 방문은 스트리밍된 pending promise 를 클라가 인계(서버액션 POST 0건), 재방문은 캐시 적중 — Playwright 네트워크 로그로 확인.
+- ✅ fullstack.md §7 "자체 UI 조회는 RSC" 규칙의 명시 예외 1건 — 본 ADR 이 그 기록. 추가 RQ 확장은 "다중 소비 클라 패칭" 실증 필요 시에만.
+- ⚠️ Next 16 SSRF 가드가 localhost 이미지 최적화를 기본 차단 → `next.config.ts` `dangerouslyAllowLocalIP` dev 한정 허용(프로덕션 R2/S3 가드 유지).
+- ⚠️ /news 목록에 ErrorBoundary 미설치(기존 RSC 시절과 동일 리스크 프로파일) — v1.1 error.tsx 도입 검토.
