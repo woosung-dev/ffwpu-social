@@ -186,3 +186,51 @@ export async function getHeroNews() {
 export async function getHeroCandidates() {
   return newsDb.listHeroCandidates();
 }
+
+// ─── 익명 좋아요 (ADR-026 — sessionId 토글, IP 미수집) ───────────────────
+export async function toggleHeart(newsId: string, sessionId: string) {
+  const existing = await newsDb.findHeartEventAny(newsId, sessionId);
+  let liked: boolean;
+  if (!existing) {
+    await newsDb.insertHeart(newsId, sessionId);
+    liked = true;
+  } else {
+    const currentlyActive = existing.deletedAt == null;
+    await newsDb.setHeartDeleted(existing.id, currentlyActive);
+    liked = !currentlyActive;
+  }
+  const count = await newsDb.countActiveHearts(newsId);
+  return { liked, count };
+}
+
+export async function getHeartState(newsId: string, sessionId: string) {
+  const active = await newsDb.findActiveHeartEvent(newsId, sessionId);
+  const count = await newsDb.countActiveHearts(newsId);
+  return { liked: active != null, count };
+}
+
+// 관련 글 — 같은 카테고리 우선, 부족하면 최신 글로 보충 (self 제외)
+export async function getRelatedNews(
+  newsId: string,
+  categoryId: string,
+  limit = 3,
+) {
+  const sameCat = await newsDb.listRelatedNews(newsId, categoryId, limit);
+  if (sameCat.length >= limit) return sameCat;
+  const recent = await newsDb.listPublicNews({
+    page: 1,
+    limit: limit + sameCat.length + 3,
+  });
+  const seen = new Set([newsId, ...sameCat.map((s) => s.id)]);
+  const fill = recent
+    .filter((r) => !seen.has(r.id))
+    .slice(0, limit - sameCat.length)
+    .map((r) => ({
+      id: r.id,
+      title: r.title,
+      categoryName: r.categoryName,
+      coverImageUrl: r.coverImageUrl,
+      publishedAt: r.publishedAt,
+    }));
+  return [...sameCat, ...fill];
+}

@@ -28,6 +28,7 @@ export {
   setHeroOrder,
   getHeroNews,
   getHeroCandidates,
+  getRelatedNews,
 } from "./service";
 
 export {
