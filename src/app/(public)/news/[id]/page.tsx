@@ -99,7 +99,7 @@ async function NewsDetailContent({
           <h2 className="text-xl font-bold text-ink-strong">
             더 많은 소식 살펴보기
           </h2>
-          <ul className="mt-4 grid grid-cols-1 gap-7 sm:grid-cols-3 sm:gap-5">
+          <ul className="mt-4 grid grid-cols-1 gap-5 min-[448px]:grid-cols-2 md:grid-cols-3">
             {related.map((r) => (
               <li key={r.id} className="flex">
                 <ArticleCard

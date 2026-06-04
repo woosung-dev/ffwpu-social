@@ -85,7 +85,7 @@ function NewsListLoading() {
   return (
     <div className="mt-6 lg:mt-8" aria-busy>
       <div className="h-10 animate-pulse rounded-md bg-muted/60" />
-      <ul className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:mt-10 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-12">
+      <ul className="mt-8 grid grid-cols-1 gap-6 min-[448px]:grid-cols-2 lg:mt-10 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-12">
         {Array.from({ length: 9 }).map((_, i) => (
           <li key={i} className="flex justify-center">
             <div className="h-[348px] w-full max-w-[382px] animate-pulse rounded-[14px] bg-muted/60" />

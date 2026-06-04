@@ -5,17 +5,18 @@ import { SectionContainer } from "@/client/components/layout";
 import { MediaCard } from "@/client/components/media";
 import { cn } from "@/lib/utils";
 
-// Figma 마조네리 6 카드 높이 비율:
-//  - base(375/1열 col≈343px): portrait→ ~350px — aspect-[278/300]
-//  - sm(640~767/1열 col≈608-735px): landscape 단축 — aspect-[278/140] (767 극단 방지)
-//  - md+(768+/3열 col): Figma 원안 portrait 복원 (768 부터 3열)
+// Figma 마조네리 6 카드 높이 비율 (열 수 = Figma 정합: 375 1열 · 768 2열 · 1025 3열):
+//  - base(375/1열 col≈343px): portrait ~350px — aspect-[278/300]
+//  - sm(640~767/1열 col≈608-735px): landscape 단축 — aspect-[278/140] (1열 폭 극단 방지)
+//  - md(768~1023/2열 col≈355px): portrait 복원 — aspect-[278/300]
+//  - lg+(1024+/3열 col≈235px): Figma 원안 tall portrait — aspect-[278/4xx]
 const CARD_ASPECTS = [
   "aspect-[278/256]",
-  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/425]",
-  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/425]",
-  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/337]",
+  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/300] lg:aspect-[278/425]",
+  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/300] lg:aspect-[278/425]",
+  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/300] lg:aspect-[278/337]",
   "aspect-[278/278]",
-  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/381]",
+  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/300] lg:aspect-[278/381]",
 ] as const;
 
 // 자산 fallback — DB cover_image_url 미설정 시 articlegrid 시안 자산 cycle
@@ -71,9 +72,9 @@ export function ArticleGridSection({ items }: Props) {
           </Link>
         </div>
 
-        {/* 우측 마조네리 — columns로 자연스러운 높이 분배. 모바일 1·md+(768~) 3열 (Figma 정합) */}
+        {/* 우측 마조네리 — columns로 자연스러운 높이 분배. 375 1열 · 768 2열 · 1024↑ 3열 (Figma 정합) */}
         <div className="flex-1">
-          <div className="columns-1 gap-4 [&>*]:mb-4 md:columns-3">
+          <div className="columns-1 gap-4 [&>*]:mb-4 md:columns-2 lg:columns-3">
             {Array.from({ length: 6 }).map((_, idx) => {
               const item = items[idx];
               if (!item) return null;
