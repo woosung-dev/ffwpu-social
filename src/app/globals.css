@@ -120,6 +120,7 @@
   --color-surface-dark: #242424; /* Footer·ArticleGrid 좌블록·StorySection 헤딩 색 겸용 */
   --color-surface-tint-soft: #f8f1ff; /* Hero·Partners 그라디언트 시작 */
   --color-surface-tint-faint: #faf4ff; /* StorySection 배경 */
+  --color-surface-news-banner: #f2eff4; /* 소식 SubBanner 연보라-그레이 배경 (Figma 125:8915) */
 
   /* 태그 */
   --color-tag-default: #ac86d0;

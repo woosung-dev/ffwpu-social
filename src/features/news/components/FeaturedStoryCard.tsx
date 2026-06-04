@@ -28,7 +28,7 @@ export function FeaturedStoryCard({ stories }: Props) {
   const story = stories[selected] ?? stories[0]!;
 
   return (
-    <section className="w-full bg-[#fafafa] px-2.5 pb-[60px] pt-[20px] lg:px-10 lg:pt-[30px]">
+    <section className="w-full bg-surface-card px-2.5 pb-[60px] pt-[20px] lg:px-10 lg:pt-[30px]">
       <div className="grid items-center gap-6 lg:grid-cols-2 lg:gap-10">
         <div className="order-2 flex flex-col gap-4 lg:order-1">
           {story.badge && (

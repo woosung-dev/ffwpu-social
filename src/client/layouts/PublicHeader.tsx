@@ -55,7 +55,9 @@ export function PublicHeader() {
           />
         </Link>
 
-        {/* 데스크탑(md↑, 768~): 풀 4메뉴 내비 — Figma Header 768~1024 variant 도 풀 노출(단일 pill 은 <768 only). md 는 14px/좁은 간격(M size), lg↑ 16px(L size) */}
+        {/* 우측 클러스터 — Figma: 로고 좌측 / [4메뉴 + 모바일pill + 검색] 우측 한 덩어리. justify-between 2분할로 우측 정렬 */}
+        <div className="flex items-center gap-3 lg:gap-6">
+        {/* 데스크탑(md↑, 768~): 풀 4메뉴 내비 — md 14px/좁은 간격(M), lg↑ 16px(L) */}
         <nav className="hidden items-center gap-3 md:flex lg:gap-6">
           {MENU.map((m) => {
             const isActive = activeItem.id === m.id;
@@ -123,7 +125,7 @@ export function PublicHeader() {
           type="button"
           disabled
           aria-label="검색 (준비 중)"
-          className="shrink-0 cursor-not-allowed text-white/60"
+          className="shrink-0 cursor-not-allowed text-brand-primary/70"
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
           <img
@@ -135,6 +137,7 @@ export function PublicHeader() {
             className="size-5"
           />
         </button>
+        </div>
       </div>
     </header>
   );

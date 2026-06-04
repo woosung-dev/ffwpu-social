@@ -38,7 +38,7 @@ export function CategoryTabs({ categories, selected, onChangeAction }: Props) {
                   "relative flex h-full items-center justify-center whitespace-nowrap px-[10px] text-[17px] transition-colors",
                   isActive
                     ? "font-medium text-ink-strong"
-                    : "font-normal text-[#959ba9] hover:text-foreground",
+                    : "font-normal text-ink-date hover:text-foreground",
                 )}
               >
                 {tab.name}
