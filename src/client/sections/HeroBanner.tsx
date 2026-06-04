@@ -1,4 +1,4 @@
-// 사용자 랜딩 Hero 섹션 — Figma 96:7690(데스크탑 1440)·99:6951(모바일 375). lg+ 가로 2단(비겹침, flower 정상흐름 ~420=28vw, 콘텐츠 items-center 상중단). lg↓ Method B: 좌측 텍스트(z-10) + 우측 flower 를 absolute 배경 장식으로 겹침(z 아래·컴팩트). 폰트·flower 는 clamp 로 375↔1440 보간. Gmarket Sans Medium 미로드 시 SUIT fallback
+// 사용자 랜딩 Hero 섹션 — Figma 96:7690(데스크탑 1440)·99:6951(모바일 375). lg+ 가로 2단(비겹침, flower 정상흐름 ~420=28vw, 콘텐츠 items-center 상중단). lg↓ Method B: 좌측 텍스트(z-10) + 우측 flower 를 absolute 배경 장식으로 겹침(z 아래·컴팩트). 폰트·flower 는 clamp 로 375↔1440 보간. 타이틀은 SUIT Medium 통일(Gmarket 미사용 — 사용자 결정 2026-06-05)
 import Link from "next/link";
 
 import { SectionContainer } from "@/client/components/layout";
@@ -13,12 +13,7 @@ export function HeroBanner() {
         {/* Title 블록 — 항상 좌측 정렬, flower 위(z-10) */}
         <div className="relative z-10 flex flex-col items-start gap-4 lg:gap-5">
           <h1
-            className="text-[clamp(1.5rem,5vw,3.75rem)] leading-[1.25] whitespace-pre-line text-brand-deep"
-            style={{
-              fontFamily:
-                "'Gmarket Sans Medium', var(--font-suit), system-ui, sans-serif",
-              fontWeight: 500,
-            }}
+            className="text-[clamp(1.5rem,5vw,3.75rem)] leading-[1.25] font-medium whitespace-pre-line text-brand-deep"
           >
             {"가치를 삶으로,\n변화를 꽃피우는 동행"}
           </h1>
