@@ -84,19 +84,19 @@ export function StorySection({ stats, slots }: Props) {
   return (
     <section id="story" className="w-full bg-surface-tint-faint py-16 lg:py-24">
       <SectionContainer className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-[70px]">
-        {/* 좌측 이미지 2장 — Figma 좌우 나란히(동일 높이), 모바일 세로 스택. 운영자 지정 글 대표 이미지(미지정 시 기본 사진) */}
-        <div className="relative flex w-full flex-col gap-3 sm:h-[340px] sm:flex-row lg:h-[420px] lg:flex-[1.8]">
+        {/* 좌측 이미지 2장 — Figma 375~(flex-row 나란히), sm h-340, lg h-420 */}
+        <div className="relative flex w-full flex-row gap-3 h-[240px] sm:h-[340px] lg:h-[420px] lg:flex-[1.8]">
           <StoryImage
             slot={slots[0] ?? null}
             fallback={FALLBACK_IMAGES[0]}
-            wrapperClass="aspect-[4/3] w-full sm:aspect-auto sm:h-full sm:flex-1"
+            wrapperClass="h-full flex-1"
             width={560}
             height={420}
           />
           <StoryImage
             slot={slots[1] ?? null}
             fallback={FALLBACK_IMAGES[1]}
-            wrapperClass="aspect-square w-full sm:aspect-auto sm:h-full sm:w-[42%] lg:w-[280px] lg:shrink-0"
+            wrapperClass="h-full w-[42%] shrink-0 lg:w-[280px] lg:shrink-0"
             width={280}
             height={280}
           />
@@ -130,7 +130,7 @@ export function StorySection({ stats, slots }: Props) {
             쌀 나눔 활동
           </span>
 
-          <h2 className="text-2xl font-bold leading-tight md:text-3xl lg:text-[32px]">
+          <h2 className="break-keep text-2xl font-bold leading-tight md:text-3xl lg:text-[32px]">
             밥이 사랑입니다
             <br />
             나누는 우리는 식구입니다

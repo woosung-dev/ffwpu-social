@@ -1,4 +1,4 @@
-// 카테고리 탭 — categories 테이블(동적) 기반. "전체"는 가상 UI 필터 (ALL_CATEGORY_SLUG). Figma node 125:9134: SUIT Medium 17px, active brand-vivid 하단 라인
+// 카테고리 탭 — Figma 125:9134 정합: SUIT Medium 17px, active h-56px + brand-vivid 하단 2px 라인, inactive h-46px
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -25,20 +25,20 @@ export function CategoryTabs({ categories, selected, onChangeAction }: Props) {
 
   return (
     <nav aria-label="카테고리" className="w-full overflow-x-auto">
-      <ul className="flex min-w-max items-center gap-1 border-b border-border">
+      <ul className="flex min-w-max items-end border-b border-border">
         {tabs.map((tab) => {
           const isActive = tab.slug === selected;
           return (
-            <li key={tab.slug}>
+            <li key={tab.slug} className={cn(isActive ? "h-14" : "h-[46px]")}>
               <button
                 type="button"
                 onClick={() => onChangeAction?.(tab.slug)}
                 aria-pressed={isActive}
                 className={cn(
-                  "relative whitespace-nowrap px-4 py-3 text-[17px] font-medium transition-colors",
+                  "relative flex h-full items-center justify-center whitespace-nowrap px-[10px] text-[17px] transition-colors",
                   isActive
-                    ? "text-ink-strong"
-                    : "text-ink-subtle hover:text-foreground",
+                    ? "font-medium text-ink-strong"
+                    : "font-normal text-[#959ba9] hover:text-foreground",
                 )}
               >
                 {tab.name}

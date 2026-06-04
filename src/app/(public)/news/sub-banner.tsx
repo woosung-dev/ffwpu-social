@@ -1,32 +1,43 @@
-// 소식 페이지 상단 서브 배너 — Figma node 125:8915 정합 (bg #f2eff4, h:132, Sow Good 로고 + 카피)
+// 소식 페이지 서브 배너 — Figma 125:8915/135:12492 정합 (bg #f2eff4)
+// 데스크탑: 로고 + 세로 구분선 + 문구 가로 배치 / 모바일: 로고 → 가로 구분선 → 문구 세로 스택
 import Image from "next/image";
 
 export function SubBanner() {
   return (
-    <section
-      aria-label="Sow Good 소개"
-      className="bg-[#f2eff4]"
-    >
-      <div className="container mx-auto flex flex-col items-center justify-center gap-3 px-4 py-6 sm:flex-row sm:gap-10 sm:py-8 lg:px-20">
+    <section aria-label="Sow Good 소개" className="bg-[#f2eff4]">
+      {/* 모바일 (< md): 세로 스택 — Figma 135:12492 정합 */}
+      <div className="flex flex-col gap-4 px-4 py-6 md:hidden">
         <Image
-          src="/icons/featured-mini-logo.svg"
+          src="/icons/sow-good-banner-logo.svg"
+          alt="Sow Good"
+          width={116}
+          height={47}
+          className="h-auto w-[116px]"
+        />
+        <div className="h-px w-32 bg-brand-soft/40" aria-hidden />
+        <p className="text-[14px] font-medium leading-relaxed text-brand-soft">
+          <span className="font-black text-brand-primary">Sow Good</span>{" "}
+          가족이 아니어도, 같은 동네가 아니어도,
+          <br />
+          밥상을 함께하는 사람이 있다면 우리는 이미 식구입니다.
+        </p>
+      </div>
+
+      {/* 태블릿 이상 (md+): 가로 배치 — Figma 125:8915 정합 */}
+      <div className="hidden md:flex md:items-center md:justify-center md:gap-10 md:px-[120px] md:py-[34px]">
+        <Image
+          src="/icons/sow-good-banner-logo.svg"
           alt="Sow Good"
           width={160}
-          height={64}
-          className="h-12 w-auto shrink-0 sm:h-14"
+          height={65}
+          className="h-auto w-[160px] shrink-0"
         />
-        <div
-          aria-hidden
-          className="hidden h-9 w-px shrink-0 bg-brand-soft/40 sm:block"
-        />
-        <p className="break-keep text-center text-sm leading-relaxed text-brand-soft sm:text-left sm:text-base">
-          <span className="font-extrabold text-brand-primary">Sow Good</span>{" "}
+        <div aria-hidden className="h-9 w-px shrink-0 bg-brand-soft/40" />
+        <p className="break-keep text-[16px] font-medium leading-relaxed text-brand-soft">
+          <span className="font-black text-brand-primary">Sow Good</span>{" "}
           가족이 아니어도, 같은 동네가 아니어도,
-          <br className="hidden sm:block" />
-          <span className="sm:inline">
-            {" "}
-            밥상을 함께하는 사람이 있다면 우리는 이미 식구입니다.
-          </span>
+          <br />
+          밥상을 함께하는 사람이 있다면 우리는 이미 식구입니다.
         </p>
       </div>
     </section>
