@@ -1,18 +1,21 @@
-// 사용자 랜딩 ArticleGrid 섹션 — Figma 331:8155 (시안4) / 96:7877 (이전 시안). 좌측 다크 블록 + 우측 마조네리 6 슬롯. featured_rank 운영자 pin + 쌀 나눔 카테고리 최신순 자동 fallback (PR B 사용자 결정 2026-06-01)
+// 사용자 랜딩 ArticleGrid 섹션 — Figma 331:8155 (시안4) / 96:7877 (이전 시안). 좌측 다크 블록 + 우측 마조네리 6 슬롯. 데이터는 page.tsx ArticleGridSectionWithData 가 props 로 전달 (Kpi/Story 패턴 통일)
 import Link from "next/link";
 
+import { SectionContainer } from "@/client/components/layout";
 import { StoryCard } from "@/features/news/components";
-import { landingDb } from "@/features/landing";
 import { cn } from "@/lib/utils";
 
-// Figma 마조네리 6 카드 높이 비율 — 256 / 425 / 425 / 337 / 278 / 381
+// Figma 마조네리 6 카드 높이 비율:
+//  - base(375/1열 col≈343px): portrait→ ~350px — aspect-[278/300]
+//  - sm+(640~/1열 col≈608-735px): landscape 단축 — aspect-[278/140] (767 극단 방지)
+//  - lg+(1024+/3열 col≈272px): Figma 원안 portrait 복원
 const CARD_ASPECTS = [
   "aspect-[278/256]",
-  "aspect-[278/425]",
-  "aspect-[278/425]",
-  "aspect-[278/337]",
+  "aspect-[278/300] sm:aspect-[278/140] lg:aspect-[278/425]",
+  "aspect-[278/300] sm:aspect-[278/140] lg:aspect-[278/425]",
+  "aspect-[278/300] sm:aspect-[278/140] lg:aspect-[278/337]",
   "aspect-[278/278]",
-  "aspect-[278/381]",
+  "aspect-[278/300] sm:aspect-[278/140] lg:aspect-[278/381]",
 ] as const;
 
 // 자산 fallback — DB cover_image_url 미설정 시 articlegrid 시안 자산 cycle
@@ -25,27 +28,35 @@ const FALLBACK_IMAGES = [
   "/images/articlegrid-card6.png",
 ] as const;
 
-export async function ArticleGridSection() {
-  // featured_rank 운영자 pin + 쌀 나눔 카테고리 최신순 자동 fallback. 7 슬롯 중 시안 4 6슬롯만 마조네리 노출 (1~6번)
-  const slots = await landingDb.listFeaturedGrid(7);
-  const items = slots
-    .slice(0, 6)
-    .filter((s): s is NonNullable<typeof s> => s != null);
+// 마조네리 카드 데이터 — listFeaturedGrid 결과에서 사용하는 필드만
+export type FeaturedGridItem = {
+  id: string;
+  title: string;
+  categoryName: string;
+  coverImageUrl: string | null;
+};
 
+type Props = {
+  items: FeaturedGridItem[];
+};
+
+export function ArticleGridSection({ items }: Props) {
   return (
     <section id="stories" className="w-full bg-white py-16 lg:py-24">
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10 px-4 lg:flex-row lg:items-start lg:gap-8 lg:px-0">
-        {/* 좌측 다크 블록 — 319px 폭, 라운드 12px, ExtraBold 31px #E9CFFF */}
-        <div className="rounded-xl bg-surface-dark p-8 lg:w-[319px] lg:shrink-0 lg:self-start lg:p-10">
-          <h2 className="text-2xl font-extrabold leading-tight text-ink-on-purple lg:text-[31px]">
-            고소한 사랑의 향기가 퍼져나가고 있어요
-          </h2>
-          <p className="mt-3 text-base font-semibold text-ink-on-purple lg:text-lg">
-            사랑을 주고 받는 우리들의 이야기
-          </p>
+      <SectionContainer className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-8">
+        {/* 좌측 다크 블록 — 라운드 12px, ExtraBold 31px #E9CFFF. md(768~1023) 가로 배너(헤딩↔CTA 양끝), lg+ 319px 사이드 헤더, 모바일 세로 스택 (Figma 정합) */}
+        <div className="rounded-xl bg-surface-dark p-8 md:flex md:items-center md:justify-between md:gap-6 lg:block lg:w-[319px] lg:shrink-0 lg:self-start lg:p-10">
+          <div>
+            <h2 className="text-2xl font-extrabold leading-tight text-ink-on-purple md:text-[31px]">
+              고소한 사랑의 향기가 퍼져나가고 있어요
+            </h2>
+            <p className="mt-3 text-base font-semibold text-ink-on-purple lg:text-lg">
+              사랑을 주고 받는 우리들의 이야기
+            </p>
+          </div>
           <Link
             href="/news"
-            className="mt-6 inline-flex items-center gap-2 text-base font-semibold text-white hover:opacity-90"
+            className="mt-6 inline-flex shrink-0 items-center gap-2 text-base font-semibold text-white hover:opacity-90 md:mt-0 lg:mt-6"
           >
             아티클 더 보러가기
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
@@ -80,7 +91,7 @@ export async function ArticleGridSection() {
             })}
           </div>
         </div>
-      </div>
+      </SectionContainer>
     </section>
   );
 }

@@ -1,4 +1,4 @@
-// 소식 카드 — size 1~4 × state default/hover/none = 12 variants 통합 컴포넌트. Server Component (Heart 만 Client child 로 슬롯). ADR-007 카테고리 5 enum
+// 소식 카드 — Figma 114:8193 정합. 이미지 + [카테고리(좌) | 하트(우)] + 제목 + 날짜. Server Component (Heart 만 Client child)
 import Image from "next/image";
 import Link from "next/link";
 import dayjs from "dayjs";
@@ -31,39 +31,28 @@ const SIZE_CONFIG: Record<
   {
     container: string;
     aspectRatio: string;
-    titleClass: string;
-    categoryClass: string;
   }
 > = {
   1: {
-    container: "w-full max-w-[382px]",
-    aspectRatio: "aspect-[382/210]",
-    titleClass: "text-lg lg:text-xl line-clamp-2",
-    categoryClass: "text-xs",
+    container: "w-full max-w-[384px]",
+    aspectRatio: "aspect-[313/170]",
   },
   2: {
     container: "w-full max-w-[313px]",
-    aspectRatio: "aspect-[313/175]",
-    titleClass: "text-base lg:text-lg line-clamp-2",
-    categoryClass: "text-xs",
+    aspectRatio: "aspect-[313/170]",
   },
   3: {
     container: "w-full max-w-[288px]",
-    aspectRatio: "aspect-[288/160]",
-    titleClass: "text-base line-clamp-2",
-    categoryClass: "text-xs",
+    aspectRatio: "aspect-[288/156]",
   },
   4: {
     container: "w-full max-w-[200px]",
-    aspectRatio: "aspect-[200/120]",
-    titleClass: "text-sm line-clamp-2",
-    categoryClass: "text-[10px]",
+    aspectRatio: "aspect-[200/110]",
   },
 };
 
 const GRADIENT_STYLE: React.CSSProperties = {
-  background:
-    "linear-gradient(135deg, var(--color-gradient-from), var(--color-gradient-to))",
+  background: "linear-gradient(135deg, #7b2ac7, #ac69ea)",
 };
 
 export function ArticleCard({
@@ -75,41 +64,61 @@ export function ArticleCard({
   const config = SIZE_CONFIG[size];
 
   if (state === "none") {
-    // Figma (114:8164) 명세: 카드 전체가 그라디언트 + 중앙 "보도자료" 큰 텍스트만 (카테고리 라벨·제목·날짜 본문 영역 없음)
+    // 이미지 없는 그라디언트 플레이스홀더 카드 (Figma 114:8202)
     return (
       <div
         className={cn(
-          "flex items-center justify-center overflow-hidden rounded-[14px] text-white",
+          "flex flex-col overflow-hidden rounded-[14px]",
           config.container,
           className,
         )}
-        style={{ ...GRADIENT_STYLE, aspectRatio: "1 / 1" }}
       >
-        <span className="text-xl font-extrabold tracking-wide lg:text-2xl">
-          보도자료
-        </span>
+        <div
+          className={cn(
+            "flex items-center justify-center rounded-[14px]",
+            config.aspectRatio,
+          )}
+          style={GRADIENT_STYLE}
+        >
+          <span className="text-2xl font-bold text-white">보도자료</span>
+        </div>
+        {article && (
+          <div className="flex flex-col gap-5 px-0.5 pb-3.5 pt-3">
+            <div className="flex flex-col gap-1">
+              <span className="text-[14px] font-bold text-brand-vivid">
+                {article.categoryName}
+              </span>
+              <p className="line-clamp-2 text-[18px] font-bold leading-[1.4] text-ink-strong">
+                {article.title}
+              </p>
+            </div>
+            <span className="text-[16px] font-medium text-[#959ba9]">
+              {article.publishedAt
+                ? dayjs(article.publishedAt).format("YYYY.MM.DD")
+                : "—"}
+            </span>
+          </div>
+        )}
       </div>
     );
   }
 
   if (!article) return null;
-  const isHover = state === "hover";
 
   return (
     <Link
       href={`/news/${article.id}`}
       className={cn(
-        "group flex flex-col overflow-hidden rounded-[14px] border border-border bg-white transition-shadow",
-        isHover
-          ? "shadow-[0_8px_24px_-12px_rgba(80,31,126,0.25)]"
-          : "hover:shadow-[0_8px_24px_-12px_rgba(80,31,126,0.25)]",
+        "group flex flex-col overflow-hidden rounded-[14px] transition-shadow hover:shadow-[0_8px_24px_-12px_rgba(80,31,126,0.25)]",
+        state === "hover" && "shadow-[0_8px_24px_-12px_rgba(80,31,126,0.25)]",
         config.container,
         className,
       )}
     >
+      {/* 이미지 컨테이너 */}
       <div
         className={cn(
-          "relative overflow-hidden bg-surface-soft",
+          "relative overflow-hidden rounded-[14px] bg-surface-soft",
           config.aspectRatio,
         )}
       >
@@ -124,38 +133,34 @@ export function ArticleCard({
         ) : (
           <div className="absolute inset-0" style={GRADIENT_STYLE} />
         )}
-        {(isHover || article.heartCount != null) && (
-          <div
-            className={cn(
-              "absolute right-3 top-3 rounded-full bg-white/95 px-2 py-1 shadow-sm transition-opacity",
-              isHover ? "opacity-100" : "opacity-0 group-hover:opacity-100",
-            )}
-          >
-            <Heart
-              count={article.heartCount ?? 0}
-              interactive={false}
-              compact
-            />
-          </div>
-        )}
       </div>
-      <div className="flex flex-col gap-2 p-4">
-        <span
-          className={cn(
-            "self-start rounded-full bg-brand-vivid px-2.5 py-0.5 font-semibold text-white",
-            config.categoryClass,
-          )}
-        >
-          {article.categoryName}
-        </span>
-        <p className={cn("font-bold text-foreground", config.titleClass)}>
-          {article.title}
-        </p>
-        <p className="text-xs text-ink-date">
+
+      {/* 텍스트 영역 — Figma 114:8195 정합 */}
+      <div className="flex flex-col gap-5 px-0.5 pb-3.5 pt-3">
+        <div className="flex flex-col gap-1">
+          {/* 카테고리(좌) + 하트(우) 행 — Figma 114:8288 정합 */}
+          <div className="flex items-start justify-between">
+            <span className="text-[14px] font-bold leading-[1.6] text-brand-vivid">
+              {article.categoryName}
+            </span>
+            {/* 이미지 있는 카드만 하트 표시 — Figma 114:8288 정합 */}
+            {article.coverImageUrl != null && article.heartCount != null && (
+              <Heart
+                count={article.heartCount}
+                interactive={false}
+                compact
+              />
+            )}
+          </div>
+          <p className="line-clamp-2 text-[18px] font-bold leading-[1.4] text-ink-strong">
+            {article.title}
+          </p>
+        </div>
+        <span className="text-[16px] font-medium text-[#959ba9]">
           {article.publishedAt
             ? dayjs(article.publishedAt).format("YYYY.MM.DD")
             : "—"}
-        </p>
+        </span>
       </div>
     </Link>
   );

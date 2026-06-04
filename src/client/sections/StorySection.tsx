@@ -3,6 +3,7 @@
 // 통계는 kpi_metrics(section='story') DB 연결 — 운영자가 /admin/landing 에서 입력. value 0/null 인 항목은 hide-when-empty 로 숨김
 import Link from "next/link";
 
+import { SectionContainer } from "@/client/components/layout";
 import { cn } from "@/lib/utils";
 
 export type StoryStat = {
@@ -29,50 +30,51 @@ const FALLBACK_IMAGES = [
   "/images/story-card2.png",
 ] as const;
 
-// 상단 슬롯 이미지 — 지정 글의 대표 이미지(글 링크) 또는 기본 디자인 사진
+// 상단 슬롯 이미지 — wrapperClass 로 크기/비율 지정, 이미지는 컨테이너를 object-cover 로 채움(좌우 동일 높이 배치 지원). 지정 글 대표 이미지(글 링크) 또는 기본 사진
 function StoryImage({
   slot,
   fallback,
-  colSpanClass,
-  aspectClass,
+  wrapperClass,
   width,
   height,
 }: {
   slot: StorySlotItem | null;
   fallback: string;
-  colSpanClass: string;
-  aspectClass: string;
+  wrapperClass: string;
   width: number;
   height: number;
 }) {
   const hasArticleImage = Boolean(slot?.coverImageUrl);
   const src = slot?.coverImageUrl ?? fallback;
   const alt = hasArticleImage ? slot!.title : "";
-  const imgClass = cn(aspectClass, "w-full rounded-lg object-cover");
+  const img = (
+    // eslint-disable-next-line @next/next/no-img-element -- S3/public asset
+    <img
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      className="absolute inset-0 h-full w-full object-cover"
+    />
+  );
 
   if (slot && hasArticleImage) {
     return (
       <Link
         href={`/news/${slot.id}`}
         className={cn(
-          colSpanClass,
-          "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/60 focus-visible:ring-offset-2",
+          "relative block overflow-hidden rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/60 focus-visible:ring-offset-2",
+          wrapperClass,
         )}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element -- S3/public asset */}
-        <img src={src} alt={alt} width={width} height={height} className={imgClass} />
+        {img}
       </Link>
     );
   }
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- public asset
-    <img
-      src={src}
-      alt={alt}
-      width={width}
-      height={height}
-      className={cn(colSpanClass, imgClass)}
-    />
+    <div className={cn("relative overflow-hidden rounded-lg", wrapperClass)}>
+      {img}
+    </div>
   );
 }
 
@@ -81,32 +83,44 @@ export function StorySection({ stats, slots }: Props) {
   const visibleStats = stats.filter((s) => s.value != null && s.value > 0);
   return (
     <section id="story" className="w-full bg-surface-tint-faint py-16 lg:py-24">
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10 px-4 lg:flex-row lg:items-center lg:gap-[70px] lg:px-0">
-        {/* 좌측 이미지 2장 — 큰 + 작은. 운영자 지정 글 대표 이미지 (미지정 시 기본 사진) */}
-        <div className="relative grid w-full grid-cols-2 gap-3 lg:w-[560px] lg:shrink-0">
+      <SectionContainer className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-[70px]">
+        {/* 좌측 이미지 2장 — Figma 375~(flex-row 나란히), sm h-340, lg h-420 */}
+        <div className="relative flex w-full flex-row gap-3 h-[240px] sm:h-[340px] lg:h-[420px] lg:flex-[1.8]">
           <StoryImage
             slot={slots[0] ?? null}
             fallback={FALLBACK_IMAGES[0]}
-            colSpanClass="col-span-2"
-            aspectClass="aspect-[4/3]"
+            wrapperClass="h-full flex-1"
             width={560}
             height={420}
           />
           <StoryImage
             slot={slots[1] ?? null}
             fallback={FALLBACK_IMAGES[1]}
-            colSpanClass="col-span-1"
-            aspectClass="aspect-square"
+            wrapperClass="h-full w-[42%] shrink-0 lg:w-[280px] lg:shrink-0"
             width={280}
             height={280}
           />
-          {/* 장식 — 데스크탑에만 */}
+          {/* 장식 — 별·하트 (데스크탑) */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
+          <img
+            src="/icons/story-star1.svg"
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute -top-6 -left-5 z-10 hidden size-12 lg:block"
+          />
           {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
           <img
             src="/icons/story-heart.svg"
             alt=""
             aria-hidden
-            className="absolute -right-4 -top-6 hidden size-16 lg:block"
+            className="pointer-events-none absolute -bottom-5 left-[30%] z-10 hidden size-14 lg:block"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
+          <img
+            src="/icons/story-star2.svg"
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute -top-4 -right-4 z-10 hidden size-12 lg:block"
           />
         </div>
 
@@ -116,7 +130,7 @@ export function StorySection({ stats, slots }: Props) {
             쌀 나눔 활동
           </span>
 
-          <h2 className="text-2xl font-bold leading-tight md:text-3xl lg:text-[32px]">
+          <h2 className="break-keep text-2xl font-bold leading-tight md:text-3xl lg:text-[32px]">
             밥이 사랑입니다
             <br />
             나누는 우리는 식구입니다
@@ -129,11 +143,11 @@ export function StorySection({ stats, slots }: Props) {
 
           {/* Result 통계 — Bold 24px #9257CA value / Medium 15px label, lg+ 가로 라인 / 모바일 세로 라인. hide-when-empty 적용 */}
           {visibleStats.length > 0 && (
-            <ul className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-0">
+            <ul className="mt-2 flex flex-row items-stretch gap-0">
               {visibleStats.map((stat) => (
                 <li
                   key={stat.slug}
-                  className="flex flex-col gap-1 lg:px-8 lg:text-right [&:not(:first-child)]:border-t [&:not(:first-child)]:border-brand-mid/30 [&:not(:first-child)]:pt-4 lg:[&:not(:first-child)]:border-l lg:[&:not(:first-child)]:border-t-0 lg:[&:not(:first-child)]:pt-0"
+                  className="flex flex-1 flex-col gap-1 px-[clamp(0.75rem,2.5vw,2rem)] text-left lg:flex-initial lg:px-8 lg:text-right [&:not(:first-child)]:border-l [&:not(:first-child)]:border-brand-mid/30"
                   aria-label={`${stat.label} ${stat.displayValue}`}
                 >
                   <p className="text-brand-mid text-2xl font-bold tabular-nums">
@@ -145,7 +159,7 @@ export function StorySection({ stats, slots }: Props) {
             </ul>
           )}
         </div>
-      </div>
+      </SectionContainer>
     </section>
   );
 }

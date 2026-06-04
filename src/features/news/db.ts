@@ -35,6 +35,7 @@ export async function listPublicNews(opts: ListOpts) {
       coverImageUrl: news.coverImageUrl,
       publishedAt: news.publishedAt,
       createdAt: news.createdAt,
+      heartCount: sql<number>`(SELECT count(*)::int FROM heart_events WHERE news_id = ${news.id} AND deleted_at IS NULL)`,
     })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
@@ -244,6 +245,105 @@ export async function findActiveHeartEvent(newsId: string, sessionId: string) {
     )
     .limit(1);
   return row ?? null;
+}
+
+// 세션 하트 행 (삭제 포함) — 토글 재활성용. unique(newsId, sessionId) 라 0~1행
+export async function findHeartEventAny(newsId: string, sessionId: string) {
+  const [row] = await db
+    .select()
+    .from(heartEvents)
+    .where(
+      and(eq(heartEvents.newsId, newsId), eq(heartEvents.sessionId, sessionId)),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+// 익명 하트 — 공개 토글(트랜잭션 외 단건). insert / deletedAt 갱신.
+// onConflictDoUpdate: 동시 "첫 좋아요" 경합(같은 newsId+sessionId 동시 insert)을 23505 throw 대신
+// deletedAt=null 로 멱등 흡수 — 두 요청 모두 liked 로 수렴 (codex MED: tx/upsert 부재 race)
+export async function insertHeart(newsId: string, sessionId: string) {
+  await db
+    .insert(heartEvents)
+    .values({ newsId, sessionId })
+    .onConflictDoUpdate({
+      target: [heartEvents.newsId, heartEvents.sessionId],
+      set: { deletedAt: null },
+    });
+}
+
+// 발행 여부 — 익명 하트가 draft/비공개 글에 row 생성하는 것 차단용 (codex MED)
+export async function isNewsPublished(newsId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: news.id })
+    .from(news)
+    .where(and(eq(news.id, newsId), isNotNull(news.publishedAt)))
+    .limit(1);
+  return row != null;
+}
+
+// 인접 글 — 발행 글만, publishedAt 기준. prev(이전글)=더 최신 / next(다음글)=더 과거 (목록 newest-first 정합).
+// 동일 publishedAt tie 는 v1 스킵 허용(초 단위 정밀도). 자기 자신 제외
+export async function findAdjacentNews(newsId: string, publishedAt: Date) {
+  const [prev] = await db
+    .select({ id: news.id, title: news.title })
+    .from(news)
+    .where(
+      and(
+        isNotNull(news.publishedAt),
+        sql`${news.publishedAt} > ${publishedAt}`,
+        sql`${news.id} <> ${newsId}`,
+      ),
+    )
+    .orderBy(asc(news.publishedAt))
+    .limit(1);
+  const [next] = await db
+    .select({ id: news.id, title: news.title })
+    .from(news)
+    .where(
+      and(
+        isNotNull(news.publishedAt),
+        sql`${news.publishedAt} < ${publishedAt}`,
+        sql`${news.id} <> ${newsId}`,
+      ),
+    )
+    .orderBy(desc(news.publishedAt))
+    .limit(1);
+  return { prev: prev ?? null, next: next ?? null };
+}
+
+export async function setHeartDeleted(id: string, deleted: boolean) {
+  await db
+    .update(heartEvents)
+    .set({ deletedAt: deleted ? new Date() : null })
+    .where(eq(heartEvents.id, id));
+}
+
+// 관련 글 — 같은 카테고리 최신순(self 제외, published). ADR-013 가중치 스코어는 v1.1
+export async function listRelatedNews(
+  newsId: string,
+  categoryId: string,
+  limit: number,
+) {
+  return db
+    .select({
+      id: news.id,
+      title: news.title,
+      categoryName: categories.name,
+      coverImageUrl: news.coverImageUrl,
+      publishedAt: news.publishedAt,
+    })
+    .from(news)
+    .innerJoin(categories, eq(news.categoryId, categories.id))
+    .where(
+      and(
+        isNotNull(news.publishedAt),
+        eq(news.categoryId, categoryId),
+        sql`${news.id} <> ${newsId}`,
+      ),
+    )
+    .orderBy(desc(news.publishedAt))
+    .limit(limit);
 }
 
 // ─── Mutation — transaction 안에서만 호출 (codex P1#5, tx 인자 강제) ────────

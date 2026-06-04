@@ -56,6 +56,37 @@ export async function getNewsDetailAction(id: string) {
   return { success: true as const, data };
 }
 
+// 익명 좋아요 토글 / 상태 조회 — 인증 불필요. sessionId 는 client localStorage UUID (ADR-026, IP 미수집)
+export async function toggleHeartAction(newsId: string, sessionId: string) {
+  if (
+    !z.uuid().safeParse(newsId).success ||
+    !z.uuid().safeParse(sessionId).success
+  ) {
+    return { success: false as const, error: "Invalid request" };
+  }
+  try {
+    const data = await newsService.toggleHeart(newsId, sessionId);
+    return { success: true as const, data };
+  } catch {
+    return { success: false as const, error: "좋아요 처리에 실패했습니다." };
+  }
+}
+
+export async function heartStateAction(newsId: string, sessionId: string) {
+  if (
+    !z.uuid().safeParse(newsId).success ||
+    !z.uuid().safeParse(sessionId).success
+  ) {
+    return { success: false as const, error: "Invalid request" };
+  }
+  try {
+    const data = await newsService.getHeartState(newsId, sessionId);
+    return { success: true as const, data };
+  } catch {
+    return { success: false as const, error: "조회 실패" };
+  }
+}
+
 // ─── 어드민 CRUD (super 가드) — RHF handleSubmit 의 values 객체 직접 수신 (결정 로그 [T7 시그니처]) ──
 
 export async function createNewsAction(

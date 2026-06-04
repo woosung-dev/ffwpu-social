@@ -26,7 +26,14 @@ const dbBarrelOnly = {
 
 export default [
   {
-    ignores: [".next/**", "node_modules/**", "drizzle/**", "out/**", "dist/**"],
+    ignores: [
+      ".next/**",
+      "node_modules/**",
+      "drizzle/**",
+      "out/**",
+      "dist/**",
+      ".cache/**",
+    ],
   },
   // 공개 영역(client): admin import 금지 + DAL 직접 import 금지
   {

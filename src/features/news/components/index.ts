@@ -5,4 +5,3 @@ export { FeaturedStoryCard, type FeaturedStory } from "./FeaturedStoryCard";
 export { Heart } from "./Heart";
 export { CategoryTabs, type CategoryTabItem } from "./CategoryTabs";
 export { Pagination } from "./Pagination";
-export { KpiCard } from "./KpiCard";

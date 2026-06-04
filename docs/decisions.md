@@ -1353,3 +1353,48 @@ velog 최종 처방은 "pnpm workspace 기준선 → 빌드성능 필요 시 Tur
 - ⚠️ OPT-2를 ship 블로커로 만들지 말 것. boundary 위반은 lessons.md에 실증 사고가 없어 ship 자격 없음. 반드시 ship 후 warn → error.
 - ⚠️ OPT-2 범위 self-limit. element-type 매트릭스·import/order·배럴 우회 차단까지 욕심내면 오탐·유지비·F2 폐기손실이 폭증해 8.0 점수가 무너진다. ADR-024가 이미 잡은 컨벤션(`index.ts`에서 `db.ts` 비공개)과 중복 룰은 넣지 않는다.
 - ⚠️ F2 시 Next 16 + NextAuth v5 beta 스택의 미검증 플러그인 호환성 주의(Nx 진입 금지 이유 중 하나).
+
+---
+
+## ADR-034: TanStack Query 도입 범위 — /news 목록 클라 캐시 한정 (Streaming SSR + useSuspenseQuery)
+
+- **상태**: 채택 (2026-06-03)
+- **맥락**: 사용자 요청 "랜딩·소식 목록 호출에 캐시 용도 + 요즘 권장되는 Streaming·useSuspenseQuery 기법 조사 후 도입". TanStack 공식 Advanced SSR 가이드 조사 결과 — (a) 안정 패턴 = 서버 `prefetchQuery`(no await) → pending 포함 `dehydrate` → `HydrationBoundary` → 클라 `useSuspenseQuery` (b) `ReactQueryStreamedHydration`(`@tanstack/react-query-next-experimental`)은 experimental + 네비게이션 워터폴 단점 (c) Data Ownership 권고: *RSC만 소비하는 데이터에 RQ는 불필요 복잡도*.
+
+### Decision
+
+1. **/news 목록만 RQ 적용** — 탭(카테고리)·페이지네이션 왕복 시 방문 조합을 클라 캐시에서 즉시 복원(스켈레톤 재노출 0). 키·정규화·queryFn 은 `src/features/news/api.ts` 단일 출처(서버/클라 동일 import — drift 방지). queryFn 은 기존 `listNewsAction` 재사용(Route Handler 신설 없음, fullstack.md §6 유지).
+2. **랜딩은 RSC 유지** — 클라 재패칭·상호작용 0인 데이터(공식 권고 정합). 랜딩은 이미 RSC+Suspense 로 스트리밍 중.
+3. **하트는 현행 유지** — localStorage sessionId 외부동기화 useEffect 는 허용 패턴(anti-slop §2), RQ 전환 실익 없음 (사용자 확인 2026-06-03).
+4. **experimental 패키지 미채택** — 안정 prefetch+HydrationBoundary 패턴만. `staleTime: 60s`, pending 쿼리 dehydrate 포함(`shouldDehydrateQuery`), 서버 요청별 새 QueryClient/브라우저 싱글톤(`src/lib/query/get-query-client.ts`).
+
+### Consequences
+
+- ✅ 검증: 탭 전초 방문은 스트리밍된 pending promise 를 클라가 인계(서버액션 POST 0건), 재방문은 캐시 적중 — Playwright 네트워크 로그로 확인.
+- ✅ fullstack.md §7 "자체 UI 조회는 RSC" 규칙의 명시 예외 1건 — 본 ADR 이 그 기록. 추가 RQ 확장은 "다중 소비 클라 패칭" 실증 필요 시에만.
+- ⚠️ Next 16 SSRF 가드가 localhost 이미지 최적화를 기본 차단 → `next.config.ts` `dangerouslyAllowLocalIP` dev 한정 허용(프로덕션 R2/S3 가드 유지).
+- ⚠️ /news 목록에 ErrorBoundary 미설치(기존 RSC 시절과 동일 리스크 프로파일) — v1.1 error.tsx 도입 검토.
+
+---
+
+## ADR-035: 랜딩 반응형 BP 정책 — 표준 Tailwind BP + clamp 보간, 커스텀 스크린 미추가
+
+- **상태**: 채택 (2026-06-03)
+- **맥락**: 랜딩 7면을 디자이너 4-BP(1920~1440/1439~1025/1024~768/767~375)에 정합. 디자이너는 각 범위 양끝 폭을 따로 그림. Figma 는 "스티커 이미지"라 CSS 직접 이식 금지(gap/margin/padding만 참고) — 사용자 메타 프롬프트. 7면 병렬 디자인 검증(fan-out→synthesis) 수행.
+
+### Decision
+
+1. **표준 Tailwind BP만** (sm640/md768/lg1024/xl1280). 커스텀 스크린·`min-[1025px]` arbitrary variant 금지. 디자이너 "1024 vs 1025" 1px 경계는 Figma 1024 시안이 *데스크탑 컴포지션*으로 확인돼 실제 충돌 없음 → 리플로우 경계 = `lg`(1024), 태블릿 전용 처리 = 768~1023(`md`).
+2. **밴드 내부 유동화 = `clamp()`** (타이포·간격·크기), **컴포지션 리플로우 = BP**. 1440~1920 여백 확장도 clamp(커스텀 BP 추가 대신). `max-w-[1200px]` 콘텐츠 캡 덕에 vw-clamp 가 1280+ 에서 동일 결과.
+3. **고정폭→유동 (서지컬)**: KPI 좌블록 `xl:w-[607px]` → `lg:flex-[1.7] xl:flex-[2.4]` (1440 ≈607px 재현 + 1024 값 가독폭). Story Result 전 폭 가로(`flex-row`, lg 축소 허용). Partners 전환점 `sm`(640)→`md`(768)=Figma 밴드 경계 정렬. ArticleGrid 다크블록 768 가로 배너(`md:flex`).
+4. **장식은 폭 부족 시 숨김**: KPI 그래프+별 데코는 1024~1279 카드 폭 부족 → `xl:flex`.
+5. **마조네리는 `columns-*` 유지** (`display:masonry` 미사용 — 브라우저 지원 불안정).
+6. **`docs/design.md` 매트릭스 정정** — 스크린샷 추정 매트릭스의 5개 셀 오류(1024 세로/2x2, Story 375 Result 세로, ArticleGrid 모바일 다크블록 제거, Hero 세로스택)를 Figma 기준 정정 노트로 supersede.
+
+### Consequences
+
+- ✅ 전 폭(320~1920 9폭) 가로스크롤 0 — Playwright `scrollWidth<=clientWidth` 어서션 통과. 768 H-scroll(KPI 별 아이콘) 해소.
+- ✅ 1280+/1440 기존 정합 뷰 무회귀(벤토 비율·값 크기 캡 보존). 1024~1279 Figma 데스크탑 side-by-side 신규 정합.
+- ✅ Figma "스티커 이미지" 원칙 준수 — synthesis 가 억지 CSS(매직 오프셋·xl 상향으로 Figma 1024 깨는 변경·추측성 flower 축소) 기각.
+- ⚠️ 디자이너 1px 경계(1024/1025)는 표준 BP 로 정확 표현 불가 — Figma 1024=데스크탑 귀결로 해소했으나, 차후 디자이너가 1025 를 태블릿으로 재정의하면 재검토 필요.
+- ⚠️ KPI `flex-[1.7]/[2.4]` 는 Figma 607:256 비율 근사(매직 비율 아님, 가용폭 분배) — 실콘텐츠/실사진 교체 후 1024·1440 재확인 권장.

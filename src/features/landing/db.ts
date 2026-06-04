@@ -153,6 +153,7 @@ export async function listRiceSharingCandidates() {
       title: news.title,
       categoryName: categories.name,
       categorySlug: categories.slug,
+      coverImageUrl: news.coverImageUrl, // 슬롯 썸네일 — 운영자가 노출될 이미지 확인용
       publishedAt: news.publishedAt,
       storySlot: news.storySlot,
       featuredRank: news.featuredRank,

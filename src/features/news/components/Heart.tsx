@@ -11,8 +11,11 @@ type Props = {
   count: number;
   /** 현재 세션이 좋아요를 누른 상태인지 */
   initialActive?: boolean;
-  /** Server Action 연결 — D-2 toggleHeart 도입 후 부모가 주입. 없으면 시각 표시만 */
-  onToggleAction?: (next: boolean) => Promise<void> | void;
+  /** Server Action 연결 — 부모가 주입. 없으면 시각 표시만.
+   *  서버 권위 상태 `{ liked, count }` 를 반환하면 optimistic 값을 그 값으로 보정 (다른 탭/경합 후 정합). */
+  onToggleAction?: (
+    next: boolean,
+  ) => Promise<{ liked: boolean; count: number } | void> | void;
   /** 작은 사이즈 (카드 내 호버 뱃지 등) */
   compact?: boolean;
   /** false 면 클릭 불가, 단순 표시 (카드 호버 표시·관련 글 카드 등) */
@@ -30,7 +33,8 @@ export function Heart({
   const [optimisticDelta, setOptimisticDelta] = useState(0);
   const [pending, startTransition] = useTransition();
 
-  const displayCount = count + optimisticDelta;
+  // SSR count 가 낮게 stale 인 상태에서 취소 시 음수 표시 방지 (codex loop2 LOW)
+  const displayCount = Math.max(0, count + optimisticDelta);
 
   const handleClick = () => {
     if (!interactive || pending) return;
@@ -40,7 +44,12 @@ export function Heart({
     if (onToggleAction) {
       startTransition(async () => {
         try {
-          await onToggleAction(next);
+          const result = await onToggleAction(next);
+          if (result) {
+            // 서버 권위 상태로 보정 — count 는 prop(SSR 시점) 대비 delta 로 환산
+            setActive(result.liked);
+            setOptimisticDelta(result.count - count);
+          }
         } catch {
           // 실패 시 롤백
           setActive(!next);

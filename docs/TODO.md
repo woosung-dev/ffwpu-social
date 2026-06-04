@@ -4,7 +4,11 @@
 
 > **목적:** AI ↔ 사용자 매개. 차단 상태가 아닌 질문·확인 항목은 여기에 누적 후 자연스러운 타이밍에 일괄 전달.
 
-## 진행 중 (2026-06-01)
+## 진행 중 (2026-06-03)
+
+- **랜딩 실데이터화 + 반응형 4-BP 정합** — `docs/plans/active/2026-06-03-landing-data-responsive.md` (branch `feat/client-foundation`). WS1 시드 실데이터화(사진 11장→MinIO) + WS2 슬롯 썸네일 + WS3 ArticleGrid 호이스트 + WS4 RQ /news 목록 캐시(useSuspenseQuery 안정 패턴) + WS5 7면 4-BP 정합. **스키마 변경 없음.**
+  - 🔴 **사진 11장 수령 대기** — `src/db/seed-assets/`에 넣으면 시드가 자동 업로드 (아래 2026-05-30 조달 항목과 동일 건). KPI 보라 카드 1장만 `public/images/` 덮어쓰기.
+  - Gmarket Sans Medium: **라이선스 확인 필요** (사용자 결정 2026-06-03) — 확보 시 next/font/local 로드, 그 전까지 SUIT 폴백 + clamp 재튜닝.
 
 - **어드민 v1.0 ship-전 하드닝** — `docs/plans/active/2026-06-01-admin-ship-hardening.md` (branch `feat/admin-ship-hardening`). HIGH 6 + 접근성 + 모바일 카드뷰 + 아키텍처 옵션1. 다단 검토 GO-WITH-FIXES + codex v2 교정. **스키마 변경 없음.**
   - **상태: 코드 완료** — A1~A8·B1~B4·C1·D1·D2 구현. 자동 게이트 통과(src tsc 0·Next compile 성공·lint·단위테스트 31). ADR-030/031/032 기록. 커밋·수동 검증 대기.
@@ -111,6 +115,7 @@
 
 - [ ] 에러 박스 대비 검증 — `text-destructive` on `bg-destructive/5` 가 WCAG AA(4.5:1) 경계선. NewsTable·KpiEditor·AccountManager·StoryStatsEditor·HeroOrderManager 공통 패턴 (신규 파일 고유 아님). 전역 1회 검증 후 필요 시 `font-medium` 또는 토큰 1단계 상향. (designer Slice4 Should-fix #2)
 - [ ] `NewsTable.tsx` 페이지네이션 윈도잉 — 현재 `Array.from({length: totalPages})` 전체 렌더. 글이 30+ 페이지가 되면 모바일 가로 오버플로. 현재 9건(1페이지)이라 미발현. first/prev/…/next/last 윈도잉으로 교체. (latent, 데이터 증가 시)
+- [ ] 랜딩 반응형 2차 후속 정리 — `public/icons/hero-banner-background.svg` 미참조 에셋 제거(Hero 곡선 제거로 고아). `globals.css` `--color-surface-tint-soft` 주석 "Hero·Partners" → "Partners" 로 정정(Hero 미사용). 저우선.
 
 ### v1.1+ 백로그
 
