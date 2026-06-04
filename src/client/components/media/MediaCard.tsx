@@ -1,4 +1,4 @@
-// StoryCard — 277.67×425 세로 카드, 이미지 위 그라디언트 오버레이 + 라벤더 텍스트 (#F1E3FF). 랜딩 StorySection 용
+// MediaCard — 이미지 fill + 하단 그라디언트 오버레이 + 라벤더 텍스트 카드. 랜딩 ArticleGrid 마조네리용 (구 StoryCard, ADR-024 client 영역으로 이동 — 랜딩 전용이라 features/news 의존 제거)
 import Image from "next/image";
 import Link from "next/link";
 
@@ -12,7 +12,7 @@ type Props = {
   className?: string;
 };
 
-export function StoryCard({
+export function MediaCard({
   href,
   imageUrl,
   title,

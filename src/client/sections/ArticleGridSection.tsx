@@ -2,7 +2,7 @@
 import Link from "next/link";
 
 import { SectionContainer } from "@/client/components/layout";
-import { StoryCard } from "@/features/news/components";
+import { MediaCard } from "@/client/components/media";
 import { cn } from "@/lib/utils";
 
 // Figma 마조네리 6 카드 높이 비율:
@@ -79,7 +79,7 @@ export function ArticleGridSection({ items }: Props) {
               if (!item) return null;
               return (
                 <div key={item.id} className="break-inside-avoid">
-                  <StoryCard
+                  <MediaCard
                     href={`/news/${item.id}`}
                     imageUrl={item.coverImageUrl ?? FALLBACK_IMAGES[idx]}
                     title={item.title}
