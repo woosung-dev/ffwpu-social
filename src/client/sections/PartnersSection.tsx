@@ -5,11 +5,46 @@ import { SectionContainer } from "@/client/components/layout";
 
 // 실제 협력 기관 5곳 — w/h=트림 원본 비율(CLS용), hBase=375~1439 표시높이 / hWide=1440+ 표시높이 (Figma image rect). 투명 여백 트림, opacity-23, 스크린리더용 alt
 const PARTNERS = [
-  { src: "/images/s5-partner1.png", name: "선학UP대학원대학교", w: 352, h: 52, hBase: 25, hWide: 31 },
-  { src: "/images/s5-partner2.png", name: "천주평화연합", w: 267, h: 67, hBase: 43, hWide: 53 },
-  { src: "/images/s5-partner3.png", name: "선학역사편찬원", w: 266, h: 62, hBase: 31, hWide: 38 },
-  { src: "/images/s5-partner4.png", name: "PeaceTV", w: 138, h: 52, hBase: 26, hWide: 33 },
-  { src: "/images/s5-partner5.png", name: "천원궁", w: 272, h: 78, hBase: 42, hWide: 52 },
+  {
+    src: "/images/s5-partner1.png",
+    name: "선학UP대학원대학교",
+    w: 352,
+    h: 52,
+    hBase: 25,
+    hWide: 31,
+  },
+  {
+    src: "/images/s5-partner2.png",
+    name: "천주평화연합",
+    w: 267,
+    h: 67,
+    hBase: 43,
+    hWide: 53,
+  },
+  {
+    src: "/images/s5-partner3.png",
+    name: "선학역사편찬원",
+    w: 266,
+    h: 62,
+    hBase: 31,
+    hWide: 38,
+  },
+  {
+    src: "/images/s5-partner4.png",
+    name: "PeaceTV",
+    w: 138,
+    h: 52,
+    hBase: 26,
+    hWide: 33,
+  },
+  {
+    src: "/images/s5-partner5.png",
+    name: "천원궁",
+    w: 272,
+    h: 78,
+    hBase: 42,
+    hWide: 52,
+  },
 ] as const;
 
 export function PartnersSection() {
@@ -48,7 +83,7 @@ export function PartnersSection() {
         </div>
 
         {/* 하단 — 파트너 로고. Figma List 332:9087 — flex justify-between(lg+) / flex-wrap(md) / flex-col(base) · opacity-23(컨테이너). Logo 프레임: w-200(base·md)→auto(lg+), h-70(base)→100(md+) */}
-        <div className="mt-[70px] flex w-full flex-col items-center justify-center opacity-[0.23] md:flex-row md:flex-wrap md:content-center md:justify-center md:gap-x-6 lg:flex-nowrap lg:justify-between">
+        <div className="mt-[70px] flex w-full flex-col items-center justify-center opacity-[0.23] md:flex-row md:flex-wrap md:content-center md:justify-around lg:flex-nowrap lg:justify-between">
           {PARTNERS.map((partner) => (
             <div
               key={partner.src}
@@ -60,7 +95,12 @@ export function PartnersSection() {
                 alt={partner.name}
                 width={partner.w}
                 height={partner.h}
-                style={{ "--h": `${partner.hBase}px`, "--hw": `${partner.hWide}px` } as CSSProperties}
+                style={
+                  {
+                    "--h": `${partner.hBase}px`,
+                    "--hw": `${partner.hWide}px`,
+                  } as CSSProperties
+                }
                 className="h-[var(--h)] w-auto max-w-full wide:h-[var(--hw)]"
               />
             </div>
