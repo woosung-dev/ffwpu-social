@@ -81,7 +81,10 @@
 ### Operational Commands
 
 ```bash
-pnpm dev                       # 로컬 개발 서버
+pnpm infra:up                  # Postgres(5433)+MinIO 컨테이너 기동 (.env.local 자동 주입)
+pnpm dev                       # 로컬 개발 서버 (infra 선행 필요)
+pnpm dev:up                    # infra:up + dev 한 번에
+pnpm infra:down                # 컨테이너 정지
 pnpm build && pnpm start       # 프로덕션 빌드 확인
 pnpm tsc --noEmit              # 타입 체크
 pnpm lint                      # ESLint
