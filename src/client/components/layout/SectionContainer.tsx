@@ -1,6 +1,6 @@
-// 섹션 콘텐츠 공통 래퍼 — Figma 데스크탑 콘텐츠 1200px 중앙 정렬 + 반응형 좌우 거터.
-// max-w-[1264px] = 콘텐츠 1200 + lg:px-8(좌우 64) 라 1440 에서 콘텐츠 1200·거터 120px(Figma 96:7689 일치),
-// 1024~1199 에서도 거터 32px 확보 → 기존 lg:px-0 가 만들던 "거터 0(화면 끝 닿음)" 버그 교정.
+// 섹션 콘텐츠 공통 래퍼 — Figma 4-BP max-width 컨테이너 (Contents x좌표 역산, SSoT docs/design.md).
+// 콘텐츠 폭: base 343 / md 648 / lg 905~1319 / wide 1200~1680 (>1920 1680 고정).
+// 좌우 패딩: base 16 / md·lg 60 / wide 120. max-w-1920 로 wide 콘텐츠 상한 1680.
 // 섹션별 flex/gap 은 className 으로 주입. (ADR-024 client 영역 공통 컴포넌트)
 import type { ReactNode } from "react";
 
@@ -13,7 +13,7 @@ type Props = {
 
 export function SectionContainer({ className, children }: Props) {
   return (
-    <div className={cn("mx-auto w-full max-w-[1264px] px-4 lg:px-8", className)}>
+    <div className={cn("mx-auto w-full max-w-[1920px] px-4 md:px-[60px] wide:px-[120px]", className)}>
       {children}
     </div>
   );
