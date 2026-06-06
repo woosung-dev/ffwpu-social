@@ -71,7 +71,13 @@ coverImageHeight: integer("cover_image_height"),
 - [x] `ArticleGridSection` — `CARD_ASPECTS`/`FALLBACK_IMAGES` 제거, `MasonryGrid` 사용 (모바일 1 / md+ 3열)
 - [x] `listFeaturedGrid` SELECT 에 w/h 추가
 - [x] 검증: `tsc` ✅ + `lint` ✅ + `build` ✅
-- [ ] 🔴 시각 검증: `migrate`(완료) + 재시드 → dev 서버 4-BP(375/768/1024/1440) + CLS 0 확인
+- [x] 🔴 균일하게 보이던 근본원인 = DB 치수 NULL. **비파괴 백필**(`db:backfill-cover-dims`, 재시드 아님 — 큐레이션 보존)로 커버 9장 치수 채움 → 가변 높이 실제 확인
+- [x] 시각 검증: dev(:3000) 1440(3열 가변)·375(1열 가변) 스크린샷 OK, CLS 0(aspectRatio 선점)
+
+### Phase 2.5 — Pinterest 마감 (백필 + shortest-column) ✅ 완료
+- [x] `readImageSize` → `features/storage/image-size.ts` 공유 유틸 추출 (seed + 백필 공용) — 커밋 998814a
+- [x] 비파괴 백필 스크립트 `db/backfill-cover-dims.ts` (S3 GetObject→파싱→UPDATE, idempotent) — 커밋 3eccf23
+- [x] `MasonryGrid` round-robin → **shortest-column bin-packing**(`getWeight` prop, Pinterest 컬럼 균형) — 커밋 d4fd6e5
 
 ### ~~Phase 3 — /news 마조네리~~ ❌ 범위 제외 (2026-06-06 확정)
 - `/news` 목록은 **균일 3×3 그리드 유지.** 코드 변경 없음. 향후에도 별도 요청 없으면 미적용.
