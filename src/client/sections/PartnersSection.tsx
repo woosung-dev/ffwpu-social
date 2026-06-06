@@ -51,7 +51,7 @@ export function PartnersSection() {
   return (
     <section
       id="partners"
-      className="w-full bg-gradient-to-b from-surface-tint-soft to-white py-16 lg:py-24"
+      className="w-full bg-gradient-to-b from-white to-surface-tint-soft py-16 lg:py-24"
     >
       <SectionContainer>
         {/* 상단 — 보라 아이콘 + Sow Good 로고 + 카피 */}
