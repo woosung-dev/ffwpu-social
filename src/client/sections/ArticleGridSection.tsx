@@ -1,32 +1,16 @@
-// 사용자 랜딩 ArticleGrid 섹션 — Figma 331:8155 (시안4) / 96:7877 (이전 시안). 좌측 다크 블록 + 우측 마조네리 6 슬롯. 데이터는 page.tsx ArticleGridSectionWithData 가 props 로 전달 (Kpi/Story 패턴 통일)
+// 사용자 랜딩 ArticleGrid 섹션 — Figma 331:8155(시안4). 좌측 다크 블록 + 우측 마조네리.
+// 카드 높이는 업로드 이미지 실제 비율로 결정(MasonryGrid round-robin + MediaCard aspectRatio, CLS 0).
+// 데이터는 page.tsx ArticleGridSectionWithData 가 props 로 전달 (Kpi/Story 패턴 통일)
 import Link from "next/link";
 
 import { SectionContainer } from "@/client/components/layout";
-import { MediaCard } from "@/client/components/media";
-import { cn } from "@/lib/utils";
+import { MasonryGrid, MediaCard, type MasonryTier } from "@/client/components/media";
 
-// Figma 마조네리 6 카드 높이 비율:
-//  - base(375/1열 col≈343px): portrait→ ~350px — aspect-[278/300]
-//  - sm(640~767/1열 col≈608-735px): landscape 단축 — aspect-[278/140] (767 극단 방지)
-//  - md+(768+/3열 col): Figma 원안 portrait 복원 (768 부터 3열)
-const CARD_ASPECTS = [
-  "aspect-[278/256]",
-  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/425]",
-  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/425]",
-  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/337]",
-  "aspect-[278/278]",
-  "aspect-[278/300] sm:aspect-[278/140] md:aspect-[278/381]",
-] as const;
-
-// 자산 fallback — DB cover_image_url 미설정 시 articlegrid 시안 자산 cycle
-const FALLBACK_IMAGES = [
-  "/images/articlegrid-card1.png",
-  "/images/articlegrid-card2.png",
-  "/images/articlegrid-card3.png",
-  "/images/articlegrid-card4.png",
-  "/images/articlegrid-card5.png",
-  "/images/articlegrid-card6.png",
-] as const;
+// 마조네리 BP 정합 — 모바일 1열 / md+(768~) 3열 (Figma). 숨김 tier 의 lazy 이미지는 미로드
+const GRID_TIERS: MasonryTier[] = [
+  { columns: 1, visibilityClassName: "flex md:hidden" },
+  { columns: 3, visibilityClassName: "hidden md:flex" },
+];
 
 // 마조네리 카드 데이터 — listFeaturedGrid 결과에서 사용하는 필드만
 export type FeaturedGridItem = {
@@ -34,6 +18,8 @@ export type FeaturedGridItem = {
   title: string;
   categoryName: string;
   coverImageUrl: string | null;
+  coverImageWidth: number | null;
+  coverImageHeight: number | null;
 };
 
 type Props = {
@@ -71,25 +57,23 @@ export function ArticleGridSection({ items }: Props) {
           </Link>
         </div>
 
-        {/* 우측 마조네리 — columns로 자연스러운 높이 분배. 모바일 1·md+(768~) 3열 (Figma 정합) */}
+        {/* 우측 마조네리 — 이미지 실제 비율로 가변 높이. 모바일 1열 / md+ 3열 (round-robin, 읽기 순서 보존) */}
         <div className="flex-1">
-          <div className="columns-1 gap-4 [&>*]:mb-4 md:columns-3">
-            {Array.from({ length: 6 }).map((_, idx) => {
-              const item = items[idx];
-              if (!item) return null;
-              return (
-                <div key={item.id} className="break-inside-avoid">
-                  <MediaCard
-                    href={`/news/${item.id}`}
-                    imageUrl={item.coverImageUrl ?? FALLBACK_IMAGES[idx]}
-                    title={item.title}
-                    subtitle={item.categoryName}
-                    className={cn("max-w-none w-full", CARD_ASPECTS[idx])}
-                  />
-                </div>
-              );
-            })}
-          </div>
+          <MasonryGrid
+            items={items.slice(0, 6)}
+            getKey={(item) => item.id}
+            tiers={GRID_TIERS}
+            renderItem={(item) => (
+              <MediaCard
+                href={`/news/${item.id}`}
+                imageUrl={item.coverImageUrl}
+                width={item.coverImageWidth}
+                height={item.coverImageHeight}
+                title={item.title}
+                subtitle={item.categoryName}
+              />
+            )}
+          />
         </div>
       </SectionContainer>
     </section>
