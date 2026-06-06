@@ -50,14 +50,15 @@ coverImageHeight: integer("cover_image_height"),
 
 ## 5. 단계 (Phases) · 체크리스트
 
-### Phase 1 — 기반 (스키마 + 치수 캡처 + 백필) ⟵ 첫 슬라이스
-- [ ] `news` 스키마에 `coverImageWidth`/`coverImageHeight` 추가 + 마이그레이션 생성
-- [ ] `newsInputSchema` (schemas.ts) 에 `coverImageWidth`/`coverImageHeight` (int positive nullable) 추가
-- [ ] `CoverImageUploader` — 업로드 직전 `createImageBitmap(file)` 로 w/h 추출, `onChange(url, { width, height })` 로 전달
-- [ ] `NewsEditor` — w/h 상태 보관 + 저장 시 action 에 전달
-- [ ] `createNews`/`updateNews` (service/db) — w/h 영속화
-- [ ] 시드 11장 백필 (`seed.ts` 또는 1회성 스크립트) — 로컬 파일 dims 읽어 채움
-- [ ] 검증: `pnpm tsc --noEmit` + `pnpm lint` + `drizzle-kit generate` diff 검토
+### Phase 1 — 기반 (스키마 + 치수 캡처 + 백필) ✅ 완료 (커밋 dcef816)
+- [x] `news` 스키마에 `coverImageWidth`/`coverImageHeight` 추가 + 마이그레이션 `0006`
+- [x] `newsInputSchema` (schemas.ts) 에 `coverImageWidth`/`coverImageHeight` (int positive nullable) 추가
+- [x] `CoverImageUploader` — 업로드 직전 `createImageBitmap(file)` 로 w/h 추출, `onChange(url, dims)` 로 전달
+- [x] `NewsEditor` — RHF `setValue` 로 w/h 보관 + 저장 시 payload 전달 / edit 페이지 prefill (getAdminNewsById)
+- [x] `createNews`/`updateNews` (service) — w/h 영속화
+- [x] 시드 백필 (`seed.ts`) — PNG/JPEG 헤더 파서로 로컬 파일 dims 읽어 채움 (커버 11종)
+- [x] 검증: `pnpm tsc --noEmit` ✅ + `pnpm lint` ✅ + 마이그레이션 diff(additive nullable 2컬럼) ✅
+- [ ] 🔴 런타임 반영: `pnpm drizzle-kit migrate` + 재시드 (재시드는 dev DB TRUNCATE — 사용자 타이밍 결정)
 
 ### Phase 2 — 공유 마조네리 컴포넌트 + 랜딩
 - [ ] `src/client/components/media/MasonryGrid.tsx` — items + 컬럼수(BP) → round-robin 분배 렌더 (Server Component)
