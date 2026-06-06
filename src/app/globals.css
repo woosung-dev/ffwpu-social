@@ -8,7 +8,9 @@
      - 태블릿   : md   (768 ~ 1023)
      - 데스크탑 : lg   (1024 ~ 1439)
      - 와이드   : wide (1440 ~ )                         */
-  --breakpoint-wide: 1440px;
+  /* ⚠️ rem 으로 둘 것 — 기본 breakpoint(sm~2xl)가 rem 이라 px 로 두면 단위 불일치로 정렬이 깨져
+     wide: 가 md/lg 를 override 못 함(base 만 이김). 90rem = 1440px (2026-06-06 수정). */
+  --breakpoint-wide: 90rem;
 }
 
 @custom-variant dark (&:is(.dark *));
