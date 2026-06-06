@@ -7,7 +7,16 @@ export { ALL_CATEGORY_SLUG } from "./constants";
 // 어드민 글 생성/수정 입력 — body 는 jsonb (Tiptap JSON, 구조 검증은 NewsBodyRenderer T12 가 담당), tags 는 다중 입력
 export const newsInputSchema = z.object({
   title: z.string().min(1).max(200),
-  body: z.unknown(),
+  // 클라가 JSON.stringify 로 전송 → 서버 parse. 객체로 보내면 Server Action 직렬화(React Flight)에서
+  // 중첩 attrs 가 temporary reference($T)로 소실됨(Next16 cacheComponents). 문자열은 안전.
+  body: z.string().transform((s, ctx): unknown => {
+    try {
+      return JSON.parse(s);
+    } catch {
+      ctx.addIssue({ code: "custom", message: "본문 형식이 올바르지 않습니다." });
+      return z.NEVER;
+    }
+  }),
   categoryId: z.uuid(),
   coverImageUrl: z.string().min(1).nullable().optional(),
   publishedAt: z.date().nullable().optional(),
