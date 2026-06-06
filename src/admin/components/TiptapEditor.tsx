@@ -19,6 +19,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { uploadImageAction } from "@/features/news/actions";
+import { buildPresignedPostBody } from "@/features/storage/presigned-upload";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -52,10 +53,7 @@ async function uploadBodyImage(
     throw new Error(msg);
   }
   const { uploadUrl, fields, publicUrl } = presign.data;
-  const fd = new FormData();
-  for (const [k, v] of Object.entries(fields)) fd.append(k, v);
-  fd.append("Content-Type", file.type);
-  fd.append("file", file);
+  const fd = buildPresignedPostBody(fields, file);
   const resp = await fetch(uploadUrl, { method: "POST", body: fd });
   if (!resp.ok) {
     throw new Error(`이미지 업로드 실패 (HTTP ${resp.status})`);
