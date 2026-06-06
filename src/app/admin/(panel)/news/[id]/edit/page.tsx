@@ -63,6 +63,8 @@ async function EditNewsData({
         body: news.body as JSONContent,
         categoryId: news.categoryId,
         coverImageUrl: news.coverImageUrl,
+        coverImageWidth: news.coverImageWidth,
+        coverImageHeight: news.coverImageHeight,
         publishedAt: news.publishedAt,
         tags: news.tags,
       }}

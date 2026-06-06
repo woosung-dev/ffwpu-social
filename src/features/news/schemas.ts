@@ -10,6 +10,9 @@ export const newsInputSchema = z.object({
   body: z.unknown(),
   categoryId: z.uuid(),
   coverImageUrl: z.string().min(1).nullable().optional(),
+  // 커버 이미지 픽셀 치수 — 클라 캡처, 마조네리 카드 비율. coverImageUrl 과 한 쌍
+  coverImageWidth: z.number().int().positive().nullable().optional(),
+  coverImageHeight: z.number().int().positive().nullable().optional(),
   publishedAt: z.date().nullable().optional(),
   tags: z.array(z.string().min(1).max(50)).max(20).default([]),
 });

@@ -15,6 +15,9 @@ export const news = pgTable(
       .references(() => categories.id, { onDelete: "restrict" })
       .notNull(),
     coverImageUrl: text("cover_image_url"),
+    // 커버 이미지 실제 픽셀 치수 — 클라(naturalWidth/Height) 캡처. 마조네리 카드 높이·CLS 0 용. NULL = 레거시(폴백 비율)
+    coverImageWidth: integer("cover_image_width"),
+    coverImageHeight: integer("cover_image_height"),
     publishedAt: timestamp("published_at"),
     // 메인 랜딩 StorySection 상단 슬롯 (1~2). NULL = 비노출. UNIQUE WHERE NOT NULL — 같은 자리 중복 불가
     storySlot: integer("story_slot"),

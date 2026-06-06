@@ -8,13 +8,28 @@ import { uploadImageAction } from "@/features/news/actions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+type ImageDimensions = { width: number; height: number };
+
 type Props = {
   value: string | null;
-  onChange: (url: string | null) => void;
+  onChange: (url: string | null, dims: ImageDimensions | null) => void;
   scope: { newsId: string } | { tempId: string };
   onError?: (msg: string) => void;
   disabled?: boolean;
 };
+
+// 업로드 직전 클라이언트에서 이미지 픽셀 치수 추출 — 마조네리 카드 비율(coverImageWidth/Height) 용.
+// presigned POST 직접 업로드라 서버가 바이트를 못 봄 → 클라가 유일한 캡처 지점. 실패해도 업로드는 진행(폴백 비율)
+async function readImageDimensions(file: File): Promise<ImageDimensions | null> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const dims = { width: bitmap.width, height: bitmap.height };
+    bitmap.close();
+    return dims;
+  } catch {
+    return null;
+  }
+}
 
 export function CoverImageUploader({
   value,
@@ -34,6 +49,7 @@ export function CoverImageUploader({
     }
     setIsUploading(true);
     try {
+      const dims = await readImageDimensions(file);
       const presign = await uploadImageAction({
         filename: file.name,
         mime: file.type,
@@ -57,7 +73,7 @@ export function CoverImageUploader({
       if (!resp.ok) {
         throw new Error(`업로드 실패 (HTTP ${resp.status})`);
       }
-      onChange(publicUrl);
+      onChange(publicUrl, dims);
     } catch (err) {
       onError?.(err instanceof Error ? err.message : "커버 이미지 업로드 실패");
       // 실패 시 기존 value 유지 — 의도적으로 onChange 호출 안 함 (결정 로그 [T8 실패 처리])
@@ -143,7 +159,7 @@ export function CoverImageUploader({
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => onChange(null)}
+          onClick={() => onChange(null, null)}
           disabled={disabled || isUploading}
           className="gap-1 text-xs text-ink-subtle"
         >

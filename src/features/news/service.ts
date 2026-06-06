@@ -85,6 +85,8 @@ export async function createNews(
       body: input.body,
       categoryId: input.categoryId,
       coverImageUrl: input.coverImageUrl ?? null,
+      coverImageWidth: input.coverImageWidth ?? null,
+      coverImageHeight: input.coverImageHeight ?? null,
       publishedAt: input.publishedAt ?? null,
       createdBy: actorUserId,
     });
@@ -103,6 +105,8 @@ export async function updateNews(id: string, input: NewsInput) {
       body: input.body,
       categoryId: input.categoryId,
       coverImageUrl: input.coverImageUrl ?? null,
+      coverImageWidth: input.coverImageWidth ?? null,
+      coverImageHeight: input.coverImageHeight ?? null,
       publishedAt: input.publishedAt ?? null,
     });
     if (!updated) return null;

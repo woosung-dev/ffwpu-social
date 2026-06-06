@@ -43,6 +43,13 @@
       "when": 1780320492608,
       "tag": "0005_outstanding_miracleman",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780748057694,
+      "tag": "0006_dry_firelord",
+      "breakpoints": true
     }
   ]
 }
