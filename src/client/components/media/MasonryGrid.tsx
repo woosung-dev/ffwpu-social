@@ -18,13 +18,33 @@ type Props<T> = {
   renderItem: (item: T) => ReactNode;
   // 컬럼 간·카드 간 간격 (기본 gap-4)
   gapClassName?: string;
+  // 항목 상대 높이(예: height/width). 주면 Pinterest식 shortest-column 배치, 없으면 순서 보존 round-robin.
+  getWeight?: (item: T) => number;
 };
 
-// 순서 보존 분배 — item i 를 컬럼 i%N 에 배치. 최신순 = 좌상단부터 행 우선
-function distribute<T>(items: T[], columnCount: number): T[][] {
+// 컬럼 분배. getWeight 가 있으면 누적 높이가 가장 작은 컬럼에 배치(Pinterest shortest-column) — 컬럼 하단 균형.
+// 없으면 round-robin(item i → col i%N, 행 우선 순서 보존). 순서대로 순회하므로 앞 항목은 빈 컬럼에 먼저 깔려 상단 행 유지.
+function distribute<T>(
+  items: T[],
+  columnCount: number,
+  getWeight?: (item: T) => number,
+): T[][] {
   const cols: T[][] = Array.from({ length: columnCount }, () => []);
-  for (let i = 0; i < items.length; i++) {
-    cols[i % columnCount].push(items[i]);
+  if (!getWeight) {
+    for (let i = 0; i < items.length; i++) {
+      cols[i % columnCount].push(items[i]);
+    }
+    return cols;
+  }
+  const heights = new Array<number>(columnCount).fill(0);
+  for (const item of items) {
+    // 동률이면 가장 왼쪽 컬럼 (좌→우 읽기 순서 보존)
+    let target = 0;
+    for (let c = 1; c < columnCount; c++) {
+      if (heights[c] < heights[target]) target = c;
+    }
+    cols[target].push(item);
+    heights[target] += getWeight(item);
   }
   return cols;
 }
@@ -35,6 +55,7 @@ export function MasonryGrid<T>({
   getKey,
   renderItem,
   gapClassName = "gap-4",
+  getWeight,
 }: Props<T>) {
   return (
     <>
@@ -43,7 +64,7 @@ export function MasonryGrid<T>({
           key={`tier-${tier.columns}`}
           className={cn("w-full", tier.visibilityClassName, gapClassName)}
         >
-          {distribute(items, tier.columns).map((col, ci) => (
+          {distribute(items, tier.columns, getWeight).map((col, ci) => (
             <div key={ci} className={cn("flex flex-1 flex-col", gapClassName)}>
               {col.map((item) => (
                 <Fragment key={getKey(item)}>{renderItem(item)}</Fragment>

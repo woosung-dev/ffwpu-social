@@ -63,6 +63,12 @@ export function ArticleGridSection({ items }: Props) {
             items={items.slice(0, 6)}
             getKey={(item) => item.id}
             tiers={GRID_TIERS}
+            // 상대 높이 = height/width (컬럼 너비 고정이라 렌더 높이에 비례). 치수 없으면 MediaCard 4/5 폴백과 동일한 1.25
+            getWeight={(item) =>
+              item.coverImageHeight && item.coverImageWidth
+                ? item.coverImageHeight / item.coverImageWidth
+                : 1.25
+            }
             renderItem={(item) => (
               <MediaCard
                 href={`/news/${item.id}`}
