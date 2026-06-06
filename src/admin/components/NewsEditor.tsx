@@ -83,7 +83,8 @@ export function NewsEditor({ mode, categories, initial }: Props) {
         : null;
       const payload: NewsInput = {
         ...values,
-        body,
+        // 문자열로 전송 — 객체로 보내면 Server Action 직렬화에서 중첩 attrs 가 소실됨($T). 서버에서 parse
+        body: JSON.stringify(body),
         publishedAt,
       };
       startTransition(async () => {
