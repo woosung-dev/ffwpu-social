@@ -4,9 +4,9 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
-import { listCategories } from "@/features/news";
+import { ALL_CATEGORY_SLUG, listCategories, listNews } from "@/features/news";
 import {
-  fetchNewsList,
+  NEWS_PAGE_SIZE,
   newsKeys,
   normalizeNewsListFilters,
 } from "@/features/news/api";
@@ -69,9 +69,18 @@ async function NewsListPrefetch({
     .map((c) => ({ slug: c.slug, name: c.name }));
 
   const queryClient = getQueryClient();
+  // 서버 prefetch — service 직접 호출(서버 컴포넌트). 클라는 동일 키로 GET /api/news 를 fetch (api.ts)
   void queryClient.prefetchQuery({
     queryKey: newsKeys.list(filters),
-    queryFn: () => fetchNewsList(filters),
+    queryFn: () =>
+      listNews({
+        categorySlug:
+          filters.categorySlug === ALL_CATEGORY_SLUG
+            ? undefined
+            : filters.categorySlug,
+        page: filters.page,
+        limit: NEWS_PAGE_SIZE,
+      }),
   });
 
   return (
