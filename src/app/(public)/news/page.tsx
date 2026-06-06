@@ -22,9 +22,11 @@ export const metadata: Metadata = {
     "사회공헌단 Sow Good 의 쌀 나눔·가족 치유·지역 봉사·환경 캠페인 활동 소식.",
 };
 
+// App Router 는 반복 키를 string[] 로 전달 — normalizeNewsListFilters(firstParam) 가 흡수
 type SearchParams = {
-  category?: string;
-  page?: string;
+  category?: string | string[];
+  page?: string | string[];
+  q?: string | string[];
 };
 
 export default function NewsListPage({
@@ -60,8 +62,8 @@ async function NewsListPrefetch({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { category, page } = await searchParams;
-  const filters = normalizeNewsListFilters({ category, page });
+  const { category, page, q } = await searchParams;
+  const filters = normalizeNewsListFilters({ category, page, q });
 
   const categoriesAll = await listCategories();
   const categoriesForTabs = categoriesAll
@@ -78,6 +80,7 @@ async function NewsListPrefetch({
           filters.categorySlug === ALL_CATEGORY_SLUG
             ? undefined
             : filters.categorySlug,
+        q: filters.q || undefined,
         page: filters.page,
         limit: NEWS_PAGE_SIZE,
       }),

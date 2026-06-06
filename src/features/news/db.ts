@@ -1,8 +1,9 @@
 // 소식(news) Drizzle 쿼리 전담 — DAL. db import는 여기서만 (fullstack.md §3). 공개(published_at IS NOT NULL) / 어드민(모두) 분리 (codex P1#7). mutation 은 tx 인자 강제 (codex P1#5)
-import { and, asc, desc, eq, inArray, isNotNull, isNull, like, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, like, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { categories, heartEvents, news, newsTags } from "@/db/schema";
 import { ALL_CATEGORY_SLUG } from "./constants";
+import { likePattern } from "./search-query";
 import { RICE_SHARING_SLUG } from "./slot-rules";
 
 // service.ts 가 db.transaction 콜백에서 받는 tx 와 동일 — mutation 함수 시그니처로 그대로 노출 (T6 결정 로그 [tx alias])
@@ -10,6 +11,7 @@ export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 type ListOpts = {
   categorySlug?: string;
+  q?: string;
   page: number;
   limit: number;
 };
@@ -18,6 +20,18 @@ function categoryWhere(categorySlug?: string) {
   return categorySlug && categorySlug !== ALL_CATEGORY_SLUG
     ? eq(categories.slug, categorySlug)
     : undefined;
+}
+
+// 검색 필터 — 제목 OR 태그 부분일치(ILIKE, 대소문자 무관). q 없으면 undefined(필터 미적용).
+// 태그는 normalizeTags 로 lowercase 저장되나 ILIKE 라 입력 케이스 무관. 본문(jsonb)은 v1.1
+function searchWhere(q?: string) {
+  const trimmed = q?.trim();
+  if (!trimmed) return undefined;
+  const pattern = likePattern(trimmed);
+  return or(
+    ilike(news.title, pattern),
+    sql`EXISTS (SELECT 1 FROM ${newsTags} WHERE ${newsTags.newsId} = ${news.id} AND ${newsTags.tag} ILIKE ${pattern})`,
+  );
 }
 
 // ─── 사용자 사이트 — published 만 (codex P1#7) ──────────────────────────────
@@ -39,19 +53,31 @@ export async function listPublicNews(opts: ListOpts) {
     })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
-    .where(and(isNotNull(news.publishedAt), categoryWhere(opts.categorySlug)))
+    .where(
+      and(
+        isNotNull(news.publishedAt),
+        categoryWhere(opts.categorySlug),
+        searchWhere(opts.q),
+      ),
+    )
     .orderBy(desc(news.publishedAt))
     .limit(opts.limit)
     .offset(offset);
 }
 
-// 공개 카운트 — listPublicNews 페이지네이션 용. 동일 조건
-export async function countPublicNews(opts: Pick<ListOpts, "categorySlug">) {
+// 공개 카운트 — listPublicNews 페이지네이션 용. 동일 조건(카테고리 + 검색)
+export async function countPublicNews(opts: Pick<ListOpts, "categorySlug" | "q">) {
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
-    .where(and(isNotNull(news.publishedAt), categoryWhere(opts.categorySlug)));
+    .where(
+      and(
+        isNotNull(news.publishedAt),
+        categoryWhere(opts.categorySlug),
+        searchWhere(opts.q),
+      ),
+    );
   return row?.count ?? 0;
 }
 

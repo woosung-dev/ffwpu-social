@@ -8,9 +8,15 @@ import type { ListNewsQuery, NewsInput } from "./schemas";
 export async function listNews(query: ListNewsQuery) {
   const [items, total] = await Promise.all([
     newsDb.listPublicNews(query),
-    newsDb.countPublicNews({ categorySlug: query.categorySlug }),
+    newsDb.countPublicNews({ categorySlug: query.categorySlug, q: query.q }),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / query.limit));
+  // page 가 범위 초과(공유·북마크된 ?page=N, 검색으로 결과가 줄어든 경우)면 마지막 페이지로 재조회 —
+  // 막다른 빈 화면(결과 없음 + 페이지네이션 미렌더로 탈출 불가) 방지. 결과 0건(genuine empty)은 page=1 이라 재조회 안 함
+  if (items.length === 0 && query.page > totalPages) {
+    const clamped = await newsDb.listPublicNews({ ...query, page: totalPages });
+    return { items: clamped, total, totalPages, page: totalPages, limit: query.limit };
+  }
   return { items, total, totalPages, page: query.page, limit: query.limit };
 }
 
