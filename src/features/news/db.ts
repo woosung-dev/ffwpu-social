@@ -142,6 +142,8 @@ export async function getAdminNewsById(id: string) {
       categoryName: categories.name,
       categorySlug: categories.slug,
       coverImageUrl: news.coverImageUrl,
+      coverImageWidth: news.coverImageWidth,
+      coverImageHeight: news.coverImageHeight,
       publishedAt: news.publishedAt,
       createdAt: news.createdAt,
       updatedAt: news.updatedAt,

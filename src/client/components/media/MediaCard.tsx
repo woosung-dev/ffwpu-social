@@ -10,6 +10,9 @@ type Props = {
   title: string;
   subtitle?: string;
   className?: string;
+  // 커버 실제 픽셀 — 박스 비율 = 이미지 비율이라 object-cover 크롭 0(마조네리 가변 높이). 없으면 폴백 4/5
+  width?: number | null;
+  height?: number | null;
 };
 
 export function MediaCard({
@@ -18,14 +21,17 @@ export function MediaCard({
   title,
   subtitle,
   className,
+  width,
+  height,
 }: Props) {
   const Wrapper = href ? Link : "div";
+  const aspectRatio = width && height ? `${width} / ${height}` : "4 / 5";
   return (
     <Wrapper
       href={href ?? "#"}
+      style={{ aspectRatio }}
       className={cn(
-        "group relative block w-full max-w-[278px] overflow-hidden rounded-[12px] bg-brand-darkest outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/60 focus-visible:ring-offset-2",
-        "aspect-[278/425]",
+        "group relative block w-full overflow-hidden rounded-[12px] bg-brand-darkest outline-none focus-visible:ring-2 focus-visible:ring-brand-mid/60 focus-visible:ring-offset-2",
         className,
       )}
     >
@@ -34,7 +40,7 @@ export function MediaCard({
           src={imageUrl}
           alt=""
           fill
-          sizes="(max-width: 768px) 80vw, 300px"
+          sizes="(max-width: 768px) 90vw, 30vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
       )}

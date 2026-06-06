@@ -32,6 +32,8 @@ export type NewsEditorInitial = {
   body: JSONContent;
   categoryId: string;
   coverImageUrl: string | null;
+  coverImageWidth: number | null;
+  coverImageHeight: number | null;
   publishedAt: Date | null;
   tags: string[];
 };
@@ -69,6 +71,8 @@ export function NewsEditor({ mode, categories, initial }: Props) {
       categoryId: initial?.categoryId ?? "",
       tags: initial?.tags ?? [],
       coverImageUrl: initial?.coverImageUrl ?? null,
+      coverImageWidth: initial?.coverImageWidth ?? null,
+      coverImageHeight: initial?.coverImageHeight ?? null,
     },
   });
 
@@ -290,7 +294,11 @@ export function NewsEditor({ mode, categories, initial }: Props) {
                   render={({ field }) => (
                     <CoverImageUploader
                       value={field.value ?? null}
-                      onChange={field.onChange}
+                      onChange={(url, dims) => {
+                        field.onChange(url);
+                        form.setValue("coverImageWidth", dims?.width ?? null);
+                        form.setValue("coverImageHeight", dims?.height ?? null);
+                      }}
                       scope={scope}
                       onError={setError}
                       disabled={isPending}

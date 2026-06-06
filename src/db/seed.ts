@@ -9,6 +9,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { sql } from "drizzle-orm";
 
 import { normalizeEmail } from "../features/accounts/schemas";
+import { readImageSize } from "../features/storage/image-size";
 
 config({ path: ".env.local" });
 
@@ -53,8 +54,11 @@ function resolveAssetPath(filename: string): string | null {
   return null;
 }
 
+// 업로드 결과 — publicUrl + 픽셀 치수(없으면 null). 치수는 공유 readImageSize(features/storage/image-size) 사용
+type CoverMeta = { url: string; width: number | null; height: number | null };
+
 // 결정적 키(news/seed/<파일명>) — 재시드 시 동일 키 덮어쓰기, orphan 미발생
-async function uploadCover(filename: string): Promise<string | null> {
+async function uploadCover(filename: string): Promise<CoverMeta | null> {
   const filePath = resolveAssetPath(filename);
   if (!filePath) {
     console.warn(`[seed] ⚠ 커버 자산 미발견: ${filename} — 커버 없이 진행`);
@@ -66,12 +70,17 @@ async function uploadCover(filename: string): Promise<string | null> {
     console.warn(`[seed] ⚠ 미지원 확장자: ${filename} — 커버 없이 진행`);
     return null;
   }
+  const buffer = fs.readFileSync(filePath);
+  const size = readImageSize(buffer);
+  if (!size) {
+    console.warn(`[seed] ⚠ ${filename}: 치수 파싱 실패 — 마조네리 폴백 비율 사용`);
+  }
   const key = `news/seed/${filename}`;
   await s3.send(
     new PutObjectCommand({
       Bucket: S3_BUCKET,
       Key: key,
-      Body: fs.readFileSync(filePath),
+      Body: buffer,
       ContentType: contentType,
     }),
   );
@@ -80,7 +89,11 @@ async function uploadCover(filename: string): Promise<string | null> {
       `[seed] ⚠ ${filename}: Figma 추출 폴백 사용 — 실사진 수령 시 src/db/seed-assets/ 에 동일 이름으로 배치 후 재시드`,
     );
   }
-  return getPublicUrl(key);
+  return {
+    url: getPublicUrl(key),
+    width: size?.width ?? null,
+    height: size?.height ?? null,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -387,12 +400,12 @@ async function seed() {
     .returning();
 
   console.log("[seed] uploading cover assets to MinIO...");
-  // 파일명 → publicUrl 캐시 (동일 자산 중복 업로드 방지)
-  const coverUrlByFile = new Map<string, string | null>();
+  // 파일명 → {url, width, height} 캐시 (동일 자산 중복 업로드 방지)
+  const coverMetaByFile = new Map<string, CoverMeta | null>();
   for (const sample of samples) {
-    if (!sample.coverFile || coverUrlByFile.has(sample.coverFile)) continue;
+    if (!sample.coverFile || coverMetaByFile.has(sample.coverFile)) continue;
     try {
-      coverUrlByFile.set(sample.coverFile, await uploadCover(sample.coverFile));
+      coverMetaByFile.set(sample.coverFile, await uploadCover(sample.coverFile));
     } catch (err) {
       console.error(
         "[seed] MinIO 업로드 실패 — docker compose up -d 로 MinIO 가동 후 재시도하세요.",
@@ -403,9 +416,10 @@ async function seed() {
 
   console.log(`[seed] inserting ${samples.length} news samples...`);
   for (const sample of samples) {
-    const coverImageUrl = sample.coverFile
-      ? (coverUrlByFile.get(sample.coverFile) ?? null)
+    const coverMeta = sample.coverFile
+      ? (coverMetaByFile.get(sample.coverFile) ?? null)
       : null;
+    const coverImageUrl = coverMeta?.url ?? null;
     const [inserted] = await db
       .insert(news)
       .values({
@@ -416,6 +430,8 @@ async function seed() {
         ),
         categoryId: categoryIdBySlug.get(sample.category)!,
         coverImageUrl,
+        coverImageWidth: coverMeta?.width ?? null,
+        coverImageHeight: coverMeta?.height ?? null,
         publishedAt: sample.publishedAt,
         storySlot: sample.storySlot ?? null,
         featuredRank: sample.featuredRank ?? null,
@@ -432,7 +448,7 @@ async function seed() {
   }
 
   const tagCount = samples.reduce((sum, s) => sum + s.tags.length, 0);
-  const coverCount = [...coverUrlByFile.values()].filter(Boolean).length;
+  const coverCount = [...coverMetaByFile.values()].filter(Boolean).length;
   console.log(
     `[seed] done. admin: ${adminEmail} / news ${samples.length}건 (커버 ${coverCount}) + 태그 ${tagCount}건 / story 슬롯 2 · featured 6 · hero 4 배정`,
   );
