@@ -13,11 +13,7 @@ import {
   MAX_IMAGE_BYTES,
 } from "@/features/storage";
 import * as newsService from "./service";
-import {
-  listNewsQuerySchema,
-  newsInputSchema,
-  type NewsInput,
-} from "./schemas";
+import { newsInputSchema, type NewsInput } from "./schemas";
 
 // 커버 이미지 URL 서버측 검증 — S3 public prefix 만 허용 (codex v2 P2#3, next/image unoptimized 가 remotePatterns 우회하므로 필수)
 function isInvalidCover(url: string | null | undefined): boolean {
@@ -40,15 +36,7 @@ function revalidateNewsRoutes(id?: string) {
 }
 
 // ─── 사용자 사이트 (인증 불필요, 읽기 전용) ─────────────────────────────────
-
-export async function listNewsAction(rawQuery: Record<string, unknown>) {
-  const parsed = listNewsQuerySchema.safeParse(rawQuery);
-  if (!parsed.success) {
-    return { success: false as const, error: parsed.error };
-  }
-  const data = await newsService.listNews(parsed.data);
-  return { success: true as const, data };
-}
+// 목록 조회는 Server Action 대신 GET /api/news (route handler) — 클라 useSuspenseQuery 렌더 중 Router setState 경고 방지
 
 export async function getNewsDetailAction(id: string) {
   const data = await newsService.getNewsDetail(id);

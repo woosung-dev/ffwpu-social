@@ -1,6 +1,5 @@
 // 소식 도메인 React Query key factory + 목록 queryFn — 캐시 키·정규화 SSoT (typescript.md §4: 도메인별 api.ts)
-// 서버(prefetch)와 클라(useSuspenseQuery)가 동일 키·동일 fetch 를 import — drift 방지 (nextjs-shared §5)
-import { listNewsAction } from "./actions";
+// 클라(useSuspenseQuery): fetchNewsList → GET /api/news. 서버(prefetch): page.tsx 가 service.listNews 직접 호출 — 키·정규화는 여기서 공유 (drift 방지, nextjs-shared §5)
 import { ALL_CATEGORY_SLUG } from "./constants";
 
 export const NEWS_PAGE_SIZE = 9; // 3x3 그리드
@@ -29,16 +28,41 @@ export const newsKeys = {
     [...newsKeys.all, "list", f.categorySlug, f.page] as const,
 };
 
-// 목록 fetch — 서버에선 직접 실행, 클라에선 Server Action RPC. 실패 시 throw (RQ 컨벤션)
-export async function fetchNewsList(f: NewsListFilters) {
-  const res = await listNewsAction({
-    categorySlug:
-      f.categorySlug === ALL_CATEGORY_SLUG ? undefined : f.categorySlug,
-    page: f.page,
-    limit: NEWS_PAGE_SIZE,
+// 목록 응답 타입 — GET /api/news 의 클라 계약. db.listPublicNews select 와 동기화.
+// publishedAt/createdAt 은 서버 prefetch(flight)=Date, 클라 fetch(JSON)=ISO string 양쪽 가능 — ArticleCard 가 둘 다 처리
+export type NewsListItem = {
+  id: string;
+  title: string;
+  categoryId: string;
+  categoryName: string;
+  categorySlug: string;
+  coverImageUrl: string | null;
+  publishedAt: Date | string | null;
+  createdAt: Date | string;
+  heartCount: number;
+};
+
+export type NewsListResult = {
+  items: NewsListItem[];
+  total: number;
+  totalPages: number;
+  page: number;
+  limit: number;
+};
+
+// 목록 fetch (클라 전용) — GET /api/news. Server Action 을 queryFn 으로 쓰면 렌더 중 Router setState 경고 → route handler 로 분리.
+// 서버 prefetch 는 page.tsx 가 service.listNews 를 직접 호출 (이 함수는 브라우저에서만 실행). 실패 시 throw (RQ 컨벤션)
+export async function fetchNewsList(f: NewsListFilters): Promise<NewsListResult> {
+  const params = new URLSearchParams({
+    page: String(f.page),
+    limit: String(NEWS_PAGE_SIZE),
   });
-  if (!res.success) {
+  if (f.categorySlug !== ALL_CATEGORY_SLUG) {
+    params.set("category", f.categorySlug);
+  }
+  const res = await fetch(`/api/news?${params.toString()}`);
+  if (!res.ok) {
     throw new Error("소식 목록을 불러오지 못했습니다.");
   }
-  return res.data;
+  return res.json() as Promise<NewsListResult>;
 }
