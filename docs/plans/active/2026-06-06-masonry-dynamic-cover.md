@@ -8,26 +8,31 @@ brainstorming_done: 2026-06-06
 related_adr:
 ---
 
-# 콘텐츠 주도 마조네리 — 업로드 이미지 비율로 카드 높이 결정
+# 콘텐츠 주도 마조네리 — 랜딩 ArticleGrid 업로드 이미지 비율로 카드 높이
 
 > Pinterest 벤치마킹. 운영자가 올린 커버 이미지의 **실제 종횡비**로 카드 높이가 정해지는 마조네리.
-> 적용 범위: 랜딩 `ArticleGridSection` + `/news` 목록 (사용자 "둘 다" 결정).
+> **적용 범위: 랜딩 `ArticleGridSection` 단독.** `/news` 목록은 범위 밖 — 균일 3×3 그리드 유지.
+
+## 0. 범위 정정 이력 (중요)
+
+- 2026-06-06 최초: "랜딩 + /news 둘 다" 로 결정 → **정정**: `/news` 는 **균일 카드** 유지가 맞음.
+- 확인 결과 `/news` 렌더링(ArticleCard·NewsListClient·`/news` 페이지)은 **변경 0건** — 애초에 손대지 않아 이미 균일 상태.
+- 따라서 코드 리셋 불필요. 이 계획서의 범위만 **랜딩 전용**으로 축소 (사용자 확정).
 
 ## 1. 문제 (현재 상태)
 
-- **랜딩 ArticleGrid** (`src/client/sections/ArticleGridSection.tsx`): 높이를 `CARD_ASPECTS[idx]` 로 **슬롯 index별 하드코딩** (Figma 시안값). 이미지가 아니라 "몇 번째 슬롯"이 높이를 정함 → `object-cover` 크롭. "가짜 마조네리".
-- **/news 목록** (`ArticleCard` `SIZE_CONFIG`): 고정 가로형 aspect(`313/170` 등) **균일 3×3 그리드**. 마조네리 아님.
-- 두 경우 모두 세로 단체사진을 올리면 위아래가 잘림 → 톤앤매너(`domain.md §7` "실제 현장 사진, 정제 안 돼도 OK")와 충돌.
+- **랜딩 ArticleGrid** (`src/client/sections/ArticleGridSection.tsx`): 높이를 슬롯 index별 `CARD_ASPECTS` 로 **하드코딩**(Figma 시안값)했었음. 이미지가 아니라 "몇 번째 슬롯"이 높이를 정함 → `object-cover` 크롭. "가짜 마조네리". 세로 사진을 올리면 위아래가 잘려 톤앤매너(`domain.md §7` "실제 현장 사진, 정제 안 돼도 OK")와 충돌. **→ 이 한 영역만 콘텐츠 주도로 전환.**
+- **/news 목록**: `ArticleCard` 균일 3×3 그리드. **의도된 균일 — 유지(범위 밖).** 소식 피드는 카테고리·익명 하트·날짜가 카드 하단에 정렬돼야 해 균일 카드가 적합.
 
 ## 2. 핵심 결정 (확정)
 
 | 항목 | 결정 | 이유 |
 |---|---|---|
 | **치수 추출** | 클라이언트 `naturalWidth/Height` (CoverImageUploader) | 업로드가 presigned POST 로 **브라우저→S3 직접 전송** — 서버가 바이트를 못 봄. sharp/image-size 서버 추출 구조상 불가. 단일 운영자라 클라 보고값 신뢰 OK. **의존성 0.** |
-| **레이아웃 기법** | 서버 분배 N-컬럼 round-robin | CSS `columns` 는 컬럼 우선이라 최신순 깨짐. round-robin(`item i → col i%N`)은 **읽기 순서(행 우선) 보존 + CLS 0 + SSR 친화 + 클라 JS 0.** 네이티브 `masonry` 는 2026 미지원. |
+| **레이아웃 기법** | 서버 분배 N-컬럼 round-robin | CSS `columns` 는 컬럼 우선이라 순서 깨짐. round-robin(`item i → col i%N`)은 **읽기 순서(행 우선) 보존 + CLS 0 + SSR 친화 + 클라 JS 0.** 네이티브 `masonry` 는 2026 미지원. |
 | **카드 박스** | `style={{ aspectRatio: w/h }}` + `<Image fill object-cover>` | 박스 비율 = 이미지 비율 → **크롭 0**. |
-| **플레이스홀더** | phase 1 = `bg-surface-tint-soft` 단색 | Pinterest 지배색 트릭의 경량판. 블러는 후속. |
-| **치수 NULL 폴백** | 레거시 글은 기존 비율 유지 | 점진 도입 — 백필 전 글도 안 깨짐. |
+| **플레이스홀더** | `bg-brand-darkest`(다크 카드) | 로드 중 어두운 카드 → 이미지. 라이트 플래시 회피. 블러는 후속. |
+| **치수 NULL 폴백** | 4/5 (portrait) | 백필 전 레거시 글도 안 깨짐 — 균일 4/5 로 graceful. |
 
 ## 3. 스키마 변경
 
@@ -38,50 +43,48 @@ coverImageWidth: integer("cover_image_width"),
 coverImageHeight: integer("cover_image_height"),
 ```
 
-- 마이그레이션: `pnpm drizzle-kit generate` → 사람 검토 → 커밋. 배포 시 `migrate`.
-- 블러용 `coverImageBlur: text(...)` 는 후속(Phase 5, 선택).
+- 마이그레이션 `0006` 생성·적용 완료. 배포 시 `migrate` 필요.
+- 블러용 `coverImageBlur: text(...)` 는 후속(선택).
+- 치수는 어드민 글 작성·수정 시 모든 커버에 저장됨(공용 에디터) — 랜딩이 이를 소비, /news 는 사용 안 함(무해).
 
-## 4. 미결 마이크로 결정 (구현 전 확인)
+## 4. 미결 마이크로 결정
 
-1. **블러 플레이스홀더** — phase 1 포함? → **권장: 후속.** (canvas 다운스케일 base64, 복잡도↑)
-2. **/news 페이지네이션** — 마조네리 + 기존 9개 페이지네이션 유지(마지막 행 ragged 허용)? → **권장: 유지.**
-3. **컬럼 수 (4-BP)** — 랜딩 right 영역 1/md:3 유지. /news 375→1·768→2·1024→3·1440→3 → **권장 그대로(기존 3×3 연속성).**
-4. **레거시 폴백 비율** — /news 는 기존 가로형(`313/170`) 유지가 덜 튐 / 랜딩은 `4/5` portrait. → **확인 필요.**
+1. **블러 플레이스홀더** — 후속(선택). canvas 다운스케일 base64, 복잡도↑.
+2. **랜딩 폴백 비율** — 치수 NULL 글은 `4/5`. (확정)
+
+> 구 미결정 항목 중 `/news` 페이지네이션·컬럼수·레거시 폴백은 **범위 제외로 삭제.**
 
 ## 5. 단계 (Phases) · 체크리스트
 
 ### Phase 1 — 기반 (스키마 + 치수 캡처 + 백필) ✅ 완료 (커밋 dcef816)
-- [x] `news` 스키마에 `coverImageWidth`/`coverImageHeight` 추가 + 마이그레이션 `0006`
+- [x] `news` 스키마에 `coverImageWidth`/`coverImageHeight` 추가 + 마이그레이션 `0006` (적용 완료)
 - [x] `newsInputSchema` (schemas.ts) 에 `coverImageWidth`/`coverImageHeight` (int positive nullable) 추가
-- [x] `CoverImageUploader` — 업로드 직전 `createImageBitmap(file)` 로 w/h 추출, `onChange(url, dims)` 로 전달
-- [x] `NewsEditor` — RHF `setValue` 로 w/h 보관 + 저장 시 payload 전달 / edit 페이지 prefill (getAdminNewsById)
+- [x] `CoverImageUploader` — `createImageBitmap(file)` 로 w/h 추출, `onChange(url, dims)` 로 전달
+- [x] `NewsEditor` — RHF `setValue` 로 w/h 보관 + payload 전달 / edit 페이지 prefill (getAdminNewsById)
 - [x] `createNews`/`updateNews` (service) — w/h 영속화
 - [x] 시드 백필 (`seed.ts`) — PNG/JPEG 헤더 파서로 로컬 파일 dims 읽어 채움 (커버 11종)
-- [x] 검증: `pnpm tsc --noEmit` ✅ + `pnpm lint` ✅ + 마이그레이션 diff(additive nullable 2컬럼) ✅
-- [ ] 🔴 런타임 반영: `pnpm drizzle-kit migrate` + 재시드 (재시드는 dev DB TRUNCATE — 사용자 타이밍 결정)
+- [x] 검증: `pnpm tsc --noEmit` ✅ + `pnpm lint` ✅ + 마이그레이션 diff ✅
 
-### Phase 2 — 공유 마조네리 컴포넌트 + 랜딩
-- [ ] `src/client/components/media/MasonryGrid.tsx` — items + 컬럼수(BP) → round-robin 분배 렌더 (Server Component)
-- [ ] `MediaCard` — 고정 `aspect-[278/425]` 제거, `aspectRatio` prop(이미지 w/h) 주입
-- [ ] `ArticleGridSection` — `CARD_ASPECTS` 제거, `MasonryGrid` 사용. listFeaturedGrid 가 w/h 내려주도록 SELECT 확장
-- [ ] 검증: 4-BP 시각(375/768/1024/1440) + CLS 0 확인
+### Phase 2 — 랜딩 ArticleGrid 마조네리 ✅ 완료 (커밋 2b981b4)
+- [x] `MasonryGrid` (`src/client/components/media/`) — round-robin 분배 Server Component, BP tier 토글
+- [x] `MediaCard` — 고정 `aspect-[278/425]` 제거, 이미지 w/h 로 `aspectRatio` (크롭 0), NULL 폴백 4/5
+- [x] `ArticleGridSection` — `CARD_ASPECTS`/`FALLBACK_IMAGES` 제거, `MasonryGrid` 사용 (모바일 1 / md+ 3열)
+- [x] `listFeaturedGrid` SELECT 에 w/h 추가
+- [x] 검증: `tsc` ✅ + `lint` ✅ + `build` ✅
+- [ ] 🔴 시각 검증: `migrate`(완료) + 재시드 → dev 서버 4-BP(375/768/1024/1440) + CLS 0 확인
 
-### Phase 3 — /news 마조네리
-- [ ] `listNews` (db.ts) SELECT 에 w/h 추가, `api.ts` 응답 타입 확장
-- [ ] `NewsListClient` — 3×3 그리드 → `MasonryGrid` 교체 (RQ useSuspenseQuery 데이터에 w/h 포함)
-- [ ] `ArticleCard` — masonry variant (세로형, `aspectRatio` 주입) 또는 신규 카드
-- [ ] React Hooks 안전 점검 (LESSON-004) — RQ data 를 effect dep 로 쓰지 말 것
-- [ ] 검증: 탭 전환·페이지네이션·CLS
+### ~~Phase 3 — /news 마조네리~~ ❌ 범위 제외 (2026-06-06 확정)
+- `/news` 목록은 **균일 3×3 그리드 유지.** 코드 변경 없음. 향후에도 별도 요청 없으면 미적용.
 
 ### Phase 4 — 마무리
-- [ ] `pnpm build` 통과
+- [ ] 시각 검증(위 Phase 2 🔴) 후 스크린샷
 - [ ] anti-slop 체크리스트 (§3 디자인) 통과
-- [ ] 관련 ADR 기록 (마조네리 레이아웃 결정 + 클라 치수 캡처)
-- [ ] docs/design.md · 본 plan 갱신
+- [ ] ADR 기록 (랜딩 마조네리 레이아웃 + 클라 치수 캡처 결정)
+- [ ] docs/design.md 갱신 + 본 plan merge 시 삭제
 
 ## 6. 리스크
 
-- **클라 치수 누락** (구형 브라우저·createImageBitmap 실패) → try/catch 폴백 비율, 업로드는 진행.
-- **RQ 응답 형태 변경** (/news) → 캐시 키 동일 유지, 필드만 추가 (하위호환).
-- **백필 누락 글** → NULL 폴백 비율로 graceful.
-- **마이그레이션** → additive nullable 이라 무손실. 배포 시 `migrate` 필요(현재 active 브랜치들의 "스키마 변경 0" 기조와 별개 브랜치).
+- **클라 치수 누락** (구형 브라우저·createImageBitmap 실패) → `readImageDimensions` try/catch 폴백, 업로드는 진행.
+- **백필 누락 글** → NULL 폴백 비율(4/5)로 graceful.
+- **마이그레이션** → additive nullable 이라 무손실. 배포 시 `migrate` 필요.
+- **숨김 tier 중복 렌더** → 랜딩은 6 항목·2 tier 라 미미. `display:none` 이라 lazy 이미지 미로드.
