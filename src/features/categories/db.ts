@@ -3,6 +3,9 @@ import { asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { categories, news } from "@/db/schema";
 
+// 트랜잭션 핸들 타입 — reorder 등 다중 update 를 단일 트랜잭션으로 묶을 때 사용 (news/db.ts 동일 패턴)
+export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 // 어드민 — 모든 카테고리 (비활성 포함, sortOrder 우선·이름 보조)
 export async function listAllCategoriesForAdmin() {
   return db
@@ -40,6 +43,14 @@ export async function getCategoryBySlug(slug: string) {
   return row ?? null;
 }
 
+// 현재 최대 sortOrder — 신규 카테고리를 맨 끝에 배치하기 위한 기준값 (없으면 0)
+export async function getMaxSortOrder() {
+  const [row] = await db
+    .select({ max: sql<number>`coalesce(max(${categories.sortOrder}), 0)::int` })
+    .from(categories);
+  return row?.max ?? 0;
+}
+
 export async function insertCategory(data: {
   name: string;
   slug: string;
@@ -52,10 +63,9 @@ export async function insertCategory(data: {
   return row;
 }
 
-// updateData 타입은 slug 제외 — 컴파일 단계에서 slug 변경 차단 (ADR-025 immutable)
+// updateData 타입은 slug·sortOrder 제외 — slug 변경 차단(ADR-025) + 정렬은 reorderCategories 전용 경로로 일원화
 export type UpdateCategoryData = {
   name?: string;
-  sortOrder?: number;
   isActive?: boolean;
 };
 
@@ -67,4 +77,15 @@ export async function updateCategoryById(id: string, data: UpdateCategoryData) {
     .where(eq(categories.id, id))
     .returning();
   return row ?? null;
+}
+
+// 일괄 정렬 — 드래그 순서대로 1..N sortOrder 재부여. 단일 트랜잭션(전부 성공/전부 롤백).
+// 히어로와 달리 advisory lock 불필요: sortOrder 에 unique 제약이 없어 동시 저장도 last-write-wins 로 안전(데이터 손상 없음) + 단일 super 계정
+export async function reorderCategories(tx: Tx, orderedIds: string[]) {
+  for (let i = 0; i < orderedIds.length; i++) {
+    await tx
+      .update(categories)
+      .set({ sortOrder: i + 1, updatedAt: new Date() })
+      .where(eq(categories.id, orderedIds[i]));
+  }
 }

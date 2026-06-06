@@ -1,12 +1,39 @@
-// 카테고리 관리 UI — 상단 추가 폼 + row 리스트 (글 수·정렬·활성) + 수정 Dialog. ADR-025 slug immutable.
+// 카테고리 관리 UI — 상단 추가 폼 + 드래그 정렬 리스트(글 수·활성·수정) + 수정 Dialog. 정렬은 @dnd-kit 드래그 전용(소식 히어로 동일 UX). ADR-025 slug immutable.
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  arrayMove,
+  useSortable,
+} from "@dnd-kit/sortable";
+import {
+  restrictToVerticalAxis,
+  restrictToParentElement,
+} from "@dnd-kit/modifiers";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical } from "lucide-react";
+
 import {
   createCategoryAction,
   updateCategoryAction,
+  reorderCategoriesAction,
 } from "@/features/categories/actions";
 import {
   createCategorySchema,
@@ -33,6 +60,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 
 export type CategoryRow = {
   id: string;
@@ -49,11 +77,19 @@ export function CategoryManager({ rows }: Props) {
   const [editing, setEditing] = useState<CategoryRow | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // 서버 revalidate 로 rows 가 갱신되면(추가·수정·정렬저장) 드래그 로컬 상태를 새 순서로 리셋 (anti-slop: prop→state 동기화는 key remount)
+  const rowsKey = rows.map((r) => `${r.id}:${r.sortOrder}`).join("|");
+
   return (
     <div className="space-y-8">
       <CreateForm onError={setError} />
       <ErrorBanner message={error} onClose={() => setError(null)} />
-      <CategoriesTable rows={rows} onEdit={setEditing} />
+      <CategoryOrderList
+        key={rowsKey}
+        rows={rows}
+        onEdit={setEditing}
+        onError={setError}
+      />
       {editing && (
         <EditDialog
           row={editing}
@@ -65,13 +101,13 @@ export function CategoryManager({ rows }: Props) {
   );
 }
 
-// ─── 상단 추가 폼 ──────────────────────────────────────────────────────────
+// ─── 상단 추가 폼 (sortOrder 입력 없음 — 새 카테고리는 맨 끝 자동 배치) ──────
 
 function CreateForm({ onError }: { onError: (msg: string | null) => void }) {
   const [isPending, startTransition] = useTransition();
   const form = useForm<CreateCategoryInput>({
     resolver: zodResolver(createCategorySchema),
-    defaultValues: { name: "", slug: "", sortOrder: 0 },
+    defaultValues: { name: "", slug: "" },
   });
 
   const onSubmit = (values: CreateCategoryInput) => {
@@ -86,7 +122,7 @@ function CreateForm({ onError }: { onError: (msg: string | null) => void }) {
         onError(msg);
         return;
       }
-      form.reset({ name: "", slug: "", sortOrder: 0 });
+      form.reset({ name: "", slug: "" });
     });
   };
 
@@ -94,12 +130,16 @@ function CreateForm({ onError }: { onError: (msg: string | null) => void }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-xl">새 카테고리 추가</CardTitle>
+        <p className="text-sm text-ink-subtle">
+          추가하면 목록 맨 아래에 들어갑니다. 노출 순서는 아래에서 드래그로
+          조정하세요.
+        </p>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="grid gap-4 md:grid-cols-[1fr_1fr_120px_auto] md:items-end"
+            className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end"
           >
             <FormField
               control={form.control}
@@ -135,28 +175,6 @@ function CreateForm({ onError }: { onError: (msg: string | null) => void }) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="sortOrder"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>정렬</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={9999}
-                      disabled={isPending}
-                      {...field}
-                      onChange={(e) =>
-                        field.onChange(e.target.valueAsNumber || 0)
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <Button type="submit" disabled={isPending}>
               {isPending ? "추가 중..." : "추가"}
             </Button>
@@ -167,15 +185,154 @@ function CreateForm({ onError }: { onError: (msg: string | null) => void }) {
   );
 }
 
-// ─── 리스트 ───────────────────────────────────────────────────────────────
+// ─── 드래그 정렬 리스트 ─────────────────────────────────────────────────────
 
-function CategoriesTable({
+function ActiveBadge({ active }: { active: boolean }) {
+  return (
+    <span
+      className={cn(
+        "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
+        active
+          ? "bg-kpi-lime/40 text-ink-strong"
+          : "bg-muted text-ink-subtle",
+      )}
+    >
+      {active ? "활성" : "비활성"}
+    </span>
+  );
+}
+
+function SortableCategoryRow({
+  row,
+  index,
+  onEdit,
+  reducedMotion,
+}: {
+  row: CategoryRow;
+  index: number;
+  onEdit: (row: CategoryRow) => void;
+  reducedMotion: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: row.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: reducedMotion ? "none" : transition,
+  };
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "flex items-center gap-3 rounded-lg border border-border bg-white p-3",
+        isDragging && "opacity-60 shadow-md",
+      )}
+    >
+      <button
+        type="button"
+        className="shrink-0 cursor-grab touch-none rounded p-1 text-ink-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50"
+        aria-label={`${row.name} 순서 변경 (현재 ${index + 1}번)`}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="size-4" aria-hidden />
+      </button>
+      <span
+        className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-xs font-semibold text-brand-primary"
+        aria-hidden
+      >
+        {index + 1}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="truncate text-sm font-medium text-ink-strong">
+            {row.name}
+          </p>
+          <ActiveBadge active={row.isActive} />
+        </div>
+        <p className="truncate text-xs text-ink-subtle">
+          <span className="font-mono text-ink-date">{row.slug}</span>
+          <span className="tabular-nums"> · 글 {row.newsCount}건</span>
+        </p>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => onEdit(row)}
+        className="shrink-0"
+      >
+        수정
+      </Button>
+    </li>
+  );
+}
+
+function CategoryOrderList({
   rows,
   onEdit,
+  onError,
 }: {
   rows: CategoryRow[];
   onEdit: (row: CategoryRow) => void;
+  onError: (msg: string | null) => void;
 }) {
+  const router = useRouter();
+  const [items, setItems] = useState<CategoryRow[]>(rows);
+  const [isPending, startTransition] = useTransition();
+
+  const initialIds = useMemo(() => rows.map((r) => r.id).join(","), [rows]);
+  const isDirty = items.map((i) => i.id).join(",") !== initialIds;
+
+  const reducedMotion =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const labelOf = (id: string) =>
+    items.find((i) => i.id === id)?.name ?? "카테고리";
+  const posOf = (id: string) => items.findIndex((i) => i.id === id) + 1;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const onDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (over && active.id !== over.id) {
+      setItems((cur) => {
+        const from = cur.findIndex((i) => i.id === active.id);
+        const to = cur.findIndex((i) => i.id === over.id);
+        return arrayMove(cur, from, to);
+      });
+    }
+  };
+
+  const onSave = () => {
+    onError(null);
+    startTransition(async () => {
+      const result = await reorderCategoriesAction({
+        orderedIds: items.map((i) => i.id),
+      });
+      if (!result.success) {
+        onError(
+          typeof result.error === "string"
+            ? result.error
+            : "정렬 저장에 실패했습니다.",
+        );
+        return;
+      }
+      toast.success("카테고리 순서가 저장되었습니다. 사용자 사이트 탭에 즉시 반영됩니다.");
+      router.refresh();
+    });
+  };
+
   if (rows.length === 0) {
     return (
       <Card>
@@ -185,106 +342,79 @@ function CategoriesTable({
       </Card>
     );
   }
+
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader>
         <CardTitle className="text-xl">카테고리 목록</CardTitle>
+        <p className="text-sm text-ink-subtle">
+          드래그로 노출 순서를 바꾼 뒤 저장하세요. 순서는 사용자 사이트의 소식
+          분류 탭에 그대로 반영됩니다.
+        </p>
       </CardHeader>
-      <CardContent>
-        {/* 데스크탑 — 테이블 (md 이상) */}
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full min-w-[640px] text-sm">
-            <thead className="border-b text-ink-subtle">
-              <tr className="text-left">
-                <th className="py-3 pr-4 font-medium">이름</th>
-                <th className="py-3 pr-4 font-medium">slug</th>
-                <th className="py-3 pr-4 font-medium">글 수</th>
-                <th className="py-3 pr-4 font-medium">정렬</th>
-                <th className="py-3 pr-4 font-medium">활성</th>
-                <th className="py-3 font-medium text-right">관리</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr
+      <CardContent className="space-y-4">
+        <DndContext
+          id="admin-categories-dnd"
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+          onDragEnd={onDragEnd}
+          accessibility={{
+            announcements: {
+              onDragStart: ({ active }) =>
+                `${labelOf(active.id as string)} 항목을 집었습니다.`,
+              onDragOver: ({ active, over }) =>
+                over
+                  ? `${labelOf(active.id as string)} 항목을 ${posOf(over.id as string)}번 위치로 이동 중입니다.`
+                  : "",
+              onDragEnd: ({ active, over }) =>
+                over
+                  ? `${labelOf(active.id as string)} 항목을 ${posOf(over.id as string)}번 위치에 놓았습니다.`
+                  : "이동을 취소했습니다.",
+              onDragCancel: ({ active }) =>
+                `${labelOf(active.id as string)} 이동을 취소했습니다.`,
+            },
+          }}
+        >
+          <SortableContext
+            items={items.map((i) => i.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <ul className="space-y-2">
+              {items.map((row, i) => (
+                <SortableCategoryRow
                   key={row.id}
-                  className="border-b last:border-b-0 transition-colors hover:bg-surface-soft/60"
-                >
-                  <td className="py-3 pr-4 font-medium text-ink-strong">
-                    {row.name}
-                  </td>
-                  <td className="py-3 pr-4 font-mono text-xs text-ink-date">
-                    {row.slug}
-                  </td>
-                  <td className="py-3 pr-4 text-ink-strong tabular-nums">
-                    {row.newsCount}건
-                  </td>
-                  <td className="py-3 pr-4 text-ink-strong tabular-nums">
-                    {row.sortOrder}
-                  </td>
-                  <td className="py-3 pr-4">
-                    <span
-                      className={
-                        row.isActive
-                          ? "rounded-full bg-kpi-lime/40 px-2 py-1 text-xs font-medium text-ink-strong"
-                          : "rounded-full bg-muted px-2 py-1 text-xs font-medium text-ink-subtle"
-                      }
-                    >
-                      {row.isActive ? "활성" : "비활성"}
-                    </span>
-                  </td>
-                  <td className="py-3 text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit(row)}
-                    >
-                      수정
-                    </Button>
-                  </td>
-                </tr>
+                  row={row}
+                  index={i}
+                  onEdit={onEdit}
+                  reducedMotion={reducedMotion}
+                />
               ))}
-            </tbody>
-          </table>
-        </div>
+            </ul>
+          </SortableContext>
+        </DndContext>
 
-        {/* 모바일 — 카드 (md 미만) */}
-        <ul className="space-y-3 md:hidden">
-          {rows.map((row) => (
-            <li
-              key={row.id}
-              className="space-y-2 rounded-lg border border-border p-4"
+        <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
+          {isDirty && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setItems(rows)}
+              disabled={isPending}
             >
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-medium text-ink-strong">{row.name}</span>
-                <span
-                  className={
-                    row.isActive
-                      ? "shrink-0 rounded-full bg-kpi-lime/40 px-2 py-1 text-xs font-medium text-ink-strong"
-                      : "shrink-0 rounded-full bg-muted px-2 py-1 text-xs font-medium text-ink-subtle"
-                  }
-                >
-                  {row.isActive ? "활성" : "비활성"}
-                </span>
-              </div>
-              <p className="font-mono text-xs text-ink-date">{row.slug}</p>
-              <p className="text-xs text-ink-subtle tabular-nums">
-                글 {row.newsCount}건 · 정렬 {row.sortOrder}
-              </p>
-              <div className="flex justify-end">
-                <Button variant="ghost" size="sm" onClick={() => onEdit(row)}>
-                  수정
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
+              되돌리기
+            </Button>
+          )}
+          <Button type="button" onClick={onSave} disabled={!isDirty || isPending}>
+            {isPending ? "저장 중..." : "순서 저장"}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-// ─── 수정 Dialog ─────────────────────────────────────────────────────────
+// ─── 수정 Dialog (이름 + 활성 — 정렬은 드래그 전용) ──────────────────────────
 
 function EditDialog({
   row,
@@ -300,7 +430,6 @@ function EditDialog({
     resolver: zodResolver(updateCategorySchema),
     defaultValues: {
       name: row.name,
-      sortOrder: row.sortOrder,
       isActive: row.isActive,
     },
   });
@@ -328,15 +457,11 @@ function EditDialog({
           <DialogTitle>카테고리 수정</DialogTitle>
         </DialogHeader>
         <div className="rounded-md border bg-muted/30 px-4 py-3 text-xs text-ink-subtle">
-          slug{" "}
-          <span className="font-mono text-ink-strong">{row.slug}</span>{" "}
-          는 변경할 수 없습니다 (ADR-025).
+          slug <span className="font-mono text-ink-strong">{row.slug}</span> 는
+          변경할 수 없습니다 (ADR-025). 순서는 목록에서 드래그로 조정하세요.
         </div>
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4 pt-2"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
             <FormField
               control={form.control}
               name="name"
@@ -348,29 +473,6 @@ function EditDialog({
                       disabled={isPending}
                       {...field}
                       value={field.value ?? ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="sortOrder"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>정렬</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={9999}
-                      disabled={isPending}
-                      {...field}
-                      value={field.value ?? 0}
-                      onChange={(e) =>
-                        field.onChange(e.target.valueAsNumber || 0)
-                      }
                     />
                   </FormControl>
                   <FormMessage />
