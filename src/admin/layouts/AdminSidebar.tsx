@@ -1,4 +1,4 @@
-// 어드민 좌측 네비게이션 — 대시보드 / 소식 / 로그아웃. 1024↓ 토글, 활성 메뉴 표시. ADR-024 F3 src/admin/ 전용
+// 어드민 좌측 네비게이션 — 대시보드 단독 + 콘텐츠/메인 페이지/시스템 그룹. 1024↓ 토글, 인덱스(/admin)는 정확 일치로 활성 판정. ADR-024 F3 src/admin/ 전용
 "use client";
 
 import Link from "next/link";
@@ -13,16 +13,41 @@ type NavItem = {
   href: string;
   label: string;
   icon: typeof LayoutDashboard;
+  // 인덱스 라우트(/admin)는 정확 일치로만 활성 — prefix 매칭 시 모든 하위 페이지에서 켜짐
+  exact?: boolean;
 };
 
-const NAV: readonly NavItem[] = [
-  { href: "/admin", label: "대시보드", icon: LayoutDashboard },
-  { href: "/admin/news", label: "소식 관리", icon: Newspaper },
-  { href: "/admin/news-hero", label: "소식 히어로", icon: Star },
-  { href: "/admin/categories", label: "카테고리 관리", icon: FolderTree },
-  { href: "/admin/kpi", label: "KPI 관리", icon: BarChart3 },
-  { href: "/admin/landing", label: "메인 큐레이션", icon: Sparkles },
-  { href: "/admin/accounts", label: "계정 관리", icon: Users },
+type NavGroup = {
+  label: string | null; // null = 라벨 없는 최상단(대시보드)
+  items: readonly NavItem[];
+};
+
+const NAV_GROUPS: readonly NavGroup[] = [
+  {
+    label: null,
+    items: [
+      { href: "/admin", label: "대시보드", icon: LayoutDashboard, exact: true },
+    ],
+  },
+  {
+    label: "콘텐츠",
+    items: [
+      { href: "/admin/news", label: "소식 관리", icon: Newspaper },
+      { href: "/admin/news-hero", label: "소식 히어로", icon: Star },
+      { href: "/admin/categories", label: "카테고리 관리", icon: FolderTree },
+    ],
+  },
+  {
+    label: "메인 페이지",
+    items: [
+      { href: "/admin/kpi", label: "KPI 관리", icon: BarChart3 },
+      { href: "/admin/landing", label: "메인 큐레이션", icon: Sparkles },
+    ],
+  },
+  {
+    label: "시스템",
+    items: [{ href: "/admin/accounts", label: "계정 관리", icon: Users }],
+  },
 ] as const;
 
 export function AdminSidebar() {
@@ -71,32 +96,43 @@ export function AdminSidebar() {
           <p className="mt-0.5 text-xs text-ink-date">사회공헌국 전용</p>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <ul className="space-y-1">
-            {NAV.map((item) => {
-              const isActive =
-                pathname === item.href || pathname.startsWith(`${item.href}/`);
-              const Icon = item.icon;
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={() => setOpen(false)}
-                    className={cn(
-                      "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-cool",
-                      isActive
-                        ? "bg-brand-primary/10 text-brand-primary font-semibold before:absolute before:left-0 before:top-1/2 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-brand-primary"
-                        : "font-medium text-ink-subtle hover:bg-white hover:text-ink-strong",
-                    )}
-                  >
-                    <Icon className="size-4" aria-hidden />
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+        <nav className="flex-1 space-y-3 overflow-y-auto px-3 py-4">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label ?? "root"}>
+              {group.label && (
+                <p className="px-3 pb-1 text-[11px] font-semibold tracking-wide text-ink-date">
+                  {group.label}
+                </p>
+              )}
+              <ul className="space-y-1">
+                {group.items.map((item) => {
+                  const isActive = item.exact
+                    ? pathname === item.href
+                    : pathname === item.href ||
+                      pathname.startsWith(`${item.href}/`);
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setOpen(false)}
+                        className={cn(
+                          "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-cool",
+                          isActive
+                            ? "bg-brand-primary/10 text-brand-primary font-semibold before:absolute before:left-0 before:top-1/2 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-brand-primary"
+                            : "font-medium text-ink-subtle hover:bg-white hover:text-ink-strong",
+                        )}
+                      >
+                        <Icon className="size-4" aria-hidden />
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
         <div className="border-t border-border px-3 py-4">
