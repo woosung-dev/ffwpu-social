@@ -9,8 +9,10 @@ import * as service from "./service";
 import {
   type CreateCategoryInput,
   type UpdateCategoryInput,
+  type ReorderCategoriesInput,
   createCategorySchema,
   updateCategorySchema,
+  reorderCategoriesSchema,
 } from "./schemas";
 
 // 카테고리 변경은 사용자 사이트 탭/필터·어드민 폼 선택지에 즉시 반영 필요
@@ -52,6 +54,22 @@ export async function updateCategoryAction(
     if (!row) return { success: false, error: "Not Found" };
     revalidateAffected();
     return { success: true, data: { id: row.id } };
+  } catch (e) {
+    return toActionError(e, "categoryAction");
+  }
+}
+
+// 드래그 정렬 일괄 저장 — 명시 Save. 노출 순서가 사용자 사이트 탭·필터에 즉시 반영
+export async function reorderCategoriesAction(
+  input: ReorderCategoriesInput,
+): Promise<ActionResult<{ count: number }, ReorderCategoriesInput>> {
+  try {
+    await requireSuperAdmin();
+    const parsed = reorderCategoriesSchema.safeParse(input);
+    if (!parsed.success) return { success: false, error: parsed.error };
+    await service.reorderCategories(parsed.data.orderedIds);
+    revalidateAffected();
+    return { success: true, data: { count: parsed.data.orderedIds.length } };
   } catch (e) {
     return toActionError(e, "categoryAction");
   }
