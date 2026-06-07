@@ -15,7 +15,7 @@ export function SubBanner() {
             src="/icons/sow-good-banner-logo.svg"
             alt="Sow Good"
             width={116}
-            height={47}
+            height={46}
             className="h-auto w-[116px]"
           />
           <div className="h-px w-32 bg-brand-soft/40" aria-hidden />
@@ -33,7 +33,7 @@ export function SubBanner() {
             src="/icons/sow-good-banner-logo.svg"
             alt="Sow Good"
             width={160}
-            height={65}
+            height={64}
             className="h-auto w-[160px] shrink-0"
           />
           <div aria-hidden className="h-9 w-px shrink-0 bg-brand-soft/40" />
