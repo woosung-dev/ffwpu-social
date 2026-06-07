@@ -25,6 +25,8 @@
 
 ## Completed (최근 3개)
 
+- [x] **소식 검색 + 768 그리드 정정 (2026-06-07)** — `/news` "더 많은 소식" 탭+검색 인라인 툴바(제목+태그 ILIKE, q×category AND). 768 카드 3열→2열 수정(skeleton·Figma 정합). branch `feat/news-search`, ADR-036. Generator-Evaluator(2-pass 적대 + codex C1 반복q 500 수락). tsc0·lint0·test47. **스키마 0.** plan/검증: `docs/plans/active/2026-06-07-news-search.md` · `docs/design/review-news-search-2026-06-07.md`.
+  - **v1.1 후속(Next Actions):** 본문(jsonb) 검색 · 검색어 하이라이트 · 자동완성/추천검색어 · 헤더 검색 모달(familyfed SearchPanel 패턴) · 사회공헌국 검색 디자인 최종 승인.
 - [x] **Figma SSOT 재동기화 (2026-05-30)** — 사용자 3 노드 ID 재공유 기반. 홈 1920/1024 자식 frame ID 갱신 (`331:7984`·`332:9254`) + 1439 폐기 + 소식 Banner 정식 등장 카피 갱신. `docs/design.md` / `docs/design/README.md` / `docs/current.md` / `docs/TODO.md` 4파일 일관화. 사용자 조달 대기 항목 ↓ "Next Actions" 등록.
 - [x] Sprint 1 D-4 — F3 폴더 + 디자인 토큰 + SUIT 폰트 + 공통 컴포넌트 11종 + Route Group (2026-05-27, 9 commits)
 - [x] D-4 Multi-Agent 검증 + ITERATE verdict → P0 7건 처리 완료

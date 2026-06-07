@@ -1398,3 +1398,25 @@ velog 최종 처방은 "pnpm workspace 기준선 → 빌드성능 필요 시 Tur
 - ✅ Figma "스티커 이미지" 원칙 준수 — synthesis 가 억지 CSS(매직 오프셋·xl 상향으로 Figma 1024 깨는 변경·추측성 flower 축소) 기각.
 - ⚠️ 디자이너 1px 경계(1024/1025)는 표준 BP 로 정확 표현 불가 — Figma 1024=데스크탑 귀결로 해소했으나, 차후 디자이너가 1025 를 태블릿으로 재정의하면 재검토 필요.
 - ⚠️ KPI `flex-[1.7]/[2.4]` 는 Figma 607:256 비율 근사(매직 비율 아님, 가용폭 분배) — 실콘텐츠/실사진 교체 후 1024·1440 재확인 권장.
+
+## ADR-036: /news 소식 검색 — 제목+태그 ILIKE 인라인 툴바 (ADR-016 "검색 ❌" 부분 갱신)
+
+- **상태**: 채택 (2026-06-07)
+- **맥락**: 사용자가 `/news` 목록에 검색 추가를 명시 요청(참고 패턴: familyfed-web "탭+검색 한 줄" node 1323-8705). 우리 Figma 소식(95-9359)에는 검색 UI 가 없음(4 BP baseline 확인) → ADR-016 "검색 기능 ❌ — 헤더 아이콘만"을 **사용자 결정으로 갱신**(domain.md §1 SSoT = Figma + 사용자 결정). **DB 스키마 변경 없음.**
+
+### Decision
+
+1. **검색 대상 = 제목 + 태그** (`news.title` ILIKE OR `news_tags.tag` EXISTS ILIKE). 본문(jsonb)은 noise·full-scan 우려로 v1.1 보류.
+2. **툴바 2행 구조** (피드백 반영) — "더 많은 소식" 아래: (1행) CategoryTabs 전체 폭 단독, (2행) 검색(좌, `flex-1 max-w-440`) + 정렬(우). 카테고리 多(5개+)로 탭+검색 한 줄이 좁아 familyfed 뉴스룸(1272-7363)처럼 검색을 아래 행으로 분리. 검색은 탭 `overflow-x-auto` 영역 밖 형제. 헤더 돋보기 아이콘은 현행 disabled 유지(모달 v1.1).
+2-bis. **정렬** — `최신순`(발행 publishedAt DESC, 기본) / `제목순`(title ASC, Hangul 음절 codepoint = 가나다). native `<select>`(ChevronDown). `?sort=` URL 드라이버, latest 면 파라미터 생략.
+3. **`q × category × sort` 조합** = AND/정렬 독립, 각 변경 시 page=1 리셋·상호 URL 보존. `?q=`/`?sort=` URL 드라이버 — useSuspenseQuery 키에 q·sort 포함, 서버 prefetch↔클라 정규화 단일 출처(`features/news/api.ts`).
+4. **LIKE 안전** — `likePattern` 이 `% _ \` 이스케이프(와일드카드 주입 차단) + Drizzle 파라미터 바인딩(인젝션 불가) + q ≤100자(스키마·input).
+5. **엣지 처리** — 반복 q(string[]) `firstParam` 흡수(서버 500 방지, codex C1) · page overflow 마지막 페이지 재조회(막다른 빈 화면 방지) · 한글 IME 조합 가드(onKeyDown+onSubmit) · `key={q}` input 동기화.
+
+### Consequences
+
+- ✅ 제목·태그 키워드 검색 동작(라이브: 14건 중 q=쌀 8건, q=현장→태그 매칭 1건). category+q+page 결합·전 BP 가로스크롤 0·콘솔 0 error.
+- ✅ 768 카드 그리드 열수 버그(`md:`3열→`lg:`3열, skeleton·Figma 2열 정합) 동반 수정.
+- ⚠️ 본문 검색·하이라이트·자동완성·헤더 모달은 v1.1 (`docs/TODO.md`).
+- ⚠️ ADR-016 "검색 ❌"는 본 ADR 로 부분 supersede — **목록 인라인 검색 한정**, 그 외 1차 범위 동결 유지.
+- 근거 산출물: `docs/plans/active/2026-06-07-news-search.md` · `docs/design/review-news-search-2026-06-07.md`.

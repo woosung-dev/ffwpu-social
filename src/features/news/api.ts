@@ -4,28 +4,46 @@ import { ALL_CATEGORY_SLUG } from "./constants";
 
 export const NEWS_PAGE_SIZE = 9; // 3x3 그리드
 
-// URL searchParams → 목록 필터 정규화 — float/NaN/0/음수 page 차단, 빈 category 는 전체
+// searchParams 단일 값 추출 — App Router 서버에서 반복 키(?q=a&q=b)는 string[] 로 들어옴(첫 값 채택).
+// 클라 useSearchParams().get() 은 이미 string|null 이라 무영향. 배열에 .trim() 호출 시 서버 500 방지 (codex C1)
+function firstParam(v: string | string[] | null | undefined): string | undefined {
+  return Array.isArray(v) ? v[0] : (v ?? undefined);
+}
+
+// 정렬 옵션 — latest(발행 최신순, 기본) | title(제목 가나다순)
+export const NEWS_SORT_VALUES = ["latest", "title"] as const;
+export type NewsSort = (typeof NEWS_SORT_VALUES)[number];
+
+// URL searchParams → 목록 필터 정규화 — float/NaN/0/음수 page 차단, 빈 category 는 전체, q 는 trim(빈 값 = 검색 미적용), sort 미지/오입력은 latest
 export function normalizeNewsListFilters(params: {
-  category?: string | null;
-  page?: string | null;
+  category?: string | string[] | null;
+  q?: string | string[] | null;
+  sort?: string | string[] | null;
+  page?: string | string[] | null;
 }): NewsListFilters {
+  const category = firstParam(params.category);
   const categorySlug =
-    params.category && params.category.length > 0
-      ? params.category
-      : ALL_CATEGORY_SLUG;
-  const page = Math.max(1, Math.floor(Number(params.page) || 1));
-  return { categorySlug, page };
+    category && category.length > 0 ? category : ALL_CATEGORY_SLUG;
+  const q = firstParam(params.q)?.trim() ?? "";
+  const sortRaw = firstParam(params.sort);
+  const sort: NewsSort = NEWS_SORT_VALUES.includes(sortRaw as NewsSort)
+    ? (sortRaw as NewsSort)
+    : "latest";
+  const page = Math.max(1, Math.floor(Number(firstParam(params.page)) || 1));
+  return { categorySlug, q, sort, page };
 }
 
 export type NewsListFilters = {
   categorySlug: string; // 정규화 값 (전체 = ALL_CATEGORY_SLUG)
+  q: string; // 정규화 검색어 (빈 문자열 = 검색 미적용)
+  sort: NewsSort; // 정렬 (기본 latest)
   page: number;
 };
 
 export const newsKeys = {
   all: ["news"] as const,
   list: (f: NewsListFilters) =>
-    [...newsKeys.all, "list", f.categorySlug, f.page] as const,
+    [...newsKeys.all, "list", f.categorySlug, f.q, f.sort, f.page] as const,
 };
 
 // 목록 응답 타입 — GET /api/news 의 클라 계약. db.listPublicNews select 와 동기화.
@@ -59,6 +77,12 @@ export async function fetchNewsList(f: NewsListFilters): Promise<NewsListResult>
   });
   if (f.categorySlug !== ALL_CATEGORY_SLUG) {
     params.set("category", f.categorySlug);
+  }
+  if (f.q) {
+    params.set("q", f.q);
+  }
+  if (f.sort !== "latest") {
+    params.set("sort", f.sort);
   }
   const res = await fetch(`/api/news?${params.toString()}`);
   if (!res.ok) {

@@ -64,7 +64,7 @@ export function ArticleCard({ size = 1, article, className }: Props) {
             alt=""
             fill
             sizes="(max-width: 1024px) 100vw, 400px"
-            className="object-cover"
+            className="object-cover transition-transform duration-300 ease-out group-hover:scale-105 motion-reduce:transform-none"
           />
         ) : (
           <div className="absolute inset-0" style={GRADIENT_STYLE} />

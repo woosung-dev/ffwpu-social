@@ -5,6 +5,7 @@ import {
   type FeaturedStory,
 } from "@/features/news/components";
 import { extractExcerpt } from "@/features/news/render/excerpt";
+import { SectionContainer } from "@/client/components/layout";
 
 export async function NewsHero() {
   const items = await getHeroNews();
@@ -20,8 +21,11 @@ export async function NewsHero() {
   }));
 
   return (
-    <section className="container mx-auto px-4 pt-10 lg:px-20 lg:pt-16">
-      <FeaturedStoryCard stories={stories} />
+    // 배경(연한 회색)은 양옆 끝까지 풀폭(full-bleed) — 콘텐츠만 SectionContainer 밴드에 정렬 (Figma 125:8904)
+    <section className="w-full bg-surface-card pt-5 pb-[60px] lg:pt-[30px]">
+      <SectionContainer>
+        <FeaturedStoryCard stories={stories} />
+      </SectionContainer>
     </section>
   );
 }

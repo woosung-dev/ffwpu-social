@@ -31,6 +31,10 @@ export type NewsInput = z.infer<typeof newsInputSchema>;
 // 사용자 사이트 목록 조회 — categorySlug 필터 ("all" 또는 카테고리 slug)
 export const listNewsQuerySchema = z.object({
   categorySlug: z.string().optional(),
+  // 제목 + 태그 부분일치 검색어 (없으면 전체). 본문(jsonb) 검색은 v1.1
+  q: z.string().trim().max(100).optional(),
+  // 정렬 — latest(발행 최신순, 기본) | title(제목 가나다순)
+  sort: z.enum(["latest", "title"]).default("latest"),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(9),
 });

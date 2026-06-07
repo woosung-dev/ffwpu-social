@@ -11,6 +11,7 @@ import {
   normalizeNewsListFilters,
 } from "@/features/news/api";
 import { getQueryClient } from "@/lib/query/get-query-client";
+import { SectionContainer } from "@/client/components/layout";
 
 import { SubBanner } from "./sub-banner";
 import { NewsHero } from "./news-hero";
@@ -22,9 +23,12 @@ export const metadata: Metadata = {
     "사회공헌단 Sow Good 의 쌀 나눔·가족 치유·지역 봉사·환경 캠페인 활동 소식.",
 };
 
+// App Router 는 반복 키를 string[] 로 전달 — normalizeNewsListFilters(firstParam) 가 흡수
 type SearchParams = {
-  category?: string;
-  page?: string;
+  category?: string | string[];
+  page?: string | string[];
+  q?: string | string[];
+  sort?: string | string[];
 };
 
 export default function NewsListPage({
@@ -41,14 +45,17 @@ export default function NewsListPage({
         <NewsHero />
       </Suspense>
 
-      <section className="container mx-auto px-4 py-10 lg:px-20 lg:py-16">
-        <h2 className="text-2xl font-bold tracking-tight text-ink-strong lg:text-[32px]">
-          더 많은 소식
-        </h2>
+      {/* 랜딩과 동일 밴드 고정폭 정합 — SectionContainer(768→648 / 1025→905 / 1440→1200, mobile px-4) */}
+      <section className="w-full py-10 lg:py-16">
+        <SectionContainer>
+          <h2 className="text-2xl font-bold tracking-tight text-ink-strong lg:text-[32px]">
+            더 많은 소식
+          </h2>
 
-        <Suspense fallback={<NewsListLoading />}>
-          <NewsListPrefetch searchParams={searchParams} />
-        </Suspense>
+          <Suspense fallback={<NewsListLoading />}>
+            <NewsListPrefetch searchParams={searchParams} />
+          </Suspense>
+        </SectionContainer>
       </section>
     </>
   );
@@ -60,8 +67,8 @@ async function NewsListPrefetch({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { category, page } = await searchParams;
-  const filters = normalizeNewsListFilters({ category, page });
+  const { category, page, q, sort } = await searchParams;
+  const filters = normalizeNewsListFilters({ category, page, q, sort });
 
   const categoriesAll = await listCategories();
   const categoriesForTabs = categoriesAll
@@ -78,6 +85,8 @@ async function NewsListPrefetch({
           filters.categorySlug === ALL_CATEGORY_SLUG
             ? undefined
             : filters.categorySlug,
+        q: filters.q || undefined,
+        sort: filters.sort,
         page: filters.page,
         limit: NEWS_PAGE_SIZE,
       }),

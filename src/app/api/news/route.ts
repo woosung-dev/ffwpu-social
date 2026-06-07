@@ -8,6 +8,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const parsed = listNewsQuerySchema.safeParse({
     categorySlug: searchParams.get("category") ?? undefined,
+    q: searchParams.get("q") ?? undefined,
+    sort: searchParams.get("sort") ?? undefined,
     page: searchParams.get("page") ?? undefined,
     limit: searchParams.get("limit") ?? undefined,
   });
