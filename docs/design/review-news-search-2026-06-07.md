@@ -80,3 +80,7 @@ familyfed 정본 컴포넌트(코드)에 맞춰 미세 정합. 라이브 측정�
 ### 정렬 select — 네이티브 → shadcn 디자인 드롭다운 (사용자 피드백 7차)
 
 native `<select>`(OS 기본 옵션 리스트)라 디자인이 안 입혀짐 → **shadcn `Select`(Radix)** 로 교체. 닫힘=라운드 박스(트리거), 열림=디자인 팝오버(라운드·그림자·진입 애니메이션·선택 항목 ✓ 체크). 트리거 `h-11 rounded-lg border-[#D1D5DB] hover:border-[#BAC2D0]`, `position="popper" align="end"`. 라이브: 열림 팝오버 확인, "제목순" 선택 → `?sort=title` + 재정렬. 콘솔 0 error. 스크린샷 `live-news-sort-popover.png`. **`.next` 캐시 삭제 후 재기동(stale 캐시 대응).**
+
+### FeaturedStory(히어로) 배경 full-bleed (사용자 피드백 8차)
+
+Figma 마스터(125:8904)는 히어로 배경(연회색)이 **양옆 끝까지 풀폭**인데, SectionContainer 적용 후 `bg-surface-card` 가 밴드 폭에 갇혀 있었음. → 배경+세로패딩을 **풀폭 래퍼(news-hero)** 로 올리고, FeaturedStoryCard 는 밴드 콘텐츠 그리드만 담당. 라이브 측정: bg 폭 = 뷰포트(1440→1440 / 768→768 / 375→375, left=0), 콘텐츠 = 밴드(1200/648/343). 스크린샷 `live-news-hero-fullbleed-1440.png`.
