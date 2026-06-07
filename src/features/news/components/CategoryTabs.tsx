@@ -1,4 +1,5 @@
-// 카테고리 탭 — Figma 125:9134 정합: SUIT Medium 17px, active h-56px + brand-vivid 하단 2px 라인, inactive h-46px
+// 카테고리 탭 — Figma 125:9134 + familyfed 463-2827 hover. SUIT 17px, 높이 46(mobile)/56(md+) 균일.
+// active/hover 동일 모습: brand-vivid 하단 2px 라인이 origin-center scale-x 로 양쪽 확장(center-out) + Medium·ink-strong
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -29,25 +30,21 @@ export function CategoryTabs({ categories, selected, onChangeAction }: Props) {
         {tabs.map((tab) => {
           const isActive = tab.slug === selected;
           return (
-            <li key={tab.slug} className={cn(isActive ? "h-14" : "h-[46px]")}>
+            <li key={tab.slug}>
               <button
                 type="button"
                 onClick={() => onChangeAction?.(tab.slug)}
                 aria-pressed={isActive}
                 className={cn(
-                  "relative flex h-full items-center justify-center whitespace-nowrap px-[10px] text-[17px] transition-colors",
+                  "relative flex h-[46px] items-center justify-center whitespace-nowrap px-[10px] text-[17px] transition-colors md:h-14",
+                  // 하단 라인 — origin-center scale-x 로 양쪽 확장(center-out). active 항상 노출 / inactive 는 hover 시 노출 = active 와 동일 모습
+                  "after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:origin-center after:bg-brand-vivid after:transition-transform after:duration-300 after:content-[''] motion-reduce:after:transition-none",
                   isActive
-                    ? "font-medium text-ink-strong"
-                    : "font-normal text-ink-date hover:text-foreground",
+                    ? "font-medium text-ink-strong after:scale-x-100"
+                    : "font-normal text-ink-date after:scale-x-0 hover:font-medium hover:text-ink-strong hover:after:scale-x-100",
                 )}
               >
                 {tab.name}
-                {isActive && (
-                  <span
-                    aria-hidden
-                    className="absolute inset-x-0 -bottom-px h-0.5 bg-brand-vivid"
-                  />
-                )}
               </button>
             </li>
           );

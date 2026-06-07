@@ -50,3 +50,9 @@
 - **카드 hover** — `ArticleCard` 이미지 `group-hover:scale-105`(+`transition-transform`·`motion-reduce` 가드). 라이브 측정: hover 시 `scale` 1.0→**1.05** 부드러운 전환(v4 `scale` 속성, transition 에 scale 포함).
 - **검색 input** — focus 시 보라 밑줄(`focus-within:border-brand-vivid`) 제거 → 밑줄 **중립 유지**(focus=blur 동일 색 확인). 키보드 포커스만 `has-[input:focus-visible]` subtle ring 으로 a11y 표시(마우스 비표시). familyfed PageSearchbar 일관.
 - 검증: tsc 0 · lint 0 · test 47 · build green. 스크린샷 `live-news-search-v2-{1440,768,375}.png`.
+
+### 탭 hover (사용자 피드백 3차, familyfed 463-2827)
+
+- `CategoryTabs` — 하단 brand-vivid 라인을 `::after` + `origin-center scale-x` 로 전환. **inactive hover 시 라인이 가운데에서 양쪽으로 확장(center-out)** + 텍스트 Medium·ink-strong → **hover = active 동일 모습**. 라이브 측정: active `scale 1`(origin=탭 중앙) / inactive idle `scale 0 1` → hover `scale 1`, hover fontWeight 500.
+- 높이 균일화 — 기존 active 56·inactive 46 고정 → **46(mobile)/56(md+) 균일**(familyfed 정합, hover 시 레이아웃 시프트 제거). `motion-reduce:after:transition-none` 가드.
+- 스크린샷 `live-news-tab-hover.png`(전체=active·지역 봉사=hover 동일 모습).
