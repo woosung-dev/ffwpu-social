@@ -12,9 +12,15 @@ export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type ListOpts = {
   categorySlug?: string;
   q?: string;
+  sort?: "latest" | "title";
   page: number;
   limit: number;
 };
+
+// 정렬 — title(제목 가나다순, Hangul 음절은 codepoint=가나다 순) / 그 외 latest(발행 최신순)
+function newsOrderBy(sort?: ListOpts["sort"]) {
+  return sort === "title" ? asc(news.title) : desc(news.publishedAt);
+}
 
 function categoryWhere(categorySlug?: string) {
   return categorySlug && categorySlug !== ALL_CATEGORY_SLUG
@@ -60,7 +66,7 @@ export async function listPublicNews(opts: ListOpts) {
         searchWhere(opts.q),
       ),
     )
-    .orderBy(desc(news.publishedAt))
+    .orderBy(newsOrderBy(opts.sort))
     .limit(opts.limit)
     .offset(offset);
 }

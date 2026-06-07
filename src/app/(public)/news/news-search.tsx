@@ -8,9 +8,10 @@ import { SearchInput } from "@/features/news/components";
 
 type Props = {
   defaultValue: string;
+  className?: string;
 };
 
-export function NewsSearch({ defaultValue }: Props) {
+export function NewsSearch({ defaultValue, className }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -31,6 +32,7 @@ export function NewsSearch({ defaultValue }: Props) {
       defaultValue={defaultValue}
       onSubmitAction={onSubmitAction}
       busy={isPending}
+      className={className}
     />
   );
 }

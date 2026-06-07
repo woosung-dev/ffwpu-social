@@ -28,6 +28,7 @@ type SearchParams = {
   category?: string | string[];
   page?: string | string[];
   q?: string | string[];
+  sort?: string | string[];
 };
 
 export default function NewsListPage({
@@ -66,8 +67,8 @@ async function NewsListPrefetch({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { category, page, q } = await searchParams;
-  const filters = normalizeNewsListFilters({ category, page, q });
+  const { category, page, q, sort } = await searchParams;
+  const filters = normalizeNewsListFilters({ category, page, q, sort });
 
   const categoriesAll = await listCategories();
   const categoriesForTabs = categoriesAll
@@ -85,6 +86,7 @@ async function NewsListPrefetch({
             ? undefined
             : filters.categorySlug,
         q: filters.q || undefined,
+        sort: filters.sort,
         page: filters.page,
         limit: NEWS_PAGE_SIZE,
       }),

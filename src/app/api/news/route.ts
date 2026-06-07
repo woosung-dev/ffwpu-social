@@ -9,6 +9,7 @@ export async function GET(request: Request) {
   const parsed = listNewsQuerySchema.safeParse({
     categorySlug: searchParams.get("category") ?? undefined,
     q: searchParams.get("q") ?? undefined,
+    sort: searchParams.get("sort") ?? undefined,
     page: searchParams.get("page") ?? undefined,
     limit: searchParams.get("limit") ?? undefined,
   });

@@ -56,3 +56,11 @@
 - `CategoryTabs` — 하단 brand-vivid 라인을 `::after` + `origin-center scale-x` 로 전환. **inactive hover 시 라인이 가운데에서 양쪽으로 확장(center-out)** + 텍스트 Medium·ink-strong → **hover = active 동일 모습**. 라이브 측정: active `scale 1`(origin=탭 중앙) / inactive idle `scale 0 1` → hover `scale 1`, hover fontWeight 500.
 - 높이 균일화 — 기존 active 56·inactive 46 고정 → **46(mobile)/56(md+) 균일**(familyfed 정합, hover 시 레이아웃 시프트 제거). `motion-reduce:after:transition-none` 가드.
 - 스크린샷 `live-news-tab-hover.png`(전체=active·지역 봉사=hover 동일 모습).
+
+### 검색 위치 이동 + 정렬 추가 (사용자 피드백 4차, familyfed 1272-7363)
+
+사용자 지적: 카테고리가 많아(5개+) 탭+검색 한 줄이 좁다 → familyfed 뉴스룸처럼 검색을 아래 행으로 내리고, 최신순/제목순 정렬 추가.
+
+- **툴바 2행** — (1행) CategoryTabs 전체 폭 단독, (2행) 검색(좌, `flex-1 max-w-440`) + 정렬(우, `items-end` 하단선 정렬). 라이브 1440/375 확인.
+- **정렬** — `최신순`(기본, publishedAt DESC) / `제목순`(title ASC). db `newsOrderBy`, 스키마 `z.enum(["latest","title"])`, `?sort=` URL 드라이버(latest 생략). 라이브 API: title 정렬 가나다순 확인(가족 치유→갈등 회복→감사의…), q+sort 결합 정상. select 변경 시 URL `?sort=title` + 그리드 재정렬 확인.
+- 검증: tsc 0 · lint 0 · **test 48** · build green · 콘솔 0 error. 스크린샷 `live-news-sort-{1440,375}.png` · `live-news-sort-title-1440.png`.

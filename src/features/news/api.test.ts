@@ -28,12 +28,23 @@ describe("normalizeNewsListFilters", () => {
     expect(normalizeNewsListFilters({ page: "0" }).page).toBe(1);
     expect(normalizeNewsListFilters({ page: "3" }).page).toBe(3);
   });
+
+  it("sort 는 화이트리스트만 허용하고 미지·오입력은 latest 로 정규화한다", () => {
+    expect(normalizeNewsListFilters({ sort: "title" }).sort).toBe("title");
+    expect(normalizeNewsListFilters({ sort: "latest" }).sort).toBe("latest");
+    expect(normalizeNewsListFilters({ sort: "bogus" }).sort).toBe("latest");
+    expect(normalizeNewsListFilters({}).sort).toBe("latest");
+    expect(normalizeNewsListFilters({ sort: ["title", "x"] }).sort).toBe("title");
+  });
 });
 
 describe("newsKeys.list", () => {
-  it("캐시 키에 q 가 포함돼 검색어별로 키가 분리된다", () => {
-    const base = { categorySlug: ALL_CATEGORY_SLUG, page: 1 };
+  it("캐시 키에 q·sort 가 포함돼 조합별로 키가 분리된다", () => {
+    const base = { categorySlug: ALL_CATEGORY_SLUG, sort: "latest" as const, page: 1 };
     expect(newsKeys.list({ ...base, q: "쌀" })).not.toEqual(
+      newsKeys.list({ ...base, q: "" }),
+    );
+    expect(newsKeys.list({ ...base, q: "", sort: "title" })).not.toEqual(
       newsKeys.list({ ...base, q: "" }),
     );
     expect(newsKeys.list({ ...base, q: "쌀" })).toEqual([
@@ -41,6 +52,7 @@ describe("newsKeys.list", () => {
       "list",
       ALL_CATEGORY_SLUG,
       "쌀",
+      "latest",
       1,
     ]);
   });

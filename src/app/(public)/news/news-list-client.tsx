@@ -18,6 +18,7 @@ import {
 
 import { NewsCategoryTabs } from "./news-filters";
 import { NewsSearch } from "./news-search";
+import { NewsSort } from "./news-sort";
 
 type Props = {
   categories: readonly CategoryTabItem[];
@@ -29,6 +30,7 @@ export function NewsListClient({ categories }: Props) {
   const filters = normalizeNewsListFilters({
     category: searchParams.get("category"),
     q: searchParams.get("q"),
+    sort: searchParams.get("sort"),
     page: searchParams.get("page"),
   });
 
@@ -37,13 +39,14 @@ export function NewsListClient({ categories }: Props) {
     queryFn: () => fetchNewsList(filters),
   });
 
-  // 페이지 변경 href — 카테고리·검색어 유지, 1페이지는 쿼리 생략
+  // 페이지 변경 href — 카테고리·검색어·정렬 유지, 1페이지는 쿼리 생략
   const buildPageHref = (nextPage: number) => {
     const params = new URLSearchParams();
     if (filters.categorySlug !== ALL_CATEGORY_SLUG) {
       params.set("category", filters.categorySlug);
     }
     if (filters.q) params.set("q", filters.q);
+    if (filters.sort !== "latest") params.set("sort", filters.sort);
     if (nextPage !== 1) params.set("page", String(nextPage));
     const query = params.toString();
     return query ? `/news?${query}` : "/news";
@@ -51,16 +54,23 @@ export function NewsListClient({ categories }: Props) {
 
   return (
     <>
-      {/* 툴바 — 모바일 세로 스택(탭 위 / 검색 아래), md↑ 한 줄(탭 좌측 flex-1 + 검색 우측, 하단선 정렬). 검색은 탭의 overflow-x-auto 영역 밖 형제 */}
-      <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:gap-5 lg:mt-8 wide:gap-6">
-        <div className="min-w-0 flex-1">
-          <NewsCategoryTabs
-            categories={categories}
-            selected={filters.categorySlug}
-          />
-        </div>
+      {/* 탭은 전체 폭 단독 행 — 카테고리 多 정합 (familyfed 1272-7363) */}
+      <div className="mt-6 lg:mt-8">
+        <NewsCategoryTabs
+          categories={categories}
+          selected={filters.categorySlug}
+        />
+      </div>
+
+      {/* 탭 아래 행 — 검색(좌) + 정렬(우). items-end 로 두 하단선 정렬 */}
+      <div className="mt-4 flex items-end justify-between gap-3 md:mt-5">
         {/* key={filters.q} — URL 의 q 가 외부에서 바뀌면(로고·/news 클릭) input 값을 리셋 (anti-slop: prop→state 는 key reset) */}
-        <NewsSearch key={filters.q} defaultValue={filters.q} />
+        <NewsSearch
+          key={filters.q}
+          defaultValue={filters.q}
+          className="min-w-0 flex-1 max-w-[440px]"
+        />
+        <NewsSort value={filters.sort} />
       </div>
 
       {list.items.length === 0 ? (

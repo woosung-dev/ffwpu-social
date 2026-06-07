@@ -34,7 +34,9 @@ related_adr: 036-news-search
 - [x] 적대 수락 — F1 key 리셋(P1) · F2 page overflow 재조회(P1) · F3 onSubmit IME 가드(P2) · F4 빈결과 role=status(P2). F5(input box-ring) 비수락
 - [x] Phase 4 Codex — C1 반복 q(string[]) 서버 500 → firstParam 흡수. 수락·수정·재검증(라이브 200)
 - [x] Phase 5 docs — ADR-036 · AGENTS.md · design.md · TODO.md · 본 plan · 검증 리포트
-- [ ] 커밋·PR (사용자 승인 흐름)
+- [x] 피드백 후속 — 밴드폭 SectionContainer 정합 · 카드 hover 줌 · 검색 input 중립 밑줄 · 탭 hover center-out 라인(hover=active)
+- [x] 피드백 후속 — 툴바 2행(탭 단독 + 검색·정렬) · 정렬 최신순/제목순(familyfed 1272-7363). test 48
+- [ ] 커밋·PR (사용자 승인 흐름, PR #35 갱신 중)
 
 ## 변경 파일
 

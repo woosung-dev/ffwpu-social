@@ -1407,8 +1407,9 @@ velog 최종 처방은 "pnpm workspace 기준선 → 빌드성능 필요 시 Tur
 ### Decision
 
 1. **검색 대상 = 제목 + 태그** (`news.title` ILIKE OR `news_tags.tag` EXISTS ILIKE). 본문(jsonb)은 noise·full-scan 우려로 v1.1 보류.
-2. **인라인 툴바** — "더 많은 소식" 행에 탭(좌) + 검색(우). md↑ 한 줄(하단선 정렬), 375 세로 스택. 검색 input 은 탭 `overflow-x-auto` 영역 밖 형제(모바일 가로 스크롤 회피). 헤더 돋보기 아이콘은 현행 disabled 유지(모달은 v1.1).
-3. **`q × category` = AND**, 둘 다 page=1 리셋·상호 URL 보존. `?q=` URL 드라이버 — useSuspenseQuery 키에 q 포함, 서버 prefetch↔클라 정규화 단일 출처(`features/news/api.ts`).
+2. **툴바 2행 구조** (피드백 반영) — "더 많은 소식" 아래: (1행) CategoryTabs 전체 폭 단독, (2행) 검색(좌, `flex-1 max-w-440`) + 정렬(우). 카테고리 多(5개+)로 탭+검색 한 줄이 좁아 familyfed 뉴스룸(1272-7363)처럼 검색을 아래 행으로 분리. 검색은 탭 `overflow-x-auto` 영역 밖 형제. 헤더 돋보기 아이콘은 현행 disabled 유지(모달 v1.1).
+2-bis. **정렬** — `최신순`(발행 publishedAt DESC, 기본) / `제목순`(title ASC, Hangul 음절 codepoint = 가나다). native `<select>`(ChevronDown). `?sort=` URL 드라이버, latest 면 파라미터 생략.
+3. **`q × category × sort` 조합** = AND/정렬 독립, 각 변경 시 page=1 리셋·상호 URL 보존. `?q=`/`?sort=` URL 드라이버 — useSuspenseQuery 키에 q·sort 포함, 서버 prefetch↔클라 정규화 단일 출처(`features/news/api.ts`).
 4. **LIKE 안전** — `likePattern` 이 `% _ \` 이스케이프(와일드카드 주입 차단) + Drizzle 파라미터 바인딩(인젝션 불가) + q ≤100자(스키마·input).
 5. **엣지 처리** — 반복 q(string[]) `firstParam` 흡수(서버 500 방지, codex C1) · page overflow 마지막 페이지 재조회(막다른 빈 화면 방지) · 한글 IME 조합 가드(onKeyDown+onSubmit) · `key={q}` input 동기화.
 
