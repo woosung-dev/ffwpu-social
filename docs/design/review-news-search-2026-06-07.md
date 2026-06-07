@@ -64,3 +64,11 @@
 - **툴바 2행** — (1행) CategoryTabs 전체 폭 단독, (2행) 검색(좌, `flex-1 max-w-440`) + 정렬(우, `items-end` 하단선 정렬). 라이브 1440/375 확인.
 - **정렬** — `최신순`(기본, publishedAt DESC) / `제목순`(title ASC). db `newsOrderBy`, 스키마 `z.enum(["latest","title"])`, `?sort=` URL 드라이버(latest 생략). 라이브 API: title 정렬 가나다순 확인(가족 치유→갈등 회복→감사의…), q+sort 결합 정상. select 변경 시 URL `?sort=title` + 그리드 재정렬 확인.
 - 검증: tsc 0 · lint 0 · **test 48** · build green · 콘솔 0 error. 스크린샷 `live-news-sort-{1440,375}.png` · `live-news-sort-title-1440.png`.
+
+### 검색바·필터 디테일 정합 (사용자 피드백 5차, familyfed PageSearchbar/PageTabs 1248-6428·1248-6499)
+
+familyfed 정본 컴포넌트(코드)에 맞춰 미세 정합. 라이브 측정값 = 사용자 지정 hex 정확 일치.
+
+- **검색바** — 하단 stroke 기본 `#E5E7EB`(측정 `rgb(229,231,235)`) → **hover 시에만 `#BAC2D0`**(측정 `rgb(186,194,208)`). focus 변화·링 제거. 아이콘 색 `#4B5563`(측정 `rgb(75,85,99)`) 고정, 크기 **24×24**(20→24), 아이콘 버튼 회색 원형 hover 배경 없음. **active(focus) 시 placeholder 숨김**(측정 `rgba(0,0,0,0)`). webkit clear(X) 제거, IME 가드 유지.
+- **필터(탭)** — px-6(24px) 여백, 베이스라인 `#D1D5DB`, 언더라인 reveal 을 `scale-x + opacity`(`transition-all`)로 보강, 텍스트 `transition-[color,font-weight]`. center-out·hover=active 유지.
+- 검증: tsc 0 · lint 0 · test 48 · build green · 콘솔 0 error. 스크린샷 `live-news-refined-1440.png`.

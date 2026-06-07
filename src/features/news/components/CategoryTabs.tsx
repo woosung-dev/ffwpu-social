@@ -26,7 +26,8 @@ export function CategoryTabs({ categories, selected, onChangeAction }: Props) {
 
   return (
     <nav aria-label="카테고리" className="w-full overflow-x-auto">
-      <ul className="flex min-w-max items-end border-b border-border">
+      {/* 베이스라인 #D1D5DB — underline 기준선 가독성 (familyfed PageTabs) */}
+      <ul className="flex min-w-max items-end border-b border-[#D1D5DB]">
         {tabs.map((tab) => {
           const isActive = tab.slug === selected;
           return (
@@ -36,12 +37,12 @@ export function CategoryTabs({ categories, selected, onChangeAction }: Props) {
                 onClick={() => onChangeAction?.(tab.slug)}
                 aria-pressed={isActive}
                 className={cn(
-                  "relative flex h-[46px] items-center justify-center whitespace-nowrap px-[10px] text-[17px] transition-colors md:h-14",
-                  // 하단 라인 — origin-center scale-x 로 양쪽 확장(center-out). active 항상 노출 / inactive 는 hover 시 노출 = active 와 동일 모습
-                  "after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:origin-center after:bg-brand-vivid after:transition-transform after:duration-300 after:content-[''] motion-reduce:after:transition-none",
+                  "relative flex h-[46px] items-center justify-center whitespace-nowrap px-6 text-[17px] transition-[color,font-weight] duration-500 md:h-14",
+                  // 하단 라인 — origin-center scale-x + opacity 로 양쪽 확장(center-out). active 항상 노출 / inactive 는 hover 시 노출 = active 와 동일 모습
+                  "after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:origin-center after:bg-brand-vivid after:transition-all after:duration-300 after:content-[''] motion-reduce:after:transition-none",
                   isActive
-                    ? "font-medium text-ink-strong after:scale-x-100"
-                    : "font-normal text-ink-date after:scale-x-0 hover:font-medium hover:text-ink-strong hover:after:scale-x-100",
+                    ? "font-medium text-ink-strong after:scale-x-100 after:opacity-100"
+                    : "font-normal text-ink-date after:scale-x-0 after:opacity-0 hover:font-medium hover:text-ink-strong hover:after:scale-x-100 hover:after:opacity-100",
                 )}
               >
                 {tab.name}
