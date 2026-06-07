@@ -5,6 +5,7 @@ import {
   type FeaturedStory,
 } from "@/features/news/components";
 import { extractExcerpt } from "@/features/news/render/excerpt";
+import { SectionContainer } from "@/client/components/layout";
 
 export async function NewsHero() {
   const items = await getHeroNews();
@@ -20,8 +21,10 @@ export async function NewsHero() {
   }));
 
   return (
-    <section className="container mx-auto px-4 pt-10 lg:px-20 lg:pt-16">
-      <FeaturedStoryCard stories={stories} />
+    <section className="w-full pt-10 lg:pt-16">
+      <SectionContainer>
+        <FeaturedStoryCard stories={stories} />
+      </SectionContainer>
     </section>
   );
 }

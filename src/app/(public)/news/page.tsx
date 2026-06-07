@@ -11,6 +11,7 @@ import {
   normalizeNewsListFilters,
 } from "@/features/news/api";
 import { getQueryClient } from "@/lib/query/get-query-client";
+import { SectionContainer } from "@/client/components/layout";
 
 import { SubBanner } from "./sub-banner";
 import { NewsHero } from "./news-hero";
@@ -43,14 +44,17 @@ export default function NewsListPage({
         <NewsHero />
       </Suspense>
 
-      <section className="container mx-auto px-4 py-10 lg:px-20 lg:py-16">
-        <h2 className="text-2xl font-bold tracking-tight text-ink-strong lg:text-[32px]">
-          더 많은 소식
-        </h2>
+      {/* 랜딩과 동일 밴드 고정폭 정합 — SectionContainer(768→648 / 1025→905 / 1440→1200, mobile px-4) */}
+      <section className="w-full py-10 lg:py-16">
+        <SectionContainer>
+          <h2 className="text-2xl font-bold tracking-tight text-ink-strong lg:text-[32px]">
+            더 많은 소식
+          </h2>
 
-        <Suspense fallback={<NewsListLoading />}>
-          <NewsListPrefetch searchParams={searchParams} />
-        </Suspense>
+          <Suspense fallback={<NewsListLoading />}>
+            <NewsListPrefetch searchParams={searchParams} />
+          </Suspense>
+        </SectionContainer>
       </section>
     </>
   );

@@ -35,7 +35,8 @@ export function SearchInput({
         onSubmitAction(value.trim());
       }}
       className={cn(
-        "flex h-11 items-center gap-2 border-b border-border pl-3.5 pr-1 transition-colors focus-within:border-brand-vivid",
+        // 밑줄은 중립 유지 — 입력(focus) 시 색상 변화 없음(familyfed 일관). 키보드 포커스만 subtle ring 으로 a11y 표시(마우스엔 비표시)
+        "flex h-11 items-center gap-2 rounded-sm border-b border-border pl-3.5 pr-1 has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-brand-vivid/30",
         className ?? "w-full md:w-[280px] lg:w-[320px]",
       )}
     >

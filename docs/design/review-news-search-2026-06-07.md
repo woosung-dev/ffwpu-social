@@ -41,3 +41,12 @@
 - tsc 0 · lint 0 · **vitest 47 pass**
 - 라이브(PORT=3100): 전체 14 · q=쌀 8 · q=zzxq 0 · q=현장+rice_sharing 1(태그 매칭) · overflow clamp · 반복 q 200
 - 스크린샷: `docs/design/screenshots/live-news-search-{375,768,1025,1440,1440-query,1440-empty}.png`
+
+## 후속 정합 (사용자 피드백 2차, 2026-06-07)
+
+사용자 지적: (1) 페이지 컨테이너가 랜딩의 밴드 고정폭 시스템과 불일치, (2) 카드 hover 모션 부재, (3) 검색 input focus 시 보라 밑줄이 familyfed와 불일치.
+
+- **밴드 정합** — `/news` 3블록(SubBanner·Hero·"더 많은 소식")을 랜딩과 동일한 `SectionContainer`로 전환(기존 `container mx-auto px-4 lg:px-20` 폐기). 라이브 측정으로 밴드폭 일치 확인: **1440→1200 / 1025→905 / 768→648 / 375 유동**(SubBanner 내부 포함 동일). 그리드 열 3/3/2/1.
+- **카드 hover** — `ArticleCard` 이미지 `group-hover:scale-105`(+`transition-transform`·`motion-reduce` 가드). 라이브 측정: hover 시 `scale` 1.0→**1.05** 부드러운 전환(v4 `scale` 속성, transition 에 scale 포함).
+- **검색 input** — focus 시 보라 밑줄(`focus-within:border-brand-vivid`) 제거 → 밑줄 **중립 유지**(focus=blur 동일 색 확인). 키보드 포커스만 `has-[input:focus-visible]` subtle ring 으로 a11y 표시(마우스 비표시). familyfed PageSearchbar 일관.
+- 검증: tsc 0 · lint 0 · test 47 · build green. 스크린샷 `live-news-search-v2-{1440,768,375}.png`.
