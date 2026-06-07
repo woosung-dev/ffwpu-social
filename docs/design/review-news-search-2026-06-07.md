@@ -76,3 +76,7 @@ familyfed 정본 컴포넌트(코드)에 맞춰 미세 정합. 라이브 측정�
 ### 정렬 select box — 라운드 테두리 박스 (사용자 피드백 6차)
 
 정렬 select 가 하단 라인(underline)만이라 Figma 박스형과 불일치 → **라운드 테두리 박스**로 변경. `rounded-lg border border-[#D1D5DB] bg-white`, 텍스트(최신순) 좌 + ChevronDown 우, hover 시 `#BAC2D0`, h-11. 스크린샷 `live-news-sortbox.png`.
+
+### 정렬 select — 네이티브 → shadcn 디자인 드롭다운 (사용자 피드백 7차)
+
+native `<select>`(OS 기본 옵션 리스트)라 디자인이 안 입혀짐 → **shadcn `Select`(Radix)** 로 교체. 닫힘=라운드 박스(트리거), 열림=디자인 팝오버(라운드·그림자·진입 애니메이션·선택 항목 ✓ 체크). 트리거 `h-11 rounded-lg border-[#D1D5DB] hover:border-[#BAC2D0]`, `position="popper" align="end"`. 라이브: 열림 팝오버 확인, "제목순" 선택 → `?sort=title` + 재정렬. 콘솔 0 error. 스크린샷 `live-news-sort-popover.png`. **`.next` 캐시 삭제 후 재기동(stale 캐시 대응).**
