@@ -34,12 +34,13 @@ export function NewsSort({ value }: Props) {
 
   return (
     <div className="relative shrink-0">
+      {/* 테두리 라운드 박스 + 텍스트 + 우측 chevron (Figma select box) */}
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={isPending}
         aria-label="정렬 순서"
-        className="h-11 cursor-pointer appearance-none border-b border-border bg-transparent pr-7 pl-2 text-[15px] font-medium text-ink-strong outline-none focus-visible:ring-2 focus-visible:ring-brand-vivid/30 disabled:opacity-60"
+        className="h-11 cursor-pointer appearance-none rounded-lg border border-[#D1D5DB] bg-white pr-9 pl-4 text-[15px] font-medium text-ink-strong outline-none transition-colors hover:border-[#BAC2D0] focus-visible:ring-2 focus-visible:ring-brand-vivid/30 disabled:opacity-60"
       >
         {NEWS_SORT_VALUES.map((s) => (
           <option key={s} value={s}>
@@ -49,7 +50,7 @@ export function NewsSort({ value }: Props) {
       </select>
       <ChevronDown
         aria-hidden
-        className="pointer-events-none absolute top-1/2 right-1 size-4 -translate-y-1/2 text-ink-date"
+        className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-ink-subtle"
       />
     </div>
   );
