@@ -85,9 +85,9 @@ export function StorySection({ stats, slots }: Props) {
   return (
     <section
       id="story"
-      className="w-full overflow-x-clip bg-surface-tint-faint py-16 lg:py-24"
+      className="w-full overflow-x-clip bg-surface-tint-faint py-[79px] lg:py-[73px]"
     >
-      <SectionContainer className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-0">
+      <SectionContainer className="flex flex-col gap-[50px] lg:flex-row lg:items-center lg:gap-0">
         {/* 좌측 이미지 2장 — 각 이미지를 relative 래퍼로 감싸 장식을 "그 이미지" 기준으로 앵커링.
             바깥 래퍼는 overflow visible(장식 오버행 허용), StoryImage 내부 overflow-hidden 은 둥근 사진만 클리핑.
             Figma 반응형: <1024 stacked(이미지그룹 위/텍스트 아래) · lg(1025~1439) & wide(1440) 모두 side-by-side(좌 이미지/우 텍스트).
@@ -165,16 +165,17 @@ export function StorySection({ stats, slots }: Props) {
         {/* 텍스트 + Result — 카피는 constants/story.ts SSoT.
             base: 세로(본문 위/통계 아래 풀폭) · md(768~1024): 가로 [본문 좌 | 통계 우, 하단정렬] · lg+: 세로 우정렬(side-by-side 컬럼) */}
         <div className="flex flex-1 flex-col gap-6 text-surface-dark md:flex-row md:items-end md:justify-between md:gap-8 lg:flex-col lg:items-end lg:justify-start lg:gap-6 lg:text-right">
-          <div className="flex flex-col gap-6 md:max-w-[300px] lg:max-w-none lg:items-end">
+          {/* 내부 갭 Figma 정합: tag→title 14(base)/18(md+) · title→desc 4(base)/12(md+) (이전 일률 gap-6=24 과대) */}
+          <div className="flex flex-col md:max-w-[300px] lg:max-w-none lg:items-end">
             <span className="self-start rounded-full bg-surface-dark px-4 py-2 text-base font-semibold text-ink-on-purple lg:self-end">
               {STORY_SECTION_CONTENT.tag}
             </span>
 
-            <h2 className="whitespace-pre-line break-keep text-2xl font-bold leading-tight lg:text-[32px]">
+            <h2 className="mt-3.5 whitespace-pre-line break-keep text-2xl font-bold leading-tight md:mt-[18px] lg:text-[32px]">
               {STORY_SECTION_CONTENT.title}
             </h2>
 
-            <p className="text-base font-medium leading-[1.6] lg:max-w-[420px]">
+            <p className="mt-1 text-base font-medium leading-[1.6] md:mt-3 lg:max-w-[420px]">
               {STORY_SECTION_CONTENT.subtitle}
             </p>
           </div>
