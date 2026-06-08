@@ -46,7 +46,7 @@ export function ArticleCard({ size = 1, article, className }: Props) {
     <Link
       href={`/news/${article.id}`}
       className={cn(
-        "group flex flex-col overflow-hidden rounded-[14px] transition-shadow hover:shadow-[0_8px_24px_-12px_rgba(80,31,126,0.25)]",
+        "group flex flex-col overflow-hidden rounded-[14px]",
         config.container,
         className,
       )}
@@ -78,7 +78,7 @@ export function ArticleCard({ size = 1, article, className }: Props) {
             <span className="text-[14px] font-bold leading-[1.6] text-brand-vivid">
               {article.categoryName}
             </span>
-            {article.coverImageUrl != null && article.heartCount != null && (
+            {article.heartCount != null && (
               <Heart count={article.heartCount} interactive={false} compact />
             )}
           </div>
