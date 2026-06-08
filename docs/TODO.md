@@ -121,6 +121,7 @@
 
 ### v1.1+ 백로그
 
+- [ ] **랜딩 스크롤 fade-in 인터랙션** — Figma 리뷰어 코멘트 요청 (KPI 영역 "지구랩 인터랙션 참고 https://earthrap.imweb.me/", Story 영역 "스크롤 위치에 따라 하단→위로 페이드인 되며 올라오는 인터렉션이 전체적으로 적용되면 좋을 것 같습니다 https://www.netive.co.kr/"). 정적 시안과 별개의 인터랙션 요청이며 현재 애니메이션 라이브러리·코드 전무. 구현 시 IntersectionObserver(기존 `src/client/hooks/useScrollSpy.ts` 패턴 재사용) 또는 CSS `animation-timeline: view()` 로 `translateY(16px)→0` + `opacity 0→1`, `prefers-reduced-motion` 가드 필수·진입 blocking 금지 (anti-slop 모션). 🔴 **사회공헌국 우선순위 확정 필요** — 2026-06-07 KPI·Story Figma 정합 검증에서 제외 결정(정적 정합 우선).
 - [ ] PublicFooter © 연도 자동 갱신 — BUILD_TIME 환경변수 또는 빌드 스크립트.
 - [ ] HeroBanner 60px 슬로건에 Gmarket Sans Medium 본격 도입.
 - [ ] PublicHeader 검색 기능 본격 구현 (ADR-011 1차 범위 외).

@@ -4,6 +4,7 @@
 import Link from "next/link";
 
 import { SectionContainer } from "@/client/components/layout";
+import { STORY_SECTION_CONTENT } from "@/features/landing/constants/story";
 import { cn } from "@/lib/utils";
 
 export type StoryStat = {
@@ -82,72 +83,107 @@ export function StorySection({ stats, slots }: Props) {
   // hide-when-empty — value 0/null 항목 제외. 전부 숨으면 통계 블록 자체 비노출
   const visibleStats = stats.filter((s) => s.value != null && s.value > 0);
   return (
-    <section id="story" className="w-full bg-surface-tint-faint py-16 lg:py-24">
-      <SectionContainer className="flex flex-col gap-10 wide:flex-row wide:items-center wide:gap-[70px]">
-        {/* 좌측 이미지 2장 — Figma: 1024~1439 상단 풀폭 나란히(stacked), wide(1440)만 좌측 컬럼. sm h-340, lg h-420 */}
-        <div className="relative flex w-full flex-row gap-3 h-[240px] sm:h-[340px] lg:h-[420px] wide:flex-[1.8]">
-          <StoryImage
-            slot={slots[0] ?? null}
-            fallback={FALLBACK_IMAGES[0]}
-            wrapperClass="h-full flex-1"
-            width={560}
-            height={420}
-          />
-          <StoryImage
-            slot={slots[1] ?? null}
-            fallback={FALLBACK_IMAGES[1]}
-            wrapperClass="h-full w-[42%] shrink-0 wide:w-[280px] wide:shrink-0"
-            width={280}
-            height={280}
-          />
-          {/* 장식 — 별·하트 (데스크탑) */}
-          {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
-          <img
-            src="/icons/story-star1.svg"
-            alt=""
-            aria-hidden
-            className="pointer-events-none absolute -top-6 -left-5 z-10 hidden size-12 lg:block"
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
-          <img
-            src="/icons/story-heart.svg"
-            alt=""
-            aria-hidden
-            className="pointer-events-none absolute -bottom-5 left-[30%] z-10 hidden size-14 lg:block"
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
-          <img
-            src="/icons/story-star2.svg"
-            alt=""
-            aria-hidden
-            className="pointer-events-none absolute -top-4 -right-4 z-10 hidden size-12 lg:block"
-          />
+    <section
+      id="story"
+      className="w-full overflow-x-clip bg-surface-tint-faint py-16 lg:py-24"
+    >
+      <SectionContainer className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-0 wide:gap-[70px]">
+        {/* 좌측 이미지 2장 — 각 이미지를 relative 래퍼로 감싸 장식을 "그 이미지" 기준으로 앵커링.
+            바깥 래퍼는 overflow visible(장식 오버행 허용), StoryImage 내부 overflow-hidden 은 둥근 사진만 클리핑.
+            Figma 반응형: <1024 stacked(이미지그룹 위/텍스트 아래) · lg(1025~1439) & wide(1440) 모두 side-by-side(좌 이미지/우 텍스트).
+            lg(content 905px 고정): 이미지그룹 545 + 텍스트 360, 이미지1 347 / 이미지2 186, h333 (Figma 1439 프레임 332:8976).
+            wide(content 1200): flex-[1.8] / h420. */}
+        <div className="flex w-full flex-row gap-3 h-[240px] sm:h-[340px] md:h-[294px] lg:h-[333px] lg:w-[545px] lg:flex-none wide:h-[420px] wide:w-auto wide:flex-[1.8]">
+          {/* 이미지 1 (좌) + 장식(SOW·heart) — 이 이미지 기준 %. left/right=이미지 폭%, top/bottom=이미지 높이%, 음수=오버행 */}
+          <div className="relative h-full flex-1">
+            <StoryImage
+              slot={slots[0] ?? null}
+              fallback={FALLBACK_IMAGES[0]}
+              wrapperClass="h-full w-full"
+              width={560}
+              height={420}
+            />
+            {/* SOW — 좌상단 오버행 */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
+            <img
+              src="/icons/story-sow.svg"
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute left-[-5%] top-[-8%] z-10 h-auto w-[44%] -rotate-[5deg]"
+            />
+            {/* heart — 좌측 중상단 */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
+            <img
+              src="/icons/story-heart.svg"
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute left-[-7%] top-[28%] z-10 h-auto w-[13%]"
+            />
+          </div>
+
+          {/* 이미지 2 (우) + 장식(sparkles·Go·od = Good) — 이 이미지 기준 % */}
+          <div className="relative h-full w-[42%] shrink-0 md:w-[186px] wide:w-[280px] wide:shrink-0">
+            <StoryImage
+              slot={slots[1] ?? null}
+              fallback={FALLBACK_IMAGES[1]}
+              wrapperClass="h-full w-full"
+              width={280}
+              height={280}
+            />
+            {/* sparkles — 우상단 */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
+            <img
+              src="/icons/story-sparkles.svg"
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute right-[-2%] top-[-9%] z-10 h-auto w-[30%]"
+            />
+            {/* Good: Go — 좌하단 오버행(갭 쪽) */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
+            <img
+              src="/icons/story-go.svg"
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute bottom-[-6%] left-[-14%] z-10 h-auto w-[34%] -rotate-[3deg]"
+            />
+            {/* Good: od — 우하단 오버행 */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
+            <img
+              src="/icons/story-od.svg"
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute bottom-[-6%] right-[-6%] z-10 h-auto w-[34%] rotate-[5deg]"
+            />
+          </div>
         </div>
 
-        {/* 우측 텍스트 + Result */}
-        <div className="flex flex-1 flex-col gap-6 text-surface-dark wide:items-end wide:text-right">
-          <span className="self-start rounded-full bg-surface-dark px-4 py-2 text-base font-semibold text-ink-on-purple wide:self-end">
-            쌀 나눔 활동
-          </span>
+        {/* 텍스트 + Result — 카피는 constants/story.ts SSoT.
+            base: 세로(본문 위/통계 아래 풀폭) · md(768~1024): 가로 [본문 좌 | 통계 우, 하단정렬] · lg+: 세로 우정렬(side-by-side 컬럼) */}
+        <div className="flex flex-1 flex-col gap-6 text-surface-dark md:flex-row md:items-end md:justify-between md:gap-8 lg:flex-col lg:items-end lg:justify-start lg:gap-6 lg:text-right">
+          <div className="flex flex-col gap-6 md:max-w-[300px] lg:max-w-none lg:items-end">
+            <span className="self-start rounded-full bg-surface-dark px-4 py-2 text-base font-semibold text-ink-on-purple lg:self-end">
+              {STORY_SECTION_CONTENT.tag}
+            </span>
 
-          <h2 className="break-keep text-2xl font-bold leading-tight md:text-3xl lg:text-[32px]">
-            밥이 사랑입니다
-            <br />
-            나누는 우리는 식구입니다
-          </h2>
+            <h2 className="whitespace-pre-line break-keep text-2xl font-bold leading-tight lg:text-[32px]">
+              {STORY_SECTION_CONTENT.title}
+            </h2>
 
-          <p className="text-base font-medium leading-[1.6] lg:max-w-[420px]">
-            온기가 필요한 이웃에게 밥 한 공기의 진심을 전하며, 나누는 우리는
-            모두 식구가 됩니다.
-          </p>
+            <p className="text-base font-medium leading-[1.6] lg:max-w-[420px]">
+              {STORY_SECTION_CONTENT.subtitle}
+            </p>
+          </div>
 
           {/* Result 통계 — Bold 24px #9257CA value / Medium 15px label, lg+ 가로 라인 / 모바일 세로 라인. hide-when-empty 적용 */}
           {visibleStats.length > 0 && (
-            <ul className="mt-2 flex flex-row items-stretch gap-0">
+            <ul
+              aria-label="쌀 나눔 활동 성과"
+              className="mt-2 flex flex-row items-stretch gap-0 md:mt-0 lg:mt-2"
+            >
               {visibleStats.map((stat) => (
                 <li
                   key={stat.slug}
-                  className="flex flex-1 flex-col gap-1 px-[clamp(0.75rem,2.5vw,2rem)] text-left wide:flex-initial wide:px-8 wide:text-right [&:not(:first-child)]:border-l [&:not(:first-child)]:border-brand-mid/30"
+                  className="flex flex-1 flex-col gap-1 px-[clamp(0.75rem,2.5vw,2rem)] text-left md:flex-initial md:px-4 lg:text-right wide:px-8 [&:not(:first-child)]:border-l [&:not(:first-child)]:border-brand-mid/30"
                   aria-label={`${stat.label} ${stat.displayValue}`}
                 >
                   <p className="text-[15px] font-medium">{stat.label}</p>

@@ -57,6 +57,8 @@ coverage/
 
 # === D-4 multi-agent 검증 스크린샷 (Playwright MCP 산출물, 로컬 검증 전용) ===
 d4-bp*.png
+render-*.png
+verify-*.png
 
 # codex/스킬 세션 로컬 상태
 .context/
