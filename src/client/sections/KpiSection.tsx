@@ -111,11 +111,11 @@ export function KpiSection({ metricsBySlug }: Props) {
             </div>
           </div>
 
-          {/* 하단 Row2: 좌 칼럼(봉사 기간·Sow Good·봉사 횟수) + 우 사진 카드. Sow Good 은 640↑ 만. h 375:232 / 768:392, 좌:우 = 375≈1.44:1 / 768≈1.8:1 */}
+          {/* 하단 Row2: 좌 칼럼(봉사 기간·[md+ Sow Good]·봉사 횟수) + 우 사진 카드. Figma 375~767 밴드는 5카드 연속(Sow Good·grid·도움가정확장 reflow 는 768=md 경계에서만). 좌칼럼 199 고정·도움가정 stretch(138→524). h 375:232 / 768:392 */}
           <div data-fid="kpi-row2" className="flex h-[232px] gap-1.5 md:h-[392px] md:gap-2.5">
-            <div className="flex flex-[1.442] flex-col gap-1.5 md:flex-[1.798] md:gap-2.5">
-              {/* 상단 sub-row(봉사기간[+SowGood]): h 375:106 / 768:180. 375 cols-1(풀폭 199), sm+ cols-2(각 200). 봉사횟수가 잔여 흡수 */}
-              <div className="grid h-[106px] shrink-0 grid-cols-1 gap-1.5 sm:grid-cols-2 md:h-[180px] md:gap-2.5">
+            <div className="flex w-[199px] shrink-0 flex-col gap-1.5 md:w-auto md:flex-[1.798] md:gap-2.5">
+              {/* 상단 sub-row(봉사기간[+SowGood]): h 375:106 / 768:180. 375~767 cols-1(풀폭 199, Sow Good 미노출), md+ cols-2(각 200). 봉사횟수가 잔여 흡수 */}
+              <div className="grid h-[106px] shrink-0 grid-cols-1 gap-1.5 md:h-[180px] md:grid-cols-2 md:gap-2.5">
                 <div
                   data-fid="card-volunteer-period"
                   className="flex flex-col justify-between gap-3 rounded-[12px] bg-kpi-gray py-3 pl-[14px] text-ink-strong-mid md:rounded-[20px] md:py-5 md:pl-6"
@@ -129,7 +129,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                 </div>
                 <div
                   data-fid="card-sowgood"
-                  className="hidden items-center justify-center rounded-[12px] bg-kpi-yellow sm:flex md:rounded-[20px]"
+                  className="hidden items-center justify-center rounded-[12px] bg-kpi-yellow md:flex md:rounded-[20px]"
                 >
                   {/* SowGood 로고: md 138 (lg+ 는 데스크탑 블록에서 204) */}
                   {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
@@ -181,7 +181,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                   {helpedHousehold}
                 </p>
               </div>
-              {/* 인물 컷아웃 사진: 카드 우하단 바닥 앵커, 자연 비율(object-contain), per-BP 폭(375≈176 / 768≈297). 바닥이 카드 바닥 살짝 넘어 overhang(음수 bottom) — overflow-hidden 으로 좌측 클립 */}
+              {/* 인물 컷아웃 사진: 바닥 중앙 앵커, 자연 비율(object-contain), 바닥 살짝 overhang(음수 bottom). 375~767 밴드는 카드가 stretch(138→524)라 인물도 함께 커짐(이미지-fill, 텍스트 아님): 폭 176→280. md(768~1023, 카드 228 고정)는 297 고정 */}
               <div className="relative flex-1">
                 {/* eslint-disable-next-line @next/next/no-img-element -- decorative photo */}
                 <img
@@ -190,7 +190,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                   width={366}
                   height={423}
                   aria-hidden
-                  className="absolute -bottom-[8px] right-0 w-[176px] max-w-none object-contain object-bottom md:-bottom-[14px] md:w-[297px]"
+                  className="absolute -bottom-[8px] left-1/2 w-[clamp(176px,36.5vw,280px)] max-w-none -translate-x-1/2 object-contain object-bottom md:-bottom-[14px] md:left-auto md:right-0 md:w-[297px] md:translate-x-0"
                 />
               </div>
             </div>
