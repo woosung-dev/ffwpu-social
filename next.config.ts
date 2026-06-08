@@ -8,7 +8,9 @@ const config: NextConfig = {
       // 로컬 MinIO (ADR-020)
       { protocol: "http", hostname: "localhost", port: "9000" },
       { protocol: "http", hostname: "127.0.0.1", port: "9000" },
-      // 추후 R2/S3 도메인 추가 (ADR-001a)
+      // 배포 R2/S3 (ADR-001a). *.r2.dev = R2 버킷 공개 도메인(NEXT_PUBLIC_S3_PUBLIC_URL 기본형).
+      // 커스텀 도메인 연결 시 그 호스트를 여기 추가 — 미등록 도메인은 next/image 가 차단.
+      { protocol: "https", hostname: "*.r2.dev" },
       { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
       { protocol: "https", hostname: "*.s3.amazonaws.com" },
     ],
