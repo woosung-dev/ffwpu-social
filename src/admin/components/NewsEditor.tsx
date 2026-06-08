@@ -46,7 +46,9 @@ type Props = {
 
 // 폼 schema — body·publishedAt 은 form 외부 관리 (P1#6 + 발행 버튼)
 const formSchema = newsInputSchema.omit({ body: true, publishedAt: true });
-type FormValues = z.infer<typeof formSchema>;
+// @hookform/resolvers v5 는 input(기본값 적용 전)·output(검증 후) 타입을 구분 — tags 등 .default() 필드 정합용
+type FormInput = z.input<typeof formSchema>;
+type FormValues = z.output<typeof formSchema>;
 
 export function NewsEditor({ mode, categories, initial }: Props) {
   const router = useRouter();
@@ -64,7 +66,7 @@ export function NewsEditor({ mode, categories, initial }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<FormValues>({
+  const form = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: initial?.title ?? "",
