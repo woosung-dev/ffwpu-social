@@ -198,8 +198,8 @@ export function KpiSection({ metricsBySlug }: Props) {
                   {helpedHousehold}
                 </p>
               </div>
-              {/* 인물 컷아웃 사진: 바닥 중앙 앵커, 자연 비율(object-contain), 바닥 살짝 overhang(음수 bottom). 375~767 밴드는 카드가 stretch(138→524)라 인물도 함께 커짐(이미지-fill, 텍스트 아님): 폭 176→280. md(768~1023, 카드 228 고정)는 297 고정 */}
-              <div className="relative flex-1">
+              {/* 인물 컷아웃 사진: object-cover object-bottom(자산 567×760, 투명상단 153px → 가로주도 cover·바닥앵커로 투명상단 프레임 밖 클립, 박스 하단만 -mb overhang). 밴드 375~767 은 카드가 stretch(138→524)라 인물도 함께 커짐(clamp 176→280) + self-center(중앙). md(768~1023)는 297 고정. personOutline drop-shadow 유지 */}
+              <div className="relative mt-auto aspect-[176/203] w-[clamp(176px,36.5vw,280px)] max-w-none -mb-[61px] self-center md:aspect-[297/343] md:-mb-[45px] md:-ml-[20px] md:w-[255px] md:self-center">
                 {/* eslint-disable-next-line @next/next/no-img-element -- decorative photo */}
                 <img
                   src="/images/kpi-purple-card-photo.png"
@@ -208,7 +208,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                   height={423}
                   aria-hidden
                   style={{ filter: personOutline(2) }}
-                  className="absolute -bottom-[8px] left-1/2 w-[clamp(176px,36.5vw,280px)] max-w-none -translate-x-1/2 object-contain object-bottom md:-bottom-[14px] md:left-auto md:right-0 md:w-[297px] md:translate-x-0"
+                  className="absolute inset-0 h-full w-full object-cover object-bottom"
                 />
               </div>
             </div>
@@ -340,8 +340,8 @@ export function KpiSection({ metricsBySlug }: Props) {
                   {helpedHousehold}
                 </p>
               </div>
-              {/* 인물 컷아웃 사진: 카드 우하단 바닥 앵커, 자연 비율(object-contain), Figma 366px. 바닥이 카드 바닥 살짝 넘어 overhang(음수 bottom) — overflow-hidden 으로 좌측 클립. (Figma 미존재 cream vector 제거) */}
-              <div className="relative min-h-[240px] flex-1">
+              {/* 인물 컷아웃 사진: object-cover object-bottom(자산 0.746 < 프레임0.865 → 가로주도 cover·투명상단 바닥앵커로 프레임 밖, 박스 하단만 overhang → overflow-hidden 바닥 클립). **absolute** 라 카드 폭(flex-1=256/282)에 영향無(in-flow 면 프레임 폭이 대시보드 폭 밀어 910 으로 깨짐). 바닥중앙 앵커·-bottom overhang. personOutline drop-shadow 유지 */}
+              <div className="absolute bottom-0 left-1/2 aspect-[366/423] w-[335px] max-w-none -translate-x-1/2 translate-y-[40px]">
                 {/* eslint-disable-next-line @next/next/no-img-element -- decorative photo */}
                 <img
                   src="/images/kpi-purple-card-photo.png"
@@ -350,7 +350,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                   height={423}
                   aria-hidden
                   style={{ filter: personOutline(3) }}
-                  className="absolute -bottom-[18px] right-0 w-[366px] max-w-none object-contain object-bottom"
+                  className="absolute inset-0 h-full w-full object-cover object-bottom"
                 />
               </div>
             </div>
