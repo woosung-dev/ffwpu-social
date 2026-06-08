@@ -198,8 +198,8 @@ export function KpiSection({ metricsBySlug }: Props) {
                   {helpedHousehold}
                 </p>
               </div>
-              {/* 인물 컷아웃 사진: object-cover object-bottom(자산 567×760, 투명상단 153px → 가로주도 cover·바닥앵커로 투명상단 프레임 밖 클립, 박스 하단만 -mb overhang). 밴드 375~767 은 카드가 stretch(138→524)라 인물도 함께 커짐(clamp 176→280) + self-center(중앙). md(768~1023)는 297 고정. personOutline drop-shadow 유지 */}
-              <div className="relative mt-auto aspect-[176/203] w-[clamp(176px,36.5vw,280px)] max-w-none -mb-[61px] self-center md:aspect-[297/343] md:-mb-[45px] md:-ml-[20px] md:w-[255px] md:self-center">
+              {/* 인물 컷아웃 사진: **absolute** 바닥중앙 앵커(카드 폭 영향無). 밴드 375~767 카드는 짧음(h232)이라 인물을 height-limit(176→190, frame≈카드높이)·중앙 → 머리+박스 모두 보임(과대하면 박스 잘림). md(768~1023, h392)는 255·바닥 overhang. object-cover object-bottom 으로 투명상단 크롭. personOutline drop-shadow 유지 */}
+              <div className="absolute bottom-0 left-1/2 aspect-[176/203] w-[clamp(176px,25vw,190px)] max-w-none -translate-x-1/2 md:aspect-[297/343] md:-bottom-[45px] md:w-[255px]">
                 {/* eslint-disable-next-line @next/next/no-img-element -- decorative photo */}
                 <img
                   src="/images/kpi-purple-card-photo.png"
