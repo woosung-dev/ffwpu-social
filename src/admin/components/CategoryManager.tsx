@@ -77,8 +77,11 @@ export function CategoryManager({ rows }: Props) {
   const [editing, setEditing] = useState<CategoryRow | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // 서버 revalidate 로 rows 가 갱신되면(추가·수정·정렬저장) 드래그 로컬 상태를 새 순서로 리셋 (anti-slop: prop→state 동기화는 key remount)
-  const rowsKey = rows.map((r) => `${r.id}:${r.sortOrder}`).join("|");
+  // 서버 revalidate 로 rows 가 갱신되면(추가·수정·정렬저장·활성토글) 드래그 로컬 상태를 새 값으로 리셋 (anti-slop: prop→state 동기화는 key remount).
+  // name·isActive 도 포함 — 수정 다이얼로그로 이름/활성만 바꾸면 sortOrder 불변이라 remount 안 돼 리스트가 stale 로 남던 버그 수정.
+  const rowsKey = rows
+    .map((r) => `${r.id}:${r.sortOrder}:${r.name}:${r.isActive}`)
+    .join("|");
 
   return (
     <div className="space-y-8">
