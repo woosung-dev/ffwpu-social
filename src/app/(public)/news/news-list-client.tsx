@@ -83,7 +83,7 @@ export function NewsListClient({ categories }: Props) {
             : "아직 등록된 소식이 없습니다."}
         </p>
       ) : (
-        <ul className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-x-[18px] md:gap-y-12 lg:mt-10 lg:grid-cols-3 wide:gap-x-6">
+        <ul className="mt-8 grid [grid-template-columns:repeat(auto-fill,minmax(max(200px,calc(50%-12px)),1fr))] gap-6 md:grid-cols-2 md:gap-x-[18px] md:gap-y-12 lg:mt-10 lg:grid-cols-3 wide:gap-x-6">
           {list.items.map((item) => (
             <li key={item.id} className="flex justify-center">
               <ArticleCard
