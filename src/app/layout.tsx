@@ -18,6 +18,17 @@ const suit = localFont({
   fallback: ["system-ui", "-apple-system", "Apple SD Gothic Neo", "sans-serif"],
 });
 
+// Gmarket Sans Medium — Hero 헤드라인 전용(SIL OFL, corp.gmarket.com). Medium(500) 단일 weight.
+const gmarketSans = localFont({
+  src: [
+    { path: "../../public/fonts/GmarketSans-Medium.woff2", weight: "500", style: "normal" },
+  ],
+  variable: "--font-gmarket",
+  display: "swap",
+  preload: true,
+  fallback: ["system-ui", "-apple-system", "Apple SD Gothic Neo", "sans-serif"],
+});
+
 export const metadata: Metadata = {
   title: "사회공헌단 Sow Good — 가치를 삶으로 증명",
   description:
@@ -30,7 +41,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko" className={suit.variable}>
+    <html lang="ko" className={`${suit.variable} ${gmarketSans.variable}`}>
       <body>{children}</body>
     </html>
   );
