@@ -47,7 +47,8 @@ export function KpiSection({ metricsBySlug }: Props) {
     <section
       id="kpi"
       aria-labelledby="kpi-heading"
-      className="w-full bg-white py-16 lg:py-24"
+      // 섹션 세로 패딩 Figma 4BP 정합 — Contents y-offset 44/58/90/96 (이전 일률 64/64/96/96)
+      className="w-full bg-white py-[44px] md:py-[58px] lg:py-[90px] wide:py-[96px]"
     >
       {/* 섹션 방향: base/md/lg column · wide row(헤딩 좌 | 대시보드 우). 헤딩↔대시보드 gap = 30/40/40/70 (discrete) */}
       <SectionContainer className="flex flex-col gap-[30px] md:gap-10 wide:flex-row wide:items-start wide:gap-[70px]">
