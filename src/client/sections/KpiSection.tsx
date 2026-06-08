@@ -17,6 +17,23 @@ function pickDisplay(
   return m.get(slug)?.displayValue ?? fallback;
 }
 
+// 도움가정 인물 컷아웃의 흰색 스티커 아웃라인(Figma 96:9919) — alpha 실루엣 따라 8방향 white drop-shadow.
+// 자산에 흰 테두리가 없어 CSS 로 구현(어느 크기에서도 실루엣 추종). n=두께(px)
+function personOutline(n: number): string {
+  return [
+    [n, 0],
+    [-n, 0],
+    [0, n],
+    [0, -n],
+    [n, n],
+    [-n, n],
+    [n, -n],
+    [-n, -n],
+  ]
+    .map(([x, y]) => `drop-shadow(${x}px ${y}px 0 #fff)`)
+    .join(" ");
+}
+
 export function KpiSection({ metricsBySlug }: Props) {
   const volunteerCount = pickDisplay(metricsBySlug, "volunteer_count", "—");
   const volunteerPeriod = pickDisplay(metricsBySlug, "volunteer_period", "—");
@@ -190,6 +207,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                   width={366}
                   height={423}
                   aria-hidden
+                  style={{ filter: personOutline(2) }}
                   className="absolute -bottom-[8px] left-1/2 w-[clamp(176px,36.5vw,280px)] max-w-none -translate-x-1/2 object-contain object-bottom md:-bottom-[14px] md:left-auto md:right-0 md:w-[297px] md:translate-x-0"
                 />
               </div>
@@ -331,6 +349,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                   width={366}
                   height={423}
                   aria-hidden
+                  style={{ filter: personOutline(3) }}
                   className="absolute -bottom-[18px] right-0 w-[366px] max-w-none object-contain object-bottom"
                 />
               </div>
