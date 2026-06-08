@@ -1,4 +1,6 @@
 // 소식(news) 비즈니스 로직 — db import 금지. db 레이어 함수만 호출 (fullstack.md §3). public/admin 분리 (codex P1#7). mutation 은 db.transaction 안에서 (codex P1#5)
+import { cache } from "react";
+
 import { db } from "@/db";
 import { deleteByPrefix } from "@/features/storage";
 import * as newsDb from "./db";
@@ -20,11 +22,17 @@ export async function listNews(query: ListNewsQuery) {
   return { items, total, totalPages, page: query.page, limit: query.limit };
 }
 
-export async function getNewsDetail(id: string) {
+// cache() — 같은 요청 내 generateMetadata + 페이지 렌더가 각각 호출해도 DB 1회만 (요청 단위 dedupe)
+export const getNewsDetail = cache(async (id: string) => {
   const item = await newsDb.getPublicNewsById(id);
   if (!item) return null;
   const heartCount = await newsDb.countActiveHearts(id);
   return { ...item, heartCount };
+});
+
+// sitemap 용 — 발행글 전체 (id + updatedAt)
+export async function listPublishedNewsForSitemap() {
+  return newsDb.listPublishedForSitemap();
 }
 
 // 활성 카테고리 목록 — CategoryTabs·어드민 폼 데이터 소스
