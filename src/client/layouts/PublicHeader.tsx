@@ -1,45 +1,50 @@
-// 사용자 사이트 헤더 — Figma Header 컴포넌트 4 variant 정합. bg-brand-bright #B769FF + 알약 active. 4 메뉴 스크롤스파이(랜딩) / "활동 스토리" 고정(그 외). md↑(768~) 풀 4메뉴 내비, <768 활성 섹션 pill→드롭다운. ADR-009·검색 미구현
+// 사용자 사이트 헤더 — 클릭 불가 "현재 위치 인디케이터" (ADR-037). 검색·드롭다운 없음.
+// 랜딩: 스크롤 구간에 따라 임팩트 데이터→쌀 나눔 소식→쌀나눔 프로젝트 자동 active. /news: 활동 스토리 고정.
+// md↑(768~) 풀 4항목 표시 / <768 현재 active pill 1개만. bg-brand-bright #B769FF + 알약 active.
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
 
 import { useScrollSpy } from "@/client/hooks/useScrollSpy";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 type MenuItem = {
   id: string;
   label: string;
-  href: string;
-  /** 랜딩 페이지 섹션 앵커인가 (true) — 별도 라우트인가 (false) */
-  isAnchor: boolean;
+  /** 랜딩에서 이 섹션 id 가 active 일 때 강조 (DOM 순서: kpi→story→stories) */
+  landingSection?: string;
+  /** 비랜딩(/news 등) 페이지에서 active 고정 */
+  activeOnSubpage?: boolean;
 };
 
+// 표시 순서는 Figma 유지(임팩트/활동스토리/소식/프로젝트). landingSection 이 active 구간을 결정.
 const MENU: readonly MenuItem[] = [
-  { id: "kpi", label: "임팩트 데이터", href: "/#kpi", isAnchor: true },
-  { id: "stories", label: "활동 스토리", href: "/#stories", isAnchor: true },
-  { id: "news", label: "쌀 나눔 소식", href: "/news", isAnchor: false },
-  { id: "story", label: "쌀나눔 프로젝트", href: "/#story", isAnchor: true },
+  { id: "kpi", label: "임팩트 데이터", landingSection: "kpi" },
+  { id: "activity", label: "활동 스토리", activeOnSubpage: true },
+  { id: "newsfeed", label: "쌀 나눔 소식", landingSection: "story" },
+  { id: "project", label: "쌀나눔 프로젝트", landingSection: "stories" },
 ] as const;
 
-const SCROLL_SECTIONS = MENU.filter((m) => m.isAnchor).map((m) => m.id);
+// DOM 순서(위→아래)로 전달 — 바닥 감지 시 마지막 섹션 정확도용 (useScrollSpy 참조)
+const SCROLL_SECTIONS = MENU.map((m) => m.landingSection).filter(
+  (s): s is string => Boolean(s),
+);
+const FIRST_LANDING_SECTION = SCROLL_SECTIONS[0]; // Hero 영역(스파이 null) 폴백
 
 export function PublicHeader() {
   const pathname = usePathname();
   const isLanding = pathname === "/";
   const scrollActive = useScrollSpy(SCROLL_SECTIONS);
 
-  // 랜딩: 스크롤스파이 결과 / 비랜딩: "활동 스토리" 고정 (ADR-009)
-  const activeId = isLanding ? scrollActive : "stories";
-  // 모바일 pill 라벨 — 활성 섹션, 최상단(스파이 null)에서는 첫 메뉴로 폴백 (Figma 기본 상태)
-  const activeItem = MENU.find((m) => m.id === activeId) ?? MENU[0];
+  // 랜딩: 스크롤 구간 → 해당 메뉴 / 비랜딩: 서브페이지 active 메뉴(활동 스토리)
+  const activeMenuId = isLanding
+    ? MENU.find(
+        (m) => m.landingSection === (scrollActive ?? FIRST_LANDING_SECTION),
+      )?.id
+    : MENU.find((m) => m.activeOnSubpage)?.id;
+  // 모바일 pill — 현재 active 항목 (없으면 첫 항목 폴백)
+  const activeItem = MENU.find((m) => m.id === activeMenuId) ?? MENU[0];
 
   return (
     <header className="sticky top-0 z-40 bg-brand-bright">
@@ -55,88 +60,36 @@ export function PublicHeader() {
           />
         </Link>
 
-        {/* 우측 클러스터 — Figma: 로고 좌측 / [4메뉴 + 모바일pill + 검색] 우측 한 덩어리. justify-between 2분할로 우측 정렬 */}
-        <div className="flex items-center gap-3 lg:gap-6">
-        {/* 데스크탑(md↑, 768~): 풀 4메뉴 내비 — md 14px/좁은 간격(M), lg↑ 16px(L) */}
-        <nav className="hidden items-center gap-3 md:flex lg:gap-6">
+        {/* 데스크탑(md↑, 768~): 4항목 위치 인디케이터 — 클릭 불가, active 자동 강조 */}
+        <nav
+          aria-label="현재 보고 있는 영역"
+          className="hidden items-center gap-3 md:flex lg:gap-6"
+        >
           {MENU.map((m) => {
-            const isActive = activeItem.id === m.id;
+            const isActive = m.id === activeMenuId;
             return (
-              <Link
+              <span
                 key={m.id}
-                href={m.href}
-                aria-current={isActive ? "page" : undefined}
+                aria-current={isActive ? "true" : undefined}
                 className={cn(
-                  "rounded-full px-3.5 py-2 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-brand-darkest focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bright lg:px-5 lg:py-2.5 lg:text-base",
+                  "rounded-full px-3.5 py-2 text-sm transition-colors select-none lg:px-5 lg:py-2.5 lg:text-base",
                   isActive
                     ? "border-[1.6px] border-brand-primary bg-white font-extrabold text-brand-primary"
-                    : "font-bold text-white hover:bg-white/10",
+                    : "font-bold text-white",
                 )}
               >
                 {m.label}
-              </Link>
+              </span>
             );
           })}
         </nav>
 
-        {/* 모바일(<768): 활성 섹션 pill → 탭 시 전체 섹션 드롭다운 (Figma 375~767 variant) */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              aria-label={`현재 위치 ${activeItem.label} — 섹션 메뉴 열기`}
-              className="flex h-11 items-center gap-1.5 rounded-full border-[1.6px] border-brand-primary bg-white pr-3 pl-4 text-base font-extrabold text-brand-primary outline-none focus-visible:ring-2 focus-visible:ring-brand-darkest focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bright md:hidden"
-            >
-              <span>{activeItem.label}</span>
-              <ChevronDown className="size-4 shrink-0" aria-hidden />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="center"
-            sideOffset={8}
-            className="min-w-[200px]"
-          >
-            {MENU.map((m) => {
-              const isActive = activeItem.id === m.id;
-              return (
-                <DropdownMenuItem
-                  key={m.id}
-                  asChild
-                  className={cn(
-                    "min-h-11 cursor-pointer px-3 text-base",
-                    isActive
-                      ? "font-extrabold text-brand-primary focus:text-brand-primary"
-                      : "font-medium",
-                  )}
-                >
-                  <Link
-                    href={m.href}
-                    aria-current={isActive ? "page" : undefined}
-                  >
-                    {m.label}
-                  </Link>
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <button
-          type="button"
-          disabled
-          aria-label="검색 (준비 중)"
-          className="shrink-0 cursor-not-allowed text-brand-primary/70"
+        {/* 모바일(<768): 현재 active 항목 pill 1개만 — 드롭다운·클릭 없음 */}
+        <div
+          aria-label={`현재 위치 ${activeItem.label}`}
+          className="flex h-11 items-center rounded-full border-[1.6px] border-brand-primary bg-white px-4 text-base font-extrabold text-brand-primary select-none md:hidden"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
-          <img
-            src="/icons/search-icon.svg"
-            alt=""
-            width={20}
-            height={20}
-            aria-hidden
-            className="size-5"
-          />
-        </button>
+          {activeItem.label}
         </div>
       </div>
     </header>
