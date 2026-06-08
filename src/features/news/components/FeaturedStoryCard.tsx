@@ -30,8 +30,8 @@ export function FeaturedStoryCard({ stories }: Props) {
   return (
     // 배경·세로 패딩은 풀폭 래퍼(news-hero)가 담당 — 여기선 밴드 폭 콘텐츠 그리드만
     <section className="w-full">
-      <div className="grid items-center gap-6 lg:grid-cols-2 lg:gap-10">
-        <div className="order-2 flex flex-col gap-4 lg:order-1">
+      <div className="grid items-center gap-6 sm:grid-cols-2 lg:gap-10">
+        <div className="order-2 flex flex-col gap-4 md:order-1">
           {story.badge && (
             <span className="self-start rounded-full bg-brand-vivid px-3 py-1 text-xs font-semibold text-white">
               {story.badge}
@@ -93,14 +93,14 @@ export function FeaturedStoryCard({ stories }: Props) {
           </div>
         </div>
 
-        <div className="order-1 lg:order-2">
+        <div className="order-1 md:order-2">
           <div className="relative aspect-[612/411] overflow-hidden rounded-2xl bg-white">
             {story.imageUrl ? (
               <Image
                 src={story.imageUrl}
                 alt=""
                 fill
-                sizes="(max-width: 1024px) 100vw, 612px"
+                sizes="(max-width: 639px) 100vw, 50vw"
                 className="object-cover"
               />
             ) : (

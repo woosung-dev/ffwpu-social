@@ -57,7 +57,8 @@ async function NewsDetailContent({
     : { prev: null, next: null };
 
   return (
-    <div className="mx-auto w-full max-w-[900px] px-4 py-12 lg:py-20">
+    <div className="mx-auto w-full px-4 md:max-w-[648px] md:px-0 lg:max-w-[905px] py-12 lg:py-20">
+      {/* 본문폭: 리스트 밴드 정합 md648/lg905, wide는 가독 cap(1200 미적용) */}
       <DetailHeader
         newsId={item.id}
         categoryName={item.categoryName}
@@ -99,7 +100,7 @@ async function NewsDetailContent({
           <h2 className="text-xl font-bold text-ink-strong">
             더 많은 소식 살펴보기
           </h2>
-          <ul className="mt-4 grid grid-cols-1 gap-7 sm:grid-cols-3 sm:gap-5">
+          <ul className="mt-4 grid [grid-template-columns:repeat(auto-fill,minmax(max(200px,calc(50%-14px)),1fr))] gap-7 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
             {related.map((r) => (
               <li key={r.id} className="flex">
                 <ArticleCard
