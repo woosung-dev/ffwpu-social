@@ -6,7 +6,11 @@ export { ALL_CATEGORY_SLUG } from "./constants";
 
 // 어드민 글 생성/수정 입력 — body 는 jsonb (Tiptap JSON, 구조 검증은 NewsBodyRenderer T12 가 담당), tags 는 다중 입력
 export const newsInputSchema = z.object({
-  title: z.string().min(1).max(200),
+  // 한국어 검증 메시지 — 미지정 시 Zod v4 영문 기본 메시지("Too small…")가 사용자에게 노출됨(anti-slop §4)
+  title: z
+    .string()
+    .min(1, "제목을 입력해주세요.")
+    .max(200, "제목은 200자 이내로 입력해주세요."),
   // 클라가 JSON.stringify 로 전송 → 서버 parse. 객체로 보내면 Server Action 직렬화(React Flight)에서
   // 중첩 attrs 가 temporary reference($T)로 소실됨(Next16 cacheComponents). 문자열은 안전.
   body: z.string().transform((s, ctx): unknown => {
@@ -17,7 +21,7 @@ export const newsInputSchema = z.object({
       return z.NEVER;
     }
   }),
-  categoryId: z.uuid(),
+  categoryId: z.uuid("카테고리를 선택해주세요."),
   coverImageUrl: z.string().min(1).nullable().optional(),
   // 커버 이미지 픽셀 치수 — 클라 캡처, 마조네리 카드 비율. coverImageUrl 과 한 쌍
   coverImageWidth: z.number().int().positive().nullable().optional(),
