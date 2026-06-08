@@ -42,7 +42,7 @@
 | 카드 그리드 열·갭 | 384·3열 24/48 (1440) · 313·2열 18/48 (768) · 288·3열 18/48 (1025) · 343·1열 –/48 (375) | 1440 384 24/48·768 315 18/48·375 343 –/48·1025 290 18/48 | ✓ **행간 24→48 수정**(375), 카드폭 ±2 |
 | 카테고리 탭 height | 56(1440)/46(375) | 56 | ✓ |
 | Featured 이미지 aspect | 612/411=1.489 | 1.489 | ✓ 이미지 정합 |
-| **Featured 섹션 높이** | 646(1440, 텍스트컬럼 556 stretch·버튼 하단앵커) | 480 | ⚠️ **차이 166** — 코드 텍스트컬럼 compact(content-driven). 구조·이미지는 정합. 결정 필요(아래) |
+| **Featured 섹션 높이** | 646(1440)·503(768)·content 556/423 | 646/503·375 stack | ✓ **재구조화**(items-stretch+min-h 423/556·버튼 mt-auto 하단앵커) — 1440 646 정확, 오버플로0 |
 
 ## D. 소식 상세 (93:8810, Figma 1440 단독)
 | 요소 | Figma | 라이브 | 결과 |
@@ -58,8 +58,11 @@
 - ArticleCard Size1~4 폭(384/313/288)은 목록·관련글 그리드에서 in-context 검증 ✓.
 - Header 컴포넌트 = §A. Heart/Tag/Pagination 은 카드·상세 내 in-context 노출.
 
-## 미해결 결정 (사용자 확인)
-- **Featured 히어로 높이**: Figma는 텍스트 컬럼을 이미지보다 길게(556) 두고 "자세히 보기" 버튼을 하단 앵커(justify-between). 현재 코드는 실데이터 기준 compact(480). Figma처럼 키우면 짧은 실제 제목에서 빈 공간 발생 가능 → 구조 재설계 사안. **유지(content-robust) vs Figma 재현(airy)** 결정 필요.
+## 결정 반영
+- **Featured 히어로**: 사용자 선택 = Figma 재현(airy/하단앵커). items-stretch + BP별 min-h(423/556) + 버튼 mt-auto 로 재구조화 완료. 1440 646px 정확 일치.
+
+## 잔여(허용 범위·후속)
+- 768 featured 섹션 pb +20(news-hero pt/pb 미세) · 상세 콘텐츠폭 905 vs 900(+5) · SubBanner 375 +13(leading-relaxed 접근성 우선) · Story 375 +16(텍스트 line-height) · ArticleGrid/마조네리 높이 content-driven.
 
 ## 검증
 - tsc 0 · lint 0 · test 48 · build ✓ (2026-06-09).
