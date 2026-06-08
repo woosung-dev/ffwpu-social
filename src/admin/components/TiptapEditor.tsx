@@ -63,6 +63,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -704,6 +705,9 @@ function LinkDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>링크 삽입</DialogTitle>
+          <DialogDescription>
+            선택한 텍스트에 연결할 링크 주소를 입력합니다.
+          </DialogDescription>
         </DialogHeader>
         <Input
           autoFocus
@@ -749,6 +753,9 @@ function TableDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>표 삽입</DialogTitle>
+          <DialogDescription>
+            삽입할 표의 행·열 수를 지정합니다.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-1.5 text-sm">
@@ -818,6 +825,9 @@ function YoutubeDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>YouTube 삽입</DialogTitle>
+          <DialogDescription>
+            본문에 넣을 YouTube 영상 주소를 입력합니다.
+          </DialogDescription>
         </DialogHeader>
         <Input
           autoFocus

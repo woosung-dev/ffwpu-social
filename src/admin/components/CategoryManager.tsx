@@ -46,6 +46,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -458,6 +459,9 @@ function EditDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>카테고리 수정</DialogTitle>
+          <DialogDescription>
+            카테고리 이름과 노출 활성 여부를 수정합니다.
+          </DialogDescription>
         </DialogHeader>
         <div className="rounded-md border bg-muted/30 px-4 py-3 text-xs text-ink-subtle">
           slug <span className="font-mono text-ink-strong">{row.slug}</span> 는

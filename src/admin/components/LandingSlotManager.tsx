@@ -205,6 +205,17 @@ export function LandingSlotManager({
         </div>
       )}
 
+      {/* 적격 안내 — 운영자가 다른 카테고리/미발행 글이 선택지에 안 떠 헤매던 문제 보완(3-에이전트 검증 #1) */}
+      <div className="rounded-lg border border-brand-primary/20 bg-brand-primary/5 px-4 py-3 text-sm text-ink-strong">
+        메인 홈(랜딩)에 노출할 글을 지정합니다.{" "}
+        <strong className="font-semibold text-brand-primary">
+          쌀 나눔 카테고리의 발행 글
+        </strong>{" "}
+        만 선택할 수 있어요 — 다른 카테고리이거나 미발행인 글은 아래 선택지·목록에
+        나타나지 않습니다. (소식 페이지(/news) 상단 노출은 ‘소식 히어로’ 메뉴에서
+        설정합니다.)
+      </div>
+
       <Card className="min-w-0">
         <CardHeader>
           <CardTitle className="text-xl">상단 — 쌀 나눔 활동 (StorySection)</CardTitle>

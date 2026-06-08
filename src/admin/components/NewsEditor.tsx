@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { z } from "zod";
 import type { JSONContent } from "@tiptap/react";
 import {
@@ -105,6 +106,8 @@ export function NewsEditor({ mode, categories, initial }: Props) {
           setError(msg);
           return;
         }
+        // 성공 피드백 명시 — 발행/저장 후 조용히 넘어가 첫 사용자가 불안하던 문제 보완(3-에이전트 검증 #4)
+        toast.success(publish ? "발행되었습니다." : "임시 저장되었습니다.");
         if (!isEdit) {
           router.push(`/admin/news/${result.data.id}/edit`);
         } else {

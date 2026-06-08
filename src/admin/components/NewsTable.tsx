@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -298,10 +299,10 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>글 삭제</DialogTitle>
+            <DialogDescription className="text-sm text-ink-subtle">
+              정말로 이 글을 삭제하시겠습니까? 본문 이미지·태그도 함께 삭제되며 되돌릴 수 없습니다.
+            </DialogDescription>
           </DialogHeader>
-          <p className="text-sm text-ink-subtle">
-            정말로 이 글을 삭제하시겠습니까? 본문 이미지·태그도 함께 삭제되며 되돌릴 수 없습니다.
-          </p>
           <DialogFooter>
             <Button
               variant="ghost"
