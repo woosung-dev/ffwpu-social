@@ -30,6 +30,8 @@ export function TagsInput({
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  // IME(한글) 조합 상태 — 조합 중 Enter 는 글자 확정용이라 태그 추가 금지(마지막 글자 중복 버그). nativeEvent.isComposing 보강(compositionend 타이밍 의존 제거)
+  const isComposingRef = useRef(false);
   const reachedMax = value.length >= maxTags;
 
   // 디바운스 autocomplete — input 200ms 후 searchTagsAction 호출
@@ -66,6 +68,9 @@ export function TagsInput({
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // 한글 IME 조합 중 Enter/comma 는 조합 확정용 — 여기서 태그를 추가하면 확정된 마지막 글자가
+    // 빈 input 으로 다시 새어 다음 태그에 중복된다(영어는 조합이 없어 정상). 조합 중엔 무시.
+    if (e.nativeEvent.isComposing || isComposingRef.current) return;
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       if (input.trim().length > 0) addTag(input);
@@ -112,6 +117,12 @@ export function TagsInput({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onKeyDown}
+          onCompositionStart={() => {
+            isComposingRef.current = true;
+          }}
+          onCompositionEnd={() => {
+            isComposingRef.current = false;
+          }}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           placeholder={
