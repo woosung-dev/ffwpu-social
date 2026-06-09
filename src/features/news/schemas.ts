@@ -26,7 +26,15 @@ export const newsInputSchema = z.object({
   // 커버 이미지 픽셀 치수 — 클라 캡처, 마조네리 카드 비율. coverImageUrl 과 한 쌍
   coverImageWidth: z.number().int().positive().nullable().optional(),
   coverImageHeight: z.number().int().positive().nullable().optional(),
-  publishedAt: z.date().nullable().optional(),
+  // 발행일 — 수정 가능하나 미래 불가(예약 발행 없음). null = 임시저장. 60s 시계오차 허용
+  publishedAt: z
+    .date()
+    .nullable()
+    .optional()
+    .refine(
+      (d) => !d || d.getTime() <= Date.now() + 60_000,
+      "발행일은 미래로 지정할 수 없습니다.",
+    ),
   tags: z.array(z.string().min(1).max(50)).max(20).default([]),
 });
 

@@ -283,6 +283,13 @@ function Toolbar({
       : editor.isActive("heading", { level: 3 })
         ? "제목 3"
         : "본문";
+  // 현재 글자 크기 라벨 — 아이콘만으론 발견이 어려워(제목 드롭다운과 혼동) 트리거에 텍스트 노출
+  const currentFontSize = editor.getAttributes("textStyle").fontSize as
+    | string
+    | undefined;
+  const fontSizeLabel = currentFontSize
+    ? (FONT_SIZE_LABELS[currentFontSize] ?? currentFontSize)
+    : "글자 크기";
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-surface-cool px-2 py-1.5">
@@ -341,9 +348,10 @@ function Toolbar({
             type="button"
             disabled={disabled}
             aria-label="글자 크기"
-            className="flex items-center gap-1 rounded p-1.5 text-ink-subtle hover:bg-muted disabled:opacity-50"
+            className="flex items-center gap-1 rounded px-2 py-1.5 text-xs font-medium text-ink-subtle hover:bg-muted disabled:opacity-50"
           >
-            <Type className="h-4 w-4" />
+            <Type className="h-3.5 w-3.5" />
+            {fontSizeLabel}
             <ChevronDown className="h-3 w-3" />
           </button>
         </DropdownMenuTrigger>

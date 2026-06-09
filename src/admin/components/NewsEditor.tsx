@@ -51,6 +51,22 @@ const formSchema = newsInputSchema.omit({ body: true, publishedAt: true });
 type FormInput = z.input<typeof formSchema>;
 type FormValues = z.output<typeof formSchema>;
 
+// 발행일 ↔ <input type="date">(로컬 YYYY-MM-DD) 변환
+function toDateInput(d: Date): string {
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
+}
+
+// 선택 날짜 → publishedAt. 미래는 오늘로 클램프(예약 발행 없음). 같은 날짜 재발행이면 기존 시각 보존, 오늘=now, 과거=정오
+function resolvePublishedAt(dateStr: string, existing: Date | null): Date {
+  const now = new Date();
+  const todayStr = toDateInput(now);
+  const safe = dateStr > todayStr ? todayStr : dateStr;
+  if (existing && toDateInput(existing) === safe) return existing;
+  if (safe === todayStr) return now;
+  return new Date(`${safe}T12:00:00`);
+}
+
 export function NewsEditor({ mode, categories, initial }: Props) {
   const router = useRouter();
   const isEdit = mode === "edit";
@@ -66,6 +82,11 @@ export function NewsEditor({ mode, categories, initial }: Props) {
   );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  // 발행일 — 수정 가능(미래 불가). 발행 시 적용. 기존 발행글은 그 날짜, 신규·임시는 오늘 기본
+  const [publishDate, setPublishDate] = useState(
+    toDateInput(initial?.publishedAt ?? new Date()),
+  );
+  const todayStr = toDateInput(new Date());
 
   const form = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(formSchema),
@@ -84,9 +105,7 @@ export function NewsEditor({ mode, categories, initial }: Props) {
     form.handleSubmit((values) => {
       setError(null);
       const publishedAt = publish
-        ? isEdit && initial?.publishedAt
-          ? initial.publishedAt
-          : new Date()
+        ? resolvePublishedAt(publishDate, initial?.publishedAt ?? null)
         : null;
       const payload: NewsInput = {
         ...values,
@@ -225,11 +244,25 @@ export function NewsEditor({ mode, categories, initial }: Props) {
                     {isPending ? "처리 중..." : "발행"}
                   </Button>
                 </div>
-                {isEdit && initial?.publishedAt && (
-                  <p className="text-xs text-ink-date">
-                    발행일 · {initial.publishedAt.toLocaleDateString("ko-KR")}
-                  </p>
-                )}
+              </CardContent>
+            </Card>
+
+            {/* 발행일 — 수정 가능(미래 불가, 예약 발행 없음). 발행 시 이 날짜로 기록. 모바일·데스크탑 공통 노출 */}
+            <Card>
+              <CardContent className="space-y-2 pt-6">
+                <h3 className="text-sm font-semibold text-ink-strong">발행일</h3>
+                <input
+                  type="date"
+                  value={publishDate}
+                  max={todayStr}
+                  onChange={(e) => setPublishDate(e.target.value)}
+                  disabled={isPending}
+                  aria-label="발행일"
+                  className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 disabled:opacity-50"
+                />
+                <p className="text-xs text-ink-subtle">
+                  발행하면 이 날짜로 기록됩니다. 미래 날짜는 지정할 수 없어요(예약 발행 없음).
+                </p>
               </CardContent>
             </Card>
 
