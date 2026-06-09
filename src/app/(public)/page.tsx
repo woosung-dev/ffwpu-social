@@ -18,12 +18,15 @@ export const metadata: Metadata = {
   title: "Sow Good — 가치를 삶으로, 변화를 꽃피우는 동행",
   description:
     "세계평화통일가정연합 신한국협회 사회공헌국 Sow Good. 쌀 나눔으로 따뜻한 변화를 이어갑니다.",
+  alternates: { canonical: "/" },
   openGraph: {
     title: "Sow Good — 가치를 삶으로, 변화를 꽃피우는 동행",
     description:
       "세계평화통일가정연합 신한국협회 사회공헌국. 쌀 나눔으로 따뜻한 변화를.",
     type: "website",
     locale: "ko_KR",
+    url: "/",
+    images: [{ url: "/api/og", width: 1200, height: 630 }],
   },
 };
 

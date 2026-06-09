@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
 import { getAdjacentNews, getNewsDetail, getRelatedNews } from "@/features/news";
+import { bodyToExcerpt } from "@/features/news/excerpt";
 import { NewsBodyRenderer } from "@/features/news/render/news-body-renderer";
 import { ArticleCard } from "@/features/news/components";
 
@@ -13,11 +14,49 @@ import { PrevNextNav } from "./prev-next-nav";
 import { ShareRow } from "./share-row";
 import { ScrollTopButton } from "./scroll-top";
 
-export const metadata: Metadata = {
-  title: "쌀 나눔 소식 | 사회공헌단 Sow Good",
-  description:
-    "사회공헌단 Sow Good 의 쌀 나눔·가족 치유·지역 봉사·환경 캠페인 활동 소식.",
-};
+// 글별 메타 — 공유 시 제목·요약·커버 썸네일이 뜨도록(이전엔 전 글 동일 일반 타이틀). 커버 없으면 동적 OG(/api/og)
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const article = await getNewsDetail(id);
+  if (!article) {
+    return {
+      title: "찾을 수 없는 소식 | 사회공헌단 Sow Good",
+      robots: { index: false, follow: false },
+    };
+  }
+  const description =
+    bodyToExcerpt(article.body, 150) ||
+    `${article.categoryName} · 사회공헌단 Sow Good 의 활동 소식.`;
+  const ogImage =
+    article.coverImageUrl ??
+    `/api/og?title=${encodeURIComponent(article.title)}`;
+  const url = `/news/${id}`;
+  return {
+    title: `${article.title} | 사회공헌단 Sow Good`,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title: article.title,
+      description,
+      type: "article",
+      locale: "ko_KR",
+      url,
+      publishedTime: article.publishedAt?.toISOString(),
+      tags: article.tags,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: article.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description,
+      images: [ogImage],
+    },
+  };
+}
 
 export default function NewsDetailPage(props: {
   params: Promise<{ id: string }>;

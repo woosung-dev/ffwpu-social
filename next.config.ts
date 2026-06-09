@@ -9,7 +9,7 @@ const config: NextConfig = {
       { protocol: "http", hostname: "localhost", port: "9000" },
       { protocol: "http", hostname: "127.0.0.1", port: "9000" },
       // R2/S3 공개 읽기 도메인 (ADR-001a). r2.cloudflarestorage.com 은 인증 API 엔드포인트라 공개 렌더용 아님.
-      // R2 공개 URL = r2.dev(개발) 또는 커스텀 도메인. 커스텀 도메인 사용 시 아래에 추가.
+      // *.r2.dev = R2 버킷 공개 도메인(NEXT_PUBLIC_S3_PUBLIC_URL 기본형). 커스텀 도메인 연결 시 그 호스트 추가 — 미등록은 next/image 차단.
       { protocol: "https", hostname: "*.r2.dev" },
       { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
       { protocol: "https", hostname: "*.s3.amazonaws.com" },

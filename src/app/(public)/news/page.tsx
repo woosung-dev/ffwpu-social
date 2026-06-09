@@ -21,6 +21,16 @@ export const metadata: Metadata = {
   title: "쌀 나눔 소식 | 사회공헌단 Sow Good",
   description:
     "사회공헌단 Sow Good 의 쌀 나눔·가족 치유·지역 봉사·환경 캠페인 활동 소식.",
+  alternates: { canonical: "/news" },
+  openGraph: {
+    title: "쌀 나눔 소식 | 사회공헌단 Sow Good",
+    description:
+      "사회공헌단 Sow Good 의 쌀 나눔·가족 치유·지역 봉사·환경 캠페인 활동 소식.",
+    type: "website",
+    locale: "ko_KR",
+    url: "/news",
+    images: [{ url: "/api/og", width: 1200, height: 630 }],
+  },
 };
 
 // App Router 는 반복 키를 string[] 로 전달 — normalizeNewsListFilters(firstParam) 가 흡수
