@@ -2,12 +2,18 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
-// 어드민 호스트: 프로덕션은 admin.<도메인> 서브도메인. 로컬(localhost/127.0.0.1)은 분기 우회 — 한 포트에서 양쪽 접근.
+// 어드민 호스트: 프로덕션은 admin.<도메인> 서브도메인.
 function isAdminHost(host: string): boolean {
   return host.startsWith("admin.");
 }
-function isLocalHost(host: string): boolean {
-  return host.startsWith("localhost") || host.startsWith("127.0.0.1");
+// 분기 우회: 로컬(localhost) + Vercel 기본 배포 도메인(*.vercel.app).
+// 커스텀 도메인 연결 전까지는 한 호스트에서 양쪽 접근 — vercel.app 엔 admin. 서브도메인을 만들 수 없어 락아웃 방지.
+function isBranchBypassHost(host: string): boolean {
+  return (
+    host.startsWith("localhost") ||
+    host.startsWith("127.0.0.1") ||
+    host.endsWith(".vercel.app")
+  );
 }
 
 export default auth((req) => {
@@ -15,8 +21,8 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isAdminPath = pathname.startsWith("/admin");
 
-  // 1) 호스트 ↔ 경로 분리 (로컬은 우회). ADR-023: 사용자 도메인 /admin = 404, 어드민 도메인 비-admin = /admin
-  if (!isLocalHost(host)) {
+  // 1) 호스트 ↔ 경로 분리 (로컬·vercel.app 은 우회). ADR-023: 사용자 도메인 /admin = 404, 어드민 도메인 비-admin = /admin
+  if (!isBranchBypassHost(host)) {
     if (!isAdminHost(host) && isAdminPath) {
       // 사용자 도메인에서 어드민 접근 차단 — 어드민은 admin 서브도메인 전용
       return new NextResponse(null, { status: 404 });
