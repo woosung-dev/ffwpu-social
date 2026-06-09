@@ -34,6 +34,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -329,6 +330,9 @@ export function HeroOrderManager({ initialItems, candidates }: Props) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>소식 추가</DialogTitle>
+            <DialogDescription>
+              소식 히어로에 노출할 발행 글을 선택해 추가합니다.
+            </DialogDescription>
           </DialogHeader>
           <Input
             placeholder="제목으로 검색"
