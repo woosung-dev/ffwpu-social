@@ -1,6 +1,8 @@
-// 이미지 업로드 presigned POST 발급 — codex P1#4 (content-length-range + Content-Type 강제) + ADR-017 (이미지 5MB)
+// 이미지 업로드 presigned PUT URL 발급 — R2 호환 (R2 는 presigned POST 미지원, GET/PUT 만 지원).
+// ADR-017 (이미지 5MB). POST policy 의 content-length-range 는 PUT 서명에 불가 → 서버측 size 사전검증으로 대체.
 import { randomUUID } from "node:crypto";
-import { createPresignedPost as awsCreatePresignedPost } from "@aws-sdk/s3-presigned-post";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { S3_BUCKET, getPublicUrl, s3 } from "@/lib/s3";
 
 export const ALLOWED_IMAGE_MIME = [
@@ -17,7 +19,8 @@ export type UploadTarget = "cover" | "body";
 
 export type PresignedUploadResult = {
   uploadUrl: string;
-  fields: Record<string, string>;
+  // 클라가 PUT 시 그대로 보낼 Content-Type — 서명된 헤더라 불일치 시 R2 가 거부
+  contentType: string;
   publicUrl: string;
   key: string;
 };
@@ -25,7 +28,7 @@ export type PresignedUploadResult = {
 // scope: 작성 모드는 tempId (글 저장 전), 수정 모드는 newsId. orphan 정리는 v1.1 cleanup job (codex P2#4)
 export type UploadScope = { newsId: string } | { tempId: string };
 
-type CreatePresignedPostArgs = {
+type CreatePresignedUploadArgs = {
   scope: UploadScope;
   filename: string;
   mime: string;
@@ -53,10 +56,10 @@ function buildObjectKey(
   return `${prefix}/${randomUUID()}.${ext}`;
 }
 
-// S3 Presigned POST + content-length-range 정책. MIME 위조·사이즈 우회 차단 (codex P1#4).
+// Presigned PUT URL. Content-Type 을 서명에 포함 → MIME 위조 차단. 사이즈 상한은 서버 사전검증(아래)으로 강제.
 // 만료 60초 — 발급 후 즉시 업로드 가정.
-export async function createPresignedPost(
-  args: CreatePresignedPostArgs,
+export async function createPresignedUpload(
+  args: CreatePresignedUploadArgs,
 ): Promise<PresignedUploadResult> {
   if (!isAllowedImageMime(args.mime)) {
     throw new Error(`Unsupported MIME: ${args.mime}`);
@@ -69,20 +72,19 @@ export async function createPresignedPost(
 
   const key = buildObjectKey(args.scope, args.filename, args.mime);
 
-  const { url, fields } = await awsCreatePresignedPost(s3, {
-    Bucket: S3_BUCKET,
-    Key: key,
-    Conditions: [
-      ["content-length-range", 1, MAX_IMAGE_BYTES],
-      ["eq", "$Content-Type", args.mime],
-    ],
-    Fields: { "Content-Type": args.mime },
-    Expires: PRESIGN_EXPIRES_SECONDS,
-  });
+  const uploadUrl = await getSignedUrl(
+    s3,
+    new PutObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: key,
+      ContentType: args.mime,
+    }),
+    { expiresIn: PRESIGN_EXPIRES_SECONDS },
+  );
 
   return {
-    uploadUrl: url,
-    fields,
+    uploadUrl,
+    contentType: args.mime,
     publicUrl: getPublicUrl(key),
     key,
   };

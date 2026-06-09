@@ -8,7 +8,7 @@ import { type ActionResult, toActionError } from "@/lib/action-result";
 import { isAllowedImagePublicUrl } from "@/lib/s3";
 import {
   type PresignedUploadResult,
-  createPresignedPost,
+  createPresignedUpload,
   isAllowedImageMime,
   MAX_IMAGE_BYTES,
 } from "@/features/storage";
@@ -311,7 +311,7 @@ export async function uploadImageAction(
   }
   const scope = newsId ? { newsId } : { tempId: tempId! };
   try {
-    const result = await createPresignedPost({ scope, filename, mime, size });
+    const result = await createPresignedUpload({ scope, filename, mime, size });
     return { success: true, data: result };
   } catch (err) {
     return {
