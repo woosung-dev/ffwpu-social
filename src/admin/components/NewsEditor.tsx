@@ -112,13 +112,9 @@ export function NewsEditor({ mode, categories, initial }: Props) {
           setError(msg);
           return;
         }
-        // 성공 피드백 명시 — 발행/저장 후 조용히 넘어가 첫 사용자가 불안하던 문제 보완(3-에이전트 검증 #4)
+        // 성공 토스트 후 목록으로 이동 — 신규·수정 공통(사용자 요청). 토스트는 sonner 가 네비게이션 넘어 유지
         toast.success(publish ? "발행되었습니다." : "임시 저장되었습니다.");
-        if (!isEdit) {
-          router.push(`/admin/news/${result.data.id}/edit`);
-        } else {
-          router.refresh();
-        }
+        router.push("/admin/news");
       });
     })();
 
