@@ -1,15 +1,37 @@
-// Next.js 16 proxy.ts (구 middleware.ts) — /admin 경로 인증 게이트. Node Runtime 전용
+// Next.js 16 proxy.ts (구 middleware.ts) — host 분기(ADR-023 옵션2 서브도메인) + /admin 인증 게이트. Node Runtime 전용
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
+// 어드민 호스트: 프로덕션은 admin.<도메인> 서브도메인. 로컬(localhost/127.0.0.1)은 분기 우회 — 한 포트에서 양쪽 접근.
+function isAdminHost(host: string): boolean {
+  return host.startsWith("admin.");
+}
+function isLocalHost(host: string): boolean {
+  return host.startsWith("localhost") || host.startsWith("127.0.0.1");
+}
+
 export default auth((req) => {
+  const host = req.headers.get("host") ?? "";
   const { pathname } = req.nextUrl;
-  const isAdmin = pathname.startsWith("/admin");
+  const isAdminPath = pathname.startsWith("/admin");
+
+  // 1) 호스트 ↔ 경로 분리 (로컬은 우회). ADR-023: 사용자 도메인 /admin = 404, 어드민 도메인 비-admin = /admin
+  if (!isLocalHost(host)) {
+    if (!isAdminHost(host) && isAdminPath) {
+      // 사용자 도메인에서 어드민 접근 차단 — 어드민은 admin 서브도메인 전용
+      return new NextResponse(null, { status: 404 });
+    }
+    if (isAdminHost(host) && !isAdminPath) {
+      // 어드민 도메인 루트·기타 경로 → 어드민으로
+      return NextResponse.redirect(new URL("/admin", req.url));
+    }
+  }
+
+  // 2) 어드민 인증 게이트 — super 역할만 허용. read 경로(page Server Component)도 게이트 (codex consult v2 P1)
   const isLogin = pathname === "/admin/login";
-  // super 역할만 어드민 접근 허용 — read 경로(page Server Component)도 게이트 (codex consult v2 P1)
   const isSuper = req.auth?.user?.role === "super";
 
-  if (isAdmin && !isLogin) {
+  if (isAdminPath && !isLogin) {
     if (!req.auth) {
       const loginUrl = new URL("/admin/login", req.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
@@ -29,7 +51,8 @@ export default auth((req) => {
   }
 });
 
-// Next 16: proxy는 항상 Node.js Runtime — runtime 키 명시 금지
+// Next 16: proxy는 항상 Node.js Runtime — runtime 키 명시 금지.
+// host 분기를 위해 전 페이지 경로 매칭 (api·정적·파일 확장자 제외).
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };
