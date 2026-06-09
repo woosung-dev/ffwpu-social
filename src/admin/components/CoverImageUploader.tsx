@@ -5,7 +5,6 @@ import { useRef, useState } from "react";
 import NextImage from "next/image";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { uploadImageAction } from "@/features/news/actions";
-import { buildPresignedPostBody } from "@/features/storage/presigned-upload";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +19,7 @@ type Props = {
 };
 
 // 업로드 직전 클라이언트에서 이미지 픽셀 치수 추출 — 마조네리 카드 비율(coverImageWidth/Height) 용.
-// presigned POST 직접 업로드라 서버가 바이트를 못 봄 → 클라가 유일한 캡처 지점. 실패해도 업로드는 진행(폴백 비율)
+// presigned PUT 직접 업로드라 서버가 바이트를 못 봄 → 클라가 유일한 캡처 지점. 실패해도 업로드는 진행(폴백 비율)
 async function readImageDimensions(file: File): Promise<ImageDimensions | null> {
   try {
     const bitmap = await createImageBitmap(file);
@@ -65,9 +64,13 @@ export function CoverImageUploader({
             : "업로드 URL 발급 실패";
         throw new Error(msg);
       }
-      const { uploadUrl, fields, publicUrl } = presign.data;
-      const fd = buildPresignedPostBody(fields, file);
-      const resp = await fetch(uploadUrl, { method: "POST", body: fd });
+      const { uploadUrl, contentType, publicUrl } = presign.data;
+      // R2 presigned PUT — 본문은 File 직접, Content-Type 은 서명값과 일치해야 함
+      const resp = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": contentType },
+        body: file,
+      });
       if (!resp.ok) {
         throw new Error(`업로드 실패 (HTTP ${resp.status})`);
       }

@@ -23,6 +23,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -297,6 +298,9 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>계정 추가</DialogTitle>
+            <DialogDescription>
+              새 운영자 계정을 만듭니다. 신규 계정은 super 권한으로 생성됩니다.
+            </DialogDescription>
           </DialogHeader>
           <form
             onSubmit={addForm.handleSubmit(onCreate)}
@@ -432,6 +436,9 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>비밀번호 재설정 — {resetTarget?.name}</DialogTitle>
+            <DialogDescription>
+              해당 계정의 새 비밀번호를 설정합니다(최소 10자, 영문+숫자).
+            </DialogDescription>
           </DialogHeader>
           <form
             onSubmit={resetForm.handleSubmit(onReset)}
@@ -519,11 +526,11 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>계정 삭제</DialogTitle>
+            <DialogDescription className="text-sm text-ink-subtle">
+              <strong>{deleteTarget?.name}</strong> ({deleteTarget?.email}) 계정을
+              삭제하시겠습니까? 되돌릴 수 없습니다.
+            </DialogDescription>
           </DialogHeader>
-          <p className="text-sm text-ink-subtle">
-            <strong>{deleteTarget?.name}</strong> ({deleteTarget?.email}) 계정을
-            삭제하시겠습니까? 되돌릴 수 없습니다.
-          </p>
           <DialogFooter>
             <Button
               variant="ghost"

@@ -13,7 +13,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const PAGE_SIZE = 20;
+// 한 페이지 10건 — 어드민 목록 가독성 + 페이지네이션 활성화(20건이 한 페이지에 다 들어가 안 보이던 문제)
+const PAGE_SIZE = 10;
 
 type SearchParams = Record<string, string | string[] | undefined>;
 

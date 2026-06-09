@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { z } from "zod";
 import type { JSONContent } from "@tiptap/react";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/features/news/actions";
 import { newsInputSchema, type NewsInput } from "@/features/news/schemas";
 import { CoverImageUploader } from "./CoverImageUploader";
+import { DateTimePicker } from "./DateTimePicker";
 import { TagsInput } from "./TagsInput";
 import { TiptapEditor } from "./TiptapEditor";
 import { Button } from "@/components/ui/button";
@@ -46,7 +48,9 @@ type Props = {
 
 // 폼 schema — body·publishedAt 은 form 외부 관리 (P1#6 + 발행 버튼)
 const formSchema = newsInputSchema.omit({ body: true, publishedAt: true });
-type FormValues = z.infer<typeof formSchema>;
+// @hookform/resolvers v5 는 input(기본값 적용 전)·output(검증 후) 타입을 구분 — tags 등 .default() 필드 정합용
+type FormInput = z.input<typeof formSchema>;
+type FormValues = z.output<typeof formSchema>;
 
 export function NewsEditor({ mode, categories, initial }: Props) {
   const router = useRouter();
@@ -63,8 +67,12 @@ export function NewsEditor({ mode, categories, initial }: Props) {
   );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  // 발행 일시 — 수정 가능(미래 불가). 발행 시 적용. 기존 발행글은 그 일시, 신규·임시는 현재 기본
+  const [publishAt, setPublishAt] = useState<Date>(
+    initial?.publishedAt ?? new Date(),
+  );
 
-  const form = useForm<FormValues>({
+  const form = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: initial?.title ?? "",
@@ -80,10 +88,11 @@ export function NewsEditor({ mode, categories, initial }: Props) {
   const submit = (publish: boolean) =>
     form.handleSubmit((values) => {
       setError(null);
+      // 미래 방어 클램프(피커가 막지만 직접 조작 대비) — 발행=선택 일시, 임시저장=null
       const publishedAt = publish
-        ? isEdit && initial?.publishedAt
-          ? initial.publishedAt
-          : new Date()
+        ? publishAt.getTime() > Date.now()
+          ? new Date()
+          : publishAt
         : null;
       const payload: NewsInput = {
         ...values,
@@ -103,11 +112,9 @@ export function NewsEditor({ mode, categories, initial }: Props) {
           setError(msg);
           return;
         }
-        if (!isEdit) {
-          router.push(`/admin/news/${result.data.id}/edit`);
-        } else {
-          router.refresh();
-        }
+        // 성공 토스트 후 목록으로 이동 — 신규·수정 공통(사용자 요청). 토스트는 sonner 가 네비게이션 넘어 유지
+        toast.success(publish ? "발행되었습니다." : "임시 저장되었습니다.");
+        router.push("/admin/news");
       });
     })();
 
@@ -220,11 +227,23 @@ export function NewsEditor({ mode, categories, initial }: Props) {
                     {isPending ? "처리 중..." : "발행"}
                   </Button>
                 </div>
-                {isEdit && initial?.publishedAt && (
-                  <p className="text-xs text-ink-date">
-                    발행일 · {initial.publishedAt.toLocaleDateString("ko-KR")}
-                  </p>
-                )}
+              </CardContent>
+            </Card>
+
+            {/* 발행 일시 — 수정 가능(미래 불가, 예약 발행 없음). 발행 시 이 일시로 기록. 모바일·데스크탑 공통 노출 */}
+            <Card>
+              <CardContent className="space-y-2 pt-6">
+                <h3 className="text-sm font-semibold text-ink-strong">
+                  발행 일시
+                </h3>
+                <DateTimePicker
+                  value={publishAt}
+                  onChange={setPublishAt}
+                  disabled={isPending}
+                />
+                <p className="text-xs text-ink-subtle">
+                  발행하면 이 일시로 기록됩니다. 미래는 지정할 수 없어요(예약 발행 없음).
+                </p>
               </CardContent>
             </Card>
 

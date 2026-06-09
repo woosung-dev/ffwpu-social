@@ -4,7 +4,7 @@ import "server-only"; // client bundle 유입 시 빌드 에러 (codex v2 P2 —
 export {
   ALLOWED_IMAGE_MIME,
   MAX_IMAGE_BYTES,
-  createPresignedPost,
+  createPresignedUpload,
   isAllowedImageMime,
   type AllowedImageMime,
   type PresignedUploadResult,
