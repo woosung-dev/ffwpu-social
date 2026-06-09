@@ -42,7 +42,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { uploadImageAction } from "@/features/news/actions";
-import { buildPresignedPostBody } from "@/features/storage/presigned-upload";
 import {
   ALLOWED_COLORS,
   ALLOWED_FONT_SIZES,
@@ -81,7 +80,7 @@ type Props = {
   disabled?: boolean;
 };
 
-// 본문 이미지 업로드 — uploadImageAction → presigned POST → publicUrl + 실제 치수
+// 본문 이미지 업로드 — uploadImageAction → presigned PUT → publicUrl + 실제 치수
 async function uploadBodyImage(
   file: File,
   scope: TiptapScope,
@@ -101,9 +100,13 @@ async function uploadBodyImage(
         : "이미지 업로드 URL 발급 실패";
     throw new Error(msg);
   }
-  const { uploadUrl, fields, publicUrl } = presign.data;
-  const fd = buildPresignedPostBody(fields, file);
-  const resp = await fetch(uploadUrl, { method: "POST", body: fd });
+  const { uploadUrl, contentType, publicUrl } = presign.data;
+  // R2 presigned PUT — 본문은 File 직접, Content-Type 은 서명값과 일치해야 함
+  const resp = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": contentType },
+    body: file,
+  });
   if (!resp.ok) {
     throw new Error(`이미지 업로드 실패 (HTTP ${resp.status})`);
   }
