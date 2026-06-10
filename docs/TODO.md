@@ -63,6 +63,14 @@
 - [ ] **favicon 자산** — Sow Good BI 기반 favicon 사회공헌국 제공 또는 사내 제작.
 - [ ] **헤더 배경 디자인** — 코드 현재 `bg-white/90` vs Figma 명세 `#B769FF` (brand-bright 보라). D-3 시안 적용 시 Figma 정합 권고.
 
+### Figma 정합 감사 2026-06-10 escalation (디자이너/사회공헌국 — 상세: `docs/design/audit-2026-06-10/report.md` §4)
+
+- [ ] **하트 pill 클릭(채움) 상태 색** — Figma 에 pill Click 변형 미노출, 구형 컴포넌트 #B35FEB 채움 [추론] 적용. 디자이너 확정 필요.
+- [ ] **Featured 미니 로고 vs 카테고리 칩** — Figma SSoT 원칙대로 꽃 로고 복원·칩 제거. 칩(실데이터 카테고리)이 제품 의도였다면 한 줄로 번복 가능.
+- [ ] **공유 버튼 데스크탑 동작 중복** — navigator.share 미지원 데스크탑에서 공유·링크복사가 같은 동작. v1.1 카카오/페북 SDK 전까지 첫 버튼 숨김 검토.
+- [ ] **본문 14px 4곳 (Featured 본문 375/768·Story 설명)** — 접근성 제약(본문 16px)으로 16px 유지. 디자이너와 최종 합의 권장.
+- [ ] **Partners 768 5로고 2행 배치** — Figma 미정의(더미 중복) → 중앙 정렬 채택. 시각 확인 요청.
+
 ## Next Actions
 
 ### 즉시 (이 세션)

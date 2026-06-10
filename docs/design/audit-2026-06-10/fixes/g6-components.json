@@ -1,0 +1,67 @@
+[
+ {
+  "id": "components-crosscut#0",
+  "surface": "components-crosscut",
+  "element": "header.navActivePill",
+  "property": "높이(line-height)",
+  "figma": "Size L 40px (1440·1025) / Size M 33px (768·375)",
+  "measured": "L: 백색영역 44px·nav rect 46px (보더 포함 ~47) / M: 36px·nav rect 38px (~39)",
+  "diffPx": 6,
+  "severity": "P1",
+  "note": "패딩(px20/py10·px16/py8)·폰트(16/14)는 정확하나 Tailwind 기본 line-height(text-base 24px / text-sm 20px)가 Figma 콘텐츠 높이(≈20/17)보다 커서 pill 박스가 4~7px 높음. 스크린샷 픽셀 계측 + nav rect 교차 확인.",
+  "fileHint": "src/client/layouts/PublicHeader.tsx",
+  "reason": "src/client/layouts/PublicHeader.tsx 의 pill 이 text-sm/lg:text-base 에 leading override 없이 Tailwind 기본 line-height(20/24px)를 쓰므로 박스가 Figma 33/40 대비 +4~7px — allowlist '폰트 렌더 ±1~2px' 아티팩트 범위를 초과하는 실제 diff (leading-none 등으로 수정 가능)."
+ },
+ {
+  "id": "components-crosscut#1",
+  "surface": "components-crosscut",
+  "element": "header.nav↔search",
+  "property": "그룹 gap (md 이상)",
+  "figma": "셀 간 수평 gap 24 (1440·1025) / 그룹 gap 20 (768)",
+  "measured": "0 (nav 우측 edge = 검색 버튼 x, 1440: 1278=1278 / 768: 666=666 flush)",
+  "diffPx": 24,
+  "severity": "P1",
+  "note": "375 는 gap 16 으로 Figma 일치. md 이상은 코드 주석 'md↑ flush' 로 의도적 flush(md:gap-0) — 마지막 메뉴 item 의 px 패딩이 시각 gap 을 일부 대체하나 Figma 셀 gap 24/20 대비 메뉴 텍스트가 검색 아이콘에 ~20px 더 붙음. allowlist 미등재 — 단 spec 의 '셀 간 gap 24'가 메뉴↔검색에도 적용되는지 해석 여지 있음 (768 은 그룹 gap 20 명시).",
+  "fileHint": "src/client/layouts/PublicHeader.tsx",
+  "reason": "src/client/layouts/PublicHeader.tsx line 66 `gap-4 md:gap-0` 으로 md↑ flush 를 코드 확인 — specs/components.md 간격 체인이 '로고·메뉴·검색 셀 간 gap 24(1440/1025) / 그룹 20(768)'을 메뉴↔검색 포함으로 명시하고, 코드 주석 'md↑ flush' 는 allowlist.md 21개 항목에 미등재라 의도적 이탈로 인정 불가."
+ },
+ {
+  "id": "components-crosscut#2",
+  "surface": "components-crosscut",
+  "element": "card.heart (목록 카드 배지)",
+  "property": "카운트 폰트·아이콘 크기",
+  "figma": "카운트 SUIT Bold 14 #B35FEB / 하트 아이콘 15×13.33 (IconSet 박스 20)",
+  "measured": "카운트 12px (compact text-xs) / 아이콘 박스 size-3.5=14px → lucide 글리프 실렌더 ≈11.7×10.2",
+  "diffPx": 2,
+  "severity": "P1",
+  "note": "측정 JSON 미포함 — 코드 검증(ArticleCard 가 Heart 에 compact 전달 → text-xs 12px) + 768 스크린샷에서 하트 존재 확인. 폰트 허용오차 0px 라 14→12 는 위반. 아이콘 글리프도 ~3px 작음. 색·Bold 는 정합.",
+  "fileHint": "src/features/news/components/Heart.tsx",
+  "reason": "src/features/news/components/ArticleCard.tsx(line 82) 가 Heart 에 compact 를 전달하고 Heart.tsx(line 93·99) 가 text-xs(12px)·size-3.5(14px 박스→글리프 ≈11.7×10.2)로 렌더함을 코드 교차검증 — Figma 카운트 14px(폰트 허용오차 0)·아이콘 15×13.33 대비 위반이며 allowlist·특이사항 어디에도 미등재."
+ },
+ {
+  "id": "components-crosscut#4",
+  "surface": "components-crosscut",
+  "element": "pagination.arrow",
+  "property": "색 상태 매핑",
+  "figma": "enabled stroke #6B7280 / disabled #BAC2D0 (양방향 동일 규칙)",
+  "measured": "방향별 하드코딩: left svg=#BAC2D0·right svg=#6B7280 + disabled 시 opacity-30 → 측정 상태(1페이지) prev disabled 실표시 ≈ #BAC2D0@30% ≈ #EAEDF1 (스펙보다 훨씬 연함)",
+  "diffPx": 0,
+  "severity": "P1",
+  "note": "색이 상태가 아닌 방향에 박혀 있어 2페이지 이상에서 enabled prev 가 disabled 색(#BAC2D0)으로 노출되고, disabled 는 opacity 중첩으로 스펙색보다 연해짐. 코드+SVG 자산 확인 (실측 JSON 에 화살표 색 미포함).",
+  "fileHint": "src/features/news/components/Pagination.tsx + public/icons/pagination-arrow-left.svg",
+  "reason": "public/icons/pagination-arrow-left.svg(stroke #BAC2D0)·pagination-arrow-right.svg(stroke #6B7280)에 색이 방향별 하드코딩되고 src/features/news/components/Pagination.tsx renderArrow 는 disabled 시 opacity-30 만 적용함을 코드 확인 — specs/components.md §5 'enabled #6B7280 / disabled #BAC2D0' 상태 기반 매핑 위반으로 2페이지 이상에서 enabled prev 가 disabled 색으로 노출되는 실버그."
+ },
+ {
+  "id": "components-crosscut#6",
+  "surface": "components-crosscut",
+  "element": "pagination.container",
+  "property": "셀 연접 gap / 전체 폭",
+  "figma": "gap 0 (연접), 전체 120 (셀 4개 기준)",
+  "measured": "gap 2px, 전체 126 — 전 BP 동일",
+  "diffPx": 2,
+  "severity": "P2",
+  "note": "±2px 경계값 (gap 2 ≤ 허용오차이나 누적으로 전체 폭 +6). 셀 30×32 자체는 정확.",
+  "fileHint": "src/features/news/components/Pagination.tsx",
+  "reason": "src/features/news/components/Pagination.tsx line 115·117 의 gap-0.5(2px) 가 specs/components.md §5 '셀 연접(gap 0)·전체 120' 명시 스펙과 어긋나며, 직접 명세된 측정 항목인 전체 폭이 126 vs 120 = +6px 로 허용오차(±2px)를 초과 — allowlist 미등재."
+ }
+]

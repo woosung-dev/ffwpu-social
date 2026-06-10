@@ -1,0 +1,5 @@
+# 측정 라운드 증거 PNG·DOM 덤프 — 용량(26MB)상 git 제외, 로컬 보존. 수치는 *.json 으로 영속
+measured/*.png
+measured-r2/*.png
+measured/_dom-*.txt
+measured-r2/_dom-*.txt

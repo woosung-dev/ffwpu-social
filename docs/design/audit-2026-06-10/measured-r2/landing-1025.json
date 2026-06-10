@@ -1,0 +1,1077 @@
+{
+  "header": {
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "w": 1025,
+      "h": 88
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgb(183, 105, 255)"
+    }
+  },
+  "headerLogo": {
+    "rect": {
+      "x": 60,
+      "y": 18,
+      "w": 80,
+      "h": 53
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    },
+    "text": ""
+  },
+  "headerNav": {
+    "rect": {
+      "x": 325,
+      "y": 24,
+      "w": 574,
+      "h": 40
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "24px",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    }
+  },
+  "headerSearch": {
+    "rect": {
+      "x": 923,
+      "y": 35,
+      "w": 42,
+      "h": 19
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    }
+  },
+  "headerActivePill": {
+    "rect": {
+      "x": 325,
+      "y": 24,
+      "w": 130,
+      "h": 40
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "800",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "20px",
+      "paddingBottom": "0px",
+      "paddingLeft": "20px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "3.35544e+07px",
+      "borderTopWidth": "1px",
+      "color": "rgb(80, 31, 126)",
+      "backgroundColor": "rgb(255, 255, 255)",
+      "borderWidth": "1px",
+      "borderColor": "rgb(80, 31, 126)"
+    },
+    "text": "임팩트 데이터",
+    "textContent": "임팩트 데이터"
+  },
+  "headerNavSearchGap": 24,
+  "banner": {
+    "notFound": true,
+    "note": "landing has no news SubBanner"
+  },
+  "footer": {
+    "rect": {
+      "x": 0,
+      "y": 3624,
+      "w": 1025,
+      "h": 99
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(240, 225, 255)",
+      "backgroundColor": "rgb(36, 36, 36)"
+    }
+  },
+  "footerLogo": {
+    "rect": {
+      "x": 278,
+      "y": 3654,
+      "w": 59,
+      "h": 39
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(240, 225, 255)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    }
+  },
+  "footerCopy": {
+    "rect": {
+      "x": 378,
+      "y": 3662,
+      "w": 369,
+      "h": 24
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "600",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(240, 225, 255)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    },
+    "text": "COPYRIGHT 2026 © Sow Good All rights reserved"
+  },
+  "heroSection": {
+    "rect": {
+      "x": 0,
+      "y": 88,
+      "w": 1025,
+      "h": 445
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "40px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    }
+  },
+  "heroTitle": {
+    "rect": {
+      "x": 60,
+      "y": 168,
+      "w": 387,
+      "h": 105
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "42px",
+      "fontWeight": "500",
+      "lineHeight": "52.5px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(58, 15, 98)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    },
+    "text": "가치를 삶으로,\n변화를 꽃피우는 동행"
+  },
+  "heroCta": {
+    "rect": {
+      "x": 60,
+      "y": 293,
+      "w": 231,
+      "h": 49
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "12px",
+      "paddingRight": "26px",
+      "paddingBottom": "12px",
+      "paddingLeft": "26px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "10px",
+      "borderRadius": "3.35544e+07px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgb(60, 18, 100)"
+    }
+  },
+  "heroFlower": {
+    "rect": {
+      "x": 565,
+      "y": 168,
+      "w": 400,
+      "h": 365
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    },
+    "text": ""
+  },
+  "heroEllipse": {
+    "rect": {
+      "x": -723,
+      "y": -752,
+      "w": 2471,
+      "h": 1239
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "50%",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgb(183, 105, 255)"
+    },
+    "text": ""
+  },
+  "kpiSection": {
+    "rect": {
+      "x": 0,
+      "y": 533,
+      "w": 1025,
+      "h": 1057
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "90px",
+      "paddingRight": "0px",
+      "paddingBottom": "90px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgb(255, 255, 255)"
+    }
+  },
+  "kpiHeading": {
+    "rect": {
+      "x": 60,
+      "y": 623,
+      "w": 905,
+      "h": 77
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "6px",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(36, 36, 36)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    }
+  },
+  "kpiBento": {
+    "rect": {
+      "x": 60,
+      "y": 740,
+      "w": 905,
+      "h": 760
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "16px",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    }
+  },
+  "kpiCard1": {
+    "fidKey": "card-smile",
+    "rect": {
+      "x": 60,
+      "y": 740,
+      "w": 293,
+      "h": 226
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "20px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgb(183, 105, 255)"
+    }
+  },
+  "kpiCard2": {
+    "fidKey": "card-volunteer-count",
+    "rect": {
+      "x": 369,
+      "y": 740,
+      "w": 596,
+      "h": 226
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "20px",
+      "paddingRight": "24px",
+      "paddingBottom": "20px",
+      "paddingLeft": "24px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "24px",
+      "borderRadius": "20px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgb(246, 246, 246)"
+    }
+  },
+  "kpiCard3": {
+    "fidKey": "card-volunteer-period",
+    "rect": {
+      "x": 60,
+      "y": 982,
+      "w": 296,
+      "h": 225
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "20px",
+      "paddingRight": "30px",
+      "paddingBottom": "20px",
+      "paddingLeft": "30px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "20px",
+      "borderTopWidth": "0px",
+      "color": "rgb(52, 52, 52)",
+      "backgroundColor": "rgb(246, 246, 246)"
+    }
+  },
+  "kpiCard4": {
+    "fidKey": "card-sowgood",
+    "rect": {
+      "x": 372,
+      "y": 982,
+      "w": 296,
+      "h": 225
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "20px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgb(255, 207, 65)"
+    }
+  },
+  "kpiCard5": {
+    "fidKey": "card-event-count",
+    "rect": {
+      "x": 60,
+      "y": 1223,
+      "w": 607,
+      "h": 277
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "20px",
+      "paddingRight": "24px",
+      "paddingBottom": "20px",
+      "paddingLeft": "24px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "31px",
+      "borderRadius": "20px",
+      "borderTopWidth": "0px",
+      "color": "rgb(59, 71, 0)",
+      "backgroundColor": "rgb(220, 239, 125)"
+    }
+  },
+  "kpiCard6": {
+    "fidKey": "card-helped-household",
+    "rect": {
+      "x": 683,
+      "y": 982,
+      "w": 282,
+      "h": 518
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "16px",
+      "borderRadius": "20px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgb(183, 105, 255)"
+    }
+  },
+  "kpiCard3Overflow": {
+    "cardScrollOverflow": false,
+    "cardScrollWidth": 296,
+    "cardClientWidth": 296,
+    "overflowingChildren": [],
+    "hasOverflow": false
+  },
+  "storySection": {
+    "rect": {
+      "x": 0,
+      "y": 1590,
+      "w": 1025,
+      "h": 487
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "73px",
+      "paddingRight": "0px",
+      "paddingBottom": "73px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgb(250, 244, 255)"
+    }
+  },
+  "storyCard1": {
+    "rect": {
+      "x": 60,
+      "y": 1667,
+      "w": 347,
+      "h": 333
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    }
+  },
+  "storyCard2": {
+    "rect": {
+      "x": 419,
+      "y": 1667,
+      "w": 186,
+      "h": 333
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    }
+  },
+  "storyHeading": {
+    "rect": {
+      "x": 643,
+      "y": 1721,
+      "w": 322,
+      "h": 83
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "32px",
+      "fontWeight": "700",
+      "lineHeight": "41.6px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "18px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(36, 36, 36)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    },
+    "text": "밥이 사랑입니다\n나누는 우리는 식구입니다"
+  },
+  "storyResultStats": {
+    "rect": {
+      "x": 715,
+      "y": 1947,
+      "w": 250,
+      "h": 57
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "16px",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(36, 36, 36)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    }
+  },
+  "articleGridSection": {
+    "rect": {
+      "x": 0,
+      "y": 2077,
+      "w": 1025,
+      "h": 1037
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "96px",
+      "paddingRight": "0px",
+      "paddingBottom": "96px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgb(255, 255, 255)"
+    }
+  },
+  "articleGridDarkBlock": {
+    "rect": {
+      "x": 60,
+      "y": 2173,
+      "w": 905,
+      "h": 172
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "30px",
+      "paddingRight": "26px",
+      "paddingBottom": "30px",
+      "paddingLeft": "26px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "24px",
+      "borderRadius": "14px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgb(36, 36, 36)"
+    }
+  },
+  "articleGridCards": [
+    {
+      "rect": {
+        "x": 60,
+        "y": 2361,
+        "w": 291,
+        "h": 388
+      },
+      "visible": true,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "paddingTop": "0px",
+        "paddingRight": "0px",
+        "paddingBottom": "0px",
+        "paddingLeft": "0px",
+        "marginTop": "0px",
+        "marginBottom": "0px",
+        "gap": "normal",
+        "borderRadius": "12px",
+        "borderTopWidth": "0px",
+        "color": "rgb(62, 64, 78)",
+        "backgroundColor": "rgb(60, 18, 100)"
+      },
+      "overlayText": "쌀 나눔지역 어르신 가정에 쌀 50포대 전달, 따뜻한 봄 인사"
+    },
+    {
+      "rect": {
+        "x": 60,
+        "y": 2769,
+        "w": 291,
+        "h": 249
+      },
+      "visible": true,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "paddingTop": "0px",
+        "paddingRight": "0px",
+        "paddingBottom": "0px",
+        "paddingLeft": "0px",
+        "marginTop": "0px",
+        "marginBottom": "0px",
+        "gap": "normal",
+        "borderRadius": "12px",
+        "borderTopWidth": "0px",
+        "color": "rgb(62, 64, 78)",
+        "backgroundColor": "rgb(60, 18, 100)"
+      },
+      "overlayText": "쌀 나눔감사의 마음을 담은 쌀 10kg, 이웃 식탁에 오르다"
+    },
+    {
+      "rect": {
+        "x": 367,
+        "y": 2361,
+        "w": 291,
+        "h": 158
+      },
+      "visible": true,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "paddingTop": "0px",
+        "paddingRight": "0px",
+        "paddingBottom": "0px",
+        "paddingLeft": "0px",
+        "marginTop": "0px",
+        "marginBottom": "0px",
+        "gap": "normal",
+        "borderRadius": "12px",
+        "borderTopWidth": "0px",
+        "color": "rgb(62, 64, 78)",
+        "backgroundColor": "rgb(60, 18, 100)"
+      },
+      "overlayText": "쌀 나눔[QA검증] 1월 무료급식 봉사 현장 (수정됨)"
+    },
+    {
+      "rect": {
+        "x": 367,
+        "y": 2539,
+        "w": 291,
+        "h": 434
+      },
+      "visible": true,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "paddingTop": "0px",
+        "paddingRight": "0px",
+        "paddingBottom": "0px",
+        "paddingLeft": "0px",
+        "marginTop": "0px",
+        "marginBottom": "0px",
+        "gap": "normal",
+        "borderRadius": "12px",
+        "borderTopWidth": "0px",
+        "color": "rgb(62, 64, 78)",
+        "backgroundColor": "rgb(60, 18, 100)"
+      },
+      "overlayText": "쌀 나눔설맞이 쌀 나눔 — 200가정에 온기를 전하다"
+    },
+    {
+      "rect": {
+        "x": 674,
+        "y": 2361,
+        "w": 291,
+        "h": 158
+      },
+      "visible": true,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "paddingTop": "0px",
+        "paddingRight": "0px",
+        "paddingBottom": "0px",
+        "paddingLeft": "0px",
+        "marginTop": "0px",
+        "marginBottom": "0px",
+        "gap": "normal",
+        "borderRadius": "12px",
+        "borderTopWidth": "0px",
+        "color": "rgb(62, 64, 78)",
+        "backgroundColor": "rgb(60, 18, 100)"
+      },
+      "overlayText": "쌀 나눔겨울아이 성북구 음식나눔 — 따뜻한 한 끼로 전한 평화의 마음"
+    },
+    {
+      "rect": {
+        "x": 674,
+        "y": 2539,
+        "w": 291,
+        "h": 339
+      },
+      "visible": true,
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "paddingTop": "0px",
+        "paddingRight": "0px",
+        "paddingBottom": "0px",
+        "paddingLeft": "0px",
+        "marginTop": "0px",
+        "marginBottom": "0px",
+        "gap": "normal",
+        "borderRadius": "12px",
+        "borderTopWidth": "0px",
+        "color": "rgb(62, 64, 78)",
+        "backgroundColor": "rgb(60, 18, 100)"
+      },
+      "overlayText": "쌀 나눔삼태기마을에도 고소한 밥 내음이 퍼졌습니다"
+    }
+  ],
+  "partnersSection": {
+    "rect": {
+      "x": 0,
+      "y": 3114,
+      "w": 1025,
+      "h": 510
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "76px",
+      "paddingRight": "0px",
+      "paddingBottom": "76px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    }
+  },
+  "partnersIcon": {
+    "rect": {
+      "x": 467,
+      "y": 3190,
+      "w": 92,
+      "h": 92
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "20px",
+      "borderTopWidth": "2px",
+      "color": "rgb(36, 36, 36)",
+      "backgroundColor": "rgb(219, 180, 255)"
+    }
+  },
+  "partnersLogos": {
+    "rect": {
+      "x": 60,
+      "y": 3448,
+      "w": 905,
+      "h": 100
+    },
+    "visible": true,
+    "style": {
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "70px",
+      "marginBottom": "0px",
+      "gap": "normal",
+      "borderRadius": "0px",
+      "borderTopWidth": "0px",
+      "color": "rgb(62, 64, 78)",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    }
+  },
+  "partnersLogoItems": [
+    {
+      "cell": {
+        "x": 60,
+        "y": 3448,
+        "w": 169,
+        "h": 100
+      },
+      "img": {
+        "x": 60,
+        "y": 3486,
+        "w": 169,
+        "h": 25
+      },
+      "opacity": "1"
+    },
+    {
+      "cell": {
+        "x": 283,
+        "y": 3448,
+        "w": 171,
+        "h": 100
+      },
+      "img": {
+        "x": 283,
+        "y": 3477,
+        "w": 171,
+        "h": 43
+      },
+      "opacity": "1"
+    },
+    {
+      "cell": {
+        "x": 509,
+        "y": 3448,
+        "w": 133,
+        "h": 100
+      },
+      "img": {
+        "x": 509,
+        "y": 3483,
+        "w": 133,
+        "h": 31
+      },
+      "opacity": "1"
+    },
+    {
+      "cell": {
+        "x": 696,
+        "y": 3448,
+        "w": 69,
+        "h": 100
+      },
+      "img": {
+        "x": 696,
+        "y": 3485,
+        "w": 69,
+        "h": 26
+      },
+      "opacity": "1"
+    },
+    {
+      "cell": {
+        "x": 819,
+        "y": 3448,
+        "w": 146,
+        "h": 100
+      },
+      "img": {
+        "x": 819,
+        "y": 3477,
+        "w": 146,
+        "h": 42
+      },
+      "opacity": "1"
+    }
+  ],
+  "meta": {
+    "viewport": {
+      "w": 1025,
+      "h": 800
+    },
+    "hasHorizontalOverflow": false,
+    "gridColumnCount": 3,
+    "articleGridColGap": 16,
+    "articleGridRowGap": 20,
+    "visibleArticleCards": 6,
+    "pageHeight": 3723
+  }
+}

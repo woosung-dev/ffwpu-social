@@ -1,0 +1,133 @@
+{
+  "boundaryBp": true,
+  "cardRects": [
+    {
+      "x": 16,
+      "y": 892,
+      "w": 295,
+      "h": 307
+    },
+    {
+      "x": 329,
+      "y": 892,
+      "w": 295,
+      "h": 307
+    },
+    {
+      "x": 16,
+      "y": 1247,
+      "w": 295,
+      "h": 307
+    },
+    {
+      "x": 329,
+      "y": 1247,
+      "w": 295,
+      "h": 307
+    },
+    {
+      "x": 16,
+      "y": 1602,
+      "w": 295,
+      "h": 307
+    },
+    {
+      "x": 329,
+      "y": 1602,
+      "w": 295,
+      "h": 307
+    },
+    {
+      "x": 16,
+      "y": 1957,
+      "w": 295,
+      "h": 307
+    },
+    {
+      "x": 329,
+      "y": 1957,
+      "w": 295,
+      "h": 307
+    },
+    {
+      "x": 16,
+      "y": 2312,
+      "w": 295,
+      "h": 282
+    }
+  ],
+  "gridColumnCount": 2,
+  "cardColGap": 18,
+  "cardRowGap": 48,
+  "cardGridRect": {
+    "x": 16,
+    "y": 892,
+    "w": 608,
+    "h": 1702
+  },
+  "featuredLayout": "image-left-text-right",
+  "featuredImageRect": {
+    "x": 16,
+    "y": 332,
+    "w": 289,
+    "h": 205
+  },
+  "featuredMiniLogoRect": {
+    "x": 335,
+    "y": 267,
+    "w": 75,
+    "h": 50
+  },
+  "tabsScrollable": false,
+  "tabsTrackWidth": 608,
+  "tabsVisibleWidth": 608,
+  "tabRects": [
+    {
+      "x": 16,
+      "y": 753,
+      "w": 78,
+      "h": 46
+    },
+    {
+      "x": 94,
+      "y": 753,
+      "w": 111,
+      "h": 46
+    },
+    {
+      "x": 205,
+      "y": 753,
+      "w": 111,
+      "h": 46
+    },
+    {
+      "x": 316,
+      "y": 753,
+      "w": 126,
+      "h": 46
+    },
+    {
+      "x": 443,
+      "y": 753,
+      "w": 96,
+      "h": 46
+    }
+  ],
+  "headerHeight": 54,
+  "bannerRect": {
+    "x": 0,
+    "y": 54,
+    "w": 640,
+    "h": 173
+  },
+  "meta": {
+    "viewport": {
+      "w": 640,
+      "h": 900
+    },
+    "hasHorizontalOverflow": false,
+    "gridColumnCount": 2,
+    "totalCards": 9,
+    "pageHeight": 2876
+  }
+}
