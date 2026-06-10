@@ -43,21 +43,22 @@ export function ShareRow({ title, newsId }: { title: string; newsId: string }) {
 
   return (
     <div className="flex items-center gap-2">
+      {/* Figma 749:8256: 원형 40 + 아이콘 24 #4B5563 — 1회 사용이라 토큰 신설 대신 Tailwind 표준 gray-600(#4B5563) */}
       <button
         type="button"
         onClick={share}
         aria-label="공유하기"
-        className="flex size-10 items-center justify-center rounded-full bg-surface-cool text-ink-strong-mid transition-opacity hover:opacity-80"
+        className="flex size-10 items-center justify-center rounded-full bg-surface-cool text-gray-600 transition-opacity hover:opacity-80"
       >
-        <Share2 className="size-5" aria-hidden />
+        <Share2 className="size-6" aria-hidden />
       </button>
       <button
         type="button"
         onClick={() => void copyLink()}
         aria-label="링크 복사"
-        className="flex size-10 items-center justify-center rounded-full bg-surface-cool text-ink-strong-mid transition-opacity hover:opacity-80"
+        className="flex size-10 items-center justify-center rounded-full bg-surface-cool text-gray-600 transition-opacity hover:opacity-80"
       >
-        <Link2 className="size-5" aria-hidden />
+        <Link2 className="size-6" aria-hidden />
       </button>
       {copied && (
         <span className="text-sm text-ink-subtle" role="status">

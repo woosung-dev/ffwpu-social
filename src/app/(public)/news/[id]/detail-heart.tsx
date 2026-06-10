@@ -40,10 +40,10 @@ export function DetailHeart({
     return r.data; // { liked, count } — Heart 가 서버 권위 상태로 보정
   };
 
-  // 세션 상태 로딩 전엔 표시 전용(카운트), 로딩 후 인터랙티브로 전환.
+  // 세션 상태 로딩 전엔 표시 전용(카운트), 로딩 후 인터랙티브로 전환. 상세 하단은 pill 형태(Figma 749:8220).
   // key 를 달리해 로딩→완료 시 Heart 를 remount — useState(initialActive) 가 갱신된 좋아요 상태를 반영하도록
   if (initialLiked === null) {
-    return <Heart key="loading" count={count} interactive={false} />;
+    return <Heart key="loading" count={count} interactive={false} pill />;
   }
   return (
     <Heart
@@ -51,6 +51,7 @@ export function DetailHeart({
       count={count}
       initialActive={initialLiked}
       onToggleAction={handleToggle}
+      pill
     />
   );
 }

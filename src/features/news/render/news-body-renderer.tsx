@@ -21,7 +21,10 @@ export function NewsBodyRenderer({ body }: Props) {
     return <p className="text-sm text-ink-subtle">본문이 없습니다.</p>;
   }
   return (
-    <article className="prose prose-neutral max-w-none">
+    // 본문 타이포 — Figma 749:8077: lg 단락 20px/lh1.5 (base 16 모바일 유지 [추론 — 모바일 프레임 없음]).
+    // 단락 간격 24 는 prose em 마진(1.25em×20=25px)으로 ±2px 내 충족 — 별도 마진 override 시 first-child 0 마진이 깨져 미적용.
+    // 리드 단락 Bold 는 콘텐츠(에디터) 스타일이므로 렌더러에서 강제하지 않음.
+    <article className="prose prose-neutral max-w-none lg:[&_p]:text-xl lg:[&_p]:leading-[1.5]">
       {safe.content.map((node, i) => renderNode(node, i))}
     </article>
   );
