@@ -114,6 +114,15 @@ export async function getPublicNewsById(id: string) {
   return { ...row, tags: tags.map((t) => t.tag) };
 }
 
+// sitemap 용 — 발행글 전체 id + 최종수정일. 경량 select(본문·태그 제외)
+export async function listPublishedForSitemap() {
+  return db
+    .select({ id: news.id, updatedAt: news.updatedAt })
+    .from(news)
+    .where(isNotNull(news.publishedAt))
+    .orderBy(desc(news.publishedAt));
+}
+
 // ─── 어드민 — 모든 글 (draft + published, codex P1#7 분리) ───────────────
 
 type AdminListOpts = {

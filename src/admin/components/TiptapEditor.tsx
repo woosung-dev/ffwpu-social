@@ -42,7 +42,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { uploadImageAction } from "@/features/news/actions";
-import { buildPresignedPostBody } from "@/features/storage/presigned-upload";
 import {
   ALLOWED_COLORS,
   ALLOWED_FONT_SIZES,
@@ -63,6 +62,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -80,7 +80,7 @@ type Props = {
   disabled?: boolean;
 };
 
-// 본문 이미지 업로드 — uploadImageAction → presigned POST → publicUrl + 실제 치수
+// 본문 이미지 업로드 — uploadImageAction → presigned PUT → publicUrl + 실제 치수
 async function uploadBodyImage(
   file: File,
   scope: TiptapScope,
@@ -100,9 +100,13 @@ async function uploadBodyImage(
         : "이미지 업로드 URL 발급 실패";
     throw new Error(msg);
   }
-  const { uploadUrl, fields, publicUrl } = presign.data;
-  const fd = buildPresignedPostBody(fields, file);
-  const resp = await fetch(uploadUrl, { method: "POST", body: fd });
+  const { uploadUrl, contentType, publicUrl } = presign.data;
+  // R2 presigned PUT — 본문은 File 직접, Content-Type 은 서명값과 일치해야 함
+  const resp = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": contentType },
+    body: file,
+  });
   if (!resp.ok) {
     throw new Error(`이미지 업로드 실패 (HTTP ${resp.status})`);
   }
@@ -282,6 +286,13 @@ function Toolbar({
       : editor.isActive("heading", { level: 3 })
         ? "제목 3"
         : "본문";
+  // 현재 글자 크기 라벨 — 아이콘만으론 발견이 어려워(제목 드롭다운과 혼동) 트리거에 텍스트 노출
+  const currentFontSize = editor.getAttributes("textStyle").fontSize as
+    | string
+    | undefined;
+  const fontSizeLabel = currentFontSize
+    ? (FONT_SIZE_LABELS[currentFontSize] ?? currentFontSize)
+    : "글자 크기";
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-surface-cool px-2 py-1.5">
@@ -340,9 +351,10 @@ function Toolbar({
             type="button"
             disabled={disabled}
             aria-label="글자 크기"
-            className="flex items-center gap-1 rounded p-1.5 text-ink-subtle hover:bg-muted disabled:opacity-50"
+            className="flex items-center gap-1 rounded px-2 py-1.5 text-xs font-medium text-ink-subtle hover:bg-muted disabled:opacity-50"
           >
-            <Type className="h-4 w-4" />
+            <Type className="h-3.5 w-3.5" />
+            {fontSizeLabel}
             <ChevronDown className="h-3 w-3" />
           </button>
         </DropdownMenuTrigger>
@@ -704,6 +716,9 @@ function LinkDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>링크 삽입</DialogTitle>
+          <DialogDescription>
+            선택한 텍스트에 연결할 링크 주소를 입력합니다.
+          </DialogDescription>
         </DialogHeader>
         <Input
           autoFocus
@@ -749,6 +764,9 @@ function TableDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>표 삽입</DialogTitle>
+          <DialogDescription>
+            삽입할 표의 행·열 수를 지정합니다.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-1.5 text-sm">
@@ -818,6 +836,9 @@ function YoutubeDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>YouTube 삽입</DialogTitle>
+          <DialogDescription>
+            본문에 넣을 YouTube 영상 주소를 입력합니다.
+          </DialogDescription>
         </DialogHeader>
         <Input
           autoFocus
