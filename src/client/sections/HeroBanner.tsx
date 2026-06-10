@@ -2,9 +2,20 @@
 // 곡선 = 실제 타원(Ellipse 444, #B769FF, ~2:1)을 섹션 박스에 클립해 convex 하단 곡선 재현. 곡선 아래 코너는 page bg(흰색) 노출.
 // 꽃은 콘텐츠(z-10)에 두어 타원 클립 밖에서 줄기가 곡선 아래 흰 영역으로 자연 overhang(클리핑 금지).
 // 모든 크기/폰트/간격은 base/md(768)/lg(1024)/wide(1440) 구간별 고정 — clamp(vw) 연속 스케일 제거(v1 회귀 차단).
+import localFont from "next/font/local";
 import Link from "next/link";
 
 import { SectionContainer } from "@/client/components/layout";
+
+// Gmarket Sans Medium — Hero 헤드라인 전용(SIL OFL, corp.gmarket.com).
+// 루트 레이아웃이 아닌 여기서 로드 — preload(woff2 512KB)가 랜딩 라우트에만 주입되도록 (어드민·/news 무관).
+const gmarketSans = localFont({
+  src: "../../../public/fonts/GmarketSans-Medium.woff2",
+  weight: "500",
+  variable: "--font-gmarket",
+  display: "swap",
+  fallback: ["system-ui", "-apple-system", "Apple SD Gothic Neo", "sans-serif"],
+});
 
 export function HeroBanner() {
   return (
@@ -33,13 +44,8 @@ export function HeroBanner() {
         >
           <h1
             data-fid="hero-headline"
-            // 24/32/42/60 구간별 고정(clamp 제거). Gmarket Sans Medium(--font-gmarket, next/font/local), SUIT fallback.
-            className="text-2xl leading-[1.25] whitespace-pre-line text-brand-deep md:text-[32px] lg:text-[42px] wide:text-[60px]"
-            style={{
-              fontFamily:
-                "var(--font-gmarket), var(--font-suit), system-ui, sans-serif",
-              fontWeight: 500,
-            }}
+            // 24/32/42/60 구간별 고정(clamp 제거). 폰트 스택 = globals.css --font-display 토큰(Gmarket→SUIT 폴백)
+            className={`${gmarketSans.variable} font-display text-2xl leading-[1.25] font-medium whitespace-pre-line text-brand-deep md:text-[32px] lg:text-[42px] wide:text-[60px]`}
           >
             {"가치를 삶으로,\n변화를 꽃피우는 동행"}
           </h1>

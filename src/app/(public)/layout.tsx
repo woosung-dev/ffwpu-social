@@ -4,6 +4,7 @@
 import { Suspense } from "react";
 
 import { PublicFooter, PublicHeader } from "@/client/layouts";
+import { HEADER_BAR_HEIGHT_CLASS } from "@/client/layouts/header-height";
 import { QueryProvider } from "@/client/providers/QueryProvider";
 
 export default function PublicLayout({
@@ -15,7 +16,12 @@ export default function PublicLayout({
     <QueryProvider>
       <div className="flex min-h-screen flex-col">
         <Suspense
-          fallback={<div className="sticky top-0 z-40 h-16 bg-brand-bright lg:h-20" />}
+          // fallback 높이 = 실제 헤더 바 높이(header-height.ts SSoT) — 불일치 시 스트리밍 도착 때 콘텐츠 점프
+          fallback={
+            <div
+              className={`sticky top-0 z-40 bg-brand-bright ${HEADER_BAR_HEIGHT_CLASS}`}
+            />
+          }
         >
           <PublicHeader />
         </Suspense>

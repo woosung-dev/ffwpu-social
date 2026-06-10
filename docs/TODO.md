@@ -129,6 +129,12 @@
 - [ ] `NewsTable.tsx` 페이지네이션 윈도잉 — 현재 `Array.from({length: totalPages})` 전체 렌더. 글이 30+ 페이지가 되면 모바일 가로 오버플로. 현재 9건(1페이지)이라 미발현. first/prev/…/next/last 윈도잉으로 교체. (latent, 데이터 증가 시)
 - [ ] 랜딩 반응형 2차 후속 정리 — `public/icons/hero-banner-background.svg` 미참조 에셋 제거(Hero 곡선 제거로 고아). `globals.css` `--color-surface-tint-soft` 주석 "Hero·Partners" → "Partners" 로 정정(Hero 미사용). 저우선.
 
+### Figma 정합 스윕 후속 (2026-06-10 하드코딩 정리에서 파생)
+
+- [ ] Partners 섹션 py wide(48) < lg(76) 역전 — Figma 1440 프레임 재확인 [확인 필요]. 높이 역산값이라 콘텐츠 내부 오프셋이 패딩에 흡수됐을 가능성 — KPI 처럼 오토레이아웃 패딩 직접 측정으로 검증.
+- [ ] `GmarketSans-Medium.woff2` 서브셋 — 현재 512KB 풀 글리프(한글 11,172자 전체). SUIT 동일 정책(KS 급 ~2,900자) 서브셋 시 ~261KB(−49%). 헤드라인 글리프 한정이면 ~5KB — 단 카피 변경 시 재생성 필요(트레이드오프 결정 필요).
+- [ ] `FeaturedStoryCard` min-h(423/556) 콘텐츠 폭주 가드 — 제목·설명이 운영자 자유 입력이라 길어지면 airy 간격(`mt-auto`) 붕괴. 제목 `line-clamp-2`·설명 `line-clamp-3` 검토 (운영 자율성 제약: 어떤 길이를 넣어도 디자인 유지).
+
 ### v1.1+ 백로그
 
 - [ ] **랜딩 스크롤 fade-in 인터랙션** — Figma 리뷰어 코멘트 요청 (KPI 영역 "지구랩 인터랙션 참고 https://earthrap.imweb.me/", Story 영역 "스크롤 위치에 따라 하단→위로 페이드인 되며 올라오는 인터렉션이 전체적으로 적용되면 좋을 것 같습니다 https://www.netive.co.kr/"). 정적 시안과 별개의 인터랙션 요청이며 현재 애니메이션 라이브러리·코드 전무. 구현 시 IntersectionObserver(기존 `src/client/hooks/useScrollSpy.ts` 패턴 재사용) 또는 CSS `animation-timeline: view()` 로 `translateY(16px)→0` + `opacity 0→1`, `prefers-reduced-motion` 가드 필수·진입 blocking 금지 (anti-slop 모션). 🔴 **사회공헌국 우선순위 확정 필요** — 2026-06-07 KPI·Story Figma 정합 검증에서 제외 결정(정적 정합 우선).

@@ -51,7 +51,8 @@ export function PartnersSection() {
   return (
     <section
       id="partners"
-      className="w-full bg-gradient-to-b from-white to-surface-tint-soft py-[75px] md:py-[44px] lg:py-[76px] wide:py-[49px]"
+      // 세로 패딩 — Figma 높이 역산 75/44/76/49 의 4px 스냅(76/44/76/48). wide<lg 역전은 Figma 원본 수치 — 재확인 docs/TODO.md
+      className="w-full bg-gradient-to-b from-white to-surface-tint-soft py-19 md:py-11 lg:py-19 wide:py-12"
     >
       <SectionContainer>
         {/* 상단 — 보라 아이콘 + Sow Good 로고 + 카피 */}

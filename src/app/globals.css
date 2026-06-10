@@ -137,6 +137,12 @@
   --font-sans:
     var(--font-suit), system-ui, -apple-system, BlinkMacSystemFont,
     "Apple SD Gothic Neo", sans-serif;
+
+  /* Hero 헤드라인 디스플레이 폰트 — HeroBanner(next/font)가 주입한 --font-gmarket 을 감쌈.
+     토큰명을 --font-gmarket 으로 두면 주입 변수와 자기참조 충돌 — 별칭(--font-display) 유지 */
+  --font-display:
+    var(--font-gmarket), var(--font-suit), system-ui, "Apple SD Gothic Neo",
+    sans-serif;
 }
 
 @layer base {
