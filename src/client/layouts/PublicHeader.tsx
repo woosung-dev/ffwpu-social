@@ -6,8 +6,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { SectionContainer } from "@/client/components/layout";
 import { useScrollSpy } from "@/client/hooks/useScrollSpy";
 import { cn } from "@/lib/utils";
+
+import { HEADER_BAR_HEIGHT_CLASS } from "./header-height";
+
+// "현재 위치" pill 공통 디자인 — 데스크탑 active 항목과 모바일 단독 pill 동일
+const ACTIVE_PILL_CLASS =
+  "border-[1.6px] border-brand-primary bg-white font-extrabold text-brand-primary";
 
 type MenuItem = {
   id: string;
@@ -48,8 +55,10 @@ export function PublicHeader() {
 
   return (
     <header className="sticky top-0 z-40 bg-brand-bright">
-      {/* 바 — Figma 헤더 컴포넌트(97:9431) 4BP 정합: height 54/70/88/88, 콘텐츠 그리드=SectionContainer(343/648/905/1200) */}
-      <div className="mx-auto flex h-[54px] w-full items-center justify-between px-4 md:h-[70px] md:max-w-[648px] md:px-0 lg:h-[88px] lg:max-w-[905px] wide:max-w-[1200px]">
+      {/* 바 — 높이는 header-height.ts SSoT, 밴드 폭(343/648/905/1200)은 SectionContainer 재사용 */}
+      <SectionContainer
+        className={cn("flex items-center justify-between", HEADER_BAR_HEIGHT_CLASS)}
+      >
         <Link href="/" aria-label="Sow Good 홈으로" className="block shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset, next/image SVG dangerouslyAllowSVG 회피 */}
           <img
@@ -57,46 +66,44 @@ export function PublicHeader() {
             alt="Sow Good"
             width={80}
             height={53}
-            // Figma 로고 63×42(base·md) / 80×53.3(lg·wide). w-auto 로 비율 유지
-            className="h-[42px] w-auto lg:h-[53px]"
+            // Figma 로고 높이 42(base·md)/53.3(lg·wide) 의 4px 스냅. w-auto 로 비율 유지
+            className="h-10 w-auto lg:h-13"
           />
         </Link>
 
-        {/* 우측 클러스터 — 데스크탑 4항목 인디케이터(md↑) | 모바일 active pill(<768). BP 상호배타 */}
-        <div className="flex items-center">
-          {/* 데스크탑(md↑, 768~): 4항목 위치 인디케이터 — 클릭 불가, active 자동 강조. gap 4(md)/24(lg), item px 16/20·py 8/10, 14/16px */}
-          <nav
-            aria-label="현재 보고 있는 영역"
-            className="hidden items-center gap-1 md:flex lg:gap-6"
-          >
-            {MENU.map((m) => {
-              const isActive = m.id === activeMenuId;
-              return (
-                <span
-                  key={m.id}
-                  aria-current={isActive ? "true" : undefined}
-                  className={cn(
-                    "rounded-full px-4 py-2 text-sm transition-colors select-none lg:px-5 lg:py-2.5 lg:text-base",
-                    isActive
-                      ? "border-[1.6px] border-brand-primary bg-white font-extrabold text-brand-primary"
-                      : "font-bold text-white",
-                  )}
-                >
-                  {m.label}
-                </span>
-              );
-            })}
-          </nav>
+        {/* 데스크탑(md↑, 768~): 4항목 위치 인디케이터 — 클릭 불가, active 자동 강조. 모바일 pill 과 BP 상호배타 */}
+        <nav
+          aria-label="현재 보고 있는 영역"
+          className="hidden items-center gap-1 md:flex lg:gap-6"
+        >
+          {MENU.map((m) => {
+            const isActive = m.id === activeMenuId;
+            return (
+              <span
+                key={m.id}
+                aria-current={isActive ? "true" : undefined}
+                className={cn(
+                  "rounded-full px-4 py-2 text-sm transition-colors select-none lg:px-5 lg:py-2.5 lg:text-base",
+                  isActive ? ACTIVE_PILL_CLASS : "font-bold text-white",
+                )}
+              >
+                {m.label}
+              </span>
+            );
+          })}
+        </nav>
 
-          {/* 모바일(<768): 현재 active 항목 pill 1개만 — 드롭다운·클릭 없음. px16 py8 14px(Figma 375) */}
-          <div
-            aria-label={`현재 위치 ${activeItem.label}`}
-            className="flex items-center rounded-full border-[1.6px] border-brand-primary bg-white px-4 py-2 text-sm font-extrabold text-brand-primary select-none md:hidden"
-          >
-            {activeItem.label}
-          </div>
+        {/* 모바일(<768): 현재 active 항목 pill 1개만 — 드롭다운·클릭 없음 */}
+        <div
+          aria-label={`현재 위치 ${activeItem.label}`}
+          className={cn(
+            "rounded-full px-4 py-2 text-sm select-none md:hidden",
+            ACTIVE_PILL_CLASS,
+          )}
+        >
+          {activeItem.label}
         </div>
-      </div>
+      </SectionContainer>
     </header>
   );
 }

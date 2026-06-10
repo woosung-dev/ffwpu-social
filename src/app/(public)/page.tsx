@@ -7,8 +7,10 @@ import {
   ArticleGridSection,
   HeroBanner,
   KpiSection,
+  KPI_SECTION_SHELL,
   PartnersSection,
   StorySection,
+  STORY_SECTION_SHELL,
   type StorySlotItem,
 } from "@/client/sections";
 import { SectionContainer } from "@/client/components/layout";
@@ -88,8 +90,9 @@ async function StorySectionWithData() {
 }
 
 function KpiLoading() {
+  // 셸 클래스 = 실섹션과 공유 — 패딩 불일치 시 스트리밍 도착 때 레이아웃 점프
   return (
-    <section className="w-full bg-white py-16 lg:py-24" aria-busy>
+    <section className={KPI_SECTION_SHELL} aria-busy>
       <SectionContainer>
         <div className="h-[400px] w-full animate-pulse rounded-2xl bg-surface-soft" />
       </SectionContainer>
@@ -99,7 +102,7 @@ function KpiLoading() {
 
 function StoryLoading() {
   return (
-    <section className="w-full bg-surface-tint-faint py-16 lg:py-24" aria-busy>
+    <section className={STORY_SECTION_SHELL} aria-busy>
       <SectionContainer>
         <div className="h-[420px] w-full animate-pulse rounded-2xl bg-white/60" />
       </SectionContainer>

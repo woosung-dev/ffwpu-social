@@ -79,15 +79,17 @@ function StoryImage({
   );
 }
 
+// 섹션 셸(배경+세로 패딩) — Figma 측정 79/73 의 4px 그리드 스냅(80/72, ±2px 스윕 허용오차 내).
+// page.tsx Suspense 스켈레톤과 동기 유지를 위해 export 공유.
+export const STORY_SECTION_SHELL =
+  "w-full bg-surface-tint-faint py-20 lg:py-18";
+
 export function StorySection({ stats, slots }: Props) {
   // hide-when-empty — value 0/null 항목 제외. 전부 숨으면 통계 블록 자체 비노출
   const visibleStats = stats.filter((s) => s.value != null && s.value > 0);
   return (
-    <section
-      id="story"
-      className="w-full overflow-x-clip bg-surface-tint-faint py-[79px] lg:py-[73px]"
-    >
-      <SectionContainer className="flex flex-col gap-[50px] lg:flex-row lg:items-center lg:gap-0">
+    <section id="story" className={`${STORY_SECTION_SHELL} overflow-x-clip`}>
+      <SectionContainer className="flex flex-col gap-12 lg:flex-row lg:items-center lg:gap-0">
         {/* 좌측 이미지 2장 — 각 이미지를 relative 래퍼로 감싸 장식을 "그 이미지" 기준으로 앵커링.
             바깥 래퍼는 overflow visible(장식 오버행 허용), StoryImage 내부 overflow-hidden 은 둥근 사진만 클리핑.
             Figma 반응형: <1024 stacked(이미지그룹 위/텍스트 아래) · lg(1025~1439) & wide(1440) 모두 side-by-side(좌 이미지/우 텍스트).
@@ -165,13 +167,13 @@ export function StorySection({ stats, slots }: Props) {
         {/* 텍스트 + Result — 카피는 constants/story.ts SSoT.
             base: 세로(본문 위/통계 아래 풀폭) · md(768~1024): 가로 [본문 좌 | 통계 우, 하단정렬] · lg+: 세로 우정렬(side-by-side 컬럼) */}
         <div className="flex flex-1 flex-col gap-6 text-surface-dark md:flex-row md:items-end md:justify-between md:gap-8 lg:flex-col lg:items-end lg:justify-start lg:gap-6 lg:text-right">
-          {/* 내부 갭 Figma 정합: tag→title 14(base)/18(md+) · title→desc 4(base)/12(md+) (이전 일률 gap-6=24 과대) */}
+          {/* 내부 갭 — tag→title 16(Figma 14/18 의 ±2 스냅, BP 단일화) · title→desc 4(base)/12(md+) */}
           <div className="flex flex-col md:max-w-[300px] lg:max-w-none lg:items-end">
             <span className="self-start rounded-full bg-surface-dark px-4 py-2 text-base font-semibold text-ink-on-purple lg:self-end">
               {STORY_SECTION_CONTENT.tag}
             </span>
 
-            <h2 className="mt-3.5 whitespace-pre-line break-keep text-2xl font-bold leading-tight md:mt-[18px] lg:text-[32px]">
+            <h2 className="mt-4 whitespace-pre-line break-keep text-2xl font-bold leading-tight lg:text-[32px]">
               {STORY_SECTION_CONTENT.title}
             </h2>
 

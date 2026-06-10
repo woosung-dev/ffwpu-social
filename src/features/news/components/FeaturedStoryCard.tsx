@@ -33,7 +33,6 @@ export function FeaturedStoryCard({ stories }: Props) {
       {/* items-stretch + BP별 min-h(Figma featured content 423/556) → 텍스트 컬럼이 이미지보다 길고 버튼 하단 앵커(125:9042) */}
       <div className="grid items-stretch gap-6 sm:grid-cols-2 md:min-h-[423px] lg:gap-10 wide:min-h-[556px]">
         <div className="order-2 flex flex-col md:order-1">
-          {/* 상단 블록: 뱃지 + 제목 + 설명 */}
           <div className="flex flex-col gap-4">
             {story.badge && (
               <span className="self-start rounded-full bg-brand-vivid px-3 py-1 text-xs font-semibold text-white">
