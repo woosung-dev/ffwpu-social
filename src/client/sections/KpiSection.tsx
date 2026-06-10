@@ -34,6 +34,11 @@ function personOutline(n: number): string {
     .join(" ");
 }
 
+// 섹션 셸(배경+세로 패딩) — Figma Contents y-offset 44/58/90/96 의 4px 그리드 스냅(±2px, 스윕 허용오차 내).
+// page.tsx Suspense 스켈레톤과 동기 유지를 위해 export 공유.
+export const KPI_SECTION_SHELL =
+  "w-full bg-white py-11 md:py-14 lg:py-22 wide:py-24";
+
 export function KpiSection({ metricsBySlug }: Props) {
   const volunteerCount = pickDisplay(metricsBySlug, "volunteer_count", "—");
   const volunteerPeriod = pickDisplay(metricsBySlug, "volunteer_period", "—");
@@ -47,7 +52,7 @@ export function KpiSection({ metricsBySlug }: Props) {
     <section
       id="kpi"
       aria-labelledby="kpi-heading"
-      className="w-full bg-white py-16 lg:py-24"
+      className={KPI_SECTION_SHELL}
     >
       {/* 섹션 방향: base/md/lg column · wide row(헤딩 좌 | 대시보드 우). 헤딩↔대시보드 gap = 30/40/40/70 (discrete) */}
       <SectionContainer className="flex flex-col gap-[30px] md:gap-10 wide:flex-row wide:items-start wide:gap-[70px]">

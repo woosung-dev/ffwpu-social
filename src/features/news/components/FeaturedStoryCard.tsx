@@ -30,21 +30,24 @@ export function FeaturedStoryCard({ stories }: Props) {
   return (
     // 배경·세로 패딩은 풀폭 래퍼(news-hero)가 담당 — 여기선 밴드 폭 콘텐츠 그리드만
     <section className="w-full">
-      <div className="grid items-center gap-6 sm:grid-cols-2 lg:gap-10">
-        <div className="order-2 flex flex-col gap-4 md:order-1">
-          {story.badge && (
-            <span className="self-start rounded-full bg-brand-vivid px-3 py-1 text-xs font-semibold text-white">
-              {story.badge}
-            </span>
-          )}
-          <h3 className="text-2xl font-bold leading-snug text-ink-strong lg:text-[34px]">
-            {story.title}
-          </h3>
-          <p className="text-base leading-relaxed text-foreground lg:text-xl">
-            {story.description}
-          </p>
-          {/* 하단: 버튼(좌) + 인디케이터(우) — Figma 125:9042 BottomBlock justify-between 정합 */}
-          <div className="mt-4 flex items-end justify-between">
+      {/* items-stretch + BP별 min-h(Figma featured content 423/556) → 텍스트 컬럼이 이미지보다 길고 버튼 하단 앵커(125:9042) */}
+      <div className="grid items-stretch gap-6 sm:grid-cols-2 md:min-h-[423px] lg:gap-10 wide:min-h-[556px]">
+        <div className="order-2 flex flex-col md:order-1">
+          <div className="flex flex-col gap-4">
+            {story.badge && (
+              <span className="self-start rounded-full bg-brand-vivid px-3 py-1 text-xs font-semibold text-white">
+                {story.badge}
+              </span>
+            )}
+            <h3 className="text-2xl font-bold leading-snug text-ink-strong lg:text-[34px]">
+              {story.title}
+            </h3>
+            <p className="text-base leading-relaxed text-foreground lg:text-xl">
+              {story.description}
+            </p>
+          </div>
+          {/* 하단: 버튼(좌) + 인디케이터(우) — md↑ mt-auto 로 컬럼 바닥 앵커(Figma 125:9042 BottomBlock) */}
+          <div className="mt-6 flex items-end justify-between md:mt-auto md:pt-6">
             <Link
               href={story.href}
               className="inline-flex items-center gap-1.5 rounded-full bg-brand-vivid px-5 py-[10px] text-[14px] font-semibold text-white transition-colors hover:bg-brand-mid lg:text-lg lg:py-3.5"
@@ -93,8 +96,9 @@ export function FeaturedStoryCard({ stories }: Props) {
           </div>
         </div>
 
-        <div className="order-1 md:order-2">
-          <div className="relative aspect-[612/411] overflow-hidden rounded-2xl bg-white">
+        {/* 이미지 — md↑ 컬럼이 텍스트 높이로 stretch 되므로 세로 가운데 정렬(Figma 이미지 센터) */}
+        <div className="order-1 flex items-center md:order-2">
+          <div className="relative aspect-[612/411] w-full overflow-hidden rounded-2xl bg-white">
             {story.imageUrl ? (
               <Image
                 src={story.imageUrl}

@@ -5,10 +5,13 @@
 
 import { useEffect, useState } from "react";
 
+import { HEADER_BAR_HEIGHT_PX } from "@/client/layouts/header-height";
+
 // 기준선 = 헤더 하단에서 (가용 높이 × LINE_RATIO) 만큼 더 내려간 지점.
-const HEADER_H_MOBILE = 64;
-const HEADER_H_DESKTOP = 80;
-const DESKTOP_MQ = "(min-width: 1024px)"; // lg — 헤더가 80px 로 커지는 분기
+// 헤더 높이는 header-height.ts SSoT. md(72) 구간은 기준선 휴리스틱 특성상 base 값으로 근사.
+const HEADER_H_MOBILE = HEADER_BAR_HEIGHT_PX.base;
+const HEADER_H_DESKTOP = HEADER_BAR_HEIGHT_PX.lg;
+const DESKTOP_MQ = "(min-width: 1024px)"; // lg — 헤더가 88px 로 커지는 분기
 const LINE_RATIO = 0.28; // 헤더 아래 가용 높이의 28% 지점에 기준선 (docs 사이트 체감값)
 const HYSTERESIS = 8; // 경계 1~2px 진동 흡수용 데드밴드(px)
 
