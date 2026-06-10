@@ -46,11 +46,30 @@ type Props = {
   initial?: NewsEditorInitial;
 };
 
+type PublishState = "draft" | "scheduled" | "published";
+
 // 폼 schema — body·publishedAt 은 form 외부 관리 (P1#6 + 발행 버튼)
 const formSchema = newsInputSchema.omit({ body: true, publishedAt: true });
 // @hookform/resolvers v5 는 input(기본값 적용 전)·output(검증 후) 타입을 구분 — tags 등 .default() 필드 정합용
 type FormInput = z.input<typeof formSchema>;
 type FormValues = z.output<typeof formSchema>;
+
+function getPublishState(publishedAt: Date | null): PublishState {
+  if (!publishedAt) return "draft";
+  return publishedAt.getTime() > Date.now() ? "scheduled" : "published";
+}
+
+const PUBLISH_STATE_LABEL: Record<PublishState, string> = {
+  draft: "임시 저장",
+  scheduled: "예약",
+  published: "발행",
+};
+
+const PUBLISH_STATE_CLASS: Record<PublishState, string> = {
+  draft: "bg-warm/15 text-amber-700",
+  scheduled: "bg-kpi-lime/30 text-ink-strong",
+  published: "bg-brand-primary/10 text-brand-primary",
+};
 
 export function NewsEditor({ mode, categories, initial }: Props) {
   const router = useRouter();
@@ -84,16 +103,11 @@ export function NewsEditor({ mode, categories, initial }: Props) {
     },
   });
 
-  // submit handler — publish=true → publishedAt = (기존 발행 timestamp || now), false → null
+  // submit handler — publish=true → 선택 일시 저장. 미래면 예약 발행, false → null
   const submit = (publish: boolean) =>
     form.handleSubmit((values) => {
       setError(null);
-      // 미래 방어 클램프(피커가 막지만 직접 조작 대비) — 발행=선택 일시, 임시저장=null
-      const publishedAt = publish
-        ? publishAt.getTime() > Date.now()
-          ? new Date()
-          : publishAt
-        : null;
+      const publishedAt = publish ? publishAt : null;
       const payload: NewsInput = {
         ...values,
         // 문자열로 전송 — 객체로 보내면 Server Action 직렬화에서 중첩 attrs 가 소실됨($T). 서버에서 parse
@@ -113,12 +127,21 @@ export function NewsEditor({ mode, categories, initial }: Props) {
           return;
         }
         // 성공 토스트 후 목록으로 이동 — 신규·수정 공통(사용자 요청). 토스트는 sonner 가 네비게이션 넘어 유지
-        toast.success(publish ? "발행되었습니다." : "임시 저장되었습니다.");
+        const state = getPublishState(publishedAt);
+        toast.success(
+          state === "scheduled"
+            ? "예약 발행으로 저장되었습니다."
+            : state === "published"
+              ? "발행되었습니다."
+              : "임시 저장되었습니다.",
+        );
         router.push("/admin/news");
       });
     })();
 
-  const isPublished = Boolean(isEdit && initial?.publishedAt);
+  const currentState = getPublishState(isEdit ? initial?.publishedAt ?? null : null);
+  const nextPublishState = getPublishState(publishAt);
+  const submitLabel = nextPublishState === "scheduled" ? "예약" : "발행";
 
   return (
     <form className="space-y-6 pb-24 lg:pb-0" noValidate>
@@ -200,12 +223,10 @@ export function NewsEditor({ mode, categories, initial }: Props) {
                   <span
                     className={cn(
                       "rounded-full px-2.5 py-1 text-xs font-medium",
-                      isPublished
-                        ? "bg-brand-primary/10 text-brand-primary"
-                        : "bg-warm/15 text-amber-700",
+                      PUBLISH_STATE_CLASS[currentState],
                     )}
                   >
-                    {isPublished ? "발행" : "임시 저장"}
+                    {PUBLISH_STATE_LABEL[currentState]}
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -224,13 +245,13 @@ export function NewsEditor({ mode, categories, initial }: Props) {
                     disabled={isPending}
                     className="flex-1 active:scale-[0.98]"
                   >
-                    {isPending ? "처리 중..." : "발행"}
+                    {isPending ? "처리 중..." : submitLabel}
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
-            {/* 발행 일시 — 수정 가능(미래 불가, 예약 발행 없음). 발행 시 이 일시로 기록. 모바일·데스크탑 공통 노출 */}
+            {/* 발행 일시 — 과거·현재는 발행, 미래는 예약 발행. 모바일·데스크탑 공통 노출 */}
             <Card>
               <CardContent className="space-y-2 pt-6">
                 <h3 className="text-sm font-semibold text-ink-strong">
@@ -242,7 +263,7 @@ export function NewsEditor({ mode, categories, initial }: Props) {
                   disabled={isPending}
                 />
                 <p className="text-xs text-ink-subtle">
-                  발행하면 이 일시로 기록됩니다. 미래는 지정할 수 없어요(예약 발행 없음).
+                  미래 일시를 선택한 뒤 발행하면 예약 발행으로 저장됩니다.
                 </p>
               </CardContent>
             </Card>
@@ -359,12 +380,10 @@ export function NewsEditor({ mode, categories, initial }: Props) {
           <span
             className={cn(
               "rounded-full px-2.5 py-1 text-xs font-medium",
-              isPublished
-                ? "bg-brand-primary/10 text-brand-primary"
-                : "bg-warm/15 text-amber-700",
+              PUBLISH_STATE_CLASS[currentState],
             )}
           >
-            {isPublished ? "발행" : "임시 저장"}
+            {PUBLISH_STATE_LABEL[currentState]}
           </span>
           <Button
             type="button"
@@ -383,7 +402,7 @@ export function NewsEditor({ mode, categories, initial }: Props) {
             disabled={isPending}
             className="active:scale-[0.98]"
           >
-            {isPending ? "처리 중..." : "발행"}
+            {isPending ? "처리 중..." : submitLabel}
           </Button>
         </div>
       </div>

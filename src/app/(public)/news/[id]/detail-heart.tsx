@@ -4,6 +4,8 @@
 import { useEffect, useState } from "react";
 
 import { getAnonSessionId } from "@/client/lib/anon-session";
+import { recordAnalyticsEventAction } from "@/features/analytics/actions";
+import { buildAnalyticsPayload } from "@/features/analytics/client";
 import { Heart } from "@/features/news/components";
 import { heartStateAction, toggleHeartAction } from "@/features/news/actions";
 
@@ -29,6 +31,12 @@ export function DetailHeart({
     const sid = getAnonSessionId();
     const r = await toggleHeartAction(newsId, sid);
     if (!r.success) throw new Error(r.error);
+    void recordAnalyticsEventAction(
+      buildAnalyticsPayload({
+        eventType: r.data.liked ? "heart_on" : "heart_off",
+        newsId,
+      }),
+    );
     return r.data; // { liked, count } — Heart 가 서버 권위 상태로 보정
   };
 

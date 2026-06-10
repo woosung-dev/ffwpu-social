@@ -1,6 +1,7 @@
 // 글자 크기 커스텀 extension — TextStyle global attribute 로 style="font-size:Npx" 저장.
-// Tiptap v2 엔 공식 @tiptap/extension-font-size 가 없어 직접 구현(함정). 값은 툴바/sanitize 가 프리셋으로 제한.
+// 값은 툴바/sanitize 공용 normalizeFontSize 로 정수 px 범위만 허용한다.
 import { Extension } from "@tiptap/core";
+import { normalizeFontSize } from "@/features/news/render/editor-allowlist";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -37,8 +38,11 @@ export const FontSize = Extension.create({
     return {
       setFontSize:
         (size) =>
-        ({ chain }) =>
-          chain().setMark("textStyle", { fontSize: size }).run(),
+        ({ chain }) => {
+          const normalized = normalizeFontSize(size);
+          if (!normalized) return false;
+          return chain().setMark("textStyle", { fontSize: normalized }).run();
+        },
       unsetFontSize:
         () =>
         ({ chain }) =>

@@ -50,6 +50,13 @@
       "when": 1780748057694,
       "tag": "0006_dry_firelord",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781081003604,
+      "tag": "0007_chunky_doctor_doom",
+      "breakpoints": true
     }
   ]
 }

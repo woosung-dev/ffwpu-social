@@ -1,12 +1,16 @@
 // 메인 랜딩 DB 쿼리 — KPI 지표 + StorySection 상단 슬롯 (news.story_slot) + ArticleGrid 하단 슬롯 (news.featured_rank) 큐레이션 + 자동 fallback
 import "server-only";
 
-import { and, asc, desc, eq, isNotNull, isNull, notInArray } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, isNull, lte, notInArray, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { categories, kpiMetrics, news } from "@/db/schema";
 
 const RICE_SHARING_SLUG = "rice_sharing";
+
+function publicPublishedWhere() {
+  return and(isNotNull(news.publishedAt), lte(news.publishedAt, sql`now()`));
+}
 
 // 활성 impact KPI — KpiSection "한 해동안 만들어낸 변화" (4행). section='impact' 필수 — 없으면 story 3행이 섞여 7개로 깨짐
 export async function listActiveKpiMetrics() {
@@ -58,7 +62,7 @@ export async function listStorySlots() {
     .innerJoin(categories, eq(news.categoryId, categories.id))
     .where(
       and(
-        isNotNull(news.publishedAt),
+        publicPublishedWhere(),
         isNotNull(news.storySlot),
         eq(categories.slug, RICE_SHARING_SLUG),
       ),
@@ -87,7 +91,7 @@ export async function listFeaturedGrid(slotCount = 7) {
     .innerJoin(categories, eq(news.categoryId, categories.id))
     .where(
       and(
-        isNotNull(news.publishedAt),
+        publicPublishedWhere(),
         isNotNull(news.featuredRank),
         eq(categories.slug, RICE_SHARING_SLUG),
       ),
@@ -122,7 +126,7 @@ export async function listFeaturedGrid(slotCount = 7) {
         .innerJoin(categories, eq(news.categoryId, categories.id))
         .where(
           and(
-            isNotNull(news.publishedAt),
+            publicPublishedWhere(),
             isNull(news.featuredRank),
             eq(categories.slug, RICE_SHARING_SLUG),
             // notInArray(col, []) === TRUE 라 pin 없을 때도 안전 (codex: raw NOT IN 은 tuple 생성 실패 위험)
@@ -165,7 +169,7 @@ export async function listRiceSharingCandidates() {
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
     .where(
-      and(isNotNull(news.publishedAt), eq(categories.slug, RICE_SHARING_SLUG)),
+      and(publicPublishedWhere(), eq(categories.slug, RICE_SHARING_SLUG)),
     )
     .orderBy(desc(news.publishedAt));
 }

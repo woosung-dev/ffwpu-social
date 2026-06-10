@@ -1,8 +1,18 @@
 // 에디터 허용값 단일 출처(pure, 클라 툴바 ↔ 서버 sanitize 공용) — 드리프트/XSS 차단.
 // 툴바는 여기 값만 노출하고, sanitize 는 여기 값만 통과시킨다. inline style 값은 반드시 화이트리스트.
 
-// 글자 크기 프리셋(자유 px 금지). 본문 기본 ~16px 기준 5단
-export const ALLOWED_FONT_SIZES = ["14px", "16px", "18px", "22px", "28px"] as const;
+// 글자 크기 프리셋 + 직접 입력 허용 범위. 저장값은 반드시 정수 px 로 정규화한다.
+export const FONT_SIZE_MIN = 12;
+export const FONT_SIZE_MAX = 40;
+export const ALLOWED_FONT_SIZES = [
+  "14px",
+  "16px",
+  "18px",
+  "20px",
+  "24px",
+  "28px",
+  "32px",
+] as const;
 
 // 글자 색 팔레트(자유 컬러피커 금지) — 먹/회색 + 브랜드 + 강조 6
 export const ALLOWED_COLORS = [
@@ -38,6 +48,22 @@ export function isAllowedValue(
   v: unknown,
 ): v is string {
   return typeof v === "string" && list.includes(v);
+}
+
+export function normalizeFontSize(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const match = v.trim().match(/^(\d{1,2})px$/);
+  if (!match) return null;
+  const n = Number(match[1]);
+  if (!Number.isInteger(n) || n < FONT_SIZE_MIN || n > FONT_SIZE_MAX) {
+    return null;
+  }
+  return `${n}px`;
+}
+
+export function fontSizeToNumber(v: unknown): number | null {
+  const normalized = normalizeFontSize(v);
+  return normalized ? Number(normalized.slice(0, -2)) : null;
 }
 
 // 이미지 폭 단계로 clamp(가장 가까운 허용값, 기본 100)

@@ -49,7 +49,7 @@ export async function getAdminNewsDetail(id: string) {
 export async function listNewsForAdmin(opts: {
   page: number;
   limit: number;
-  status?: "all" | "draft" | "published";
+  status?: "all" | "draft" | "scheduled" | "published";
   categorySlug?: string;
 }) {
   const [items, total] = await Promise.all([
@@ -126,8 +126,10 @@ export async function updateNews(id: string, input: NewsInput) {
     if (!updated) return null;
 
     const riceId = await newsDb.getRiceSharingCategoryId(tx);
+    const isCurrentlyPublic =
+      input.publishedAt != null && input.publishedAt.getTime() <= Date.now();
     const clear = slotsToClearOnTransition({
-      isPublished: input.publishedAt != null,
+      isPublished: isCurrentlyPublic,
       isRiceSharing: input.categoryId === riceId,
     });
     if (clear.hero) await newsDb.clearHeroRank(tx, id);

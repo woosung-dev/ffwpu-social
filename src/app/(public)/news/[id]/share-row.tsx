@@ -4,10 +4,20 @@
 import { Link2, Share2 } from "lucide-react";
 import { useState } from "react";
 
-export function ShareRow({ title }: { title: string }) {
+import { recordAnalyticsEventAction } from "@/features/analytics/actions";
+import { buildAnalyticsPayload } from "@/features/analytics/client";
+
+export function ShareRow({ title, newsId }: { title: string; newsId: string }) {
   const [copied, setCopied] = useState(false);
 
-  const copyLink = async () => {
+  const recordShare = () => {
+    void recordAnalyticsEventAction(
+      buildAnalyticsPayload({ eventType: "share_click", newsId }),
+    );
+  };
+
+  const copyLink = async (track = true) => {
+    if (track) recordShare();
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
@@ -18,6 +28,7 @@ export function ShareRow({ title }: { title: string }) {
   };
 
   const share = async () => {
+    recordShare();
     if (typeof navigator.share === "function") {
       try {
         await navigator.share({ title, url: window.location.href });
@@ -27,7 +38,7 @@ export function ShareRow({ title }: { title: string }) {
         return;
       }
     }
-    await copyLink();
+    await copyLink(false);
   };
 
   return (
@@ -42,7 +53,7 @@ export function ShareRow({ title }: { title: string }) {
       </button>
       <button
         type="button"
-        onClick={copyLink}
+        onClick={() => void copyLink()}
         aria-label="링크 복사"
         className="flex size-10 items-center justify-center rounded-full bg-surface-cool text-ink-strong-mid transition-opacity hover:opacity-80"
       >

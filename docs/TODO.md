@@ -18,13 +18,15 @@
 
 ## 배포 전 필수 (🔴 차단성)
 
+- [ ] **DB 마이그레이션 0007 적용** — 관리자 방문자 분석용 `analytics_events` 테이블 추가. 배포 DB에서 `pnpm db:migrate` 또는 배포 절차의 Drizzle migrate 적용 필요.
 - [x] **`next build` 타입체크 블로커 해소 (2026-06-01)** — pre-existing `templates/` 스캐폴드(PR #9)가 tsconfig `**/*.ts` 에 포함돼 빌드 실패하던 것 → tsconfig `exclude` 에 `templates` 추가. `pnpm tsc`·`pnpm build` 모두 그린(exit 0). **후속(v1.1): templates monorepo 구조 재정비(PR #9) — 사용자 메모 "추후 구조 다시 잡아야".**
 - [x] **모노레포/폴더 구조 결정 (2026-06-02, ADR-033)** — velog 4부작(Nx·Turbo·pnpm) 교차검증 + 5옵션 점수화(AI-DevX 우선). 결론: 현행 **F3 단일앱 유지**가 v1.0/근미래 최적(OPT-2 8.34 > OPT-1 8.13, OPT-3/5 fails·OPT-4 weakened). velog와 **갈리지 않음**(직교+철학 수렴), template과도 거의 일치. **마이그레이션 부채(v1.1+, 보류)** — 복합 트리거(팀≥3 OR CI 빌드병목 실측 OR web/admin 독립배포 케이던스) 발화 시에만 F2(pnpm→측정후 Turbo, **Nx 금지**)로. 도메인수 7개 단독으로는 발화 금지. 상세 `docs/decisions.md` ADR-033.
 - [ ] **A7 — 로그인 rate limit** — Vercel Firewall rate-limit 룰을 `/api/auth/*` 에 적용(코드 0). 단일 super 브루트포스·credential stuffing 방어. 배포 대시보드 설정. (Vercel 배포 확정 — 2026-06-01)
 - [ ] **AUTH_SECRET 강도** — 32바이트+ 시크릿 강제·회전(rank20). 임시 어드민 비번 변경(`admin@ffwpu-social.local`).
 
-## Completed (최근 3개)
+## Completed (최근 4개)
 
+- [x] **어드민 분석·예약 발행·Tiptap 숫자 크기 (2026-06-10)** — 익명 세션 기반 `analytics_events` 추가(조회·공감·공유), 어드민 대시보드 최근 30일 분석 카드, `publishedAt <= now()` 공개 조건 기반 예약 발행, 어드민 예약 상태 표시, Tiptap `12px~40px` 숫자 입력 + sanitize 정합. `pnpm tsc --noEmit`·`pnpm lint`·`pnpm test`(52)·`pnpm build` 통과. **스키마 변경 1건.** plan: `docs/plans/active/TASK-20260610-admin-analytics-schedule-editor/`.
 - [x] **소식 검색 + 768 그리드 정정 (2026-06-07)** — `/news` "더 많은 소식" 탭+검색 인라인 툴바(제목+태그 ILIKE, q×category AND). 768 카드 3열→2열 수정(skeleton·Figma 정합). branch `feat/news-search`, ADR-036. Generator-Evaluator(2-pass 적대 + codex C1 반복q 500 수락). tsc0·lint0·test47. **스키마 0.** plan/검증: `docs/plans/active/2026-06-07-news-search.md` · `docs/design/review-news-search-2026-06-07.md`.
   - **v1.1 후속(Next Actions):** 본문(jsonb) 검색 · 검색어 하이라이트 · 자동완성/추천검색어 · 헤더 검색 모달(familyfed SearchPanel 패턴) · 사회공헌국 검색 디자인 최종 승인.
 - [x] **Figma SSOT 재동기화 (2026-05-30)** — 사용자 3 노드 ID 재공유 기반. 홈 1920/1024 자식 frame ID 갱신 (`331:7984`·`332:9254`) + 1439 폐기 + 소식 Banner 정식 등장 카피 갱신. `docs/design.md` / `docs/design/README.md` / `docs/current.md` / `docs/TODO.md` 4파일 일관화. 사용자 조달 대기 항목 ↓ "Next Actions" 등록.

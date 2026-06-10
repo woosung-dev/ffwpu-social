@@ -10,6 +10,7 @@ import { ArticleCard } from "@/features/news/components";
 
 import { SubBanner } from "../sub-banner";
 import { DetailHeader } from "./detail-header";
+import { NewsViewTracker } from "./news-view-tracker";
 import { PrevNextNav } from "./prev-next-nav";
 import { ShareRow } from "./share-row";
 import { ScrollTopButton } from "./scroll-top";
@@ -97,6 +98,7 @@ async function NewsDetailContent({
 
   return (
     <div className="mx-auto w-full px-4 md:max-w-[648px] md:px-0 lg:max-w-[905px] py-12 lg:py-20">
+      <NewsViewTracker newsId={item.id} />
       {/* 본문폭: 리스트 밴드 정합 md648/lg905, wide는 가독 cap(1200 미적용) */}
       <DetailHeader
         newsId={item.id}
@@ -126,7 +128,7 @@ async function NewsDetailContent({
 
       {/* 공유 */}
       <div className="mt-8">
-        <ShareRow title={item.title} />
+        <ShareRow title={item.title} newsId={item.id} />
       </div>
 
       <hr className="mt-12 border-border" />

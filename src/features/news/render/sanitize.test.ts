@@ -142,6 +142,40 @@ describe("sanitizeTiptapJson — 서식 마크 화이트리스트", () => {
     expect(result!.content![0].content![0].marks).toBeUndefined();
   });
 
+  it("(7-1) textStyle 숫자 px 직접 입력은 12~40px 범위만 유지", () => {
+    const result = run({
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "ok",
+              marks: [{ type: "textStyle", attrs: { fontSize: "19px" } }],
+            },
+            {
+              type: "text",
+              text: "small",
+              marks: [{ type: "textStyle", attrs: { fontSize: "11px" } }],
+            },
+            {
+              type: "text",
+              text: "unit",
+              marks: [{ type: "textStyle", attrs: { fontSize: "1.5rem" } }],
+            },
+          ],
+        },
+      ],
+    });
+    const nodes = result!.content![0].content!;
+    expect(nodes[0].marks).toEqual([
+      { type: "textStyle", attrs: { fontSize: "19px" } },
+    ]);
+    expect(nodes[1].marks).toBeUndefined();
+    expect(nodes[2].marks).toBeUndefined();
+  });
+
   it("(8) highlight 임의 색은 기본 형광으로 강등(색 attr 제거)", () => {
     const result = run({
       type: "doc",
