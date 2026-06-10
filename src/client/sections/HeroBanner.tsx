@@ -23,7 +23,8 @@ export function HeroBanner() {
       id="hero"
       // 배경 투명(타원이 보라 제공)·radius 없음. overflow-x-clip 로 타원 가로 overflow 클립(가로스크롤0).
       // 세로는 클립하지 않아 꽃 줄기가 섹션 바닥까지 내려와도 잘리지 않음.
-      className="relative w-full overflow-x-clip"
+      // md:pt-10 = 헤더↔히어로 콘텐츠 40px 간격(Figma 768/1025/1440 공통, 375 는 0). 타원·꽃은 absolute 바닥 앵커라 히어로 내부 상대 간격 무영향.
+      className="relative w-full overflow-x-clip md:pt-10"
     >
       {/* 타원 클립 래퍼 — 섹션 박스(상·좌·우)에 타원을 클립. 콘텐츠 아래(-z-10) */}
       <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden>

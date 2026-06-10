@@ -19,7 +19,10 @@ const PAGE_SIZE = 10;
 type SearchParams = Record<string, string | string[] | undefined>;
 
 function pickStatus(raw: string | string[] | undefined): NewsStatus {
-  if (raw === "draft" || raw === "published") return raw;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (value === "draft" || value === "scheduled" || value === "published") {
+    return value;
+  }
   return "all";
 }
 
@@ -43,7 +46,7 @@ export default function AdminNewsListPage(props: {
       <header className="space-y-1">
         <h1 className="text-3xl font-extrabold tracking-tight text-ink-strong">뉴스 관리</h1>
         <p className="text-sm text-ink-subtle">
-          발행된 글과 임시 저장 글을 한 곳에서 관리합니다.
+          발행·예약·임시 저장 글을 한 곳에서 관리합니다.
         </p>
       </header>
       <Suspense fallback={<ListLoading />}>

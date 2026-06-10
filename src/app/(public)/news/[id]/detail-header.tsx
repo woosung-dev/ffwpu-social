@@ -1,6 +1,4 @@
-// 소식 상세 헤더 — 카테고리 + 제목 + 날짜 + 익명 좋아요(DetailHeart). Figma 93:8821(Title 블록) 정합. Server Component (DetailHeart 만 client child)
-import { DetailHeart } from "./detail-heart";
-
+// 소식 상세 헤더 — 카테고리 + 제목 + 날짜. Figma 749:8059(B 시안 Title 블록) 정합 — 날짜 줄에 하트 없음(하트는 하단 Bottom 줄로 이동). Server Component
 function fmtDate(d: Date | string | null): string {
   if (!d) return "";
   const dt = new Date(d);
@@ -8,30 +6,25 @@ function fmtDate(d: Date | string | null): string {
 }
 
 export function DetailHeader({
-  newsId,
   categoryName,
   title,
   publishedAt,
-  heartCount,
 }: {
-  newsId: string;
   categoryName: string;
   title: string;
   publishedAt: Date | string | null;
-  heartCount: number;
 }) {
   return (
     <header className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
         <p className="text-lg font-bold text-brand-vivid">{categoryName}</p>
-        <h1 className="break-keep text-2xl font-semibold leading-snug text-ink-strong lg:text-[32px]">
+        {/* 제목 lh — Figma 749:8063: 32px × 1.5 = 48px (lg). 모바일은 기존 leading-snug 유지 */}
+        <h1 className="break-keep text-2xl font-semibold leading-snug text-ink-strong lg:text-[32px] lg:leading-[1.5]">
           {title}
         </h1>
       </div>
-      <div className="flex items-center justify-between">
-        <p className="text-base text-ink-date">{fmtDate(publishedAt)}</p>
-        <DetailHeart newsId={newsId} count={heartCount} />
-      </div>
+      {/* 날짜 — Figma 749:8068: SUIT Medium(500) */}
+      <p className="text-base font-medium text-ink-date">{fmtDate(publishedAt)}</p>
     </header>
   );
 }

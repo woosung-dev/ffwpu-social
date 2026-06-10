@@ -1,5 +1,5 @@
-// 소식(news) Drizzle 쿼리 전담 — DAL. db import는 여기서만 (fullstack.md §3). 공개(published_at IS NOT NULL) / 어드민(모두) 분리 (codex P1#7). mutation 은 tx 인자 강제 (codex P1#5)
-import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, like, or, sql } from "drizzle-orm";
+// 소식(news) Drizzle 쿼리 전담 — DAL. db import는 여기서만 (fullstack.md §3). 공개(published_at <= now) / 어드민(모두) 분리 (codex P1#7). mutation 은 tx 인자 강제 (codex P1#5)
+import { and, asc, desc, eq, gt, ilike, inArray, isNotNull, isNull, like, lte, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { categories, heartEvents, news, newsTags } from "@/db/schema";
 import { ALL_CATEGORY_SLUG } from "./constants";
@@ -28,6 +28,10 @@ function categoryWhere(categorySlug?: string) {
     : undefined;
 }
 
+function publicPublishedWhere() {
+  return and(isNotNull(news.publishedAt), lte(news.publishedAt, sql`now()`));
+}
+
 // 검색 필터 — 제목 OR 태그 부분일치(ILIKE, 대소문자 무관). q 없으면 undefined(필터 미적용).
 // 태그는 normalizeTags 로 lowercase 저장되나 ILIKE 라 입력 케이스 무관. 본문(jsonb)은 v1.1
 function searchWhere(q?: string) {
@@ -40,9 +44,9 @@ function searchWhere(q?: string) {
   );
 }
 
-// ─── 사용자 사이트 — published 만 (codex P1#7) ──────────────────────────────
+// ─── 사용자 사이트 — 현재 공개 글만 (codex P1#7 + 예약 발행) ─────────────────
 
-// 공개 목록 — published_at IS NOT NULL 강제 (draft 노출 차단)
+// 공개 목록 — published_at <= now 강제 (draft·예약글 노출 차단)
 export async function listPublicNews(opts: ListOpts) {
   const offset = (opts.page - 1) * opts.limit;
   return db
@@ -61,7 +65,7 @@ export async function listPublicNews(opts: ListOpts) {
     .innerJoin(categories, eq(news.categoryId, categories.id))
     .where(
       and(
-        isNotNull(news.publishedAt),
+        publicPublishedWhere(),
         categoryWhere(opts.categorySlug),
         searchWhere(opts.q),
       ),
@@ -79,7 +83,7 @@ export async function countPublicNews(opts: Pick<ListOpts, "categorySlug" | "q">
     .innerJoin(categories, eq(news.categoryId, categories.id))
     .where(
       and(
-        isNotNull(news.publishedAt),
+        publicPublishedWhere(),
         categoryWhere(opts.categorySlug),
         searchWhere(opts.q),
       ),
@@ -87,7 +91,7 @@ export async function countPublicNews(opts: Pick<ListOpts, "categorySlug" | "q">
   return row?.count ?? 0;
 }
 
-// 공개 상세 — draft 접근 시 null. 본문(body) + 태그 join
+// 공개 상세 — draft·예약글 접근 시 null. 본문(body) + 태그 join
 export async function getPublicNewsById(id: string) {
   const [row] = await db
     .select({
@@ -104,7 +108,7 @@ export async function getPublicNewsById(id: string) {
     })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
-    .where(and(eq(news.id, id), isNotNull(news.publishedAt)))
+    .where(and(eq(news.id, id), publicPublishedWhere()))
     .limit(1);
   if (!row) return null;
   const tags = await db
@@ -119,7 +123,7 @@ export async function listPublishedForSitemap() {
   return db
     .select({ id: news.id, updatedAt: news.updatedAt })
     .from(news)
-    .where(isNotNull(news.publishedAt))
+    .where(publicPublishedWhere())
     .orderBy(desc(news.publishedAt));
 }
 
@@ -128,13 +132,16 @@ export async function listPublishedForSitemap() {
 type AdminListOpts = {
   page: number;
   limit: number;
-  status?: "all" | "draft" | "published";
+  status?: "all" | "draft" | "scheduled" | "published";
   categorySlug?: string;
 };
 
 function adminStatusWhere(status?: AdminListOpts["status"]) {
   if (status === "draft") return isNull(news.publishedAt);
-  if (status === "published") return isNotNull(news.publishedAt);
+  if (status === "scheduled") {
+    return and(isNotNull(news.publishedAt), gt(news.publishedAt, sql`now()`));
+  }
+  if (status === "published") return publicPublishedWhere();
   return undefined;
 }
 
@@ -315,17 +322,17 @@ export async function insertHeart(newsId: string, sessionId: string) {
     });
 }
 
-// 발행 여부 — 익명 하트가 draft/비공개 글에 row 생성하는 것 차단용 (codex MED)
+// 현재 공개 여부 — 익명 하트가 draft/예약/비공개 글에 row 생성하는 것 차단용 (codex MED)
 export async function isNewsPublished(newsId: string): Promise<boolean> {
   const [row] = await db
     .select({ id: news.id })
     .from(news)
-    .where(and(eq(news.id, newsId), isNotNull(news.publishedAt)))
+    .where(and(eq(news.id, newsId), publicPublishedWhere()))
     .limit(1);
   return row != null;
 }
 
-// 인접 글 — 발행 글만, publishedAt 기준. prev(이전글)=더 최신 / next(다음글)=더 과거 (목록 newest-first 정합).
+// 인접 글 — 현재 공개 글만, publishedAt 기준. prev(이전글)=더 최신 / next(다음글)=더 과거 (목록 newest-first 정합).
 // 동일 publishedAt tie 는 v1 스킵 허용(초 단위 정밀도). 자기 자신 제외
 export async function findAdjacentNews(newsId: string, publishedAt: Date) {
   const [prev] = await db
@@ -333,7 +340,7 @@ export async function findAdjacentNews(newsId: string, publishedAt: Date) {
     .from(news)
     .where(
       and(
-        isNotNull(news.publishedAt),
+        publicPublishedWhere(),
         sql`${news.publishedAt} > ${publishedAt}`,
         sql`${news.id} <> ${newsId}`,
       ),
@@ -345,7 +352,7 @@ export async function findAdjacentNews(newsId: string, publishedAt: Date) {
     .from(news)
     .where(
       and(
-        isNotNull(news.publishedAt),
+        publicPublishedWhere(),
         sql`${news.publishedAt} < ${publishedAt}`,
         sql`${news.id} <> ${newsId}`,
       ),
@@ -362,7 +369,7 @@ export async function setHeartDeleted(id: string, deleted: boolean) {
     .where(eq(heartEvents.id, id));
 }
 
-// 관련 글 — 같은 카테고리 최신순(self 제외, published). ADR-013 가중치 스코어는 v1.1
+// 관련 글 — 같은 카테고리 최신순(self 제외, 현재 공개). ADR-013 가중치 스코어는 v1.1
 export async function listRelatedNews(
   newsId: string,
   categoryId: string,
@@ -380,7 +387,7 @@ export async function listRelatedNews(
     .innerJoin(categories, eq(news.categoryId, categories.id))
     .where(
       and(
-        isNotNull(news.publishedAt),
+        publicPublishedWhere(),
         eq(news.categoryId, categoryId),
         sql`${news.id} <> ${newsId}`,
       ),
@@ -486,7 +493,10 @@ export async function setLandingSlot(
   if (slot != null) {
     // 점유 — eligibility(발행 + 쌀 나눔) 확인 후에만 기존 점유자 해제(검증 실패 시 기존 슬롯 보존)
     const riceId = await getRiceSharingCategoryId(tx);
-    const eligible = target.publishedAt != null && target.categoryId === riceId;
+    const eligible =
+      target.publishedAt != null &&
+      target.publishedAt.getTime() <= Date.now() &&
+      target.categoryId === riceId;
     if (!eligible) return { kind: "ineligible" };
     await tx
       .update(news)
@@ -523,7 +533,7 @@ export async function acquireLandingSlotLock(tx: Tx) {
 
 // /news Hero 일괄 정렬 — 2-phase: (1) 기존 hero_rank 전부 해제 → partial unique index 비움 (충돌 원천 제거),
 // (2) 새 순서대로 1..N 부여 (N ≤ 4). 단일 트랜잭션, 실패 시 롤백. 호출 전 acquireHeroOrderLock 으로 직렬화 필수.
-// Phase2 는 publishedAt IS NOT NULL 가드 — 검증 후 미발행 전환된 글이 pin 되는 TOCTOU 차단 (Slice3 W-1)
+// Phase2 는 publishedAt <= now 가드 — 검증 후 미발행·예약 전환된 글이 pin 되는 TOCTOU 차단 (Slice3 W-1)
 export async function setHeroOrder(tx: Tx, orderedNewsIds: string[]) {
   await tx
     .update(news)
@@ -533,7 +543,7 @@ export async function setHeroOrder(tx: Tx, orderedNewsIds: string[]) {
     await tx
       .update(news)
       .set({ heroRank: i + 1, updatedAt: new Date() })
-      .where(and(eq(news.id, orderedNewsIds[i]), isNotNull(news.publishedAt)));
+      .where(and(eq(news.id, orderedNewsIds[i]), publicPublishedWhere()));
   }
 }
 
@@ -551,11 +561,11 @@ export async function countPublishedIn(tx: Tx, ids: string[]) {
   const [row] = await tx
     .select({ count: sql<number>`count(*)::int` })
     .from(news)
-    .where(and(inArray(news.id, ids), isNotNull(news.publishedAt)));
+    .where(and(inArray(news.id, ids), publicPublishedWhere()));
   return row?.count ?? 0;
 }
 
-// /news Hero 노출 — 발행 + hero_rank NOT NULL, rank 순. 전 카테고리 (랜딩 featured 의 rice_sharing 제한 없음). body 포함 (공개 히어로 발췌용, ≤4행)
+// /news Hero 노출 — 현재 공개 + hero_rank NOT NULL, rank 순. 전 카테고리 (랜딩 featured 의 rice_sharing 제한 없음). body 포함 (공개 히어로 발췌용, ≤4행)
 export async function listHeroNews() {
   return db
     .select({
@@ -570,11 +580,11 @@ export async function listHeroNews() {
     })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
-    .where(and(isNotNull(news.publishedAt), isNotNull(news.heroRank)))
+    .where(and(publicPublishedWhere(), isNotNull(news.heroRank)))
     .orderBy(asc(news.heroRank));
 }
 
-// 어드민 Hero picker 후보 — 발행 + hero_rank NULL (아직 미지정), 최신순
+// 어드민 Hero picker 후보 — 현재 공개 + hero_rank NULL (아직 미지정), 최신순
 export async function listHeroCandidates(limit = 50) {
   return db
     .select({
@@ -588,7 +598,7 @@ export async function listHeroCandidates(limit = 50) {
     })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
-    .where(and(isNotNull(news.publishedAt), isNull(news.heroRank)))
+    .where(and(publicPublishedWhere(), isNull(news.heroRank)))
     .orderBy(desc(news.publishedAt))
     .limit(limit);
 }

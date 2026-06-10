@@ -29,7 +29,8 @@ export type NewsRow = {
   updatedAt: Date;
 };
 
-export type NewsStatus = "all" | "draft" | "published";
+export type NewsStatus = "all" | "draft" | "scheduled" | "published";
+type NewsPublishState = Exclude<NewsStatus, "all">;
 
 type Props = {
   rows: NewsRow[];
@@ -41,7 +42,16 @@ type Props = {
 const STATUS_LABEL: Record<NewsStatus, string> = {
   all: "전체",
   draft: "임시 저장",
+  scheduled: "예약",
   published: "발행",
+};
+
+const STATUS_BADGE_CLASS: Record<NewsPublishState, string> = {
+  draft: "rounded-full bg-warm/15 px-2 py-1 text-xs font-medium text-amber-700",
+  scheduled:
+    "rounded-full bg-kpi-lime/30 px-2 py-1 text-xs font-medium text-ink-strong",
+  published:
+    "rounded-full bg-brand-primary/10 px-2 py-1 text-xs font-medium text-brand-primary",
 };
 
 function formatDate(d: Date): string {
@@ -50,6 +60,11 @@ function formatDate(d: Date): string {
     month: "2-digit",
     day: "2-digit",
   });
+}
+
+function getPublishState(publishedAt: Date | null): NewsPublishState {
+  if (!publishedAt) return "draft";
+  return new Date(publishedAt).getTime() > Date.now() ? "scheduled" : "published";
 }
 
 export function NewsTable({ rows, page, totalPages, status }: Props) {
@@ -105,15 +120,15 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
   };
 
   // 행 액션 — 데스크탑 테이블/모바일 카드 공용
-  const renderRowActions = (row: NewsRow, isPublished: boolean) => (
+  const renderRowActions = (row: NewsRow, hasPublishAt: boolean) => (
     <div className="flex justify-end gap-1">
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => togglePublish(row.id, isPublished)}
+        onClick={() => togglePublish(row.id, hasPublishAt)}
         disabled={isPending}
       >
-        {isPublished ? "해제" : "발행"}
+        {hasPublishAt ? "해제" : "발행"}
       </Button>
       <Button asChild variant="ghost" size="sm">
         <Link href={`/admin/news/${row.id}/edit`}>수정</Link>
@@ -135,7 +150,7 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
       {/* 상태 탭 */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-2">
-          {(["all", "draft", "published"] as const).map((s) => (
+          {(["all", "draft", "scheduled", "published"] as const).map((s) => (
             <Button
               key={s}
               variant={status === s ? "default" : "outline"}
@@ -194,7 +209,8 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
                   </thead>
                   <tbody>
                     {rows.map((row) => {
-                      const isPublished = row.publishedAt !== null;
+                      const state = getPublishState(row.publishedAt);
+                      const hasPublishAt = row.publishedAt !== null;
                       return (
                         <tr
                           key={row.id}
@@ -212,21 +228,15 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
                             {row.categoryName}
                           </td>
                           <td className="py-3 pr-4">
-                            <span
-                              className={
-                                isPublished
-                                  ? "rounded-full bg-brand-primary/10 px-2 py-1 text-xs font-medium text-brand-primary"
-                                  : "rounded-full bg-warm/15 px-2 py-1 text-xs font-medium text-amber-700"
-                              }
-                            >
-                              {isPublished ? "발행" : "임시 저장"}
+                            <span className={STATUS_BADGE_CLASS[state]}>
+                              {STATUS_LABEL[state]}
                             </span>
                           </td>
                           <td className="py-3 pr-4 text-ink-subtle">
                             {formatDate(row.createdAt)}
                           </td>
                           <td className="py-3 text-right">
-                            {renderRowActions(row, isPublished)}
+                            {renderRowActions(row, hasPublishAt)}
                           </td>
                         </tr>
                       );
@@ -238,7 +248,8 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
               {/* 모바일 — 카드 (md 미만, 가로 스크롤 없이 관리 버튼 도달) */}
               <ul className="space-y-3 md:hidden">
                 {rows.map((row) => {
-                  const isPublished = row.publishedAt !== null;
+                  const state = getPublishState(row.publishedAt);
+                  const hasPublishAt = row.publishedAt !== null;
                   return (
                     <li
                       key={row.id}
@@ -252,19 +263,15 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
                           {row.title}
                         </Link>
                         <span
-                          className={
-                            isPublished
-                              ? "shrink-0 rounded-full bg-brand-primary/10 px-2 py-1 text-xs font-medium text-brand-primary"
-                              : "shrink-0 rounded-full bg-warm/15 px-2 py-1 text-xs font-medium text-amber-700"
-                          }
+                          className={`shrink-0 ${STATUS_BADGE_CLASS[state]}`}
                         >
-                          {isPublished ? "발행" : "임시 저장"}
+                          {STATUS_LABEL[state]}
                         </span>
                       </div>
                       <p className="text-xs text-ink-subtle">
                         {row.categoryName} · {formatDate(row.createdAt)}
                       </p>
-                      {renderRowActions(row, isPublished)}
+                      {renderRowActions(row, hasPublishAt)}
                     </li>
                   );
                 })}

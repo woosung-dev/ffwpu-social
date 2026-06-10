@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Plus } from "lucide-react";
+import { getAdminAnalyticsDashboard } from "@/features/analytics";
 import { getAdminDashboard } from "@/features/news";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,18 @@ function formatDate(d: Date): string {
     month: "2-digit",
     day: "2-digit",
   });
+}
+
+function getStatusLabel(publishedAt: Date | null): string {
+  if (!publishedAt) return "임시";
+  return new Date(publishedAt).getTime() > Date.now() ? "예약" : "발행";
+}
+
+function getStatusClass(publishedAt: Date | null): string {
+  if (!publishedAt) return "bg-warm/15 text-amber-700";
+  return new Date(publishedAt).getTime() > Date.now()
+    ? "bg-kpi-lime/30 text-ink-strong"
+    : "bg-brand-primary/10 text-brand-primary";
 }
 
 export default function AdminDashboardPage() {
@@ -52,9 +65,73 @@ const CATEGORY_CHIP_PALETTE = [
 ] as const;
 
 async function DashboardData() {
-  const data = await getAdminDashboard(5);
+  const [data, analytics] = await Promise.all([
+    getAdminDashboard(5),
+    getAdminAnalyticsDashboard(),
+  ]);
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <Card className="min-w-0 lg:col-span-3">
+        <CardHeader>
+          <CardTitle className="text-xl">최근 30일 콘텐츠 분석</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Metric label="조회" value={analytics.totals.views} />
+            <Metric label="순 방문 브라우저" value={analytics.totals.uniqueViewers} />
+            <Metric label="공감 클릭" value={analytics.totals.heartClicks} />
+            <Metric label="공유 클릭" value={analytics.totals.shareClicks} />
+          </div>
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+            <div>
+              <h3 className="text-sm font-semibold text-ink-strong">인기 글</h3>
+              {analytics.topNews.length === 0 ? (
+                <p className="mt-3 text-sm text-ink-subtle">
+                  아직 분석 이벤트가 없습니다.
+                </p>
+              ) : (
+                <ul className="mt-3 divide-y">
+                  {analytics.topNews.map((item) => (
+                    <li key={item.newsId} className="flex items-center justify-between gap-4 py-2">
+                      <Link
+                        href={`/admin/news/${item.newsId}/edit`}
+                        className="min-w-0 truncate text-sm font-medium text-ink-strong hover:text-brand-primary"
+                      >
+                        {item.title}
+                      </Link>
+                      <span className="shrink-0 text-xs tabular-nums text-ink-subtle">
+                        조회 {item.views} · 공감 {item.heartClicks} · 공유 {item.shareClicks}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-ink-strong">유입 경로</h3>
+              {analytics.referrers.length === 0 ? (
+                <p className="mt-3 text-sm text-ink-subtle">기록된 외부 유입이 없습니다.</p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {analytics.referrers.map((r) => (
+                    <li
+                      key={r.referrer ?? "unknown"}
+                      className="flex items-center justify-between gap-3 rounded-md bg-surface-soft px-3 py-2"
+                    >
+                      <span className="min-w-0 truncate text-xs text-ink-subtle">
+                        {r.referrer}
+                      </span>
+                      <span className="shrink-0 text-xs font-semibold tabular-nums">
+                        {r.count}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       <Card className="min-w-0 lg:col-span-2">
         <CardHeader>
           <CardTitle className="text-xl">최근 글 5건</CardTitle>
@@ -74,13 +151,9 @@ async function DashboardData() {
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                       <span
-                        className={
-                          item.publishedAt
-                            ? "shrink-0 rounded-full bg-brand-primary/10 px-2 py-0.5 text-xs font-medium text-brand-primary"
-                            : "shrink-0 rounded-full bg-warm/15 px-2 py-0.5 text-xs font-medium text-amber-700"
-                        }
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${getStatusClass(item.publishedAt)}`}
                       >
-                        {item.publishedAt ? "발행" : "임시"}
+                        {getStatusLabel(item.publishedAt)}
                       </span>
                       <span className="truncate font-medium text-ink-strong">
                         {item.title}
@@ -128,6 +201,17 @@ async function DashboardData() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-border bg-white px-4 py-3">
+      <p className="text-xs font-medium text-ink-subtle">{label}</p>
+      <p className="mt-1 text-2xl font-extrabold tabular-nums text-ink-strong">
+        {value.toLocaleString("ko-KR")}
+      </p>
     </div>
   );
 }

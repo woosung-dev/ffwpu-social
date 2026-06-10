@@ -4,10 +4,20 @@
 import { Link2, Share2 } from "lucide-react";
 import { useState } from "react";
 
-export function ShareRow({ title }: { title: string }) {
+import { recordAnalyticsEventAction } from "@/features/analytics/actions";
+import { buildAnalyticsPayload } from "@/features/analytics/client";
+
+export function ShareRow({ title, newsId }: { title: string; newsId: string }) {
   const [copied, setCopied] = useState(false);
 
-  const copyLink = async () => {
+  const recordShare = () => {
+    void recordAnalyticsEventAction(
+      buildAnalyticsPayload({ eventType: "share_click", newsId }),
+    );
+  };
+
+  const copyLink = async (track = true) => {
+    if (track) recordShare();
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
@@ -18,6 +28,7 @@ export function ShareRow({ title }: { title: string }) {
   };
 
   const share = async () => {
+    recordShare();
     if (typeof navigator.share === "function") {
       try {
         await navigator.share({ title, url: window.location.href });
@@ -27,26 +38,27 @@ export function ShareRow({ title }: { title: string }) {
         return;
       }
     }
-    await copyLink();
+    await copyLink(false);
   };
 
   return (
     <div className="flex items-center gap-2">
+      {/* Figma 749:8256: 원형 40 + 아이콘 24 #4B5563 — 1회 사용이라 토큰 신설 대신 Tailwind 표준 gray-600(#4B5563) */}
       <button
         type="button"
         onClick={share}
         aria-label="공유하기"
-        className="flex size-10 items-center justify-center rounded-full bg-surface-cool text-ink-strong-mid transition-opacity hover:opacity-80"
+        className="flex size-10 items-center justify-center rounded-full bg-surface-cool text-gray-600 transition-opacity hover:opacity-80"
       >
-        <Share2 className="size-5" aria-hidden />
+        <Share2 className="size-6" aria-hidden />
       </button>
       <button
         type="button"
-        onClick={copyLink}
+        onClick={() => void copyLink()}
         aria-label="링크 복사"
-        className="flex size-10 items-center justify-center rounded-full bg-surface-cool text-ink-strong-mid transition-opacity hover:opacity-80"
+        className="flex size-10 items-center justify-center rounded-full bg-surface-cool text-gray-600 transition-opacity hover:opacity-80"
       >
-        <Link2 className="size-5" aria-hidden />
+        <Link2 className="size-6" aria-hidden />
       </button>
       {copied && (
         <span className="text-sm text-ink-subtle" role="status">

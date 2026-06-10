@@ -1,0 +1,7 @@
+# 측정 하네스 산출물 — 재생성 가능·용량(6MB+) 커서 git 제외, 로컬 보존 (2026-06-10 PR #45 정리).
+# 영속 결론은 report.md / specs/ / allowlist.md 만 트래킹.
+figma-shots/
+measured/
+measured-r2/
+fixes/
+findings-*.json

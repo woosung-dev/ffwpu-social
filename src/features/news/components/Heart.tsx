@@ -1,4 +1,4 @@
-// 익명 좋아요 토글 — IP+세션 1회 토글 (ADR-010). 실 toggleHeart action 연결은 D-2, 본 컴포넌트는 optimistic UI 와 시각 표시만 담당
+// 익명 좋아요 토글 — sessionId(localStorage) 1회 토글 (ADR-026). badge(카드 배지)·pill(상세 하단 "공감해요") 두 형태. optimistic UI 담당, 실 토글은 부모가 주입
 "use client";
 
 import { Heart as HeartIcon } from "lucide-react";
@@ -20,6 +20,8 @@ type Props = {
   compact?: boolean;
   /** false 면 클릭 불가, 단순 표시 (카드 호버 표시·관련 글 카드 등) */
   interactive?: boolean;
+  /** 상세 하단 "공감해요" pill 형태 (Figma 749:7904) — 미지정 시 기존 badge 형태 */
+  pill?: boolean;
 };
 
 export function Heart({
@@ -28,6 +30,7 @@ export function Heart({
   onToggleAction,
   compact = false,
   interactive = true,
+  pill = false,
 }: Props) {
   const [active, setActive] = useState(initialActive);
   const [optimisticDelta, setOptimisticDelta] = useState(0);
@@ -60,6 +63,8 @@ export function Heart({
   };
 
   const Wrapper = interactive ? "button" : "span";
+  // pill 의 행위 명칭은 라벨과 일관되게 "공감", badge 는 기존 "좋아요" 유지
+  const verb = pill ? "공감" : "좋아요";
 
   return (
     <Wrapper
@@ -69,25 +74,50 @@ export function Heart({
       aria-label={
         interactive
           ? active
-            ? "좋아요 취소"
-            : "좋아요"
-          : `좋아요 ${displayCount}개`
+            ? `${verb} 취소`
+            : pill
+              ? "공감해요"
+              : "좋아요"
+          : `${verb} ${displayCount}개`
       }
       disabled={interactive ? pending : undefined}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full text-brand-vivid transition-opacity",
+        "inline-flex items-center rounded-full transition-opacity",
         interactive
           ? "cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           : "cursor-default",
-        compact ? "text-xs" : "text-base",
+        pill
+          ? // Figma 749:7904: 흰 배경 + border 1.3 + radius full + padding 좌10/우12/상하3 + gap 6.
+            // 색은 Figma #959BA9 대신 ink-date(#6F7682) — AA 4.5:1 상향 선례 (allowlist #11)
+            "gap-1.5 border-[1.3px] border-ink-date bg-white py-[3px] pl-2.5 pr-3 text-lg leading-[1.6] text-ink-date"
+          : // compact 카운트 14px — Figma 카드 배지 SUIT Bold 14 (audit 2026-06-10, 12→14 정정)
+            cn("gap-1 text-brand-vivid", compact ? "text-sm" : "text-base"),
       )}
     >
       <HeartIcon
-        className={cn(compact ? "size-3.5" : "size-4")}
+        className={cn(
+          // pill: lucide 24-viewBox 글리프(≈20×17.5u)를 22px 렌더 → 벡터 약 18×16 (Figma 스펙)
+          // badge·compact: 16px 박스 → 글리프 실측 ≈13.3 — Figma 하트 15×13.33 정합 (compact 14→16, audit 2026-06-10)
+          pill ? "size-[22px]" : "size-4",
+          // [추론] pill active 색 — 749:7904 의 Click 변형 미노출, 구형 세트 Click(114:8301)의 #B35FEB 채움을 따름
+          pill && active && "text-brand-vivid",
+        )}
+        // pill: Figma stroke 1.3px 근사 (1.5u × 22/24 ≈ 1.38px)
+        strokeWidth={pill ? 1.5 : undefined}
         fill={active ? "currentColor" : "none"}
         aria-hidden
       />
-      <span className="font-bold tabular-nums">{displayCount}</span>
+      {pill && <span className="font-semibold">공감해요</span>}
+      <span
+        className={cn(
+          "tabular-nums",
+          pill ? "font-extrabold" : "font-bold",
+          // [추론] pill active 카운트도 구형 Click 변형 색(#B35FEB)을 따름 — 라벨·보더는 그대로
+          pill && active && "text-brand-vivid",
+        )}
+      >
+        {displayCount}
+      </span>
     </Wrapper>
   );
 }

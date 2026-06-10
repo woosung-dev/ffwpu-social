@@ -57,7 +57,8 @@ export function PartnersSection() {
       <SectionContainer>
         {/* 상단 — 보라 아이콘 + Sow Good 로고 + 카피 */}
         <div className="flex flex-col items-center gap-[30px] text-surface-dark">
-          <div className="flex size-[58px] items-center justify-center rounded-[13px] border-2 border-surface-dark bg-brand-pale md:size-[92px] md:rounded-[20px]">
+          {/* 아이콘 박스 radius — Figma 375 r8 / 768+ r20 (이전 비례 축소값 13 정정) */}
+          <div className="flex size-[58px] items-center justify-center rounded-lg border-2 border-surface-dark bg-brand-pale md:size-[92px] md:rounded-[20px]">
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
             <img
               src="/icons/s5-icon-group.svg"
@@ -83,8 +84,10 @@ export function PartnersSection() {
           </div>
         </div>
 
-        {/* 하단 — 파트너 로고. Figma List 332:9087 — flex justify-between(lg+) / flex-wrap(md) / flex-col(base) · opacity-23(컨테이너). Logo 프레임: w-200(base·md)→auto(lg+), h-70(base)→100(md+) */}
-        <div className="mt-[70px] flex w-full flex-col items-center justify-center opacity-[0.23] md:flex-row md:flex-wrap md:content-center md:justify-around lg:flex-nowrap lg:justify-between">
+        {/* 하단 — 파트너 로고. Figma List 332:9087 — flex-col(base) · opacity-23(컨테이너). Logo 프레임: w-200(base·md)→auto(lg+), h-70(base)→100(md+).
+            768 = justify-center+gap24: 1행 3셀(600+48=648 풀폭)은 Figma justify-between 과 동치이면서, Figma 가 미정의한 5로고 2행의 양끝 분리 공백을 회피 (중앙 정렬 선택).
+            lg+ = 5셀 nowrap justify-between (Figma 1025/1440) */}
+        <div className="mt-[70px] flex w-full flex-col items-center justify-center opacity-[0.23] md:flex-row md:flex-wrap md:content-center md:justify-center md:gap-6 lg:flex-nowrap lg:justify-between lg:gap-0">
           {PARTNERS.map((partner) => (
             <div
               key={partner.src}

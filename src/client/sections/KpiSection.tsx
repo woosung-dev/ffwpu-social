@@ -138,14 +138,16 @@ export function KpiSection({ metricsBySlug }: Props) {
             <div className="flex w-[199px] shrink-0 flex-col gap-1.5 md:w-auto md:flex-[1.798] md:gap-2.5">
               {/* 상단 sub-row(봉사기간[+SowGood]): h 375:106 / 768:180. 375~767 cols-1(풀폭 199, Sow Good 미노출), md+ cols-2(각 200). 봉사횟수가 잔여 흡수 */}
               <div className="grid h-[106px] shrink-0 grid-cols-1 gap-1.5 md:h-[180px] md:grid-cols-2 md:gap-2.5">
+                {/* 누적 봉사 기간 — Figma 375 px≈18 py≈12(값 우정렬) / 768 px30 py20(값 좌정렬).
+                    폭 산식: 375 셀 199−36=163 ≥ "38년 5개월" 24px ≈117 OK / 768 셀 200−60=140 vs 30px ≈141~147 — 경계(아래 [확인 필요]) */}
                 <div
                   data-fid="card-volunteer-period"
-                  className="flex flex-col justify-between gap-3 rounded-[12px] bg-kpi-gray py-3 pl-[14px] text-ink-strong-mid md:rounded-[20px] md:py-5 md:pl-6"
+                  className="flex flex-col justify-between gap-3 rounded-[12px] bg-kpi-gray px-[18px] py-3 text-ink-strong-mid md:rounded-[20px] md:px-[30px] md:py-5"
                 >
                   <p className="text-[12px] font-semibold md:text-[20px]">
                     누적 봉사 기간
                   </p>
-                  <p className="whitespace-nowrap text-[24px] font-bold leading-none tabular-nums md:text-[30px]">
+                  <p className="whitespace-nowrap text-right text-[24px] font-bold leading-none tabular-nums md:text-left md:text-[30px]">
                     {volunteerPeriod}
                   </p>
                 </div>
@@ -284,10 +286,10 @@ export function KpiSection({ metricsBySlug }: Props) {
             <div className="flex w-full flex-col gap-4 lg:w-[607px] lg:shrink-0">
               {/* sub-row(봉사기간+SowGood): Figma h225 고정 → event-count(flex-1)=518−225−16=277. grid-cols-2 강제 균등(각 295.5) */}
               <div className="grid grid-cols-2 gap-4 lg:h-[225px]">
-                {/* 누적 봉사 기간 — 값 우측까지 → pl-only(대칭 px-30 은 295.5 셀 오버플로). label 20 / value 45 */}
+                {/* 누적 봉사 기간 — Figma px30 py20 복원. 폭 산식: 셀 295.5−60=235.5 ≥ "38년 5개월" 45px ≈211 — 현 데이터 오버플로 없음. label 20 / value 45 */}
                 <div
                   data-fid="card-volunteer-period"
-                  className="flex flex-col justify-between rounded-[20px] bg-kpi-gray py-5 pl-[30px] text-ink-strong-mid"
+                  className="flex flex-col justify-between rounded-[20px] bg-kpi-gray px-[30px] py-5 text-ink-strong-mid"
                 >
                   <p className="text-[20px] font-semibold">누적 봉사 기간</p>
                   <p className="whitespace-nowrap text-[45px] font-bold leading-none tabular-nums">

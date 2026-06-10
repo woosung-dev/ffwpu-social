@@ -2,13 +2,13 @@
 // 허용 노드/마크만 통과 + inline 값은 editor-allowlist 로 화이트리스트(XSS 차단). codex P1#3 + 에디터 업그레이드.
 import {
   ALLOWED_COLORS,
-  ALLOWED_FONT_SIZES,
   ALLOWED_HIGHLIGHTS,
   YOUTUBE_ID_REGEX,
   clampImageWidth,
   extractYoutubeId,
   isAllowedValue,
   normalizeAlign,
+  normalizeFontSize,
 } from "./editor-allowlist";
 
 export type SafeMark = { type: string; attrs?: Record<string, string> };
@@ -72,8 +72,8 @@ function sanitizeMark(mark: unknown): SafeMark | null {
       const color = isObject(mark.attrs) ? mark.attrs.color : undefined;
       const fontSize = isObject(mark.attrs) ? mark.attrs.fontSize : undefined;
       if (isString(color) && isAllowedValue(ALLOWED_COLORS, color)) attrs.color = color;
-      if (isString(fontSize) && isAllowedValue(ALLOWED_FONT_SIZES, fontSize))
-        attrs.fontSize = fontSize;
+      const safeFontSize = normalizeFontSize(fontSize);
+      if (safeFontSize) attrs.fontSize = safeFontSize;
       // 유효 attr 없으면 drop (임의 style 차단)
       return Object.keys(attrs).length ? { type: "textStyle", attrs } : null;
     }

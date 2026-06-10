@@ -56,9 +56,11 @@ export default function NewsListPage({
       </Suspense>
 
       {/* 랜딩과 동일 밴드 고정폭 정합 — SectionContainer(768→648 / 1025→905 / 1440→1200, mobile px-4) */}
-      <section className="w-full py-10 lg:py-16">
+      {/* 수직 리듬 (Figma audit 2026-06-10): pt = Featured→헤딩 30(375/768/1025)·60(1440), pb = 페이지네이션 하단 40 과 합산해 Footer 간격 100(375/768/1025)·110(1440) */}
+      <section className="w-full pt-[30px] pb-[60px] wide:pt-[60px] wide:pb-[70px]">
         <SectionContainer>
-          <h2 className="text-2xl font-bold tracking-tight text-ink-strong lg:text-[32px]">
+          {/* 헤딩 크기 — Figma 24(375/768) / 28(1025) / 32(1440) */}
+          <h2 className="text-2xl font-bold tracking-tight text-ink-strong lg:text-[28px] wide:text-[32px]">
             더 많은 소식
           </h2>
 
@@ -111,7 +113,8 @@ async function NewsListPrefetch({
 
 function NewsListLoading() {
   return (
-    <div className="mt-6 lg:mt-8" aria-busy>
+    // 실제 탭 래퍼(news-list-client)의 헤딩→탭 간격 30/40 과 동기 — 로딩→로드 레이아웃 시프트 방지
+    <div className="mt-[30px] wide:mt-10" aria-busy>
       <div className="h-10 animate-pulse rounded-md bg-muted/60" />
       <ul className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:mt-10 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-12">
         {Array.from({ length: 9 }).map((_, i) => (

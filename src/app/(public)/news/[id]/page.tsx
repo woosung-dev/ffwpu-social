@@ -1,4 +1,4 @@
-// 소식 상세 페이지 — Figma 93:8810 정합. 900px 본문(헤더·태그·본문·공유·이전다음·관련글) + 스크롤탑. (public)/layout 의 헤더·푸터 사용. Next 16 params Promise + Suspense 격리
+// 소식 상세 페이지 — Figma 749:7920(B 시안) 정합. 900px 본문(헤더·태그·본문·공유+공감·이전다음·관련글) + 스크롤탑. (public)/layout 의 헤더·푸터 사용. Next 16 params Promise + Suspense 격리
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
@@ -10,6 +10,8 @@ import { ArticleCard } from "@/features/news/components";
 
 import { SubBanner } from "../sub-banner";
 import { DetailHeader } from "./detail-header";
+import { DetailHeart } from "./detail-heart";
+import { NewsViewTracker } from "./news-view-tracker";
 import { PrevNextNav } from "./prev-next-nav";
 import { ShareRow } from "./share-row";
 import { ScrollTopButton } from "./scroll-top";
@@ -96,68 +98,80 @@ async function NewsDetailContent({
     : { prev: null, next: null };
 
   return (
-    <div className="mx-auto w-full px-4 md:max-w-[648px] md:px-0 lg:max-w-[905px] py-12 lg:py-20">
-      {/* 본문폭: 리스트 밴드 정합 md648/lg905, wide는 가독 cap(1200 미적용) */}
-      <DetailHeader
-        newsId={item.id}
-        categoryName={item.categoryName}
-        title={item.title}
-        publishedAt={item.publishedAt}
-        heartCount={item.heartCount}
+    // 배경 밴드 기준 래퍼 — isolate 로 -z-10 밴드를 콘텐츠 뒤·페이지 배경 앞 stacking context 에 격리
+    <div className="relative isolate">
+      <NewsViewTracker newsId={item.id} />
+      {/* 배경 밴드 — Figma 749:7979: 풀블리드 수직 그라데이션 white→rgba(249,244,255,0.8).
+          1440 기준 h598, 하단(디바이더~관련글) 뒤에 깔리고 푸터 직전에서 끝남 — 컨테이너 하단 앵커.
+          모바일 h360 은 비례 축소 [추론 — Figma 모바일 상세 프레임 없음] */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[360px] bg-gradient-to-b from-white to-[#F9F4FF]/80 lg:h-[598px]"
       />
+      <div className="mx-auto w-full px-4 md:max-w-[648px] md:px-0 lg:max-w-[905px] py-12 lg:py-20">
+        {/* 본문폭: 리스트 밴드 정합 md648/lg905, wide는 가독 cap(1200 미적용) */}
+        <DetailHeader
+          categoryName={item.categoryName}
+          title={item.title}
+          publishedAt={item.publishedAt}
+        />
 
-      {/* 태그 — 해시태그 알약 (Figma 106:8461) */}
-      {item.tags.length > 0 && (
-        <ul className="mt-8 flex flex-wrap items-center gap-2">
-          {item.tags.map((tag) => (
-            <li key={tag}>
-              <span className="inline-flex items-center rounded-full border-[1.3px] border-tag-default px-4 py-1 text-base text-tag-default lg:text-lg">
-                #{tag}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* 본문 */}
-      <div className="mt-10">
-        <NewsBodyRenderer body={item.body} />
-      </div>
-
-      {/* 공유 */}
-      <div className="mt-8">
-        <ShareRow title={item.title} />
-      </div>
-
-      <hr className="mt-12 border-border" />
-
-      <PrevNextNav prev={adjacent.prev} next={adjacent.next} />
-
-      {/* 더 많은 소식 — Figma 93:8865 관련글 ArticleCard(인스턴스 93:8868) size=3 */}
-      {related.length > 0 && (
-        <section className="mt-12">
-          <h2 className="text-xl font-bold text-ink-strong">
-            더 많은 소식 살펴보기
-          </h2>
-          <ul className="mt-4 grid [grid-template-columns:repeat(auto-fill,minmax(max(200px,calc(50%-14px)),1fr))] gap-7 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
-            {related.map((r) => (
-              <li key={r.id} className="flex">
-                <ArticleCard
-                  size={3}
-                  className="w-full max-w-none"
-                  article={{
-                    id: r.id,
-                    title: r.title,
-                    categoryName: r.categoryName,
-                    coverImageUrl: r.coverImageUrl,
-                    publishedAt: r.publishedAt,
-                  }}
-                />
+        {/* 태그 — 해시태그 알약 (Figma 749:8073: bg #F9FAFB·Medium 18). 1440 리듬: 제목 블록 →60→ 태그. 모바일 mt-8 유지 [추론 — 모바일 상세 프레임 없음] */}
+        {item.tags.length > 0 && (
+          <ul className="mt-8 flex flex-wrap items-center gap-2 lg:mt-[60px]">
+            {item.tags.map((tag) => (
+              <li key={tag}>
+                <span className="inline-flex items-center rounded-full border-[1.3px] border-tag-default bg-gray-50 px-4 py-1 text-base font-medium text-tag-default lg:text-lg">
+                  #{tag}
+                </span>
               </li>
             ))}
           </ul>
-        </section>
-      )}
+        )}
+
+        {/* 본문 — 1440 리듬: 태그 →60→ 본문 */}
+        <div className="mt-10 lg:mt-[60px]">
+          <NewsBodyRenderer body={item.body} />
+        </div>
+
+        {/* Bottom 줄 — 공유(좌) + 공감 pill(우). Figma 749:8083, 본문 →50→ Bottom(h40) */}
+        <div className="mt-8 flex items-center justify-between lg:mt-[50px]">
+          <ShareRow title={item.title} newsId={item.id} />
+          <DetailHeart newsId={item.id} count={item.heartCount} />
+        </div>
+
+        {/* 1440 리듬: Bottom →70→ 디바이더 */}
+        <hr className="mt-12 border-border lg:mt-[70px]" />
+
+        <PrevNextNav prev={adjacent.prev} next={adjacent.next} />
+
+        {/* 더 많은 소식 — Figma 93:8865 관련글 ArticleCard(인스턴스 93:8868) size=3.
+            1440 리듬: 이전/다음 행 →40→ 제목 — 행 터치타깃 하단 여유 10px 보정해 mt 30px [추론 — 텍스트 기준 정합] */}
+        {related.length > 0 && (
+          <section className="mt-12 lg:mt-[30px]">
+            <h2 className="text-xl font-bold text-ink-strong">
+              더 많은 소식 살펴보기
+            </h2>
+            <ul className="mt-4 grid [grid-template-columns:repeat(auto-fill,minmax(max(200px,calc(50%-14px)),1fr))] gap-7 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
+              {related.map((r) => (
+                <li key={r.id} className="flex">
+                  <ArticleCard
+                    size={3}
+                    className="w-full max-w-none"
+                    article={{
+                      id: r.id,
+                      title: r.title,
+                      categoryName: r.categoryName,
+                      coverImageUrl: r.coverImageUrl,
+                      publishedAt: r.publishedAt,
+                    }}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
     </div>
   );
 }

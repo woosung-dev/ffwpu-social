@@ -1,4 +1,4 @@
-// 발행 일시 선택 — shadcn Calendar(Popover) + 시간 입력. 미래(현재 이후) 선택 차단(예약 발행 없음).
+// 발행·예약 일시 선택 — shadcn Calendar(Popover) + 시간 입력.
 "use client";
 
 import { useState } from "react";
@@ -40,23 +40,18 @@ type Props = {
 export function DateTimePicker({ value, onChange, disabled }: Props) {
   const [open, setOpen] = useState(false);
 
-  // 결합 결과가 미래면 현재로 클램프(달력은 미래 날짜 비활성, 시간은 여기서 방어)
-  const commit = (next: Date) => {
-    onChange(next.getTime() > Date.now() ? new Date() : next);
-  };
-
   const onSelectDate = (picked: Date | undefined) => {
     if (!picked) return;
     const next = new Date(value);
     next.setFullYear(picked.getFullYear(), picked.getMonth(), picked.getDate());
-    commit(next);
+    onChange(next);
   };
 
   const onTimeChange = (time: string) => {
     const [h, m] = time.split(":").map((n) => Number(n));
     const next = new Date(value);
     next.setHours(Number.isFinite(h) ? h : 0, Number.isFinite(m) ? m : 0, 0, 0);
-    commit(next);
+    onChange(next);
   };
 
   return (
@@ -78,7 +73,6 @@ export function DateTimePicker({ value, onChange, disabled }: Props) {
           mode="single"
           selected={value}
           onSelect={onSelectDate}
-          disabled={{ after: new Date() }}
           defaultMonth={value}
           locale={ko}
           autoFocus
@@ -104,7 +98,7 @@ export function DateTimePicker({ value, onChange, disabled }: Props) {
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => commit(new Date())}
+            onClick={() => onChange(new Date())}
           >
             지금
           </Button>

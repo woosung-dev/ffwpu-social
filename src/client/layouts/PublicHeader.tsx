@@ -71,7 +71,8 @@ export function PublicHeader() {
           />
         </Link>
 
-        {/* 데스크탑(md↑, 768~): 4항목 위치 인디케이터 — 클릭 불가, active 자동 강조. 모바일 pill 과 BP 상호배타 */}
+        {/* 데스크탑(md↑, 768~): 4항목 위치 인디케이터 — 클릭 불가, active 자동 강조.
+            item 박스고정 h33/40 — Figma Menu M/L, Tailwind 기본 lh 의 +4~7px 방지 (audit 2026-06-10). 모바일 pill 과 BP 상호배타 */}
         <nav
           aria-label="현재 보고 있는 영역"
           className="hidden items-center gap-1 md:flex lg:gap-6"
@@ -83,7 +84,7 @@ export function PublicHeader() {
                 key={m.id}
                 aria-current={isActive ? "true" : undefined}
                 className={cn(
-                  "rounded-full px-4 py-2 text-sm transition-colors select-none lg:px-5 lg:py-2.5 lg:text-base",
+                  "inline-flex h-[33px] items-center rounded-full px-4 text-sm transition-colors select-none lg:h-10 lg:px-5 lg:text-base",
                   isActive ? ACTIVE_PILL_CLASS : "font-bold text-white",
                 )}
               >
@@ -93,11 +94,11 @@ export function PublicHeader() {
           })}
         </nav>
 
-        {/* 모바일(<768): 현재 active 항목 pill 1개만 — 드롭다운·클릭 없음 */}
+        {/* 모바일(<768): 현재 active 항목 pill 1개만 — 드롭다운·클릭 없음. h33 박스고정(Figma 375 Menu M) */}
         <div
           aria-label={`현재 위치 ${activeItem.label}`}
           className={cn(
-            "rounded-full px-4 py-2 text-sm select-none md:hidden",
+            "flex h-[33px] items-center rounded-full px-4 text-sm select-none md:hidden",
             ACTIVE_PILL_CLASS,
           )}
         >

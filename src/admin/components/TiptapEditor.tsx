@@ -46,8 +46,12 @@ import {
   ALLOWED_COLORS,
   ALLOWED_FONT_SIZES,
   ALLOWED_HIGHLIGHTS,
+  FONT_SIZE_MAX,
+  FONT_SIZE_MIN,
   IMAGE_WIDTH_STEPS,
   extractYoutubeId,
+  fontSizeToNumber,
+  normalizeFontSize,
 } from "@/features/news/render/editor-allowlist";
 import { FontSize } from "./editor/font-size";
 import { FigureImage } from "./editor/figure-image";
@@ -253,14 +257,6 @@ const HEADINGS = [
   { label: "제목 3", level: 3 as const },
 ];
 
-const FONT_SIZE_LABELS: Record<string, string> = {
-  "14px": "작게",
-  "16px": "보통",
-  "18px": "크게",
-  "22px": "더 크게",
-  "28px": "제목",
-};
-
 function Toolbar({
   editor,
   onPickImage,
@@ -290,9 +286,7 @@ function Toolbar({
   const currentFontSize = editor.getAttributes("textStyle").fontSize as
     | string
     | undefined;
-  const fontSizeLabel = currentFontSize
-    ? (FONT_SIZE_LABELS[currentFontSize] ?? currentFontSize)
-    : "글자 크기";
+  const fontSizeLabel = currentFontSize ?? "글자 크기";
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-surface-cool px-2 py-1.5">
@@ -359,13 +353,19 @@ function Toolbar({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
+          <FontSizeNumberInput
+            key={currentFontSize ?? "default"}
+            editor={editor}
+            currentFontSize={currentFontSize}
+            disabled={disabled}
+          />
           {ALLOWED_FONT_SIZES.map((size) => (
             <DropdownMenuItem
               key={size}
               onClick={() => editor.chain().focus().setFontSize(size).run()}
               style={{ fontSize: size }}
             >
-              {FONT_SIZE_LABELS[size] ?? size}
+              {size}
             </DropdownMenuItem>
           ))}
           <DropdownMenuItem
@@ -595,6 +595,54 @@ function Toolbar({
 }
 
 // ─── 작은 구성요소 ────────────────────────────────────────────────────────────
+
+function FontSizeNumberInput({
+  editor,
+  currentFontSize,
+  disabled,
+}: {
+  editor: Editor;
+  currentFontSize?: string;
+  disabled?: boolean;
+}) {
+  const currentNumber = fontSizeToNumber(currentFontSize) ?? 16;
+
+  const commit = (raw: string) => {
+    const normalized = normalizeFontSize(`${raw}px`);
+    if (!normalized) return;
+    editor.chain().focus().setFontSize(normalized).run();
+  };
+
+  return (
+    <div className="space-y-1 border-b border-border px-2 py-2">
+      <label
+        htmlFor="font-size-input"
+        className="text-[11px] font-medium text-ink-subtle"
+      >
+        직접 입력
+      </label>
+      <div className="flex items-center gap-1.5">
+        <Input
+          id="font-size-input"
+          type="number"
+          min={FONT_SIZE_MIN}
+          max={FONT_SIZE_MAX}
+          step={1}
+          defaultValue={currentNumber}
+          disabled={disabled}
+          className="h-8 w-20 text-xs"
+          onBlur={(e) => commit(e.currentTarget.value)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            commit(e.currentTarget.value);
+          }}
+        />
+        <span className="text-xs text-ink-subtle">px</span>
+      </div>
+    </div>
+  );
+}
 
 function IconBtn({
   icon: Icon,

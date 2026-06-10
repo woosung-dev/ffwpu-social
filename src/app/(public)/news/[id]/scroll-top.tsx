@@ -41,9 +41,11 @@ export function ScrollTopButton() {
         ).matches;
         window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
       }}
-      className="fixed right-5 bottom-6 z-30 flex size-12 items-center justify-center rounded-full border border-brand-pale bg-white text-brand-primary shadow-md transition-opacity hover:opacity-90 lg:right-8 lg:bottom-8 lg:size-14"
+      // Figma 749:8118 — 원 55×55 #414448@0.78 + 흰 화살표 36, 우측 여백 90px (1440).
+      // 모바일 크기·오프셋은 기존 반응형 유지 [추론 — Figma 모바일 상세 프레임 없음]
+      className="fixed right-5 bottom-6 z-30 flex size-12 items-center justify-center rounded-full bg-[#414448]/78 text-white shadow-md transition-opacity hover:opacity-90 lg:right-[90px] lg:bottom-8 lg:size-14"
     >
-      <ArrowUp className="size-6" aria-hidden />
+      <ArrowUp className="size-6 lg:size-9" aria-hidden />
     </button>
   );
 }
