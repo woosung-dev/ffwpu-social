@@ -62,9 +62,9 @@ export function PublicHeader() {
           />
         </Link>
 
-        {/* 우측 클러스터 — (데스크탑 4항목 인디케이터 | 모바일 active pill) + 공통 검색 아이콘. 모바일 pill↔검색 gap 16(Figma) / md↑ flush */}
-        <div className="flex items-center gap-4 md:gap-0">
-          {/* 데스크탑(md↑, 768~): 4항목 위치 인디케이터 — 클릭 불가, active 자동 강조. gap 4(md)/24(lg), item px 16/20·py 8/10, 14/16px */}
+        {/* 우측 클러스터 — (데스크탑 4항목 인디케이터 | 모바일 active pill) + 공통 검색 아이콘. nav↔검색 gap: 16(375)/20(768)/24(1025·1440) — Figma 셀 gap 정합 */}
+        <div className="flex items-center gap-4 md:gap-5 lg:gap-6">
+          {/* 데스크탑(md↑, 768~): 4항목 위치 인디케이터 — 클릭 불가, active 자동 강조. gap 4(md)/24(lg), item px 16/20·h 33/40(Figma Menu M/L 박스고정 — Tailwind 기본 lh 로 인한 +4~7px 방지), 14/16px */}
           <nav
             aria-label="현재 보고 있는 영역"
             className="hidden items-center gap-1 md:flex lg:gap-6"
@@ -76,7 +76,7 @@ export function PublicHeader() {
                   key={m.id}
                   aria-current={isActive ? "true" : undefined}
                   className={cn(
-                    "rounded-full px-4 py-2 text-sm transition-colors select-none lg:px-5 lg:py-2.5 lg:text-base",
+                    "inline-flex h-[33px] items-center rounded-full px-4 text-sm transition-colors select-none lg:h-10 lg:px-5 lg:text-base",
                     isActive
                       ? "border-[1.6px] border-brand-primary bg-white font-extrabold text-brand-primary"
                       : "font-bold text-white",
@@ -88,10 +88,10 @@ export function PublicHeader() {
             })}
           </nav>
 
-          {/* 모바일(<768): 현재 active 항목 pill 1개만 — 드롭다운·클릭 없음. px16 py8 14px(Figma 375) */}
+          {/* 모바일(<768): 현재 active 항목 pill 1개만 — 드롭다운·클릭 없음. px16·h33(Figma 375 Menu M 박스고정) 14px */}
           <div
             aria-label={`현재 위치 ${activeItem.label}`}
-            className="flex items-center rounded-full border-[1.6px] border-brand-primary bg-white px-4 py-2 text-sm font-extrabold text-brand-primary select-none md:hidden"
+            className="flex h-[33px] items-center rounded-full border-[1.6px] border-brand-primary bg-white px-4 text-sm font-extrabold text-brand-primary select-none md:hidden"
           >
             {activeItem.label}
           </div>

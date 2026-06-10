@@ -54,8 +54,8 @@ export function NewsListClient({ categories }: Props) {
 
   return (
     <>
-      {/* 탭은 전체 폭 단독 행 — 카테고리 多 정합 (familyfed 1272-7363) */}
-      <div className="mt-6 lg:mt-8">
+      {/* 탭은 전체 폭 단독 행 — 카테고리 多 정합 (familyfed 1272-7363). 헤딩→탭 간격 Figma 30(375/768/1025)·40(1440) */}
+      <div className="mt-[30px] wide:mt-10">
         <NewsCategoryTabs
           categories={categories}
           selected={filters.categorySlug}
@@ -73,6 +73,7 @@ export function NewsListClient({ categories }: Props) {
         <NewsSort value={filters.sort} />
       </div>
 
+      {/* 그리드 colGap — Figma 18(767/768/1025)·24(1440). minmax 의 calc(50%-9px) 는 gap 18 의 절반과 동기 (2열 유지) */}
       {list.items.length === 0 ? (
         <p
           role="status"
@@ -83,7 +84,7 @@ export function NewsListClient({ categories }: Props) {
             : "아직 등록된 소식이 없습니다."}
         </p>
       ) : (
-        <ul className="mt-8 grid [grid-template-columns:repeat(auto-fill,minmax(max(200px,calc(50%-12px)),1fr))] gap-x-6 gap-y-12 md:grid-cols-2 md:gap-x-[18px] lg:mt-10 lg:grid-cols-3 wide:gap-x-6">
+        <ul className="mt-8 grid [grid-template-columns:repeat(auto-fill,minmax(max(200px,calc(50%-9px)),1fr))] gap-x-[18px] gap-y-12 md:grid-cols-2 lg:mt-10 lg:grid-cols-3 wide:gap-x-6">
           {list.items.map((item) => (
             <li key={item.id} className="flex justify-center">
               <ArticleCard
@@ -102,8 +103,9 @@ export function NewsListClient({ categories }: Props) {
         </ul>
       )}
 
+      {/* 그리드→페이지네이션 80 (mt40+pt40, 전 BP) · 하단 40 은 section pb(60/70) 와 합산해 Footer 간격 100/110 — Figma audit 2026-06-10 */}
       {list.totalPages > 1 && (
-        <div className="mt-10 flex justify-center pb-4 pt-10 lg:mt-16 lg:pb-10 lg:pt-16">
+        <div className="mt-10 flex justify-center pb-10 pt-10">
           <Pagination
             page={list.page}
             totalPages={list.totalPages}

@@ -1,6 +1,8 @@
 // 사용자 랜딩 Story 섹션 — Figma 96:7834 (1440×573). 배경 #FAF4FF, 좌측 이미지 2장 + 우측 TagChip+헤딩+설명+Result 통계. ADR-009 #story 앵커 (쌀나눔 프로젝트 메뉴 매핑). 4 BP: lg+ 좌-우 / 1024↓ 세로 스택. 데코 스티커 BP별 고정 px(이전 % 비율, 비단조 image1 폭 버그 수정)
 // 상단 이미지 2장 = 운영자가 /admin/landing 상단 슬롯(story_slot 1~2)에 지정한 글의 대표 이미지(미지정 시 기본 디자인 사진). 클릭 시 해당 소식으로 이동. (R7 — 어드민 큐레이션 공개 반영)
 // 통계는 kpi_metrics(section='story') DB 연결 — 운영자가 /admin/landing 에서 입력. value 0/null 인 항목은 hide-when-empty 로 숨김
+import { Fragment } from "react";
+
 import Link from "next/link";
 
 import { SectionContainer } from "@/client/components/layout";
@@ -163,40 +165,52 @@ export function StorySection({ stats, slots }: Props) {
         </div>
 
         {/* 텍스트 + Result — 카피는 constants/story.ts SSoT.
-            base: 세로(본문 위/통계 아래 풀폭) · md(768~1024): 가로 [본문 좌 | 통계 우, 하단정렬] · lg+: 세로 우정렬(side-by-side 컬럼) */}
-        <div className="flex flex-1 flex-col gap-6 text-surface-dark md:flex-row md:items-end md:justify-between md:gap-8 lg:flex-col lg:items-end lg:justify-start lg:gap-6 lg:text-right">
+            base: 세로 스택(텍스트 ─40─ Result, Figma 375) · md(768~1024): 가로 [본문 좌 | 통계 우, 하단정렬]
+            lg(1025~1439): 세로 우정렬 풀하이트(self-stretch) — 텍스트 ─80─ Result 하단 flush · wide(1440): 센터링 + 텍스트 ─119─ Result */}
+        <div className="flex flex-1 flex-col gap-10 text-surface-dark md:flex-row md:items-end md:justify-between md:gap-8 lg:flex-col lg:items-end lg:justify-end lg:gap-[80px] lg:self-stretch lg:text-right wide:justify-center wide:gap-[119px]">
           {/* 내부 갭 Figma 정합: tag→title 14(base)/18(md+) · title→desc 4(base)/12(md+) (이전 일률 gap-6=24 과대) */}
           <div className="flex flex-col md:max-w-[300px] lg:max-w-none lg:items-end">
-            <span className="self-start rounded-full bg-surface-dark px-4 py-2 text-base font-semibold text-ink-on-purple lg:self-end">
+            {/* 태그칩 — Figma 375: 14px·py6(h30) / 768: 16px·py8(h40) / 1025·1440: h35(Tag 117×35 — py6·lh1.4) */}
+            <span className="self-start rounded-full bg-surface-dark px-4 py-1.5 text-sm leading-[1.3] font-semibold text-ink-on-purple md:py-2 md:text-base md:leading-normal lg:self-end lg:py-1.5 lg:leading-[1.4]">
               {STORY_SECTION_CONTENT.tag}
             </span>
 
-            <h2 className="mt-3.5 whitespace-pre-line break-keep text-2xl font-bold leading-tight md:mt-[18px] lg:text-[32px]">
+            {/* 헤딩 — Figma 22(375)/28(768)/32(1025+), lh 1.3 공통 */}
+            <h2 className="mt-3.5 whitespace-pre-line break-keep text-[22px] font-bold leading-[1.3] md:mt-[18px] md:text-[28px] lg:text-[32px]">
               {STORY_SECTION_CONTENT.title}
             </h2>
 
+            {/* Figma 14px 이나 본문 16px 접근성 제약 우선 */}
             <p className="mt-1 text-base font-medium leading-[1.6] md:mt-3 lg:max-w-[420px]">
               {STORY_SECTION_CONTENT.subtitle}
             </p>
           </div>
 
-          {/* Result 통계 — Bold 24px #9257CA value / Medium 15px label, lg+ 가로 라인 / 모바일 세로 라인. hide-when-empty 적용 */}
+          {/* Result 통계 — Figma 구조 정합: 칼럼 gap16 + 구분선 h44(w1) 분리 렌더(이전 px 패딩+full-height border 구조가 1440 폭 +93 원인).
+              라벨 15/1.3 · 수치 24/1.3 · 칼럼 내 gap6 → 박스 h≈56. base 는 li flex-1 로 풀폭 분배(Figma 375 w323). hide-when-empty 적용 */}
           {visibleStats.length > 0 && (
             <ul
               aria-label="쌀 나눔 활동 성과"
-              className="mt-2 flex flex-row items-stretch gap-0 md:mt-0 lg:mt-2"
+              className="flex flex-row items-center gap-4"
             >
-              {visibleStats.map((stat) => (
-                <li
-                  key={stat.slug}
-                  className="flex flex-1 flex-col gap-1 px-[clamp(0.75rem,2.5vw,2rem)] text-left md:flex-initial md:px-4 lg:text-right wide:px-8 [&:not(:first-child)]:border-l [&:not(:first-child)]:border-brand-mid/30"
-                  aria-label={`${stat.label} ${stat.displayValue}`}
-                >
-                  <p className="text-[15px] font-medium">{stat.label}</p>
-                  <p className="text-brand-mid text-2xl font-bold tabular-nums">
-                    {stat.displayValue}
-                  </p>
-                </li>
+              {visibleStats.map((stat, index) => (
+                <Fragment key={stat.slug}>
+                  {/* 구분선 — Figma 세로 라인 h44, 칼럼 사이 gap16 양측 */}
+                  {index > 0 && (
+                    <li aria-hidden className="h-11 w-px bg-brand-mid/30" />
+                  )}
+                  <li
+                    className="flex flex-1 flex-col gap-1.5 text-left md:flex-initial lg:text-right"
+                    aria-label={`${stat.label} ${stat.displayValue}`}
+                  >
+                    <p className="text-[15px] font-medium leading-[1.3]">
+                      {stat.label}
+                    </p>
+                    <p className="text-brand-mid text-2xl font-bold leading-[1.3] tabular-nums">
+                      {stat.displayValue}
+                    </p>
+                  </li>
+                </Fragment>
               ))}
             </ul>
           )}

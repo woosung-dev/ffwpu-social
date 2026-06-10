@@ -18,6 +18,9 @@ type Props<T> = {
   renderItem: (item: T) => ReactNode;
   // 컬럼 간·카드 간 간격 (기본 gap-4)
   gapClassName?: string;
+  // 행/열 gap 을 분리해야 할 때만 지정 — 미지정 시 gapClassName 공용 (기존 사용처 회귀 방지)
+  columnGapClassName?: string;
+  rowGapClassName?: string;
   // 항목 상대 높이(예: height/width). 주면 Pinterest식 shortest-column 배치, 없으면 순서 보존 round-robin.
   getWeight?: (item: T) => number;
 };
@@ -55,6 +58,8 @@ export function MasonryGrid<T>({
   getKey,
   renderItem,
   gapClassName = "gap-4",
+  columnGapClassName,
+  rowGapClassName,
   getWeight,
 }: Props<T>) {
   return (
@@ -62,10 +67,17 @@ export function MasonryGrid<T>({
       {tiers.map((tier) => (
         <div
           key={`tier-${tier.columns}`}
-          className={cn("w-full", tier.visibilityClassName, gapClassName)}
+          className={cn(
+            "w-full",
+            tier.visibilityClassName,
+            columnGapClassName ?? gapClassName,
+          )}
         >
           {distribute(items, tier.columns, getWeight).map((col, ci) => (
-            <div key={ci} className={cn("flex flex-1 flex-col", gapClassName)}>
+            <div
+              key={ci}
+              className={cn("flex flex-1 flex-col", rowGapClassName ?? gapClassName)}
+            >
               {col.map((item) => (
                 <Fragment key={getKey(item)}>{renderItem(item)}</Fragment>
               ))}
