@@ -32,11 +32,11 @@ export function HeroBanner() {
         >
           <h1
             data-fid="hero-headline"
-            // 24/32/42/60 구간별 고정(clamp 제거). Gmarket Sans Medium 미로드 시 SUIT fallback.
+            // 24/32/42/60 구간별 고정(clamp 제거). Gmarket Sans Medium(--font-gmarket, next/font/local), SUIT fallback.
             className="text-2xl leading-[1.25] whitespace-pre-line text-brand-deep md:text-[32px] lg:text-[42px] wide:text-[60px]"
             style={{
               fontFamily:
-                "'Gmarket Sans Medium', var(--font-suit), system-ui, sans-serif",
+                "var(--font-gmarket), var(--font-suit), system-ui, sans-serif",
               fontWeight: 500,
             }}
           >

@@ -48,7 +48,8 @@ export function PublicHeader() {
 
   return (
     <header className="sticky top-0 z-40 bg-brand-bright">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:h-20 lg:px-20">
+      {/* 바 — Figma 헤더 컴포넌트(97:9431) 4BP 정합: height 54/70/88/88, 콘텐츠 그리드=SectionContainer(343/648/905/1200) */}
+      <div className="mx-auto flex h-[54px] w-full items-center justify-between px-4 md:h-[70px] md:max-w-[648px] md:px-0 lg:h-[88px] lg:max-w-[905px] wide:max-w-[1200px]">
         <Link href="/" aria-label="Sow Good 홈으로" className="block shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset, next/image SVG dangerouslyAllowSVG 회피 */}
           <img
@@ -56,40 +57,59 @@ export function PublicHeader() {
             alt="Sow Good"
             width={80}
             height={53}
-            className="h-10 w-auto lg:h-12"
+            // Figma 로고 63×42(base·md) / 80×53.3(lg·wide). w-auto 로 비율 유지
+            className="h-[42px] w-auto lg:h-[53px]"
           />
         </Link>
 
-        {/* 데스크탑(md↑, 768~): 4항목 위치 인디케이터 — 클릭 불가, active 자동 강조 */}
-        <nav
-          aria-label="현재 보고 있는 영역"
-          className="hidden items-center gap-3 md:flex lg:gap-6"
-        >
-          {MENU.map((m) => {
-            const isActive = m.id === activeMenuId;
-            return (
-              <span
-                key={m.id}
-                aria-current={isActive ? "true" : undefined}
-                className={cn(
-                  "rounded-full px-3.5 py-2 text-sm transition-colors select-none lg:px-5 lg:py-2.5 lg:text-base",
-                  isActive
-                    ? "border-[1.6px] border-brand-primary bg-white font-extrabold text-brand-primary"
-                    : "font-bold text-white",
-                )}
-              >
-                {m.label}
-              </span>
-            );
-          })}
-        </nav>
+        {/* 우측 클러스터 — (데스크탑 4항목 인디케이터 | 모바일 active pill) + 공통 검색 아이콘. 모바일 pill↔검색 gap 16(Figma) / md↑ flush */}
+        <div className="flex items-center gap-4 md:gap-0">
+          {/* 데스크탑(md↑, 768~): 4항목 위치 인디케이터 — 클릭 불가, active 자동 강조. gap 4(md)/24(lg), item px 16/20·py 8/10, 14/16px */}
+          <nav
+            aria-label="현재 보고 있는 영역"
+            className="hidden items-center gap-1 md:flex lg:gap-6"
+          >
+            {MENU.map((m) => {
+              const isActive = m.id === activeMenuId;
+              return (
+                <span
+                  key={m.id}
+                  aria-current={isActive ? "true" : undefined}
+                  className={cn(
+                    "rounded-full px-4 py-2 text-sm transition-colors select-none lg:px-5 lg:py-2.5 lg:text-base",
+                    isActive
+                      ? "border-[1.6px] border-brand-primary bg-white font-extrabold text-brand-primary"
+                      : "font-bold text-white",
+                  )}
+                >
+                  {m.label}
+                </span>
+              );
+            })}
+          </nav>
 
-        {/* 모바일(<768): 현재 active 항목 pill 1개만 — 드롭다운·클릭 없음 */}
-        <div
-          aria-label={`현재 위치 ${activeItem.label}`}
-          className="flex h-11 items-center rounded-full border-[1.6px] border-brand-primary bg-white px-4 text-base font-extrabold text-brand-primary select-none md:hidden"
-        >
-          {activeItem.label}
+          {/* 모바일(<768): 현재 active 항목 pill 1개만 — 드롭다운·클릭 없음. px16 py8 14px(Figma 375) */}
+          <div
+            aria-label={`현재 위치 ${activeItem.label}`}
+            className="flex items-center rounded-full border-[1.6px] border-brand-primary bg-white px-4 py-2 text-sm font-extrabold text-brand-primary select-none md:hidden"
+          >
+            {activeItem.label}
+          </div>
+
+          {/* 검색 아이콘 — Figma 전 BP 노출(button w42·icon 18.7). 검색 기능 미구현(domain "헤더 아이콘만") → 비인터랙티브 장식 */}
+          <span
+            aria-hidden
+            className="flex w-[42px] shrink-0 items-center justify-center"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
+            <img
+              src="/icons/search-icon.svg"
+              alt=""
+              width={19}
+              height={19}
+              className="size-[19px]"
+            />
+          </span>
         </div>
       </div>
     </header>

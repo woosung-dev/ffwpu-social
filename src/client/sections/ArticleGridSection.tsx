@@ -29,7 +29,7 @@ type Props = {
 export function ArticleGridSection({ items }: Props) {
   return (
     <section id="stories" className="w-full bg-white py-16 lg:py-24">
-      <SectionContainer className="flex flex-col gap-10 wide:flex-row wide:items-start wide:gap-8">
+      <SectionContainer className="flex flex-col gap-10 wide:flex-row wide:items-start wide:gap-4">
         {/* 좌측 다크 블록 — 라운드 12px, ExtraBold 31px #E9CFFF. Figma: md~1439 가로 배너(헤딩↔CTA 양끝, 풀폭 top), wide(1440)+ 만 319px 사이드 헤더, 모바일 세로 스택 */}
         <div className="rounded-xl bg-surface-dark p-8 md:flex md:items-center md:justify-between md:gap-6 wide:block wide:w-[319px] wide:shrink-0 wide:self-start wide:p-10">
           <div>

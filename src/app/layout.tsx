@@ -24,6 +24,17 @@ const suit = localFont({
   fallback: ["system-ui", "-apple-system", "Apple SD Gothic Neo", "sans-serif"],
 });
 
+// Gmarket Sans Medium — Hero 헤드라인 전용(SIL OFL, corp.gmarket.com). Medium(500) 단일 weight.
+const gmarketSans = localFont({
+  src: [
+    { path: "../../public/fonts/GmarketSans-Medium.woff2", weight: "500", style: "normal" },
+  ],
+  variable: "--font-gmarket",
+  display: "swap",
+  preload: true,
+  fallback: ["system-ui", "-apple-system", "Apple SD Gothic Neo", "sans-serif"],
+});
+
 // 루트 기본 메타 — metadataBase(OG 절대 URL 생성)·기본 OG·twitter. 페이지가 title/description/og 를 덮어씀.
 // title 템플릿은 쓰지 않음(어드민은 자체 풀 타이틀 사용 — 이중 접미사 방지). 각 페이지가 명시 타이틀.
 export const metadata: Metadata = {
@@ -46,7 +57,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko" className={suit.variable}>
+    <html lang="ko" className={`${suit.variable} ${gmarketSans.variable}`}>
       <body>{children}</body>
       {GA_ID ? <GoogleAnalytics gaId={GA_ID} /> : null}
     </html>
