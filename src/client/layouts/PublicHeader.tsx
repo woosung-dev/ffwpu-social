@@ -62,8 +62,8 @@ export function PublicHeader() {
           />
         </Link>
 
-        {/* 우측 클러스터 — (데스크탑 4항목 인디케이터 | 모바일 active pill) + 공통 검색 아이콘. 모바일 pill↔검색 gap 16(Figma) / md↑ flush */}
-        <div className="flex items-center gap-4 md:gap-0">
+        {/* 우측 클러스터 — 데스크탑 4항목 인디케이터(md↑) | 모바일 active pill(<768). BP 상호배타 */}
+        <div className="flex items-center">
           {/* 데스크탑(md↑, 768~): 4항목 위치 인디케이터 — 클릭 불가, active 자동 강조. gap 4(md)/24(lg), item px 16/20·py 8/10, 14/16px */}
           <nav
             aria-label="현재 보고 있는 영역"
@@ -95,21 +95,6 @@ export function PublicHeader() {
           >
             {activeItem.label}
           </div>
-
-          {/* 검색 아이콘 — Figma 전 BP 노출(button w42·icon 18.7). 검색 기능 미구현(domain "헤더 아이콘만") → 비인터랙티브 장식 */}
-          <span
-            aria-hidden
-            className="flex w-[42px] shrink-0 items-center justify-center"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
-            <img
-              src="/icons/search-icon.svg"
-              alt=""
-              width={19}
-              height={19}
-              className="size-[19px]"
-            />
-          </span>
         </div>
       </div>
     </header>
