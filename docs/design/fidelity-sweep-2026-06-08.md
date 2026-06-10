@@ -65,5 +65,17 @@
 ## 잔여(허용 범위·후속)
 - 768 featured 섹션 pb +20(news-hero pt/pb 미세) · 상세 콘텐츠폭 905 vs 900(+5) · SubBanner 375 +13(leading-relaxed 접근성 우선) · Story 375 +16(텍스트 line-height) · ArticleGrid/마조네리 높이 content-driven.
 
+## 2026-06-10 하드코딩 정리 (유지보수 스윕)
+
+측정 px 를 4px 그리드 표준 유틸리티로 스냅 — 엣지당 ±2px(본 스윕 허용오차) 내, 섹션 총높이 최대 −4px 트레이드오프를 유지보수성 우선으로 수용 (사용자 결정).
+
+- **헤더** 54/70/88 → **56/72/88** (`h-14 md:h-18 lg:h-22`). `src/client/layouts/header-height.ts` SSoT 신설 — PublicHeader 바·`(public)/layout.tsx` Suspense fallback·`useScrollSpy` 기준선(기존 64/80 stale) 3곳 동기. 밴드 폭은 SectionContainer 재사용으로 교체(인라인 복제 제거). 로고 42/53.3 → 40/52.
+- **KPI** py 44/58/90/96 → **44/56/88/96** (`py-11 md:py-14 lg:py-22 wide:py-24`). `KPI_SECTION_SHELL` export — page.tsx 스켈레톤 패딩 동기화(기존 64/96 stale → 스트리밍 점프 제거).
+- **Story** py 79/73 → **80/72** (`py-20 lg:py-18`), 이미지↔텍스트 갭 50 → 48(`gap-12`), tag→title 14/18 → 16 단일(`mt-4`). `STORY_SECTION_SHELL` export — 스켈레톤 동기.
+- **Partners** py 75/44/76/49 → **76/44/76/48** (`py-19 md:py-11 lg:py-19 wide:py-12`). wide<lg 역전은 Figma 재확인 항목(docs/TODO.md).
+- **Gmarket 폰트** — 로드 위치 루트 레이아웃 → HeroBanner 이동(512KB preload 가 어드민·/news 전 라우트에 주입되던 것을 랜딩 한정으로). 인라인 `style={{fontFamily}}` → globals.css `--font-display` 토큰 + `font-display font-medium` 유틸리티.
+- Featured `min-h-[423px]/[556px]` 는 **유지** — 이미지 비율(≈390px)로는 Figma 콘텐츠 높이(556) 재현 불가, 텍스트 스테이지가 높이 드라이버인 디자인의 정직한 번역.
+
 ## 검증
 - tsc 0 · lint 0 · test 48 · build ✓ (2026-06-09).
+- 하드코딩 정리 후: tsc 0 · lint 0 · test 51 · build ✓ + 빌드 CSS 에서 신규 bare 유틸리티 전수 생성 확인 + Gmarket woff2 가 랜딩 외 라우트(/news·/admin/login) 미참조 확인 (2026-06-10).
