@@ -34,7 +34,7 @@ related_adr:
 - [x] Stage 4 — Evaluator 비교 + 적대 검증 (confirmed 108)
 - [x] Stage 5 — 수정 루프 (2.5라운드 — fixed 90+5, Round 3 표적 5/5 PASS)
 - [x] Stage 6 — tsc 0·lint 0·vitest 52·build ✓ + report.md
-- [ ] 커밋·푸쉬 (사용자 승인 대기 — Git Safety Protocol)
+- [x] 커밋 3건(a7f60b2·31b7cc3·b0a2423)·푸쉬·**PR #45** (base = feat/figma-fidelity-sweep, #40 선머지 후 main 자동 재타게팅)
 - [ ] 사회공헌국/디자이너 escalation 6건 (report.md §4)
 
 ## 서버/데이터
