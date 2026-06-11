@@ -1,0 +1,30 @@
+# main push 시 프로덕션 마이그레이션만 적용. 배포는 Vercel git 자동배포가 그대로 담당(이 워크플로는 배포 안 함).
+# 보통 migrate(수 초)가 Vercel 빌드(수 분)보다 먼저 끝나 새 스키마가 새 코드보다 앞서 준비됨 → 가산형(expand) 안전.
+# 승인 게이트가 필요하면 migrate job 에 `environment: production` 한 줄 추가 + GitHub Environment(required reviewers) 생성(옵트인).
+name: Migrate (production)
+
+on:
+  push:
+    branches: [main]
+
+# 동시 마이그레이션 직렬화 — 연속 push 경합 방지(advisory lock 과 이중 안전)
+concurrency:
+  group: production-migrate
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply migrations to production
+        run: pnpm db:migrate:deploy
+        env:
+          # Neon direct 엔드포인트(-pooler 제거). GitHub Secrets 에 등록. 런타임 DATABASE_URL(pooled)과 별개.
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL_DIRECT }}

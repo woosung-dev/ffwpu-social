@@ -1479,3 +1479,32 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 - 어드민 `/admin/landing` 하단 슬롯 드롭다운에 전 카테고리 발행글 노출(카테고리명 칩 표기). 상단은 쌀 나눔만.
 - **스키마 변경 0** — 컬럼은 그대로, 규칙(쿼리 필터·eligibility)만 완화. 마이그레이션 불필요.
 - 검증: tsc0·lint0·test54, Next 빌드 통과, 데스크탑/모바일 헤더 라이브 확인(클릭 스크롤 오프셋·active 전환·드롭다운 44px 터치타깃·가로 오버플로 없음).
+
+## ADR-039: 배포 마이그레이션 자동화 — Vercel 자동배포 유지 + GHA migrate 분리 (Build≠Release)
+
+- **Status**: Accepted
+- **Date**: 2026-06-11
+
+### Context
+
+프로덕션 어드민 백스크린(2026-06-11). 루트코즈는 #45의 마이그레이션 0007(`analytics_events`)이 프로덕션 Neon에 미적용 — Vercel은 `next build`만 돌리고 `drizzle-kit migrate`를 자동 실행하지 않음. 배포마다 수동 migrate는 누락 위험이 크다. 1단계 Vercel, 2단계 AWS(EC2/Docker)에서 같은 원칙·산출물을 재사용해야 함.
+
+### Decision
+
+1. **Vercel git 자동배포는 그대로 유지.** 배포 주체를 바꾸지 않는다.
+2. **마이그레이션만 GitHub Actions로 분리.** `migrate.yml` = main push → `migrate` 잡(`db:migrate:deploy`, Neon **direct** 엔드포인트). Vercel 빌드(`next build`)에 마이그레이션을 넣지 않음(Build≠Release).
+3. **공유 러너 `src/db/migrate.ts`** — drizzle-orm migrator + pg, **advisory lock**으로 동시 실행 1개 보장. 로컬 `db:migrate`(drizzle-kit)와 병존. 호스팅 무관(EC2 이전 시 그대로 재사용).
+4. **순서:** migrate(수 초)가 Vercel 빌드(수 분)보다 먼저 끝나 새 스키마가 새 코드보다 앞서 준비됨. 가산형(Expand/Contract) 전제로 안전. `concurrency` 그룹 + advisory lock 으로 연속 push 직렬화.
+5. **PR 검증** `migrate-preview.yml` = PR에서 ephemeral Postgres에 from-scratch 적용해 깨진 마이그레이션을 머지 전 차단 + 새 SQL을 Job Summary로 노출.
+6. **안전 규칙:** forward-only(자동 롤백 금지), Expand/Contract(가산형 우선·삭제/리네임은 2단계 배포), Neon **direct** 로 migrate(런타임은 pooled), **seed/backfill은 자동 파이프라인 금지**(seed는 TRUNCATE 포함).
+
+**검토했으나 채택 안 함:** GHA가 *배포까지* 소유(migrate→`vercel deploy`, `environment` 승인 게이트, `vercel.json`로 Vercel 자동배포 off). 순서·승인이 더 견고하나 1회 셋업이 무겁고(Environment+reviewers+Secret 4개) Vercel 자동배포를 포기해야 함 — 현 규모(소규모 기관 사이트·솔로 어드민)엔 과함. 승인 게이트는 `migrate.yml`에 `environment: production` 한 줄로 후속 옵트인 가능.
+
+### Consequences
+
+- 배포마다 마이그레이션 자동 적용. Vercel은 지금처럼 push마다 자동 배포 — 운영 변화 없음(push만 하면 됨).
+- 1회 셋업: GitHub Secret `PROD_DATABASE_URL_DIRECT`(Neon direct) **하나**. Vercel 설정 무변경.
+- 막힌 prod 0007은 파이프라인 켜기 전(또는 머지 직후 자동 적용 전) 1회 수동 적용(`DATABASE_URL=<prod direct> pnpm db:migrate:deploy`)으로 해소.
+- 어드민 백스크린 방어(분석 카드 ErrorBoundary 격리)는 PR #48로 별도 — 이 자동화와 보완 관계.
+- **AWS(EC2) 이전 시 증분 경로:** Vercel 자동배포가 사라지므로 `migrate.yml`에 `deploy` 잡(docker build→ECR→EC2, `needs: migrate`)을 추가 → 위 "검토했으나 채택 안 함" 구조로 자연 수렴. `migrate.ts`·secret·advisory lock 100% 재사용, 재작성 없음.
+- 검증: `migrate.ts` 로컬 from-scratch·idempotent·동시 2러너 직렬화 확인(#49). 워크플로 YAML 유효. tsc0·lint0·test54.

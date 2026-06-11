@@ -36,7 +36,7 @@
 
 ## 4. 배포 전 최종 점검
 
-- [ ] Neon DB 생성 + 마이그레이션 적용(`pnpm drizzle-kit migrate`)
+- [ ] Neon DB 생성 + **최초 1회** 마이그레이션 적용(`DATABASE_URL=<prod direct> pnpm db:migrate:deploy`). 이후는 §5 자동화가 main push마다 적용
 - [ ] R2 버킷 생성 + 공개 도메인 + API 토큰
 - [ ] 위 변수 전부 플랫폼 환경변수 입력(시크릿은 대시보드만, 코드 금지)
 - [ ] `NEXT_PUBLIC_SITE_URL` = 실제 도메인
@@ -44,3 +44,21 @@
 - [ ] 공유 미리보기 점검: `https://<도메인>/news/<id>` 를 카톡/페북 공유 디버거로 확인
 - [ ] `https://<도메인>/sitemap.xml` · `/robots.txt` 응답 확인
 - [ ] GA4 실시간 보고서에 트래픽 잡히는지 확인
+
+## 5. 마이그레이션 자동화 (ADR-039 — Vercel 자동배포 유지)
+
+배포 주체는 **Vercel git 자동배포 그대로**. 마이그레이션만 GitHub Actions로 분리해 main push마다 자동 적용. `next build`에 넣지 않음(Build≠Release).
+
+- `.github/workflows/migrate.yml` — main push → `db:migrate:deploy`(Neon **direct**). Vercel은 별개로 자동 빌드·배포. migrate(수 초)가 빌드(수 분)보다 먼저 끝나 새 스키마가 새 코드보다 앞섬 → 가산형 안전.
+- `.github/workflows/migrate-preview.yml` — PR에서 ephemeral Postgres에 from-scratch 적용해 깨진 마이그레이션을 머지 전 차단 + 새 SQL을 Job Summary로 노출.
+- 러너 `src/db/migrate.ts` — advisory lock 으로 동시 실행 1개 보장(호스팅 무관, EC2 이전 시 재사용).
+
+**1회 셋업 (단 1개):**
+- [ ] GitHub → Settings → Secrets and variables → Actions → `PROD_DATABASE_URL_DIRECT` = Neon **direct**(`-pooler` 제거) 커넥션 스트링
+- [ ] (Vercel 설정 변경 없음 — 자동배포 그대로)
+
+**동작:** main 진입(머지/직접 push) → Actions `migrate` 잡 자동 실행(승인 게이트 없음) → migrate 적용. **금지: 자동 파이프라인에서 `db:seed`/`db:backfill-*` 실행**(seed는 TRUNCATE 포함).
+
+**선택(옵트인) 승인 게이트:** prod 스키마 변경 전 사람 확인을 원하면 `migrate.yml`의 `migrate` 잡에 `environment: production` 한 줄 추가 + GitHub → Settings → Environments → `production`(Required reviewers) 생성. 그러면 migrate 직전 수동 승인에서 멈춤.
+
+> **AWS(2단계) 이전 시:** Vercel 자동배포가 사라지므로 `migrate.yml`에 `deploy` 잡(standalone Dockerfile build→ECR→EC2, `needs: migrate`)을 추가해 "migrate → deploy" 게이트 구조로 수렴. `migrate.ts`·secret·advisory lock 그대로 재사용.
