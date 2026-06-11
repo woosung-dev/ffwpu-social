@@ -44,6 +44,10 @@ function renderMarks(marks: SafeMark[] | undefined, children: ReactNode): ReactN
         return <s>{acc}</s>;
       case "code":
         return <code>{acc}</code>;
+      case "superscript":
+        return <sup>{acc}</sup>;
+      case "subscript":
+        return <sub>{acc}</sub>;
       case "highlight":
         return (
           <mark style={mark.attrs?.color ? { backgroundColor: mark.attrs.color } : undefined}>
@@ -87,7 +91,7 @@ function renderNode(node: SafeNode, key: number): ReactNode {
       );
     case "heading": {
       const level = (node.attrs?.level as number) ?? 2;
-      const HeadingTag = `h${level}` as "h1" | "h2" | "h3";
+      const HeadingTag = `h${level}` as "h1" | "h2" | "h3" | "h4";
       return (
         <HeadingTag key={key} style={textAlign ? { textAlign } : undefined}>
           {kids}
@@ -104,6 +108,36 @@ function renderNode(node: SafeNode, key: number): ReactNode {
       return <ol key={key}>{kids}</ol>;
     case "listItem":
       return <li key={key}>{kids}</li>;
+    case "taskList":
+      return (
+        <ul key={key} className="list-none pl-0">
+          {kids}
+        </ul>
+      );
+    case "taskItem": {
+      const checked = node.attrs?.checked === "true";
+      return (
+        <li key={key} className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            checked={checked}
+            readOnly
+            disabled
+            className="mt-1.5"
+          />
+          <div className="[&>p]:my-0">{kids}</div>
+        </li>
+      );
+    }
+    case "codeBlock":
+      return (
+        <pre
+          key={key}
+          className="overflow-x-auto rounded-md bg-ink-strong/90 p-3 text-sm text-white"
+        >
+          <code>{kids}</code>
+        </pre>
+      );
     case "table":
       return (
         <div key={key} className="overflow-x-auto">

@@ -50,6 +50,27 @@ export function isAllowedValue(
   return typeof v === "string" && list.includes(v);
 }
 
+// 공식 ColorHighlightPopover 는 형광색을 var(--tt-color-highlight-*) 문자열로 저장 →
+// 공개 사이트(해당 변수 미정의)에서도 렌더되도록 hex 로 해석. 옛 hex 값은 그대로 통과.
+export const HIGHLIGHT_VAR_TO_HEX: Record<string, string> = {
+  "var(--tt-color-highlight-yellow)": "#fef9c3",
+  "var(--tt-color-highlight-green)": "#dcfce7",
+  "var(--tt-color-highlight-blue)": "#e0f2fe",
+  "var(--tt-color-highlight-purple)": "#f3e8ff",
+  "var(--tt-color-highlight-red)": "#ffe4e6",
+  "var(--tt-color-highlight-gray)": "rgb(248, 248, 247)",
+  "var(--tt-color-highlight-brown)": "rgb(244, 238, 238)",
+  "var(--tt-color-highlight-orange)": "rgb(251, 236, 221)",
+  "var(--tt-color-highlight-pink)": "rgb(252, 241, 246)",
+};
+
+export function resolveHighlightColor(color: unknown): string | null {
+  if (typeof color !== "string") return null;
+  if (color in HIGHLIGHT_VAR_TO_HEX) return HIGHLIGHT_VAR_TO_HEX[color];
+  if (isAllowedValue(ALLOWED_HIGHLIGHTS, color)) return color;
+  return null;
+}
+
 export function normalizeFontSize(v: unknown): string | null {
   if (typeof v !== "string") return null;
   const match = v.trim().match(/^(\d{1,2})px$/);
