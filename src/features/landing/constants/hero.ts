@@ -2,6 +2,6 @@
 
 export const HERO_CONTENT = {
   title: "가치를 삶으로,\n변화를 꽃피우는 동행",
-  ctaLabel: "지난 활동 살펴보기",
+  ctaLabel: "활동 스토리 살펴보기",
   ctaHref: "/news",
 } as const;

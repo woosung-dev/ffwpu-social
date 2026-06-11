@@ -59,7 +59,7 @@ export function HeroBanner() {
             {/* 텍스트 색 = Figma #e9d1ff (공유 토큰 ink-on-purple #f0e1ff 와 미세차 — CTA 한정 Figma 값 리터럴) */}
             {/* leading-[1.25]: line-box 높이 확보 → 알약 높이 lg/wide 49px(leading-none 은 44px 로 부족) */}
             <span className="text-sm leading-[1.25] font-bold text-[#e9d1ff] md:text-base lg:text-xl">
-              지난 활동 살펴보기
+              활동 스토리 살펴보기
             </span>
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
             <img
