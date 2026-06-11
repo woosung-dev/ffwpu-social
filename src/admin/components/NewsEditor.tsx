@@ -17,6 +17,7 @@ import { CoverImageUploader } from "./CoverImageUploader";
 import { DateTimePicker } from "./DateTimePicker";
 import { TagsInput } from "./TagsInput";
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
+import "@/styles/admin-editor-embed.scss";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -199,12 +200,14 @@ export function NewsEditor({ mode, categories, initial }: Props) {
               <Label className="text-sm font-semibold text-ink-strong">
                 본문
               </Label>
-              <SimpleEditor
-                defaultValue={initial?.body}
-                onChange={setBody}
-                scope={scope}
-                editable={!isPending}
-              />
+              <div className="admin-editor-embed">
+                <SimpleEditor
+                  defaultValue={initial?.body}
+                  onChange={setBody}
+                  scope={scope}
+                  editable={!isPending}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>

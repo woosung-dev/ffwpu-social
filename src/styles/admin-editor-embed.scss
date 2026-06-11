@@ -1,0 +1,26 @@
+// 공식 simple-editor(100vw/100vh standalone 가정)를 어드민 2단 레이아웃 컬럼에 끼워넣기 위한 임베드 override.
+// .admin-editor-embed 래퍼로 스코프 — 공식 standalone 스타일은 그대로 두고 임베드 시에만 박스로 제한.
+.admin-editor-embed {
+  border: 1px solid var(--border, #e3e3e6);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+// 전체화면(100vw/100vh) → 컬럼 폭 + 70vh 스크롤 박스
+.admin-editor-embed .simple-editor-wrapper {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+}
+
+// 본문 가운데 648px 제한 해제(어드민은 컬럼 폭 사용)
+.admin-editor-embed .simple-editor-content {
+  max-width: none;
+}
+
+// 거대 패딩(3rem 3rem 30vh) → 적정 + 클릭 가능한 최소 높이
+.admin-editor-embed .tiptap.ProseMirror.simple-editor {
+  padding: 1.25rem 1.5rem;
+  min-height: 340px;
+}
