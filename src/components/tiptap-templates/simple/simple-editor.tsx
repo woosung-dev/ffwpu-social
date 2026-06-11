@@ -18,7 +18,6 @@ import { Youtube } from "@tiptap/extension-youtube"
 
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button"
-import { Spacer } from "@/components/tiptap-ui-primitive/spacer"
 import {
   Toolbar,
   ToolbarGroup,
@@ -68,9 +67,6 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { useWindowSize } from "@/hooks/use-window-size"
 import { useCursorVisibility } from "@/hooks/use-cursor-visibility"
 
-// --- Components ---
-import { ThemeToggle } from "@/components/tiptap-templates/simple/theme-toggle"
-
 // --- Lib ---
 import { MAX_FILE_SIZE } from "@/lib/tiptap-utils"
 import {
@@ -93,8 +89,6 @@ const MainToolbarContent = ({
 }) => {
   return (
     <>
-      <Spacer />
-
       <ToolbarGroup>
         <UndoRedoButton action="undo" />
         <UndoRedoButton action="redo" />
@@ -150,14 +144,6 @@ const MainToolbarContent = ({
       <ToolbarGroup>
         <ImageUploadButton text="Add" />
         <YoutubeButton />
-      </ToolbarGroup>
-
-      <Spacer />
-
-      {isMobile && <ToolbarSeparator />}
-
-      <ToolbarGroup>
-        <ThemeToggle />
       </ToolbarGroup>
     </>
   )

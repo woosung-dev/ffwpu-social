@@ -24,3 +24,14 @@
   padding: 1.25rem 1.5rem;
   min-height: 340px;
 }
+
+// 툴바: 가로 스크롤 대신 줄바꿈 — 좁은 컬럼에서도 모든 옵션이 보이게
+.admin-editor-embed .tiptap-toolbar {
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+}
+.admin-editor-embed .tiptap-toolbar[data-variant="fixed"] {
+  overflow-x: visible;
+  height: auto;
+  padding: 0.375rem 0.5rem;
+}
