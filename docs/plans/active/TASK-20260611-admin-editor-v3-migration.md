@@ -28,12 +28,12 @@ brainstorming_done: 2026-06-11
 
 ## 체크리스트 (단계별 커밋)
 
-- [ ] **P1 패키지** — @tiptap/* v2 제거 → v3 추가(react·starter-kit·extension-image/list/text-style/text-align/typography/highlight/subscript/superscript/youtube·extensions·pm), `sass` 추가. tsc 깨지는 지점 확인.
-- [ ] **P2 컴포넌트 이식** — sandbox `src/components/tiptap-*`·`hooks`·`lib`·`styles` → 앱 `src/` 이식(`@/` alias 정합). SCSS 빌드 통과(globals 충돌 없음).
-- [ ] **P3 에디터 배선** — simple-editor + 글자크기 + 유튜브 컴포넌트 이식. `handleImageUpload` → R2. NewsEditor 가 새 에디터 사용(onChange JSON 유지).
-- [ ] **P4 렌더러/보안 재작성** — news-body-renderer·sanitize·editor-allowlist·excerpt 를 v3 스키마로. 유튜브·글자크기·task/첨자 반영, 표·글자색·figure 는 graceful drop.
-- [ ] **P5 통합** — 서버액션($T 직렬화 유지), 편집 페이지, 발행/조회 경로.
-- [ ] **P6 검증** — pnpm tsc/lint/test/build + dev 발행·조회 수동 확인. PR.
+- [x] **P1 패키지** — @tiptap/* v2→v3.26.0(color·table 제거, list/typography/첨자/horizontal-rule/extensions 추가, youtube v3), UI 의존성(floating-ui·radix dropdown/popover·react-hotkeys·lodash) + sass. clean install.
+- [x] **P2 컴포넌트 이식** — 공식 141파일 → 앱 `src/`(`@/`=src 정합). 이식 컴포넌트 tsc 에러 0. SCSS 는 CSS변수(var(--tt-*)) 방식이라 Tailwind 충돌 없음.
+- [x] **P3 에디터 배선** — SimpleEditor props 화(defaultValue/onChange/scope/editable). ImageUploadNode.upload → makeBodyImageUploader(R2 presigned PUT). NewsEditor 교체. 구 v2 에디터 삭제. SCSS 전역 토큰 로드.
+- [x] **P4 렌더러/sanitize v3 (가산)** — sup/sub·taskList·taskItem·codeBlock·heading4 추가, highlight var→hex 해석. 표·글자색·figure·youtube 유지(옛 발행글 graceful). 단위테스트 54 통과.
+- [x] **P5 통합** — 서버액션·편집/조회 페이지는 body 가 opaque JSON 이라 무변경. next build 가 /admin/news/new·[id]/edit·/news/[id] 전부 프리렌더 성공으로 검증.
+- [x] **P6 검증** — tsc·lint·test(54)·**next build(20/20 페이지)** 전부 그린. 남은 것: 브라우저 런타임(편집·발행·조회) 수동 확인.
 
 ## 리스크
 
