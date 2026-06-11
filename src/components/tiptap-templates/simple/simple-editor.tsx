@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
+import { EditorContent, EditorContext, useEditor, type JSONContent } from "@tiptap/react"
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit"
@@ -72,12 +72,15 @@ import { useCursorVisibility } from "@/hooks/use-cursor-visibility"
 import { ThemeToggle } from "@/components/tiptap-templates/simple/theme-toggle"
 
 // --- Lib ---
-import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
+import { MAX_FILE_SIZE } from "@/lib/tiptap-utils"
+import {
+  makeBodyImageUploader,
+  type EditorScope,
+} from "@/admin/components/editor-image-upload"
 
 // --- Styles ---
+import "@/styles/tiptap-editor-globals.scss"
 import "@/components/tiptap-templates/simple/simple-editor.scss"
-
-import content from "@/components/tiptap-templates/simple/data/content.json"
 
 const MainToolbarContent = ({
   onHighlighterClick,
@@ -189,7 +192,19 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor() {
+export type SimpleEditorProps = {
+  defaultValue?: JSONContent
+  onChange?: (json: JSONContent) => void
+  scope?: EditorScope
+  editable?: boolean
+}
+
+export function SimpleEditor({
+  defaultValue,
+  onChange,
+  scope,
+  editable = true,
+}: SimpleEditorProps = {}) {
   const isMobile = useIsMobile()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = React.useState<
@@ -200,6 +215,8 @@ export function SimpleEditor() {
   const editor = useEditor({
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,
+    editable,
+    onUpdate: ({ editor: ed }) => onChange?.(ed.getJSON()),
     editorProps: {
       attributes: {
         autocomplete: "off",
@@ -233,11 +250,11 @@ export function SimpleEditor() {
         accept: "image/*",
         maxSize: MAX_FILE_SIZE,
         limit: 3,
-        upload: handleImageUpload,
+        upload: makeBodyImageUploader(scope),
         onError: (error) => console.error("Upload failed:", error),
       }),
     ],
-    content,
+    content: defaultValue,
   })
 
   const rect = useCursorVisibility({

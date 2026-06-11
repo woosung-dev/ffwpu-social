@@ -16,7 +16,7 @@ import { newsInputSchema, type NewsInput } from "@/features/news/schemas";
 import { CoverImageUploader } from "./CoverImageUploader";
 import { DateTimePicker } from "./DateTimePicker";
 import { TagsInput } from "./TagsInput";
-import { TiptapEditor } from "./TiptapEditor";
+import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -199,12 +199,11 @@ export function NewsEditor({ mode, categories, initial }: Props) {
               <Label className="text-sm font-semibold text-ink-strong">
                 본문
               </Label>
-              <TiptapEditor
+              <SimpleEditor
                 defaultValue={initial?.body}
                 onChange={setBody}
                 scope={scope}
-                onError={setError}
-                disabled={isPending}
+                editable={!isPending}
               />
             </div>
           </CardContent>
