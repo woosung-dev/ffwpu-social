@@ -1,10 +1,6 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { createRoot } from "react-dom/client"
+import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor"
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+const App = () => <SimpleEditor />
+
+createRoot(document.getElementById("app")!).render(<App />)
