@@ -1,4 +1,5 @@
 // 어드민 대시보드 — 최근 5건 + 카테고리별 글 수 (활성만, 결정 로그 [T11 활성만]). Suspense 패턴 (결정 #17)
+// 분석 카드는 독립 ErrorBoundary+Suspense 로 격리 — 분석 조회 실패(예: analytics_events 미마이그레이션)가 대시보드 전체를 죽이지 않게 부분 degrade.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -7,6 +8,7 @@ import { getAdminAnalyticsDashboard } from "@/features/analytics";
 import { getAdminDashboard } from "@/features/news";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: "대시보드 | 사회공헌단 어드민",
@@ -49,9 +51,17 @@ export default function AdminDashboardPage() {
           </Link>
         </Button>
       </header>
-      <Suspense fallback={<DashboardLoading />}>
-        <DashboardData />
-      </Suspense>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* 분석 카드는 독립 경계 — 조회 실패해도 아래 핵심 데이터(최근 글·카테고리)는 그대로 렌더 */}
+        <ErrorBoundary fallback={<AnalyticsUnavailable />}>
+          <Suspense fallback={<AnalyticsLoading />}>
+            <AnalyticsSection />
+          </Suspense>
+        </ErrorBoundary>
+        <Suspense fallback={<CoreLoading />}>
+          <CoreSection />
+        </Suspense>
+      </div>
     </div>
   );
 }
@@ -64,74 +74,79 @@ const CATEGORY_CHIP_PALETTE = [
   "bg-brand-mid/15 text-brand-primary border-brand-mid/30", // text-brand-mid(3.91:1)→brand-primary(9.56:1) WCAG AA
 ] as const;
 
-async function DashboardData() {
-  const [data, analytics] = await Promise.all([
-    getAdminDashboard(5),
-    getAdminAnalyticsDashboard(),
-  ]);
+// 최근 30일 콘텐츠 분석 — analytics_events 집계. 실패 시 상위 ErrorBoundary 가 AnalyticsUnavailable 로 격리.
+async function AnalyticsSection() {
+  const analytics = await getAdminAnalyticsDashboard();
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <Card className="min-w-0 lg:col-span-3">
-        <CardHeader>
-          <CardTitle className="text-xl">최근 30일 콘텐츠 분석</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Metric label="조회" value={analytics.totals.views} />
-            <Metric label="순 방문 브라우저" value={analytics.totals.uniqueViewers} />
-            <Metric label="공감 클릭" value={analytics.totals.heartClicks} />
-            <Metric label="공유 클릭" value={analytics.totals.shareClicks} />
-          </div>
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
-            <div>
-              <h3 className="text-sm font-semibold text-ink-strong">인기 글</h3>
-              {analytics.topNews.length === 0 ? (
-                <p className="mt-3 text-sm text-ink-subtle">
-                  아직 분석 이벤트가 없습니다.
-                </p>
-              ) : (
-                <ul className="mt-3 divide-y">
-                  {analytics.topNews.map((item) => (
-                    <li key={item.newsId} className="flex items-center justify-between gap-4 py-2">
-                      <Link
-                        href={`/admin/news/${item.newsId}/edit`}
-                        className="min-w-0 truncate text-sm font-medium text-ink-strong hover:text-brand-primary"
-                      >
-                        {item.title}
-                      </Link>
-                      <span className="shrink-0 text-xs tabular-nums text-ink-subtle">
-                        조회 {item.views} · 공감 {item.heartClicks} · 공유 {item.shareClicks}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-ink-strong">유입 경로</h3>
-              {analytics.referrers.length === 0 ? (
-                <p className="mt-3 text-sm text-ink-subtle">기록된 외부 유입이 없습니다.</p>
-              ) : (
-                <ul className="mt-3 space-y-2">
-                  {analytics.referrers.map((r) => (
-                    <li
-                      key={r.referrer ?? "unknown"}
-                      className="flex items-center justify-between gap-3 rounded-md bg-surface-soft px-3 py-2"
+    <Card className="min-w-0 lg:col-span-3">
+      <CardHeader>
+        <CardTitle className="text-xl">최근 30일 콘텐츠 분석</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Metric label="조회" value={analytics.totals.views} />
+          <Metric label="순 방문 브라우저" value={analytics.totals.uniqueViewers} />
+          <Metric label="공감 클릭" value={analytics.totals.heartClicks} />
+          <Metric label="공유 클릭" value={analytics.totals.shareClicks} />
+        </div>
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+          <div>
+            <h3 className="text-sm font-semibold text-ink-strong">인기 글</h3>
+            {analytics.topNews.length === 0 ? (
+              <p className="mt-3 text-sm text-ink-subtle">
+                아직 분석 이벤트가 없습니다.
+              </p>
+            ) : (
+              <ul className="mt-3 divide-y">
+                {analytics.topNews.map((item) => (
+                  <li key={item.newsId} className="flex items-center justify-between gap-4 py-2">
+                    <Link
+                      href={`/admin/news/${item.newsId}/edit`}
+                      className="min-w-0 truncate text-sm font-medium text-ink-strong hover:text-brand-primary"
                     >
-                      <span className="min-w-0 truncate text-xs text-ink-subtle">
-                        {r.referrer}
-                      </span>
-                      <span className="shrink-0 text-xs font-semibold tabular-nums">
-                        {r.count}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+                      {item.title}
+                    </Link>
+                    <span className="shrink-0 text-xs tabular-nums text-ink-subtle">
+                      조회 {item.views} · 공감 {item.heartClicks} · 공유 {item.shareClicks}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-        </CardContent>
-      </Card>
+          <div>
+            <h3 className="text-sm font-semibold text-ink-strong">유입 경로</h3>
+            {analytics.referrers.length === 0 ? (
+              <p className="mt-3 text-sm text-ink-subtle">기록된 외부 유입이 없습니다.</p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {analytics.referrers.map((r) => (
+                  <li
+                    key={r.referrer ?? "unknown"}
+                    className="flex items-center justify-between gap-3 rounded-md bg-surface-soft px-3 py-2"
+                  >
+                    <span className="min-w-0 truncate text-xs text-ink-subtle">
+                      {r.referrer}
+                    </span>
+                    <span className="shrink-0 text-xs font-semibold tabular-nums">
+                      {r.count}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// 최근 글 5건 + 카테고리별 글 수 — 분석과 분리된 핵심 데이터(항상 렌더 목표).
+async function CoreSection() {
+  const data = await getAdminDashboard(5);
+  return (
+    <>
       <Card className="min-w-0 lg:col-span-2">
         <CardHeader>
           <CardTitle className="text-xl">최근 글 5건</CardTitle>
@@ -201,7 +216,7 @@ async function DashboardData() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }
 
@@ -216,11 +231,36 @@ function Metric({ label, value }: { label: string; value: number }) {
   );
 }
 
-function DashboardLoading() {
+function AnalyticsLoading() {
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3" aria-busy>
+    <div
+      className="h-48 animate-pulse rounded-md bg-muted/60 lg:col-span-3"
+      aria-busy
+    />
+  );
+}
+
+// 분석 조회 실패 시 폴백 — 대시보드 나머지는 유지. (대표 원인: 프로덕션 DB 에 0007 미적용 → analytics_events 없음)
+function AnalyticsUnavailable() {
+  return (
+    <Card className="min-w-0 lg:col-span-3">
+      <CardHeader>
+        <CardTitle className="text-xl">최근 30일 콘텐츠 분석</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="py-6 text-center text-sm text-ink-subtle">
+          분석 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CoreLoading() {
+  return (
+    <>
       <div className="h-64 animate-pulse rounded-md bg-muted/60 lg:col-span-2" />
       <div className="h-64 animate-pulse rounded-md bg-muted/60" />
-    </div>
+    </>
   );
 }
