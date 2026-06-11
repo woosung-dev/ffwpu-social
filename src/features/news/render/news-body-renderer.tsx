@@ -84,9 +84,10 @@ function renderNode(node: SafeNode, key: number): ReactNode {
 
   switch (node.type) {
     case "paragraph":
+      // 빈 단락(여러 줄바꿈)은 에디터처럼 한 줄 높이를 유지 — 빈 <p> 는 0px 로 뭉개지므로 <br/> 삽입.
       return (
         <p key={key} style={textAlign ? { textAlign } : undefined}>
-          {kids}
+          {kids.length > 0 ? kids : <br />}
         </p>
       );
     case "heading": {
