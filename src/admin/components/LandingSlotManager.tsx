@@ -1,4 +1,4 @@
-// 메인 랜딩 큐레이션 — StorySection 상단 2 슬롯 (직접 지정 only) + ArticleGrid 하단 7 슬롯 (지정 + 쌀 나눔 카테고리 최신순 자동 fallback)
+// 메인 랜딩 큐레이션 — StorySection 상단 2 슬롯(쌀 나눔만, 직접 지정) + ArticleGrid 하단 7 슬롯(전 카테고리, 지정 + 최신순 자동 fallback, ADR-038)
 "use client";
 
 import { useState, useTransition } from "react";
@@ -28,7 +28,8 @@ export type CurationNews = {
 };
 
 type Props = {
-  riceSharingPublished: CurationNews[];
+  storyCandidates: CurationNews[]; // 상단 슬롯 후보 — 발행된 쌀 나눔 글
+  featuredCandidates: CurationNews[]; // 하단 슬롯 후보 — 발행된 전 카테고리 글 (ADR-038)
   storySlots: Array<CurationNews | null>;
   featuredSlots: Array<CurationNews | null>;
 };
@@ -38,7 +39,8 @@ const FEATURED_SLOT_COUNT = 7;
 const UNSET = "__unset__";
 
 export function LandingSlotManager({
-  riceSharingPublished,
+  storyCandidates,
+  featuredCandidates,
   storySlots,
   featuredSlots,
 }: Props) {
@@ -104,6 +106,8 @@ export function LandingSlotManager({
     const key = `${kind}-${slot}`;
     const isBusy = busySlot === key;
     const slotLabel = kind === "story" ? `${slot}번 사진` : `${slot}번 자리`;
+    // 상단=쌀 나눔 후보 / 하단=전 카테고리 후보 (ADR-038)
+    const candidates = kind === "story" ? storyCandidates : featuredCandidates;
     return (
       <div
         key={key}
@@ -145,7 +149,7 @@ export function LandingSlotManager({
               <SelectValue
                 placeholder={
                   kind === "featured"
-                    ? "선택 안 함 (자동 — 쌀 나눔 최신)"
+                    ? "선택 안 함 (자동 — 최신)"
                     : "선택 안 함 (비노출)"
                 }
               />
@@ -153,10 +157,10 @@ export function LandingSlotManager({
             <SelectContent>
               <SelectItem value={UNSET}>
                 {kind === "featured"
-                  ? "선택 안 함 (자동 — 쌀 나눔 최신)"
+                  ? "선택 안 함 (자동 — 최신)"
                   : "선택 안 함 (비노출)"}
               </SelectItem>
-              {riceSharingPublished.map((n) => {
+              {candidates.map((n) => {
                 // 다른 슬롯에 이미 점유된 글은 표시하되 라벨에 명시
                 const ownStory =
                   n.storySlot != null && (kind !== "story" || n.storySlot !== slot);
@@ -205,15 +209,18 @@ export function LandingSlotManager({
         </div>
       )}
 
-      {/* 적격 안내 — 운영자가 다른 카테고리/미발행 글이 선택지에 안 떠 헤매던 문제 보완(3-에이전트 검증 #1) */}
+      {/* 적격 안내 — 상단·하단 슬롯의 선택 가능 범위가 다름(ADR-038). 운영자 혼선 방지 */}
       <div className="rounded-lg border border-brand-primary/20 bg-brand-primary/5 px-4 py-3 text-sm text-ink-strong">
-        메인 홈(랜딩)에 노출할 글을 지정합니다.{" "}
+        메인 홈(랜딩)에 노출할 글을 지정합니다. 상단 “쌀 나눔 활동”은{" "}
         <strong className="font-semibold text-brand-primary">
-          쌀 나눔 카테고리의 발행 글
-        </strong>{" "}
-        만 선택할 수 있어요 — 다른 카테고리이거나 미발행인 글은 아래 선택지·목록에
-        나타나지 않습니다. (소식 페이지(/news) 상단 노출은 ‘소식 히어로’ 메뉴에서
-        설정합니다.)
+          발행된 쌀 나눔 글
+        </strong>
+        만, 하단 “메인 스토리”는{" "}
+        <strong className="font-semibold text-brand-primary">
+          발행된 모든 카테고리 글
+        </strong>
+        을 선택할 수 있어요. 미발행 글은 선택지에 나타나지 않습니다. (소식
+        페이지(/news) 상단 노출은 ‘소식 히어로’ 메뉴에서 설정합니다.)
       </div>
 
       <Card className="min-w-0">
@@ -232,10 +239,10 @@ export function LandingSlotManager({
 
       <Card className="min-w-0">
         <CardHeader>
-          <CardTitle className="text-xl">하단 — 활동 스토리 (ArticleGrid)</CardTitle>
+          <CardTitle className="text-xl">하단 — 메인 스토리 (ArticleGrid)</CardTitle>
           <p className="text-sm text-ink-subtle">
-            ※ 지정한 자리만 점유, 미지정 자리는 쌀 나눔 카테고리 최신 글이 자동
-            채움
+            ※ 전 카테고리 발행 글 지정 가능. 지정한 자리만 점유, 미지정 자리는
+            최신 글이 자동 채움
           </p>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -247,21 +254,26 @@ export function LandingSlotManager({
 
       <Card className="min-w-0">
         <CardHeader>
-          <CardTitle className="text-xl">발행된 쌀 나눔 글 (참고)</CardTitle>
+          <CardTitle className="text-xl">발행된 글 (참고)</CardTitle>
         </CardHeader>
         <CardContent>
-          {riceSharingPublished.length === 0 ? (
+          {featuredCandidates.length === 0 ? (
             <p className="py-6 text-center text-sm text-ink-subtle">
-              발행된 쌀 나눔 글이 없습니다.
+              발행된 글이 없습니다.
             </p>
           ) : (
             <ul className="divide-y">
-              {riceSharingPublished.map((n) => (
+              {featuredCandidates.map((n) => (
                 <li
                   key={n.id}
                   className="flex items-center justify-between gap-3 py-3 text-sm"
                 >
-                  <span className="truncate text-ink-strong">{n.title}</span>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="shrink-0 rounded-full bg-surface-soft px-2 py-0.5 text-xs text-ink-subtle">
+                      {n.categoryName}
+                    </span>
+                    <span className="truncate text-ink-strong">{n.title}</span>
+                  </span>
                   <span className="shrink-0 text-xs text-ink-date">
                     {n.storySlot != null && (
                       <span className="mr-2 rounded-full bg-warm/15 px-2 py-0.5 text-amber-700">

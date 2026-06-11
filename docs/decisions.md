@@ -1452,3 +1452,30 @@ ADR-009의 "메뉴 클릭 시 앵커 스크롤" 및 매핑(③)을 **supersede**
 - 메뉴 항목이 인터랙티브 요소가 아니므로 `aria-current`로 현재 위치만 알림. 키보드 포커스·hover 강조 제거.
 - active 라벨은 **스크롤 위치 순서** 기준 — 2번째 구간(StorySection '밥이 사랑입니다')에서 '쌀 나눔 소식', 3번째 구간(ArticleGridSection 소식 카드 그리드)에서 '쌀나눔 프로젝트'가 표시됨. 섹션 콘텐츠와 라벨 의미가 일부 어긋날 수 있으나, 사용자 요청은 "위→아래 활성 순서" 우선.
 - `useScrollSpy`는 헤더 높이 상수(64/80)에 결합 — 헤더 높이 변경 시 훅 상수도 동기화 필요(주석 명시).
+
+## ADR-038: 헤더 클릭 가능 내비 재구성 + ArticleGrid 전 카테고리 개방 (ADR-037 개정)
+
+- **Status**: Accepted
+- **Date**: 2026-06-11
+
+### Context
+
+ADR-037은 헤더를 "클릭 불가 위치 인디케이터(4메뉴)"로 정의했으나, 사용자가 다시 **클릭 가능한 내비게이션**으로 전환할 것을 요청(스크린샷 3장, 2026-06-11). 동시에 메뉴를 3개로 통합하고, 운영자가 랜딩 하단 ArticleGrid에 쌀 나눔 외 카테고리 글도 큐레이션할 수 있도록 요청. 어드민 랜딩 슬롯(story/featured)은 그동안 단일 eligibility(발행+쌀 나눔)를 공유했음.
+
+### Decision
+
+1. **헤더 4메뉴 + 클릭 가능.** 임팩트 데이터→`#kpi` / 쌀 나눔 소식→`#story` / **메인 스토리→`#stories`(랜딩 카드 그리드)** / **활동 스토리→`/news`(소식 게시판)**. 기존 "쌀나눔 프로젝트" 제거, `#stories`는 "메인 스토리"로 명명. `<span>`→`<Link>`로 환원 — section 항목은 해시 스무스 스크롤(비랜딩 `/#section`), 활동 스토리는 /news 직접 이동(`activeOnSubpage`로 /news 에서 active 고정). 어드민 큐레이션 카드도 하단 ArticleGrid 명칭을 "메인 스토리"로 일치.
+2. **모바일(<768)은 현재 위치 알약(▾) → Radix 드롭다운**으로 3항목 선택(option C). Esc/바깥탭/포커스/aria는 shadcn `DropdownMenu`가 처리. 데스크탑(768+)은 3항목 알약 인라인.
+3. **앵커 스크롤 오프셋은 `globals.css` `scroll-padding-top`(56/72/88) 단일 출처** + `scroll-behavior: smooth`(prefers-reduced-motion 존중).
+4. **`useScrollSpy`에 `ResizeObserver` 추가** — Suspense 콘텐츠 스트리밍·폰트/이미지 로드로 섹션 위치가 mount 후 바뀌어도 active 재계산(초기 최상단 인디케이터 stale 버그 수정). "활동 스토리"는 `/news`에서 active 고정 유지.
+5. **랜딩 슬롯 eligibility 분리(ADR-030 개정):** 상단 StorySection(story_slot 1~2)은 **발행+쌀 나눔 유지**, 하단 ArticleGrid(featured_rank 1~7)는 **발행만(전 카테고리)**. `landingSlotEligible`→`storySlotEligible` + `featuredSlotEligible` 신규, `slotsToClearOnTransition`은 `{hero, story, featured}`로 분기. 자동 fallback도 전 카테고리 최신순.
+
+ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)를 **supersede**. "비랜딩=활동 스토리 고정", 스크롤스파이 기준선 방식은 유지. 검색 아이콘(ADR-037 ③)은 별개로 유지.
+
+### Consequences
+
+- 헤더에서 직접 섹션 탐색 복귀(클릭) + "활동 스토리" 항목으로 `/news` 직접 진입 가능. Hero "지난 활동 살펴보기"·ArticleGrid "아티클 더 보러가기" CTA도 /news 진입 유지.
+- 글 카테고리를 쌀 나눔→타 카테고리로 변경 시 **featured 슬롯 유지**(story 슬롯만 해제). 미발행 전환 시 hero·story·featured 모두 해제.
+- 어드민 `/admin/landing` 하단 슬롯 드롭다운에 전 카테고리 발행글 노출(카테고리명 칩 표기). 상단은 쌀 나눔만.
+- **스키마 변경 0** — 컬럼은 그대로, 규칙(쿼리 필터·eligibility)만 완화. 마이그레이션 불필요.
+- 검증: tsc0·lint0·test54, Next 빌드 통과, 데스크탑/모바일 헤더 라이브 확인(클릭 스크롤 오프셋·active 전환·드롭다운 44px 터치타깃·가로 오버플로 없음).

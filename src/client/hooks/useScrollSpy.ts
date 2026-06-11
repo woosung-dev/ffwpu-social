@@ -1,4 +1,4 @@
-// 사용자 페이지 스크롤 위치 → active section id 추적 (헤더 위치 인디케이터용, ADR-037)
+// 사용자 페이지 스크롤 위치 → active section id 추적 (헤더 active 인디케이터·클릭 내비용, ADR-037→038)
 // 방식: 화면 상단 기준선(헤더 아래 LINE_RATIO 지점)을 "통과한 마지막 섹션"이 active
 //       = Bootstrap Scrollspy 패턴. scroll + getBoundingClientRect + rAF — 항상 하나 active, 양방향 무진동.
 "use client";
@@ -78,6 +78,10 @@ export function useScrollSpy(sectionIds: readonly string[]): string | null {
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
     mql.addEventListener("change", onScroll);
+    // Suspense 스트리밍·이미지/폰트 로드로 섹션 위치가 mount 후 바뀌면 scroll 이벤트 없이 active 가 stale.
+    // 문서 크기 변화를 관찰해 재계산 — 초기 최상단 인디케이터가 잘못 잡히는 문제 방지.
+    const ro = new ResizeObserver(onScroll);
+    ro.observe(document.documentElement);
     update(); // 마운트 시점 스크롤 위치 반영
 
     return () => {
@@ -85,6 +89,7 @@ export function useScrollSpy(sectionIds: readonly string[]): string | null {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       mql.removeEventListener("change", onScroll);
+      ro.disconnect();
     };
   }, [idsKey]);
 

@@ -62,7 +62,7 @@ async function KpiSectionWithData() {
 }
 
 async function ArticleGridSectionWithData() {
-  // featured_rank 운영자 pin + 쌀 나눔 카테고리 최신순 자동 fallback. 7 슬롯 중 시안 6 슬롯만 마조네리 노출 (1~6번)
+  // featured_rank 운영자 pin + 전 카테고리 최신순 자동 fallback (ADR-038). 7 슬롯 중 시안 6 슬롯만 마조네리 노출 (1~6번)
   const slots = await landingDb.listFeaturedGrid(7);
   const items = slots
     .slice(0, 6)

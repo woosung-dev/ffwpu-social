@@ -152,4 +152,26 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+
+  /* 헤더 앵커 내비(ADR-038) — 해시 점프가 스티키 헤더(56/72/88px) 아래에서 멈추도록 오프셋(단일 출처).
+     scroll-behavior 스무스는 prefers-reduced-motion 존중. header-height.ts 의 px 값과 동기 유지. */
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 3.5rem; /* 56px (base) */
+  }
+  @media (min-width: 768px) {
+    html {
+      scroll-padding-top: 4.5rem; /* 72px (md) */
+    }
+  }
+  @media (min-width: 1024px) {
+    html {
+      scroll-padding-top: 5.5rem; /* 88px (lg+) */
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
 }
