@@ -2,13 +2,13 @@
 // 허용 노드/마크만 통과 + inline 값은 editor-allowlist 로 화이트리스트(XSS 차단). codex P1#3 + 에디터 업그레이드.
 import {
   ALLOWED_COLORS,
-  ALLOWED_HIGHLIGHTS,
   YOUTUBE_ID_REGEX,
   clampImageWidth,
   extractYoutubeId,
   isAllowedValue,
   normalizeAlign,
   normalizeFontSize,
+  resolveHighlightColor,
 } from "./editor-allowlist";
 
 export type SafeMark = { type: string; attrs?: Record<string, string> };
@@ -20,7 +20,7 @@ export type SafeNode = {
   text?: string;
 };
 
-const ALLOWED_HEADING_LEVELS = [1, 2, 3] as const;
+const ALLOWED_HEADING_LEVELS = [1, 2, 3, 4] as const;
 type HeadingLevel = (typeof ALLOWED_HEADING_LEVELS)[number];
 
 function isObject(x: unknown): x is Record<string, unknown> {
@@ -51,6 +51,8 @@ function sanitizeMark(mark: unknown): SafeMark | null {
     case "strike":
     case "code":
     case "underline":
+    case "superscript":
+    case "subscript":
       return { type: mark.type };
     case "link": {
       const href =
@@ -60,12 +62,10 @@ function sanitizeMark(mark: unknown): SafeMark | null {
       return { type: "link", attrs: { href } };
     }
     case "highlight": {
-      const color =
-        isObject(mark.attrs) && isString(mark.attrs.color) ? mark.attrs.color : null;
-      // 팔레트 색만 — 미허용/없음이면 기본 형광(색 attr 없이)
-      if (color && isAllowedValue(ALLOWED_HIGHLIGHTS, color))
-        return { type: "highlight", attrs: { color } };
-      return { type: "highlight" };
+      // 공식은 var(--tt-color-highlight-*) 문자열, 옛 콘텐츠는 hex → 둘 다 hex 로 해석
+      const color = isObject(mark.attrs) ? mark.attrs.color : undefined;
+      const hex = resolveHighlightColor(color);
+      return hex ? { type: "highlight", attrs: { color: hex } } : { type: "highlight" };
     }
     case "textStyle": {
       const attrs: Record<string, string> = {};
@@ -130,6 +130,27 @@ function sanitizeNode(
       return { type: node.type, content: childContent() };
     case "listItem":
       return { type: "listItem", content: childContent() };
+    case "taskList":
+      return { type: "taskList", content: childContent() };
+    case "taskItem": {
+      const checked = isObject(node.attrs) && node.attrs.checked === true;
+      return {
+        type: "taskItem",
+        attrs: { checked: checked ? "true" : "false" },
+        content: childContent(),
+      };
+    }
+    case "codeBlock": {
+      const language =
+        isObject(node.attrs) && isString(node.attrs.language)
+          ? node.attrs.language.slice(0, 30)
+          : "";
+      return {
+        type: "codeBlock",
+        ...(language ? { attrs: { language } } : {}),
+        content: childContent(),
+      };
+    }
     case "table":
       return { type: "table", content: childContent() };
     case "tableRow":
