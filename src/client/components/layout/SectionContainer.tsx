@@ -8,13 +8,15 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type Props = {
+  /** 헤더 해시 내비 점프 앵커 — 섹션 셸이 아닌 콘텐츠 래퍼에 id 를 둬서 상단 패딩을 헤더 뒤로 흡수(ADR-038) */
+  id?: string;
   className?: string;
   children: ReactNode;
 };
 
-export function SectionContainer({ className, children }: Props) {
+export function SectionContainer({ id, className, children }: Props) {
   return (
-    <div className={cn("mx-auto w-full px-4 md:max-w-[648px] md:px-0 lg:max-w-[905px] wide:max-w-[1200px]", className)}>
+    <div id={id} className={cn("mx-auto w-full px-4 md:max-w-[648px] md:px-0 lg:max-w-[905px] wide:max-w-[1200px]", className)}>
       {children}
     </div>
   );

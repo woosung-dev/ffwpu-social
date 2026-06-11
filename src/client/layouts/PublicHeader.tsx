@@ -1,6 +1,6 @@
 // 사용자 사이트 헤더 — 클릭 가능 내비(ADR-038). 랜딩 3섹션 스무스 스크롤 + "활동 스토리"는 /news 이동.
 // md↑(768~): 4항목 알약 인라인(클릭) / <768: 현재 위치 알약(▾) → 드롭다운으로 선택. /news 등 비랜딩: 활동 스토리 고정.
-// 앵커 스크롤 오프셋(스티키 헤더 높이)은 globals.css scroll-padding-top 단일 출처.
+// 앵커 스크롤 오프셋 = globals.css scroll-padding-top(헤더 높이 베이스) + 각 섹션 SectionContainer 의 scroll-mt(섹션별 호흡 간격·Story 스티커 클리어런스, ADR-038). 콘텐츠 기준 착지.
 "use client";
 
 import Link from "next/link";

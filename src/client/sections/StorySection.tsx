@@ -90,8 +90,13 @@ export function StorySection({ stats, slots }: Props) {
   // hide-when-empty — value 0/null 항목 제외. 전부 숨으면 통계 블록 자체 비노출
   const visibleStats = stats.filter((s) => s.value != null && s.value > 0);
   return (
-    <section id="story" className={`${STORY_SECTION_SHELL} overflow-x-clip`}>
-      <SectionContainer className="flex flex-col gap-12 lg:flex-row lg:items-center lg:gap-0">
+    <section className={`${STORY_SECTION_SHELL} overflow-x-clip`}>
+      {/* 헤더 클릭 착지(ADR-038): 좌측 이미지 그룹(섹션 hook) 기준. 데코 스티커가 위로 ~30-41px 오버행 →
+          scroll-mt 에 오버행+호흡 간격 합산(56/48/56/64)으로 스티커가 헤더에 안 잘리게 착지 */}
+      <SectionContainer
+        id="story"
+        className="flex scroll-mt-14 flex-col gap-12 md:scroll-mt-12 lg:scroll-mt-14 lg:flex-row lg:items-center lg:gap-0 wide:scroll-mt-16"
+      >
         {/* 좌측 이미지 2장 — 각 이미지를 relative 래퍼로 감싸 장식을 "그 이미지" 기준으로 앵커링.
             바깥 래퍼는 overflow visible(장식 오버행 허용), StoryImage 내부 overflow-hidden 은 둥근 사진만 클리핑.
             Figma 반응형: <1024 stacked(이미지그룹 위/텍스트 아래) · lg(1025~1439) & wide(1440) 모두 side-by-side(좌 이미지/우 텍스트).
