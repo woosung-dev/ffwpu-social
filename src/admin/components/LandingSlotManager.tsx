@@ -215,7 +215,7 @@ export function LandingSlotManager({
         <strong className="font-semibold text-brand-primary">
           발행된 쌀 나눔 글
         </strong>
-        만, 하단 “활동 스토리”는{" "}
+        만, 하단 “메인 스토리”는{" "}
         <strong className="font-semibold text-brand-primary">
           발행된 모든 카테고리 글
         </strong>
@@ -239,7 +239,7 @@ export function LandingSlotManager({
 
       <Card className="min-w-0">
         <CardHeader>
-          <CardTitle className="text-xl">하단 — 활동 스토리 (ArticleGrid)</CardTitle>
+          <CardTitle className="text-xl">하단 — 메인 스토리 (ArticleGrid)</CardTitle>
           <p className="text-sm text-ink-subtle">
             ※ 전 카테고리 발행 글 지정 가능. 지정한 자리만 점유, 미지정 자리는
             최신 글이 자동 채움

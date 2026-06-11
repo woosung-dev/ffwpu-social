@@ -24,7 +24,7 @@ export default function AdminLandingPage() {
         </h1>
         <p className="text-sm text-ink-subtle">
           메인 페이지 상단 &ldquo;쌀 나눔 활동&rdquo; (사진 2장, 쌀 나눔만) +
-          하단 &ldquo;활동 스토리&rdquo; (7장 그리드, 전 카테고리) 에 노출할 글을
+          하단 &ldquo;메인 스토리&rdquo; (7장 그리드, 전 카테고리) 에 노출할 글을
           지정합니다.
         </p>
       </header>

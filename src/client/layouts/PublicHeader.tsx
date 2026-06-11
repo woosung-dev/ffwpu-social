@@ -1,5 +1,5 @@
-// 사용자 사이트 헤더 — 클릭 가능 내비(ADR-038). 랜딩 3섹션(임팩트 데이터/쌀 나눔 소식/활동 스토리) 스무스 스크롤.
-// md↑(768~): 3항목 알약 인라인(클릭) / <768: 현재 위치 알약(▾) → 드롭다운으로 3항목 선택. /news 등 비랜딩: 활동 스토리 고정.
+// 사용자 사이트 헤더 — 클릭 가능 내비(ADR-038). 랜딩 3섹션 스무스 스크롤 + "활동 스토리"는 /news 이동.
+// md↑(768~): 4항목 알약 인라인(클릭) / <768: 현재 위치 알약(▾) → 드롭다운으로 선택. /news 등 비랜딩: 활동 스토리 고정.
 // 앵커 스크롤 오프셋(스티키 헤더 높이)은 globals.css scroll-padding-top 단일 출처.
 "use client";
 
@@ -26,22 +26,26 @@ const ACTIVE_PILL_CLASS =
 type MenuItem = {
   id: string;
   label: string;
-  /** 랜딩에서 스크롤·강조할 섹션 id (DOM 순서: kpi→story→stories) */
-  section: string;
+  /** 랜딩에서 스크롤·강조할 섹션 id (DOM 순서: kpi→story→stories). href 없는 항목에 필수 */
+  section?: string;
+  /** 직접 이동 링크(예: /news) — section 대신 사용. 스크롤스파이 대상 아님 */
+  href?: string;
   /** 비랜딩(/news 등) 페이지에서 active 고정 */
   activeOnSubpage?: boolean;
 };
 
-// 순서·매핑(ADR-038): 임팩트 데이터→#kpi / 쌀 나눔 소식→#story / 활동 스토리→#stories.
-// "활동 스토리"는 비랜딩(/news)에서도 active 고정 — 소식 피드 = 활동 스토리 영역.
+// 매핑(ADR-038): 임팩트 데이터→#kpi / 쌀 나눔 소식→#story / 메인 스토리→#stories(랜딩 카드 그리드) / 활동 스토리→/news(소식 게시판).
 const MENU: readonly MenuItem[] = [
   { id: "kpi", label: "임팩트 데이터", section: "kpi" },
   { id: "story", label: "쌀 나눔 소식", section: "story" },
-  { id: "stories", label: "활동 스토리", section: "stories", activeOnSubpage: true },
+  { id: "stories", label: "메인 스토리", section: "stories" },
+  { id: "news", label: "활동 스토리", href: "/news", activeOnSubpage: true },
 ] as const;
 
-// DOM 순서(위→아래)로 전달 — 바닥 감지 시 마지막 섹션 정확도용 (useScrollSpy 참조)
-const SCROLL_SECTIONS = MENU.map((m) => m.section);
+// DOM 순서(위→아래)로 전달 — 바닥 감지 시 마지막 섹션 정확도용 (useScrollSpy 참조). href 항목 제외
+const SCROLL_SECTIONS = MENU.map((m) => m.section).filter(
+  (s): s is string => Boolean(s),
+);
 const FIRST_LANDING_SECTION = SCROLL_SECTIONS[0]; // Hero 영역(스파이 null) 폴백
 
 export function PublicHeader() {
@@ -56,8 +60,9 @@ export function PublicHeader() {
   // 모바일 트리거 라벨 — 현재 active 항목 (없으면 첫 항목 폴백)
   const activeItem = MENU.find((m) => m.id === activeMenuId) ?? MENU[0];
 
-  // 랜딩=동일 페이지 해시(CSS scroll-behavior 스무스) / 비랜딩=홈 이동 후 앵커
-  const hrefFor = (section: string) => (isLanding ? `#${section}` : `/#${section}`);
+  // section 항목: 랜딩=해시(CSS 스무스), 비랜딩=홈 이동 후 앵커. href 항목: 그대로 이동(/news)
+  const hrefFor = (m: MenuItem) =>
+    m.href ?? (isLanding ? `#${m.section}` : `/#${m.section}`);
 
   return (
     <header className="sticky top-0 z-40 bg-brand-bright">
@@ -77,7 +82,7 @@ export function PublicHeader() {
           />
         </Link>
 
-        {/* 데스크탑(md↑, 768~): 3항목 클릭 가능 알약 — active 자동 강조(스크롤스파이).
+        {/* 데스크탑(md↑, 768~): 4항목 클릭 가능 알약 — active 자동 강조(스크롤스파이).
             item 박스고정 h33/40 — Figma Menu M/L, Tailwind 기본 lh 의 +4~7px 방지. 모바일 트리거와 BP 상호배타 */}
         <nav
           aria-label="주요 섹션 바로가기"
@@ -88,7 +93,7 @@ export function PublicHeader() {
             return (
               <Link
                 key={m.id}
-                href={hrefFor(m.section)}
+                href={hrefFor(m)}
                 aria-current={isActive ? "true" : undefined}
                 className={cn(
                   "inline-flex h-[33px] items-center rounded-full px-4 text-sm transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-white/80 lg:h-10 lg:px-5 lg:text-base",
@@ -103,7 +108,7 @@ export function PublicHeader() {
           })}
         </nav>
 
-        {/* 모바일(<768): 현재 위치 알약(▾) → 드롭다운 3항목 선택. Radix 가 Esc/바깥탭/포커스/aria-expanded 처리 */}
+        {/* 모바일(<768): 현재 위치 알약(▾) → 드롭다운 항목 선택. Radix 가 Esc/바깥탭/포커스/aria-expanded 처리 */}
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label={`섹션 메뉴 열기 — 현재 위치 ${activeItem.label}`}
@@ -121,7 +126,7 @@ export function PublicHeader() {
               return (
                 <DropdownMenuItem key={m.id} asChild className="cursor-pointer py-3">
                   <Link
-                    href={hrefFor(m.section)}
+                    href={hrefFor(m)}
                     aria-current={isActive ? "true" : undefined}
                     className={cn(
                       "flex items-center gap-2",
