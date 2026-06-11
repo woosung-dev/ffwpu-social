@@ -452,11 +452,27 @@ export async function getRiceSharingCategoryId(tx: Tx) {
   return row?.id ?? null;
 }
 
-// 단일 글의 랜딩 슬롯(story·featured) 동반 해제 — 발행 해제·카테고리 이탈 시 고아 슬롯 정리 (A1b)
+// 단일 글의 랜딩 슬롯(story·featured) 동반 해제 — 발행 해제 시 고아 슬롯 정리 (A1b)
 export async function clearLandingSlots(tx: Tx, id: string) {
   await tx
     .update(news)
     .set({ storySlot: null, featuredRank: null, updatedAt: new Date() })
+    .where(eq(news.id, id));
+}
+
+// story 슬롯만 해제 — 쌀 나눔 외 카테고리로 변경 시(featured 는 전 카테고리라 유지, ADR-038)
+export async function clearStorySlot(tx: Tx, id: string) {
+  await tx
+    .update(news)
+    .set({ storySlot: null, updatedAt: new Date() })
+    .where(eq(news.id, id));
+}
+
+// featured 슬롯만 해제 — 발행 해제 시(카테고리 변경엔 반응 안 함, ADR-038)
+export async function clearFeaturedRank(tx: Tx, id: string) {
+  await tx
+    .update(news)
+    .set({ featuredRank: null, updatedAt: new Date() })
     .where(eq(news.id, id));
 }
 
@@ -466,7 +482,8 @@ export type SetLandingSlotResult =
   | { kind: "not_found" };
 
 // 메인 랜딩 슬롯 설정 — StorySection (story_slot 1~2) / ArticleGrid (featured_rank 1~7).
-// slot != null 점유는 발행 + 쌀 나눔 카테고리만 허용(TOCTOU 차단: 대상 row FOR UPDATE 잠금 후 검증, 호출 전 acquireLandingSlotLock 직렬화 필수).
+// slot != null 점유 eligibility: story=발행+쌀 나눔 / featured=발행만(전 카테고리, ADR-038).
+// (TOCTOU 차단: 대상 row FOR UPDATE 잠금 후 검증, 호출 전 acquireLandingSlotLock 직렬화 필수).
 // slot == null 해제는 ineligible 글도 허용 — 고아 슬롯 정리 경로. UNIQUE WHERE NOT NULL 충돌은 점유자 선해제로 회피.
 export async function setLandingSlot(
   tx: Tx,
@@ -491,12 +508,15 @@ export async function setLandingSlot(
   if (!target) return { kind: "not_found" };
 
   if (slot != null) {
-    // 점유 — eligibility(발행 + 쌀 나눔) 확인 후에만 기존 점유자 해제(검증 실패 시 기존 슬롯 보존)
-    const riceId = await getRiceSharingCategoryId(tx);
-    const eligible =
-      target.publishedAt != null &&
-      target.publishedAt.getTime() <= Date.now() &&
-      target.categoryId === riceId;
+    // 점유 — eligibility 확인 후에만 기존 점유자 해제(검증 실패 시 기존 슬롯 보존).
+    // story=발행+쌀 나눔 / featured=발행만(전 카테고리, ADR-038)
+    const isPublic =
+      target.publishedAt != null && target.publishedAt.getTime() <= Date.now();
+    let eligible = isPublic;
+    if (kind === "story") {
+      const riceId = await getRiceSharingCategoryId(tx);
+      eligible = isPublic && target.categoryId === riceId;
+    }
     if (!eligible) return { kind: "ineligible" };
     await tx
       .update(news)

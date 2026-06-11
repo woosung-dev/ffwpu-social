@@ -70,7 +70,7 @@ export async function listStorySlots() {
     .orderBy(asc(news.storySlot));
 }
 
-// ArticleGrid 하단 슬롯 — 운영자 pin (featured_rank) + 자동 fallback (쌀 나눔 카테고리 최신순)
+// ArticleGrid 하단 슬롯 — 운영자 pin (featured_rank) + 자동 fallback (전 카테고리 최신순, ADR-038)
 // 결과: 1~7 자리 채워진 배열 (null 가능)
 export async function listFeaturedGrid(slotCount = 7) {
   // 1. 운영자 pin
@@ -89,13 +89,7 @@ export async function listFeaturedGrid(slotCount = 7) {
     })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
-    .where(
-      and(
-        publicPublishedWhere(),
-        isNotNull(news.featuredRank),
-        eq(categories.slug, RICE_SHARING_SLUG),
-      ),
-    )
+    .where(and(publicPublishedWhere(), isNotNull(news.featuredRank)))
     .orderBy(asc(news.featuredRank));
 
   const pinnedIds = new Set(pinned.map((p) => p.id));
@@ -107,7 +101,7 @@ export async function listFeaturedGrid(slotCount = 7) {
   }
   const emptySlots = slotCount - filledSlots.size;
 
-  // 2. 자동 fallback — 쌀 나눔 카테고리 최신순, pin 된 글 제외
+  // 2. 자동 fallback — 전 카테고리 최신순, pin 된 글 제외 (ADR-038)
   const autoCandidates = emptySlots > 0
     ? await db
         .select({
@@ -128,7 +122,6 @@ export async function listFeaturedGrid(slotCount = 7) {
           and(
             publicPublishedWhere(),
             isNull(news.featuredRank),
-            eq(categories.slug, RICE_SHARING_SLUG),
             // notInArray(col, []) === TRUE 라 pin 없을 때도 안전 (codex: raw NOT IN 은 tuple 생성 실패 위험)
             notInArray(news.id, Array.from(pinnedIds)),
           ),
@@ -151,9 +144,8 @@ export async function listFeaturedGrid(slotCount = 7) {
   return result;
 }
 
-// 어드민 큐레이션 후보 — 발행된 쌀 나눔 글 전체(최신순). story/featured 슬롯 점유 현황(storySlot·featuredRank) 포함.
-// page 에서 슬롯 배열로 매핑(점유 글만 — fallback 은 공개 listFeaturedGrid 전용, 어드민은 자기 pin 만 표시: codex D2).
-// 어드민 page 의 인라인 Drizzle 제거용(3계층 경계 정합: ADR-024)
+// 어드민 story 슬롯 후보 — 발행된 쌀 나눔 글 전체(최신순). 상단 StorySection 은 쌀 나눔 유지(ADR-038).
+// 슬롯 점유 현황(storySlot·featuredRank) 포함. page 에서 슬롯 배열로 매핑(점유 글만 — fallback 은 공개 listFeaturedGrid 전용: codex D2)
 export async function listRiceSharingCandidates() {
   return db
     .select({
@@ -171,5 +163,25 @@ export async function listRiceSharingCandidates() {
     .where(
       and(publicPublishedWhere(), eq(categories.slug, RICE_SHARING_SLUG)),
     )
+    .orderBy(desc(news.publishedAt));
+}
+
+// 어드민 featured 슬롯 후보 — 발행된 글 전체(전 카테고리, 최신순). 하단 ArticleGrid 는 카테고리 무관(ADR-038).
+// 카테고리명도 함께 — 운영자가 선택지에서 어느 카테고리 글인지 식별 (LandingSlotManager)
+export async function listAllPublishedCandidates() {
+  return db
+    .select({
+      id: news.id,
+      title: news.title,
+      categoryName: categories.name,
+      categorySlug: categories.slug,
+      coverImageUrl: news.coverImageUrl,
+      publishedAt: news.publishedAt,
+      storySlot: news.storySlot,
+      featuredRank: news.featuredRank,
+    })
+    .from(news)
+    .innerJoin(categories, eq(news.categoryId, categories.id))
+    .where(publicPublishedWhere())
     .orderBy(desc(news.publishedAt));
 }

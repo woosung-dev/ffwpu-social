@@ -132,8 +132,10 @@ export async function updateNews(id: string, input: NewsInput) {
       isPublished: isCurrentlyPublic,
       isRiceSharing: input.categoryId === riceId,
     });
+    // story 는 쌀 나눔 이탈 시 해제, featured 는 전 카테고리라 미발행일 때만 해제 (ADR-038)
     if (clear.hero) await newsDb.clearHeroRank(tx, id);
-    if (clear.landing) await newsDb.clearLandingSlots(tx, id);
+    if (clear.story) await newsDb.clearStorySlot(tx, id);
+    if (clear.featured) await newsDb.clearFeaturedRank(tx, id);
 
     await newsDb.replaceNewsTags(tx, id, normalized);
     return updated;

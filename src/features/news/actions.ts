@@ -218,7 +218,10 @@ export async function setLandingSlotAction(
     if (result.kind === "ineligible") {
       return {
         success: false,
-        error: "발행된 쌀 나눔 글만 메인에 노출할 수 있습니다.",
+        error:
+          parsed.data.kind === "story"
+            ? "발행된 쌀 나눔 글만 상단에 노출할 수 있습니다."
+            : "발행된 글만 메인에 노출할 수 있습니다.",
       };
     }
     // 메인 / 사용자 사이트 + 어드민 큐레이션 페이지 동시 revalidate
