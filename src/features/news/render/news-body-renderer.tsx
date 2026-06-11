@@ -104,11 +104,24 @@ function renderNode(node: SafeNode, key: number): ReactNode {
     case "horizontalRule":
       return <hr key={key} />;
     case "bulletList":
-      return <ul key={key}>{kids}</ul>;
+      // prose 플러그인 미사용 + Tailwind preflight 가 list-style 제거 → 마커·들여쓰기 명시
+      return (
+        <ul key={key} className="my-3 list-disc pl-6">
+          {kids}
+        </ul>
+      );
     case "orderedList":
-      return <ol key={key}>{kids}</ol>;
+      return (
+        <ol key={key} className="my-3 list-decimal pl-6">
+          {kids}
+        </ol>
+      );
     case "listItem":
-      return <li key={key}>{kids}</li>;
+      return (
+        <li key={key} className="my-1 [&>p]:my-0">
+          {kids}
+        </li>
+      );
     case "taskList":
       return (
         <ul key={key} className="list-none pl-0">
