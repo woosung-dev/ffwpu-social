@@ -14,6 +14,7 @@ import { Subscript } from "@tiptap/extension-subscript"
 import { Superscript } from "@tiptap/extension-superscript"
 import { Selection } from "@tiptap/extensions"
 import { TextStyleKit } from "@tiptap/extension-text-style"
+import { Youtube } from "@tiptap/extension-youtube"
 
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button"
@@ -38,6 +39,7 @@ import "@/components/tiptap-node/paragraph-node/paragraph-node.scss"
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-menu"
 import { FontSizeDropdownMenu } from "@/components/tiptap-ui/font-size-dropdown-menu"
+import { YoutubeButton } from "@/components/tiptap-ui/youtube-button"
 import { ImageUploadButton } from "@/components/tiptap-ui/image-upload-button"
 import { ListDropdownMenu } from "@/components/tiptap-ui/list-dropdown-menu"
 import { BlockquoteButton } from "@/components/tiptap-ui/blockquote-button"
@@ -144,6 +146,7 @@ const MainToolbarContent = ({
 
       <ToolbarGroup>
         <ImageUploadButton text="Add" />
+        <YoutubeButton />
       </ToolbarGroup>
 
       <Spacer />
@@ -221,6 +224,7 @@ export function SimpleEditor() {
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
       Image,
+      Youtube.configure({ nocookie: true, controls: true, width: 640, height: 360 }),
       Typography,
       Superscript,
       Subscript,

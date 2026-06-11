@@ -1,8 +1,8 @@
 <!-- Tiptap 공식 simple-editor(진짜 소스) + 글자 크기 추가 — 평가용 격리 sandbox -->
 
-# Simple Editor Lab — 공식 Tiptap simple-editor + 글자 크기
+# Simple Editor Lab — 공식 Tiptap simple-editor + 글자 크기 + 유튜브
 
-`template.tiptap.dev/preview/templates/simple` 와 동일한 **진짜 공식 simple-editor** 입니다. 공식 repo [`ueberdosis/tiptap-ui-components`](https://github.com/ueberdosis/tiptap-ui-components) 의 `apps/web` 소스를 그대로 가져왔고, **단 하나 — 글자 크기 컨트롤만 추가** 했습니다. 본 프로젝트(Tiptap v2)·프로덕션과는 완전히 격리된 독립 앱입니다.
+`template.tiptap.dev/preview/templates/simple` 와 동일한 **진짜 공식 simple-editor** 입니다. 공식 repo [`ueberdosis/tiptap-ui-components`](https://github.com/ueberdosis/tiptap-ui-components) 의 `apps/web` 소스를 그대로 가져왔고, **글자 크기 컨트롤과 유튜브 삽입을 추가** 했습니다. 본 프로젝트(Tiptap v2)·프로덕션과는 완전히 격리된 독립 앱입니다.
 
 ## 빠른 실행
 
@@ -12,7 +12,8 @@ pnpm install
 pnpm dev        # http://localhost:5180
 ```
 
-툴바의 **제목(H) 드롭다운 옆 `Size ▾`** → 본문을 드래그한 뒤 크기를 고르면 적용, `Default` 로 해제됩니다.
+- **글자 크기**: 툴바 **제목(H) 드롭다운 옆 `Size ▾`** → 본문 드래그 후 크기 선택, `Default` 로 해제.
+- **유튜브**: 이미지 **`Add` 옆 `YouTube`** → 링크 붙여넣기 → 임베드 (v3 `@tiptap/extension-youtube`, nocookie).
 
 ## 왜 직접 가져왔나 (공식 CLI 미사용)
 
@@ -24,14 +25,17 @@ pnpm dev        # http://localhost:5180
 > npx @tiptap/cli@latest add simple-editor    # 기존 프로젝트에 추가
 > ```
 
-## 공식 대비 변경점 (글자 크기 추가가 전부)
+## 공식 대비 변경점 (글자 크기 + 유튜브)
 
 | 변경 | 파일 |
 |---|---|
 | `TextStyleKit` 등록 (`fontSize`) | `src/components/tiptap-templates/simple/simple-editor.tsx` (+1줄) |
 | 툴바에 `<FontSizeDropdownMenu/>` 배치 | 동 파일 (heading 드롭다운 옆 +1줄) |
 | 글자 크기 드롭다운 컴포넌트 신규 | `src/components/tiptap-ui/font-size-dropdown-menu/` (공식 HeadingDropdownMenu 패턴 그대로) |
-| 의존성 `@tiptap/extension-text-style` 추가 | `package.json` |
+| `Youtube` 확장 등록 (nocookie) | 동 파일 (+1줄) |
+| 툴바에 `<YoutubeButton/>` 배치 | 동 파일 (이미지 Add 옆 +1줄) |
+| YouTube 버튼 컴포넌트 신규 | `src/components/tiptap-ui/youtube-button/` |
+| 의존성 `@tiptap/extension-text-style`, `@tiptap/extension-youtube` 추가 | `package.json` |
 
 독립 실행을 위한 환경 보정 2건(공식 동작과 무관).
 - `@types/node` devDep 추가 — 모노레포 루트에 의존하던 `vite.config.ts` 의 `path`/`__dirname` 타입.
