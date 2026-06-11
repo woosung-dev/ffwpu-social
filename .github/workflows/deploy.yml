@@ -1,0 +1,47 @@
+# main push → (승인 게이트) prod 마이그레이션 → 성공 시 Vercel prod 배포. migrate가 deploy를 게이트(Build≠Release≠Run).
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+# 동시 배포 직렬화 — 마이그레이션/배포 경합 방지
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    # Settings → Environments → production 의 Required reviewers = 수동 승인 게이트(이 잡 실행 직전 멈춤)
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply migrations to production
+        run: pnpm db:migrate:deploy
+        env:
+          # Neon direct 엔드포인트(-pooler 제거). GitHub Secrets에 등록.
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL_DIRECT }}
+
+  deploy:
+    needs: migrate # migrate 성공해야만 배포
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+      - name: Pull Vercel project settings
+        run: vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
+      - name: Build (prod)
+        run: vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}"
+      - name: Deploy prebuilt (prod)
+        run: vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}"

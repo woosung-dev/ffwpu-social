@@ -1479,3 +1479,28 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 - 어드민 `/admin/landing` 하단 슬롯 드롭다운에 전 카테고리 발행글 노출(카테고리명 칩 표기). 상단은 쌀 나눔만.
 - **스키마 변경 0** — 컬럼은 그대로, 규칙(쿼리 필터·eligibility)만 완화. 마이그레이션 불필요.
 - 검증: tsc0·lint0·test54, Next 빌드 통과, 데스크탑/모바일 헤더 라이브 확인(클릭 스크롤 오프셋·active 전환·드롭다운 44px 터치타깃·가로 오버플로 없음).
+
+## ADR-039: 배포 릴리스 파이프라인 — GHA 게이트 마이그레이션 (Build≠Release≠Run)
+
+- **Status**: Accepted
+- **Date**: 2026-06-11
+
+### Context
+
+프로덕션에서 어드민만 백스크린(2026-06-11). 루트코즈는 #45의 마이그레이션 0007(`analytics_events`)이 프로덕션 Neon에 미적용 — Vercel은 `next build`만 돌리고 `drizzle-kit migrate`를 자동 실행하지 않음. 배포마다 수동 migrate는 누락 위험이 크다. 1단계 Vercel, 2단계 AWS(EC2/Docker)에서 같은 원칙·산출물을 재사용해야 함.
+
+### Decision
+
+1. **Build≠Release≠Run 분리(12-factor).** 마이그레이션은 `next build` 안에 넣지 않고 *릴리스 단계* 잡으로 분리.
+2. **공유 러너 `src/db/migrate.ts`** — drizzle-orm migrator + pg, **advisory lock**으로 동시 실행 1개 보장. `db:migrate:deploy` 스크립트. 로컬 `db:migrate`(drizzle-kit)와 병존.
+3. **Vercel(현재): GitHub Actions가 순서 소유.** `deploy.yml` = main push → `migrate` 잡(`environment: production` = 수동 승인 게이트) → 성공 시 `vercel deploy --prod`. `migrate-preview.yml` = PR에서 ephemeral Postgres에 from-scratch 적용 검증. `vercel.json` `git.deploymentEnabled.main=false`로 Vercel 자동배포 끔(이중 배포 방지).
+4. **AWS(미래 청사진): standalone Dockerfile + 마이그레이션은 CI 일회성 잡(B-1 권장)으로 RDS 적용.** compose 원샷/엔트리포인트(B-2/B-3)는 단순하나 다중 인스턴스 안전성은 advisory lock 의존.
+5. **안전 규칙:** forward-only(자동 롤백 금지), Expand/Contract(가산형 우선·삭제는 2단계 배포), Neon **direct** 엔드포인트로 migrate(런타임은 pooled), **seed/backfill은 자동 파이프라인에서 금지**(seed는 TRUNCATE 포함).
+
+### Consequences
+
+- 배포마다 마이그레이션 자동 적용 + 사람 승인 1회 게이트 + 순서 보장(migrate 실패 시 deploy 차단).
+- 1회 셋업: GitHub Environment `production`(required reviewers) + Secrets(`PROD_DATABASE_URL_DIRECT`·`VERCEL_TOKEN`·`VERCEL_ORG_ID`·`VERCEL_PROJECT_ID`), Vercel git 자동배포 off.
+- 막힌 prod 0007은 파이프라인 켜기 전 1회 수동 적용(`DATABASE_URL=<prod direct> pnpm db:migrate:deploy`)으로 해소.
+- 어드민 백스크린 방어(분석 카드 ErrorBoundary 격리)는 PR #48로 별도 — 이 파이프라인과 보완 관계.
+- 검증: `migrate.ts` from-scratch 8건·idempotent·동시 2러너 직렬화(중복 0) 로컬 확인. 워크플로 YAML 유효성 확인.

@@ -1,0 +1,56 @@
+# PR 마이그레이션 미리보기/검증 — ephemeral Postgres에 from-scratch 적용(prod 무접촉) + 새 SQL을 Job Summary로 노출.
+name: Migration Preview
+
+on:
+  pull_request:
+    paths:
+      - "drizzle/**"
+      - "src/db/**"
+      - ".github/workflows/migrate-preview.yml"
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply migrations from scratch (ephemeral DB)
+        run: pnpm db:migrate:deploy
+      - name: Summarize migrations in this PR
+        run: |
+          echo "### 🗃️ 이 PR의 마이그레이션" >> "$GITHUB_STEP_SUMMARY"
+          NEW=$(git diff --name-only --diff-filter=A "origin/${{ github.base_ref }}...HEAD" -- 'drizzle/*.sql' || true)
+          if [ -z "$NEW" ]; then
+            echo "_새 마이그레이션 없음_" >> "$GITHUB_STEP_SUMMARY"
+          else
+            for f in $NEW; do
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "#### \`$f\`" >> "$GITHUB_STEP_SUMMARY"
+              echo '```sql' >> "$GITHUB_STEP_SUMMARY"
+              cat "$f" >> "$GITHUB_STEP_SUMMARY"
+              echo '```' >> "$GITHUB_STEP_SUMMARY"
+            done
+          fi
