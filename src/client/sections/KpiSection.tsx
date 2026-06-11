@@ -50,12 +50,15 @@ export function KpiSection({ metricsBySlug }: Props) {
   );
   return (
     <section
-      id="kpi"
       aria-labelledby="kpi-heading"
       className={KPI_SECTION_SHELL}
     >
       {/* 섹션 방향: base/md/lg column · wide row(헤딩 좌 | 대시보드 우). 헤딩↔대시보드 gap = 30/40/40/70 (discrete) */}
-      <SectionContainer className="flex flex-col gap-[30px] md:gap-10 wide:flex-row wide:items-start wide:gap-[70px]">
+      {/* 헤더 클릭 착지(ADR-038): id 를 콘텐츠 래퍼에 둬 상단 패딩을 헤더 뒤로 흡수 → "한 해동안…" 헤딩이 헤더 아래 호흡 간격(16/20/24)으로 착지 */}
+      <SectionContainer
+        id="kpi"
+        className="flex scroll-mt-4 flex-col gap-[30px] md:scroll-mt-5 md:gap-10 lg:scroll-mt-6 wide:flex-row wide:items-start wide:gap-[70px]"
+      >
         {/* 좌측 헤딩 — base 중앙정렬, md+ 좌측. wide(1440)만 251px 좌측 사이드. 헤딩↔본문 gap = 6/6/6/16 */}
         <div
           data-fid="kpi-heading"

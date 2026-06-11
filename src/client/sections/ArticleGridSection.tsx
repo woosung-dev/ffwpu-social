@@ -29,9 +29,13 @@ type Props = {
 export function ArticleGridSection({ items }: Props) {
   // 섹션 상하 패딩 — Figma: 375 24.5 / 768 62.5 / 1025 96.5 / 1440 100
   return (
-    <section id="stories" className="w-full bg-white py-6 md:py-16 lg:py-24 wide:py-[100px]">
+    <section className="w-full bg-white py-6 md:py-16 lg:py-24 wide:py-[100px]">
       {/* 다크블록↔그리드 간격 — Figma: 375 6 / 768 10 / 1025+ 16 (wide 는 수평 16) */}
-      <SectionContainer className="flex flex-col gap-1.5 md:gap-2.5 lg:gap-4 wide:flex-row wide:items-start">
+      {/* 헤더 클릭 착지(ADR-038): 다크 블록 기준. 솔리드 블록이라 살짝 더 여유(24/28/32) */}
+      <SectionContainer
+        id="stories"
+        className="flex scroll-mt-6 flex-col gap-1.5 md:scroll-mt-7 md:gap-2.5 lg:scroll-mt-8 lg:gap-4 wide:flex-row wide:items-start"
+      >
         {/* 좌측 다크 블록 — 라운드 12px. Figma 2중 패딩(블록+내부 Text)을 유효 인셋으로 평탄화:
             375 상20/좌16 → px-4 py-5, 768~1025 좌우26/상하30 → h172, wide 좌우26/상하40.
             md~1439 가로 배너(헤딩↔CTA 양끝, 풀폭 top), wide(1440)+ 만 319px 사이드 헤더, 모바일 세로 스택 */}

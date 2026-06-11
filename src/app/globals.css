@@ -153,7 +153,8 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 
-  /* 헤더 앵커 내비(ADR-038) — 해시 점프가 스티키 헤더(56/72/88px) 아래에서 멈추도록 오프셋(단일 출처).
+  /* 헤더 앵커 내비(ADR-038) — 해시 점프가 스티키 헤더(56/72/88px) 아래에서 멈추도록 베이스 오프셋.
+     섹션별 착지 간격은 각 섹션 SectionContainer 의 scroll-mt 가 추가(콘텐츠 기준 착지·Story 스티커 클리어런스).
      scroll-behavior 스무스는 prefers-reduced-motion 존중. header-height.ts 의 px 값과 동기 유지. */
   html {
     scroll-behavior: smooth;
