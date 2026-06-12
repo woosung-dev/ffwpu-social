@@ -57,6 +57,13 @@
       "when": 1781081003604,
       "tag": "0007_chunky_doctor_doom",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781223939905,
+      "tag": "0008_deactivate_story_orgs",
+      "breakpoints": true
     }
   ]
 }
