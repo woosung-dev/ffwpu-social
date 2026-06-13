@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { SectionContainer } from "@/client/components/layout";
 import { MasonryGrid, MediaCard, type MasonryTier } from "@/client/components/media";
+import { Reveal } from "@/client/components/motion";
 
 // 마조네리 BP 정합 — 모바일 1열 / md+(768~) 3열 (Figma). 숨김 tier 의 lazy 이미지는 미로드
 const GRID_TIERS: MasonryTier[] = [
@@ -27,6 +28,8 @@ type Props = {
 };
 
 export function ArticleGridSection({ items }: Props) {
+  // 마조네리 카드 stagger 지연 — 읽기 순서(원본 index) 기준 60ms 씩, 최대 300ms 캡(잔잔한 결)
+  const revealOrder = new Map(items.slice(0, 6).map((it, i) => [it.id, i]));
   // 섹션 상하 패딩 — Figma: 375 24.5 / 768 62.5 / 1025 96.5 / 1440 100
   return (
     <section className="w-full bg-white py-6 md:py-16 lg:py-24 wide:py-[100px]">
@@ -85,14 +88,16 @@ export function ArticleGridSection({ items }: Props) {
                 : 1.25
             }
             renderItem={(item) => (
-              <MediaCard
-                href={`/news/${item.id}`}
-                imageUrl={item.coverImageUrl}
-                width={item.coverImageWidth}
-                height={item.coverImageHeight}
-                title={item.title}
-                subtitle={item.categoryName}
-              />
+              <Reveal delayMs={Math.min(revealOrder.get(item.id) ?? 0, 5) * 60}>
+                <MediaCard
+                  href={`/news/${item.id}`}
+                  imageUrl={item.coverImageUrl}
+                  width={item.coverImageWidth}
+                  height={item.coverImageHeight}
+                  title={item.title}
+                  subtitle={item.categoryName}
+                />
+              </Reveal>
             )}
           />
         </div>

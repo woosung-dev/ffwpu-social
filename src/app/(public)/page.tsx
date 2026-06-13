@@ -14,6 +14,7 @@ import {
   type StorySlotItem,
 } from "@/client/sections";
 import { SectionContainer } from "@/client/components/layout";
+import { Reveal } from "@/client/components/motion";
 import { landingDb } from "@/features/landing";
 
 export const metadata: Metadata = {
@@ -35,17 +36,25 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
+      {/* Hero 는 어보브폴드 — 리빌 제외(스크롤 전 빈 화면 방지). 이하 섹션은 진입 시 "아래→위 페이드업"(잔잔한 결).
+          ArticleGrid 는 섹션 래핑 대신 마조네리 카드 단위 stagger(섹션 내부에서 처리) — 좌 스티키 블록은 리빌 미적용(transform↔sticky 분리). */}
       <HeroBanner />
-      <Suspense fallback={<KpiLoading />}>
-        <KpiSectionWithData />
-      </Suspense>
-      <Suspense fallback={<StoryLoading />}>
-        <StorySectionWithData />
-      </Suspense>
+      <Reveal>
+        <Suspense fallback={<KpiLoading />}>
+          <KpiSectionWithData />
+        </Suspense>
+      </Reveal>
+      <Reveal>
+        <Suspense fallback={<StoryLoading />}>
+          <StorySectionWithData />
+        </Suspense>
+      </Reveal>
       <Suspense fallback={<ArticleGridLoading />}>
         <ArticleGridSectionWithData />
       </Suspense>
-      <PartnersSection />
+      <Reveal>
+        <PartnersSection />
+      </Reveal>
     </>
   );
 }
