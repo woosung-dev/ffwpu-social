@@ -59,10 +59,11 @@ export function KpiSection({ metricsBySlug }: Props) {
         id="kpi"
         className="flex scroll-mt-4 flex-col gap-[30px] md:scroll-mt-5 md:gap-10 lg:scroll-mt-6 wide:flex-row wide:items-start wide:gap-[70px]"
       >
-        {/* 좌측 헤딩 — base 중앙정렬, md+ 좌측. wide(1440)만 251px 좌측 사이드. 헤딩↔본문 gap = 6/6/6/16 */}
+        {/* 좌측 헤딩 — base 중앙정렬, md+ 좌측. wide(1440)만 251px 좌측 사이드.
+            wide 한정 섹션 내 스티키: 우측 대시보드(760)가 뷰포트보다 길 때 헤딩이 헤더 아래(--sticky-top=112)에 핀 → 섹션 하단서 해제(earthrap 지구랩 인터랙션). 부모 wide:items-start 가 전제. 헤딩↔본문 gap = 6/6/6/16 */}
         <div
           data-fid="kpi-heading"
-          className="flex flex-col gap-1.5 text-center text-surface-dark md:text-left wide:w-[251px] wide:shrink-0 wide:gap-4"
+          className="flex flex-col gap-1.5 text-center text-surface-dark md:text-left wide:sticky wide:top-[var(--sticky-top)] wide:w-[251px] wide:shrink-0 wide:gap-4 wide:self-start"
         >
           <h2
             id="kpi-heading"

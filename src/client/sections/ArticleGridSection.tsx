@@ -38,8 +38,9 @@ export function ArticleGridSection({ items }: Props) {
       >
         {/* 좌측 다크 블록 — 라운드 12px. Figma 2중 패딩(블록+내부 Text)을 유효 인셋으로 평탄화:
             375 상20/좌16 → px-4 py-5, 768~1025 좌우26/상하30 → h172, wide 좌우26/상하40.
-            md~1439 가로 배너(헤딩↔CTA 양끝, 풀폭 top), wide(1440)+ 만 319px 사이드 헤더, 모바일 세로 스택 */}
-        <div className="rounded-xl bg-surface-dark px-4 py-5 md:flex md:items-center md:justify-between md:gap-6 md:px-[26px] md:py-[30px] wide:block wide:w-[319px] wide:shrink-0 wide:self-start wide:py-10">
+            md~1439 가로 배너(헤딩↔CTA 양끝, 풀폭 top), wide(1440)+ 만 319px 사이드 헤더, 모바일 세로 스택.
+            wide 한정 섹션 내 스티키: 우측 마조네리가 길면 다크블록이 헤더 아래(--sticky-top)에 핀 → 섹션 하단서 해제(earthrap 인터랙션). 부모 wide:items-start 전제. */}
+        <div className="rounded-xl bg-surface-dark px-4 py-5 md:flex md:items-center md:justify-between md:gap-6 md:px-[26px] md:py-[30px] wide:sticky wide:top-[var(--sticky-top)] wide:block wide:w-[319px] wide:shrink-0 wide:self-start wide:py-10">
           <div>
             {/* 타이틀 — Figma: 375 20 / 768+ 31. md 가로 배너에서 1줄 렌더 방지용 max-w (Figma 헤딩 2줄, 블록 h172) */}
             <h2 className="text-xl font-extrabold leading-tight break-keep text-ink-on-purple md:max-w-[360px] md:text-[31px]">
