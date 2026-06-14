@@ -1522,7 +1522,10 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 
 1. **섹션 내 스티키 = 순수 CSS `position: sticky`(JS 0).** 좌블록에 `wide:sticky wide:top-[var(--sticky-top)]` 만 부여. `wide`(1440+)에서만 좌 사이드 칼럼이므로 그 구간 한정("왼쪽일 때만"). 부모가 이미 `wide:items-start`(=자식 콘텐츠 높이) 라 sticky travel 이 생겨 우측(대시보드 760/마조네리)이 길 때 핀 → 섹션 하단서 자연 해제. `<wide` 는 static(기존 그대로). 검토했으나 채택 안 함: JS 스크롤 핸들러(IntersectionObserver/scroll) — sticky 가 표현하는 "섹션 경계 내 고정"을 그대로 주는데 JS 는 불필요·취약.
 2. **헤더 높이 단일 토큰 `--header-h`(3.5/4.5/5.5rem).** 기존 `scroll-padding-top` 이 56/72/88 을 globals.css 에 중복 기입하던 것을 `var(--header-h)` 참조로 교체. `--sticky-top: calc(var(--header-h) + 1.5rem)`(=112px@wide) → 스티키 좌블록이 스티키 헤더 아래 24px 호흡으로 착지, **겹침 방지**. `header-height.ts`(JS SSoT, useScrollSpy 용 px)와 세 표현 동기.
-3. **스크롤 리빌 = 무의존 IntersectionObserver(`useInViewReveal`) + CSS(`[data-reveal]`).** 진입 시 1회 `data-revealed` 부여 후 관찰 해제. "잔잔한 결"(사용자 선택) — translateY 20→0·opacity·500ms ease-out, **transform/opacity 만**(합성·anti-slop §3). 카드 그룹(마조네리)만 60ms stagger(최대 300ms). KPI 숫자 count-up **없음**. Hero(어보브폴드) 제외. 스코프 **랜딩 전용**(/news 미적용).
+3. **스크롤 리빌 = 무의존 IntersectionObserver + CSS(`[data-reveal]`).** 진입 시 1회 `data-revealed` 부여 후 관찰 해제. "잔잔한 결"(사용자 선택) — translateY 20→0·opacity·500ms ease-out, **transform/opacity 만**(합성·anti-slop §3). KPI 숫자 count-up **없음**. Hero(어보브폴드) 제외. 스코프 **랜딩 전용**(/news 미적용). 두 프리미티브:
+   - `Reveal`(요소 래핑·자가 관찰) — ArticleGrid 마조네리 카드 60ms stagger.
+   - `RevealGroup`(자식 `[data-reveal]` *속성*만 부여한 요소를 한 옵저버로 일괄 발동·표시중 DOM 순서 stagger) — **KPI 벤토·Story 처럼 정밀 레이아웃을 안 바꾸고 요소 단위 stagger** 가 필요할 때. Suspense 내부 배치(콘텐츠 도착 후 관찰).
+   - **요소 단위 리빌(사용자 2차 결정 "핵심만 포인트")**: 섹션 통째 페이드업이 "범위가 너무 크다" → KPI=헤딩 즉시(스티키)+벤토 6카드 stagger / Story=사진2·헤딩만(태그·설명·통계 즉시, 데코 스티커는 사진 wrapper 안이라 독립 모션 없이 함께 이동) / Partners=섹션 단위(소형 밴드).
 4. **노스크립트/하이드레이션-전 가림 트랩 방지 = `@media (scripting: enabled)` 스코프.** 초기 숨김(opacity 0)을 JS 사용 가능 환경에서만 적용 → JS 없으면 항상 표시. `prefers-reduced-motion: reduce` 는 항상 즉시 표시(transition 0). 인라인 스크립트 불필요.
 5. **스티키↔리빌 분리.** 리빌은 `transform` 을 쓰고, transform 된 조상은 자손 sticky 의 containing block 을 바꾼다. 그래서 (a) 스티키 좌블록 자체엔 리빌 미적용, (b) 섹션 단위 리빌은 `[data-revealed]` 도달 시 `transform: none`(컨테이닝 블록 해제) — 리빌 완료 후 sticky 정상. 실측: KPI 리빌 후에도 좌블록 112px 핀 유지.
 

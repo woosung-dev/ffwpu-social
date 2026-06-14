@@ -89,6 +89,7 @@ export function KpiSection({ metricsBySlug }: Props) {
           <div data-fid="kpi-row1" className="flex h-[115px] gap-1.5 md:h-[180px] md:gap-2.5">
             <div
               data-fid="card-smile"
+              data-reveal
               className="flex w-[115px] shrink-0 items-center justify-center rounded-[12px] bg-brand-bright md:w-[200px] md:rounded-[20px]"
             >
               {/* 스마일 글리프 폭: base 72 → md+ 121 */}
@@ -105,6 +106,7 @@ export function KpiSection({ metricsBySlug }: Props) {
             {/* 데코를 absolute(카드 우하단)로 빼서 값(텍스트)이 카드 전폭 1줄 차지 — Figma 처럼 값 1줄 + 데코 우하단 겹침. relative+overflow-hidden 으로 좌측 overhang 클립 */}
             <div
               data-fid="card-volunteer-count"
+              data-reveal
               className="relative flex min-w-0 flex-1 flex-col justify-center gap-[2px] overflow-hidden rounded-[12px] bg-kpi-gray px-[14px] py-3 text-ink-strong-mid md:gap-1 md:rounded-[20px] md:px-6 md:py-5"
             >
               <p className="text-[12px] font-semibold md:text-[20px]">
@@ -146,6 +148,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                     폭 산식: 375 셀 199−36=163 ≥ "38년 5개월" 24px ≈117 OK / 768 셀 200−60=140 vs 30px ≈141~147 — 경계(아래 [확인 필요]) */}
                 <div
                   data-fid="card-volunteer-period"
+                  data-reveal
                   className="flex flex-col justify-between gap-3 rounded-[12px] bg-kpi-gray px-[18px] py-3 text-ink-strong-mid md:rounded-[20px] md:px-[30px] md:py-5"
                 >
                   <p className="text-[12px] font-semibold md:text-[20px]">
@@ -157,6 +160,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                 </div>
                 <div
                   data-fid="card-sowgood"
+                  data-reveal
                   className="hidden items-center justify-center rounded-[12px] bg-kpi-yellow md:flex md:rounded-[20px]"
                 >
                   {/* SowGood 로고: md 138 (lg+ 는 데스크탑 블록에서 204) */}
@@ -172,6 +176,7 @@ export function KpiSection({ metricsBySlug }: Props) {
               </div>
               <div
                 data-fid="card-event-count"
+                data-reveal
                 className="flex flex-1 flex-col justify-between gap-2 overflow-hidden rounded-[12px] bg-kpi-lime px-[14px] py-3 text-ink-on-lime md:rounded-[20px] md:px-6 md:py-5"
               >
                 <p className="text-[12px] font-semibold md:text-[20px]">
@@ -198,6 +203,7 @@ export function KpiSection({ metricsBySlug }: Props) {
 
             <div
               data-fid="card-helped-household"
+              data-reveal
               className="relative flex flex-1 flex-col gap-4 overflow-hidden rounded-[12px] bg-brand-bright md:rounded-[20px]"
             >
               <div className="px-[14px] pt-3 md:px-6 md:pt-5">
@@ -236,6 +242,7 @@ export function KpiSection({ metricsBySlug }: Props) {
             {/* 보라 캐릭터 카드 — 폭 293 고정 */}
             <div
               data-fid="card-smile"
+              data-reveal
               className="flex w-[293px] shrink-0 items-center justify-center rounded-[20px] bg-brand-bright"
             >
               {/* 스마일 글리프 폭 121 */}
@@ -252,6 +259,7 @@ export function KpiSection({ metricsBySlug }: Props) {
             {/* 누적 봉사자 수 카드 — 패딩 24/20, label 20 / value 52 */}
             <div
               data-fid="card-volunteer-count"
+              data-reveal
               className="flex flex-1 items-start justify-between gap-6 rounded-[20px] bg-kpi-gray px-6 py-5"
             >
               <div className="flex flex-col gap-1 text-ink-strong-mid">
@@ -293,6 +301,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                 {/* 누적 봉사 기간 — Figma px30 py20 복원. 폭 산식: 셀 295.5−60=235.5 ≥ "38년 5개월" 45px ≈211 — 현 데이터 오버플로 없음. label 20 / value 45 */}
                 <div
                   data-fid="card-volunteer-period"
+                  data-reveal
                   className="flex flex-col justify-between rounded-[20px] bg-kpi-gray px-[30px] py-5 text-ink-strong-mid"
                 >
                   <p className="text-[20px] font-semibold">누적 봉사 기간</p>
@@ -303,6 +312,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                 {/* 노란 Sow Good 카드 — 로고 204 */}
                 <div
                   data-fid="card-sowgood"
+                  data-reveal
                   className="flex items-center justify-center rounded-[20px] bg-kpi-yellow"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
@@ -318,6 +328,7 @@ export function KpiSection({ metricsBySlug }: Props) {
               {/* 봉사활동 횟수 — label top-left / 일러스트 좌하단 + 값 우하단. label↔value 31 고정. 값 52 + nowrap */}
               <div
                 data-fid="card-event-count"
+                data-reveal
                 className="flex flex-1 flex-col justify-between gap-[31px] rounded-[20px] bg-kpi-lime px-6 py-5 text-ink-on-lime"
               >
                 <p className="text-[20px] font-semibold">봉사활동 횟수</p>
@@ -341,6 +352,7 @@ export function KpiSection({ metricsBySlug }: Props) {
             {/* 우측: 도움 가정 수 보라 카드. lg↑ flex-1(잔여폭 — lg 282 / wide 256), 높이 Row2 518. label 20 / value 42 */}
             <div
               data-fid="card-helped-household"
+              data-reveal
               className="relative flex w-full flex-col gap-4 overflow-hidden rounded-[20px] bg-brand-bright lg:flex-1 wide:gap-10"
             >
               <div className="px-6 py-5">

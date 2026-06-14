@@ -14,7 +14,7 @@ import {
   type StorySlotItem,
 } from "@/client/sections";
 import { SectionContainer } from "@/client/components/layout";
-import { Reveal } from "@/client/components/motion";
+import { Reveal, RevealGroup } from "@/client/components/motion";
 import { landingDb } from "@/features/landing";
 
 export const metadata: Metadata = {
@@ -36,19 +36,21 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
-      {/* Hero 는 어보브폴드 — 리빌 제외(스크롤 전 빈 화면 방지). 이하 섹션은 진입 시 "아래→위 페이드업"(잔잔한 결).
-          ArticleGrid 는 섹션 래핑 대신 마조네리 카드 단위 stagger(섹션 내부에서 처리) — 좌 스티키 블록은 리빌 미적용(transform↔sticky 분리). */}
+      {/* Hero 는 어보브폴드 — 리빌 제외. 이하 "요소 단위" 페이드업(섹션 통째 X, 사용자 선택 "핵심만 포인트").
+          KPI: 헤딩 즉시(스티키) + 벤토 6카드 stagger / Story: 사진2·헤딩만 + 나머지·스티커 즉시
+          → 각 섹션을 RevealGroup 으로 감싸 내부 data-reveal 요소만 발동(벤토 정밀 레이아웃 보존, Suspense 내부 배치로 콘텐츠 도착 후 관찰).
+          ArticleGrid: 마조네리 카드 단위 stagger(좌 스티키 블록은 리빌 미적용). Partners: 섹션 단위(소형 밴드, 미플래그). */}
       <HeroBanner />
-      <Reveal>
-        <Suspense fallback={<KpiLoading />}>
+      <Suspense fallback={<KpiLoading />}>
+        <RevealGroup>
           <KpiSectionWithData />
-        </Suspense>
-      </Reveal>
-      <Reveal>
-        <Suspense fallback={<StoryLoading />}>
+        </RevealGroup>
+      </Suspense>
+      <Suspense fallback={<StoryLoading />}>
+        <RevealGroup>
           <StorySectionWithData />
-        </Suspense>
-      </Reveal>
+        </RevealGroup>
+      </Suspense>
       <Suspense fallback={<ArticleGridLoading />}>
         <ArticleGridSectionWithData />
       </Suspense>
