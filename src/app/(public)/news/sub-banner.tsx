@@ -8,8 +8,8 @@ export function SubBanner() {
   return (
     // 풀블리드 배경 + 내부 콘텐츠는 랜딩과 동일 밴드 고정폭(SectionContainer)으로 정렬
     <section aria-label="Sow Good 소개" className="bg-surface-news-banner">
-      {/* md py40: 로고 116×46 축소 후 카피 행(h52)이 높이 결정 — 52+80=132 로 Figma 배너 h132 정합. lg+ 는 로고 63.8 기준 py34 → 131.8 */}
-      <SectionContainer className="py-6 md:py-10 lg:py-[34px]">
+      {/* 위아래 패딩 md+ 34 (사용자 요청 2026-06-14 — 기존 md py40/h132 정합을 34 통일로 대체). base 모바일은 24 유지. */}
+      <SectionContainer className="py-6 md:py-[34px]">
         {/* 모바일 (< md): 세로 스택 — Figma 135:12492 정합 */}
         <div className="flex flex-col gap-4 md:hidden">
           <Image

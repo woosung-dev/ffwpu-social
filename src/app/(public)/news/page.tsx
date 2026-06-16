@@ -116,7 +116,7 @@ function NewsListLoading() {
     // 실제 탭 래퍼(news-list-client)의 헤딩→탭 간격 30/40 과 동기 — 로딩→로드 레이아웃 시프트 방지
     <div className="mt-[30px] wide:mt-10" aria-busy>
       <div className="h-10 animate-pulse rounded-md bg-muted/60" />
-      <ul className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:mt-10 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-12">
+      <ul className="mt-[30px] grid grid-cols-1 gap-6 sm:grid-cols-2 md:mt-8 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-12">
         {Array.from({ length: 9 }).map((_, i) => (
           <li key={i} className="flex justify-center">
             <div className="h-[348px] w-full max-w-[382px] animate-pulse rounded-[14px] bg-muted/60" />
