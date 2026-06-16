@@ -61,7 +61,7 @@ describe("sanitizeTiptapJson — 기본 안전성", () => {
     expect((text.marks ?? []).map((m) => m.type).sort()).toEqual(["bold", "italic"]);
   });
 
-  it("(5) 허용 이미지(S3, 기본 align/width 부여) + https 링크 + 알 수 없는 노드 drop", () => {
+  it("(5) 허용 이미지(S3) + https 링크 + 알 수 없는 노드 drop", () => {
     const result = run({
       type: "doc",
       content: [
@@ -82,7 +82,7 @@ describe("sanitizeTiptapJson — 기본 안전성", () => {
     expect(result!.content).toHaveLength(2);
     expect(result!.content![0]).toEqual({
       type: "image",
-      attrs: { src: `${PREFIX}/news/abc/img.jpg`, alt: "ok", align: "center", width: 100 },
+      attrs: { src: `${PREFIX}/news/abc/img.jpg`, alt: "ok" },
     });
   });
 });
@@ -208,30 +208,30 @@ describe("sanitizeTiptapJson — 신규 노드", () => {
     });
   });
 
-  it("(10) image align/width clamp + caption 300자 + 실제치수", () => {
+  it("(10) image px width/height 보존·clamp + 인라인(문단 안 2장)", () => {
     const result = run({
       type: "doc",
       content: [
         {
-          type: "image",
-          attrs: {
-            src: `${PREFIX}/news/a/i.jpg`,
-            alt: "a",
-            align: "evil",
-            width: 9999,
-            caption: "x".repeat(400),
-            naturalWidth: 556,
-            naturalHeight: 830,
-          },
+          type: "paragraph",
+          content: [
+            {
+              type: "image",
+              attrs: { src: `${PREFIX}/news/a/1.jpg`, alt: "1", width: 320, height: 200 },
+            },
+            {
+              type: "image",
+              attrs: { src: `${PREFIX}/news/a/2.jpg`, alt: "2", width: 99999, height: 0 },
+            },
+          ],
         },
       ],
     });
-    const img = result!.content![0];
-    expect(img.attrs!.align).toBe("center"); // 임의값 → center
-    expect(img.attrs!.width).toBe(100); // 9999 → 최근접 100
-    expect((img.attrs!.caption as string).length).toBe(300);
-    expect(img.attrs!.naturalWidth).toBe(556);
-    expect(img.attrs!.naturalHeight).toBe(830);
+    const imgs = result!.content![0].content!;
+    expect(imgs).toHaveLength(2); // 한 문단에 인라인 2장
+    expect(imgs[0].attrs).toEqual({ src: `${PREFIX}/news/a/1.jpg`, alt: "1", width: 320, height: 200 });
+    expect(imgs[1].attrs!.width).toBe(4000); // 99999 → MAX clamp
+    expect(imgs[1].attrs!.height).toBeUndefined(); // 0 → 미지정
   });
 
   it("(11) blockquote·hr·table(colspan clamp) + 정렬 enum", () => {
@@ -261,5 +261,23 @@ describe("sanitizeTiptapJson — 신규 노드", () => {
     expect(th.attrs!.colspan).toBe(10); // 99 → max 10
     expect(result!.content![3].attrs).toEqual({ textAlign: "center" });
     expect(result!.content![4].attrs).toBeUndefined(); // justify 미허용 → attrs 없음
+  });
+
+  it("(12) 외부 도메인 이미지 drop (인라인 문단 안에서도)", () => {
+    const result = run({
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            { type: "image", attrs: { src: `${PREFIX}/news/a/ok.jpg` } },
+            { type: "image", attrs: { src: "https://evil.com/x.jpg" } },
+          ],
+        },
+      ],
+    });
+    const imgs = result!.content![0].content!;
+    expect(imgs).toHaveLength(1); // 외부 이미지만 제거
+    expect(imgs[0].attrs!.src).toBe(`${PREFIX}/news/a/ok.jpg`);
   });
 });

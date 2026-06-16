@@ -5,7 +5,7 @@ import { EditorContent, EditorContext, useEditor, type JSONContent } from "@tipt
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit"
-import { Image } from "@tiptap/extension-image"
+import { Image } from "@/components/tiptap-node/image-node/image-node-extension"
 import { TaskItem, TaskList } from "@tiptap/extension-list"
 import { TextAlign } from "@tiptap/extension-text-align"
 import { Typography } from "@tiptap/extension-typography"
@@ -40,6 +40,7 @@ import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-men
 import { FontSizeDropdownMenu } from "@/components/tiptap-ui/font-size-dropdown-menu"
 import { YoutubeButton } from "@/components/tiptap-ui/youtube-button"
 import { ImageUploadButton } from "@/components/tiptap-ui/image-upload-button"
+import { ImageRowButton } from "@/components/tiptap-ui/image-row-button"
 import { ListDropdownMenu } from "@/components/tiptap-ui/list-dropdown-menu"
 import { BlockquoteButton } from "@/components/tiptap-ui/blockquote-button"
 import { CodeBlockButton } from "@/components/tiptap-ui/code-block-button"
@@ -82,10 +83,12 @@ const MainToolbarContent = ({
   onHighlighterClick,
   onLinkClick,
   isMobile,
+  scope,
 }: {
   onHighlighterClick: () => void
   onLinkClick: () => void
   isMobile: boolean
+  scope?: EditorScope
 }) => {
   return (
     <>
@@ -143,6 +146,7 @@ const MainToolbarContent = ({
 
       <ToolbarGroup>
         <ImageUploadButton text="Add" />
+        <ImageRowButton scope={scope} />
         <YoutubeButton />
       </ToolbarGroup>
     </>
@@ -226,6 +230,7 @@ export function SimpleEditor({
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
+      // 인라인 이미지(한 문단에 여러 장 나란히) + 커스텀 코너 리사이즈(image-node-extension)
       Image,
       Youtube.configure({ nocookie: true, controls: true, width: 640, height: 360 }),
       Typography,
@@ -272,6 +277,7 @@ export function SimpleEditor({
               onHighlighterClick={() => setMobileView("highlighter")}
               onLinkClick={() => setMobileView("link")}
               isMobile={isMobile}
+              scope={scope}
             />
           ) : (
             <MobileToolbarContent
