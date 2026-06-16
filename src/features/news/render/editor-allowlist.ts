@@ -34,10 +34,8 @@ export const ALLOWED_HIGHLIGHTS = [
   "#d6e4ff",
 ] as const;
 
-export const ALLOWED_ALIGN = ["left", "center", "right"] as const;
-
-// 이미지 폭(%) 단계
-export const IMAGE_WIDTH_STEPS = [25, 50, 75, 100] as const;
+// 이미지 크기 — 네이티브 resize 가 px(width/height)로 저장. 공개 렌더는 max-width:100% 로 모바일 캡.
+export const IMAGE_PX_MAX = 4000;
 
 // YouTube video id — 11자
 export const YOUTUBE_ID_REGEX = /^[a-zA-Z0-9_-]{11}$/;
@@ -87,21 +85,11 @@ export function fontSizeToNumber(v: unknown): number | null {
   return normalized ? Number(normalized.slice(0, -2)) : null;
 }
 
-// 이미지 폭 단계로 clamp(가장 가까운 허용값, 기본 100)
-export function clampImageWidth(v: unknown): number {
+// 이미지 px 치수 clamp — 양의 정수 1~MAX, 유효하지 않으면 null(미지정).
+export function clampImagePx(v: unknown): number | null {
   const n = typeof v === "number" ? v : Number(v);
-  if (!Number.isFinite(n)) return 100;
-  return IMAGE_WIDTH_STEPS.reduce((best, step) =>
-    Math.abs(step - n) < Math.abs(best - n) ? step : best,
-  );
-}
-
-// 정렬 enum 으로 정규화(기본 center)
-export function normalizeAlign(v: unknown): (typeof ALLOWED_ALIGN)[number] {
-  return typeof v === "string" &&
-    (ALLOWED_ALIGN as readonly string[]).includes(v)
-    ? (v as (typeof ALLOWED_ALIGN)[number])
-    : "center";
+  if (!Number.isFinite(n) || n < 1) return null;
+  return Math.min(IMAGE_PX_MAX, Math.round(n));
 }
 
 // YouTube URL/ID → video id(없으면 null). 임의 iframe src 금지 — id 만 신뢰

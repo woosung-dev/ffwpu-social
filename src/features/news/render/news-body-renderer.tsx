@@ -1,7 +1,6 @@
 // Tiptap JSON 본문 렌더링 — sanitize 통과한 노드만 React 로 변환. Server Component (codex P1#3 안전 렌더링).
 // 새 노드/마크(밑줄·글자색·형광펜·정렬·인용·표·유튜브·이미지 정렬/폭/캡션) — 값은 sanitize 가 화이트리스트 완료.
 import type { CSSProperties, ReactNode } from "react";
-import Image from "next/image";
 import { isAllowedImagePublicUrl } from "@/lib/s3";
 import {
   type SafeMark,
@@ -70,12 +69,6 @@ function renderMarks(marks: SafeMark[] | undefined, children: ReactNode): ReactN
         return acc;
     }
   }, children);
-}
-
-function alignStyle(align: string | undefined): CSSProperties {
-  if (align === "left") return { marginRight: "auto" };
-  if (align === "right") return { marginLeft: "auto" };
-  return { marginLeft: "auto", marginRight: "auto" }; // center 기본
 }
 
 function renderNode(node: SafeNode, key: number): ReactNode {
@@ -203,34 +196,23 @@ function renderNode(node: SafeNode, key: number): ReactNode {
     case "text":
       return <span key={key}>{renderMarks(node.marks, node.text ?? "")}</span>;
     case "image": {
+      // 네이티브 inline 이미지 — 한 문단에 여러 장이 나란히. px width/height + max-width:100% 로 모바일 캡.
       const src = node.attrs?.src as string;
       const alt = (node.attrs?.alt as string) ?? "";
-      const align = node.attrs?.align as string | undefined;
-      const width = (node.attrs?.width as number) ?? 100;
-      const caption = node.attrs?.caption as string | undefined;
-      const nw = (node.attrs?.naturalWidth as number) ?? 1200;
-      const nh = (node.attrs?.naturalHeight as number) ?? 675;
+      const w = node.attrs?.width as number | undefined;
+      const h = node.attrs?.height as number | undefined;
       return (
-        <figure
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
           key={key}
-          className="my-4"
-          style={{ width: `${width}%`, ...alignStyle(align) }}
-        >
-          <Image
-            src={src}
-            alt={alt}
-            width={nw}
-            height={nh}
-            unoptimized
-            sizes="(max-width: 768px) 100vw, 800px"
-            className="h-auto w-full rounded-md"
-          />
-          {caption ? (
-            <figcaption className="mt-1 text-center text-sm text-ink-subtle">
-              {caption}
-            </figcaption>
-          ) : null}
-        </figure>
+          src={src}
+          alt={alt}
+          width={w}
+          height={h}
+          loading="lazy"
+          className="my-3 mr-2 inline-block h-auto max-w-full rounded-md align-top"
+          style={w ? { width: `${w}px` } : undefined}
+        />
       );
     }
     case "hardBreak":

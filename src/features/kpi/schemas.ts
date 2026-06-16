@@ -4,6 +4,8 @@ import { z } from "zod";
 export const kpiUpdateRowSchema = z.object({
   slug: z.string().min(1).max(50),
   label: z.string().min(1, "라벨을 입력해주세요").max(50),
+  // 라벨 아래 작은 보조 라벨 "지원가정" — 선택. 생략(undefined) 시 미변경(StoryStatsEditor 등 호환)
+  sublabel: z.string().max(20).nullable().optional(),
   // 정렬·차트용 수치 — 기간 같은 비숫자 (38년 5개월) 는 null
   value: z.number().int().min(0).max(99_999_999).nullable(),
   displayValue: z
@@ -21,3 +23,21 @@ export const kpiUpdateInputSchema = z.object({
 });
 
 export type KpiUpdateInput = z.infer<typeof kpiUpdateInputSchema>;
+
+// StorySection 통계 — 라벨·표시값 자유 텍스트(impact 와 달리 displayValue 빈값 허용 → 빈값이면 메인 숨김).
+// value/unit 은 미사용(렌더는 label+displayValue 만). value 는 호환 위해 선택.
+export const storyStatUpdateRowSchema = z.object({
+  slug: z.string().min(1).max(50),
+  label: z.string().min(1, "라벨을 입력해주세요").max(50),
+  displayValue: z.string().max(60),
+  value: z.number().int().min(0).max(99_999_999).nullable().optional(),
+  unit: z.string().max(10).nullable().optional(),
+});
+
+export type StoryStatUpdateRow = z.infer<typeof storyStatUpdateRowSchema>;
+
+export const storyStatsUpdateInputSchema = z.object({
+  rows: z.array(storyStatUpdateRowSchema).min(1).max(20),
+});
+
+export type StoryStatsUpdateInput = z.infer<typeof storyStatsUpdateInputSchema>;

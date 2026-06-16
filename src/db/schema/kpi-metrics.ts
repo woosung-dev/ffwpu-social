@@ -23,6 +23,8 @@ export const kpiMetrics = pgTable(
     .default("impact"),
   // "누적 봉사자 수" — 디스플레이용 라벨
   label: text("label").notNull(),
+  // 라벨 아래 작은 보조 라벨 "지원가정" 등 — 운영자 편집, 없으면 null (가정수 카드 등에서 사용)
+  sublabel: text("sublabel"),
   // 정렬·차트·계산용 수치. 기간 같은 비숫자 (38년 5개월) 는 null 허용. story 섹션은 hide-when-empty 판정 기준 (null/0 → 숨김)
   value: integer("value"),
   // 자유 카피 "45,217명+" — 디스플레이 그대로 노출. 운영자 직접 갱신 단위

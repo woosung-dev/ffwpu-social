@@ -38,3 +38,17 @@ export function makeBodyImageUploader(scope?: EditorScope) {
     return publicUrl;
   };
 }
+
+// 업로드 전 파일에서 원본 픽셀 치수 읽기(네트워크 없음) — 2-up 행 비율 보존용. 실패 시 null.
+export async function readImageDimensions(
+  file: File,
+): Promise<{ width: number; height: number } | null> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const dims = { width: bitmap.width, height: bitmap.height };
+    bitmap.close();
+    return dims;
+  } catch {
+    return null;
+  }
+}

@@ -3,10 +3,9 @@
 import {
   ALLOWED_COLORS,
   YOUTUBE_ID_REGEX,
-  clampImageWidth,
+  clampImagePx,
   extractYoutubeId,
   isAllowedValue,
-  normalizeAlign,
   normalizeFontSize,
   resolveHighlightColor,
 } from "./editor-allowlist";
@@ -189,35 +188,17 @@ function sanitizeNode(
       return result;
     }
     case "image": {
+      // 네이티브 Image(inline+resize) — src/alt + px width/height. 정렬은 부모 문단 textAlign.
       const src =
         isObject(node.attrs) && isString(node.attrs.src) ? node.attrs.src : null;
       if (!src || !isAllowedImage(src)) return null;
       const alt =
         isObject(node.attrs) && isString(node.attrs.alt) ? node.attrs.alt : "";
-      const align = normalizeAlign(isObject(node.attrs) ? node.attrs.align : undefined);
-      const width = clampImageWidth(isObject(node.attrs) ? node.attrs.width : undefined);
-      const caption =
-        isObject(node.attrs) && isString(node.attrs.caption)
-          ? node.attrs.caption.slice(0, 300)
-          : "";
-      const nw = clampInt(
-        isObject(node.attrs) ? node.attrs.naturalWidth : undefined,
-        1,
-        100000,
-        0,
-      );
-      const nh = clampInt(
-        isObject(node.attrs) ? node.attrs.naturalHeight : undefined,
-        1,
-        100000,
-        0,
-      );
-      const attrs: Record<string, string | number> = { src, alt, align, width };
-      if (caption) attrs.caption = caption;
-      if (nw && nh) {
-        attrs.naturalWidth = nw;
-        attrs.naturalHeight = nh;
-      }
+      const width = clampImagePx(isObject(node.attrs) ? node.attrs.width : undefined);
+      const height = clampImagePx(isObject(node.attrs) ? node.attrs.height : undefined);
+      const attrs: Record<string, string | number> = { src, alt };
+      if (width) attrs.width = width;
+      if (height) attrs.height = height;
       return { type: "image", attrs };
     }
     case "hardBreak":

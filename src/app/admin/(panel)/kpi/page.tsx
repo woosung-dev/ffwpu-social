@@ -34,6 +34,7 @@ async function KpiFormData() {
   const initialRows: KpiInitialRow[] = rows.map((r) => ({
     slug: r.slug,
     label: r.label,
+    sublabel: r.sublabel,
     value: r.value,
     displayValue: r.displayValue,
     unit: r.unit,

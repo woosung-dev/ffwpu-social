@@ -66,7 +66,12 @@ async function KpiSectionWithData() {
   const metricsBySlug = new Map(
     kpiMetrics.map((m) => [
       m.slug,
-      { label: m.label, displayValue: m.displayValue, unit: m.unit },
+      {
+        label: m.label,
+        sublabel: m.sublabel,
+        displayValue: m.displayValue,
+        unit: m.unit,
+      },
     ]),
   );
   return <KpiSection metricsBySlug={metricsBySlug} />;
