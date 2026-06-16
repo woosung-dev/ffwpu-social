@@ -3,7 +3,7 @@ import "server-only";
 
 import { db } from "@/db";
 import * as kpiDb from "./db";
-import type { KpiUpdateInput } from "./schemas";
+import type { KpiUpdateInput, StoryStatsUpdateInput } from "./schemas";
 
 export async function listKpisForAdmin() {
   return kpiDb.listForAdmin("impact");
@@ -21,12 +21,33 @@ export async function updateKpis(input: KpiUpdateInput) {
     for (const row of input.rows) {
       const result = await kpiDb.updateBySlug(tx, row.slug, {
         label: row.label,
+        sublabel: row.sublabel,
         value: row.value,
         displayValue: row.displayValue,
         unit: row.unit,
       });
       if (!result) {
         throw new Error(`KPI slug not found: ${row.slug}`);
+      }
+      updated.push(result);
+    }
+    return updated;
+  });
+}
+
+// StorySection 통계 일괄 갱신 — 라벨·표시값 자유 텍스트(빈 표시값 허용). value/unit 미사용 → null 저장.
+export async function updateStoryStats(input: StoryStatsUpdateInput) {
+  return db.transaction(async (tx) => {
+    const updated = [];
+    for (const row of input.rows) {
+      const result = await kpiDb.updateBySlug(tx, row.slug, {
+        label: row.label,
+        value: row.value ?? null,
+        displayValue: row.displayValue,
+        unit: row.unit ?? null,
+      });
+      if (!result) {
+        throw new Error(`Story stat slug not found: ${row.slug}`);
       }
       updated.push(result);
     }

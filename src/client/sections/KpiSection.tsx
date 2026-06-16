@@ -4,7 +4,12 @@ import { SectionContainer } from "@/client/components/layout";
 type Props = {
   metricsBySlug: ReadonlyMap<
     string,
-    { label: string; displayValue: string; unit: string | null }
+    {
+      label: string;
+      sublabel: string | null;
+      displayValue: string;
+      unit: string | null;
+    }
   >;
 };
 
@@ -15,6 +20,19 @@ function pickDisplay(
   fallback: string,
 ): string {
   return m.get(slug)?.displayValue ?? fallback;
+}
+
+// DB 라벨/서브라벨 — 운영자 어드민 편집분 노출(가정수 카드). 미입력 시 fallback.
+function pickLabel(
+  m: Props["metricsBySlug"],
+  slug: string,
+  fallback: string,
+): string {
+  return m.get(slug)?.label || fallback;
+}
+
+function pickSublabel(m: Props["metricsBySlug"], slug: string): string | null {
+  return m.get(slug)?.sublabel ?? null;
 }
 
 // 도움가정 인물 컷아웃의 흰색 스티커 아웃라인(Figma 96:9919) — alpha 실루엣 따라 8방향 white drop-shadow.
@@ -48,6 +66,13 @@ export function KpiSection({ metricsBySlug }: Props) {
     "helped_household_count",
     "—",
   );
+  // 가정수 카드 — DB 라벨(어드민 편집) + 작은 서브라벨. 미입력 시 기본 카피.
+  const householdLabel = pickLabel(
+    metricsBySlug,
+    "helped_household_count",
+    "행복응원 가정수",
+  );
+  const householdSublabel = pickSublabel(metricsBySlug, "helped_household_count");
   return (
     <section
       aria-labelledby="kpi-heading"
@@ -109,10 +134,10 @@ export function KpiSection({ metricsBySlug }: Props) {
               data-reveal
               className="relative flex min-w-0 flex-1 flex-col justify-center gap-[2px] overflow-hidden rounded-[12px] bg-kpi-gray px-[14px] py-3 text-ink-strong-mid md:gap-1 md:rounded-[20px] md:px-6 md:py-5"
             >
-              <p className="text-[12px] font-semibold md:text-[20px]">
+              <p className="text-[14px] font-semibold md:text-[22px]">
                 누적 봉사자 수
               </p>
-              <p className="whitespace-nowrap text-[24px] font-bold leading-none tabular-nums md:text-[40px]">
+              <p className="whitespace-nowrap text-[26px] font-bold leading-none tabular-nums md:text-[42px]">
                 {volunteerCount}
               </p>
               {/* 데코(그래프+별): base 36 → md+ 84/83 (discrete). 카드 우하단 앵커, 값 아래쪽으로 겹침. 데코 간 gap 4(375)/20(768+) */}
@@ -151,10 +176,10 @@ export function KpiSection({ metricsBySlug }: Props) {
                   data-reveal
                   className="flex flex-col justify-between gap-3 rounded-[12px] bg-kpi-gray px-[18px] py-3 text-ink-strong-mid md:rounded-[20px] md:px-[30px] md:py-5"
                 >
-                  <p className="text-[12px] font-semibold md:text-[20px]">
+                  <p className="text-[14px] font-semibold md:text-[22px]">
                     누적 봉사 기간
                   </p>
-                  <p className="whitespace-nowrap text-right text-[24px] font-bold leading-none tabular-nums md:text-left md:text-[30px]">
+                  <p className="whitespace-nowrap text-right text-[26px] font-bold leading-none tabular-nums md:text-left md:text-[32px]">
                     {volunteerPeriod}
                   </p>
                 </div>
@@ -179,7 +204,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                 data-reveal
                 className="flex flex-1 flex-col justify-between gap-2 overflow-hidden rounded-[12px] bg-kpi-lime px-[14px] py-3 text-ink-on-lime md:rounded-[20px] md:px-6 md:py-5"
               >
-                <p className="text-[12px] font-semibold md:text-[20px]">
+                <p className="text-[14px] font-semibold md:text-[22px]">
                   봉사활동 횟수
                 </p>
                 {/* 일러스트 좌하단 + 값 우하단(Figma): label top / value-row bottom. 값 = 24/40 + nowrap(전 BP 1줄) */}
@@ -194,7 +219,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                     aria-hidden
                     className="size-12 md:size-[121px]"
                   />
-                  <p className="whitespace-nowrap text-[24px] font-bold tabular-nums md:text-[40px]">
+                  <p className="whitespace-nowrap text-[26px] font-bold tabular-nums md:text-[42px]">
                     {eventCount}
                   </p>
                 </div>
@@ -207,11 +232,16 @@ export function KpiSection({ metricsBySlug }: Props) {
               className="relative flex flex-1 flex-col gap-4 overflow-hidden rounded-[12px] bg-brand-bright md:rounded-[20px]"
             >
               <div className="px-[14px] pt-3 md:px-6 md:pt-5">
-                <p className="break-keep text-[12px] font-semibold text-white md:text-[20px]">
-                  도움을 주게 된 가정 수
+                <p className="break-keep text-[14px] font-semibold text-white md:text-[22px]">
+                  {householdLabel}
                 </p>
-                {/* 값 = 20/32 (흰색). 768 '개+' 줄바꿈 방지 nowrap */}
-                <p className="whitespace-nowrap text-[20px] font-bold leading-tight tabular-nums text-white md:text-[32px]">
+                {householdSublabel ? (
+                  <p className="break-keep text-[11px] font-medium text-white/85 md:text-[14px]">
+                    {householdSublabel}
+                  </p>
+                ) : null}
+                {/* 값 = 22/34 (흰색). 768 '개+' 줄바꿈 방지 nowrap */}
+                <p className="whitespace-nowrap text-[22px] font-bold leading-tight tabular-nums text-white md:text-[34px]">
                   {helpedHousehold}
                 </p>
               </div>
@@ -263,8 +293,8 @@ export function KpiSection({ metricsBySlug }: Props) {
               className="flex flex-1 items-start justify-between gap-6 rounded-[20px] bg-kpi-gray px-6 py-5"
             >
               <div className="flex flex-col gap-1 text-ink-strong-mid">
-                <p className="text-[20px] font-semibold">누적 봉사자 수</p>
-                <p className="text-[52px] font-bold leading-none tabular-nums">
+                <p className="text-[22px] font-semibold">누적 봉사자 수</p>
+                <p className="text-[54px] font-bold leading-none tabular-nums">
                   {volunteerCount}
                 </p>
               </div>
@@ -304,8 +334,8 @@ export function KpiSection({ metricsBySlug }: Props) {
                   data-reveal
                   className="flex flex-col justify-between rounded-[20px] bg-kpi-gray px-[30px] py-5 text-ink-strong-mid"
                 >
-                  <p className="text-[20px] font-semibold">누적 봉사 기간</p>
-                  <p className="whitespace-nowrap text-[45px] font-bold leading-none tabular-nums">
+                  <p className="text-[22px] font-semibold">누적 봉사 기간</p>
+                  <p className="whitespace-nowrap text-[47px] font-bold leading-none tabular-nums">
                     {volunteerPeriod}
                   </p>
                 </div>
@@ -331,7 +361,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                 data-reveal
                 className="flex flex-1 flex-col justify-between gap-[31px] rounded-[20px] bg-kpi-lime px-6 py-5 text-ink-on-lime"
               >
-                <p className="text-[20px] font-semibold">봉사활동 횟수</p>
+                <p className="text-[22px] font-semibold">봉사활동 횟수</p>
                 <div className="flex items-end justify-between">
                   {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
                   <img
@@ -342,7 +372,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                     aria-hidden
                     className="size-[172px]"
                   />
-                  <p className="whitespace-nowrap text-[52px] font-bold tabular-nums">
+                  <p className="whitespace-nowrap text-[54px] font-bold tabular-nums">
                     {eventCount}
                   </p>
                 </div>
@@ -356,10 +386,15 @@ export function KpiSection({ metricsBySlug }: Props) {
               className="relative flex w-full flex-col gap-4 overflow-hidden rounded-[20px] bg-brand-bright lg:flex-1 wide:gap-10"
             >
               <div className="px-6 py-5">
-                <p className="text-[20px] font-semibold text-white">
-                  도움을 주게 된 가정 수
+                <p className="text-[22px] font-semibold text-white">
+                  {householdLabel}
                 </p>
-                <p className="whitespace-nowrap text-[42px] font-bold tabular-nums text-white">
+                {householdSublabel ? (
+                  <p className="text-[14px] font-medium text-white/85">
+                    {householdSublabel}
+                  </p>
+                ) : null}
+                <p className="whitespace-nowrap text-[44px] font-bold tabular-nums text-white">
                   {helpedHousehold}
                 </p>
               </div>

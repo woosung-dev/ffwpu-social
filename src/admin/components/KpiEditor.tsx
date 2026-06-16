@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 export type KpiInitialRow = {
   slug: string;
   label: string;
+  sublabel: string | null;
   value: number | null;
   displayValue: string;
   unit: string | null;
@@ -42,6 +43,7 @@ export function KpiEditor({ initialRows }: Props) {
       rows: initialRows.map((r) => ({
         slug: r.slug,
         label: r.label,
+        sublabel: r.sublabel,
         value: r.value,
         displayValue: r.displayValue,
         unit: r.unit,
@@ -113,6 +115,28 @@ export function KpiEditor({ initialRows }: Props) {
                     {form.formState.errors.rows[idx]?.label?.message}
                   </p>
                 )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor={`sublabel-${idx}`}>
+                  서브라벨 <span className="text-ink-date">(라벨 아래 작은 글씨, 선택)</span>
+                </Label>
+                <Controller
+                  control={form.control}
+                  name={`rows.${idx}.sublabel` as const}
+                  render={({ field }) => (
+                    <Input
+                      id={`sublabel-${idx}`}
+                      placeholder="예: 지원가정"
+                      disabled={isPending}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        field.onChange(v === "" ? null : v);
+                      }}
+                    />
+                  )}
+                />
               </div>
 
               <div className="space-y-2">

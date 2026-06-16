@@ -19,6 +19,7 @@ export async function listActiveKpiMetrics() {
       id: kpiMetrics.id,
       slug: kpiMetrics.slug,
       label: kpiMetrics.label,
+      sublabel: kpiMetrics.sublabel,
       value: kpiMetrics.value,
       displayValue: kpiMetrics.displayValue,
       unit: kpiMetrics.unit,

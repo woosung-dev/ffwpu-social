@@ -1,4 +1,4 @@
-// 쌀나눔 통계 입력 — StorySection 3 통계(후원기관·지원가정·지역시설) 개수 편집. value 0/빈값 → 메인 비노출. updateKpisAction 재사용 (slug 키)
+// 쌀나눔 통계 입력 — StorySection 3 통계 라벨·표시값 자유 편집. 표시값 비면 메인 비노출. updateStoryStatsAction (slug 키)
 "use client";
 
 import { useState, useTransition } from "react";
@@ -8,7 +8,7 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { updateKpisAction } from "@/features/kpi/actions";
+import { updateStoryStatsAction } from "@/features/kpi/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,26 +27,17 @@ type Props = {
   initialStats: StoryStatRow[];
 };
 
-// 개수 검증 — 정수·0 이상. 소수/음수/비숫자는 필드별 에러로 표시 (kpi value 제약과 동일)
+// 라벨·표시값 자유 텍스트. 표시값 비면 메인 숨김. 라벨은 필수(빈 행 방지)
 const storyStatsFormSchema = z.object({
   rows: z.array(
     z.object({
-      value: z
-        .number({ message: "숫자를 입력해주세요" })
-        .int("정수만 입력할 수 있습니다")
-        .min(0, "0 이상이어야 합니다")
-        .max(99_999_999)
-        .nullable(),
+      label: z.string().min(1, "라벨을 입력해주세요").max(50),
+      displayValue: z.string().max(60),
     }),
   ),
 });
 
 type FormValues = z.infer<typeof storyStatsFormSchema>;
-
-// 표시 값 파생 — 운영자는 개수만 입력, 단위는 행 고정. value 0/null 이면 "0개" 저장(메인에선 hide-when-empty 로 숨김)
-function deriveDisplayValue(value: number | null, unit: string | null): string {
-  return `${value ?? 0}${unit ?? ""}`;
-}
 
 export function StoryStatsEditor({ initialStats }: Props) {
   const router = useRouter();
@@ -56,24 +47,24 @@ export function StoryStatsEditor({ initialStats }: Props) {
   const form = useForm<FormValues>({
     resolver: zodResolver(storyStatsFormSchema),
     defaultValues: {
-      rows: initialStats.map((s) => ({ value: s.value })),
+      rows: initialStats.map((s) => ({
+        label: s.label,
+        displayValue: s.displayValue,
+      })),
     },
   });
 
   const onSubmit = (values: FormValues) => {
     setError(null);
     startTransition(async () => {
-      const rows = initialStats.map((stat, idx) => {
-        const value = values.rows[idx]?.value ?? null;
-        return {
-          slug: stat.slug,
-          label: stat.label,
-          value,
-          displayValue: deriveDisplayValue(value, stat.unit),
-          unit: stat.unit,
-        };
-      });
-      const result = await updateKpisAction({ rows });
+      const rows = initialStats.map((stat, idx) => ({
+        slug: stat.slug,
+        label: values.rows[idx]?.label ?? stat.label,
+        displayValue: values.rows[idx]?.displayValue ?? "",
+        value: null,
+        unit: null,
+      }));
+      const result = await updateStoryStatsAction({ rows });
       if (!result.success) {
         setError(
           typeof result.error === "string"
@@ -89,7 +80,7 @@ export function StoryStatsEditor({ initialStats }: Props) {
     });
   };
 
-  // 입력 중 hide 여부 미리보기 — 0/빈값이면 메인에서 숨김
+  // 입력 중 hide 여부 미리보기 — 표시값 비면 메인에서 숨김
   const watched = form.watch("rows");
 
   return (
@@ -99,8 +90,8 @@ export function StoryStatsEditor({ initialStats }: Props) {
           쌀 나눔 통계 (StorySection)
         </CardTitle>
         <p className="text-sm text-ink-subtle">
-          메인 &ldquo;쌀 나눔 활동&rdquo; 영역의 개수입니다. 0 이거나 비우면 해당
-          항목은 메인에 노출되지 않습니다.
+          메인 &ldquo;쌀 나눔 활동&rdquo; 영역의 통계입니다. 라벨·표시값을 자유롭게
+          입력할 수 있고, 표시값을 비우면 해당 항목은 메인에 노출되지 않습니다.
         </p>
       </CardHeader>
       <CardContent>
@@ -116,49 +107,51 @@ export function StoryStatsEditor({ initialStats }: Props) {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {initialStats.map((stat, idx) => {
-              const current = watched?.[idx]?.value ?? null;
-              const hidden = current == null || current <= 0;
+              const display = watched?.[idx]?.displayValue ?? "";
+              const hidden = display.trim() === "";
+              const labelErr = form.formState.errors.rows?.[idx]?.label;
               return (
-                <div key={stat.slug} className="space-y-2">
-                  <Label htmlFor={`story-stat-${idx}`}>{stat.label}</Label>
-                  <div className="flex items-center gap-2">
+                <div
+                  key={stat.slug}
+                  className="space-y-2 rounded-lg border border-border p-3"
+                >
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`story-label-${idx}`}>
+                      라벨 <span className="text-destructive" aria-hidden>*</span>
+                    </Label>
+                    <Input
+                      id={`story-label-${idx}`}
+                      placeholder="예: 나눈 사랑(쌀)의 무게"
+                      disabled={isPending}
+                      aria-invalid={!!labelErr}
+                      {...form.register(`rows.${idx}.label` as const)}
+                    />
+                    {labelErr && (
+                      <p className="text-xs text-destructive">{labelErr.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`story-display-${idx}`}>표시값</Label>
                     <Controller
                       control={form.control}
-                      name={`rows.${idx}.value` as const}
+                      name={`rows.${idx}.displayValue` as const}
                       render={({ field }) => (
                         <Input
-                          id={`story-stat-${idx}`}
-                          type="number"
-                          min={0}
-                          max={99_999_999}
-                          inputMode="numeric"
+                          id={`story-display-${idx}`}
+                          placeholder="예: 12,345kg (비우면 숨김)"
                           disabled={isPending}
-                          placeholder="0"
+                          className="font-semibold"
                           value={field.value ?? ""}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            field.onChange(v === "" ? null : Number(v));
-                          }}
+                          onChange={(e) => field.onChange(e.target.value)}
                         />
                       )}
                     />
-                    {stat.unit && (
-                      <span className="shrink-0 text-sm text-ink-subtle">
-                        {stat.unit}
-                      </span>
-                    )}
                   </div>
-                  {form.formState.errors.rows?.[idx]?.value ? (
-                    <p className="text-xs text-destructive">
-                      {form.formState.errors.rows[idx]?.value?.message}
-                    </p>
-                  ) : (
-                    <p className="text-xs text-ink-subtle">
-                      {hidden
-                        ? "메인에서 숨김 (값 없음)"
-                        : `메인 노출: ${current}${stat.unit ?? ""}`}
-                    </p>
-                  )}
+                  <p className="text-xs text-ink-subtle">
+                    {hidden
+                      ? "메인에서 숨김 (표시값 없음)"
+                      : `메인 노출: ${display}`}
+                  </p>
                 </div>
               );
             })}

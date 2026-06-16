@@ -87,8 +87,8 @@ export const STORY_SECTION_SHELL =
   "w-full bg-surface-tint-faint py-20 lg:py-18";
 
 export function StorySection({ stats, slots }: Props) {
-  // hide-when-empty — value 0/null 항목 제외. 전부 숨으면 통계 블록 자체 비노출
-  const visibleStats = stats.filter((s) => s.value != null && s.value > 0);
+  // hide-when-empty — 표시값(displayValue) 비면 제외(운영자 자유 텍스트). 전부 숨으면 통계 블록 자체 비노출
+  const visibleStats = stats.filter((s) => s.displayValue.trim() !== "");
   return (
     <section className={`${STORY_SECTION_SHELL} overflow-x-clip`}>
       {/* 헤더 클릭 착지(ADR-038): 좌측 이미지 그룹(섹션 hook) 기준. 데코 스티커가 위로 ~30-41px 오버행 →

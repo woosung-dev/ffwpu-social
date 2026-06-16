@@ -5,8 +5,13 @@ import { revalidatePath } from "next/cache";
 
 import { requireSuperAdmin } from "@/lib/auth-guards";
 import { type ActionResult, toActionError } from "@/lib/action-result";
-import { updateKpis } from "./service";
-import { kpiUpdateInputSchema, type KpiUpdateInput } from "./schemas";
+import { updateKpis, updateStoryStats } from "./service";
+import {
+  kpiUpdateInputSchema,
+  storyStatsUpdateInputSchema,
+  type KpiUpdateInput,
+  type StoryStatsUpdateInput,
+} from "./schemas";
 
 export async function updateKpisAction(
   input: KpiUpdateInput,
@@ -24,5 +29,23 @@ export async function updateKpisAction(
     return { success: true, data: { updatedCount: updated.length } };
   } catch (e) {
     return toActionError(e, "kpiAction");
+  }
+}
+
+export async function updateStoryStatsAction(
+  input: StoryStatsUpdateInput,
+): Promise<ActionResult<{ updatedCount: number }, StoryStatsUpdateInput>> {
+  try {
+    await requireSuperAdmin();
+    const parsed = storyStatsUpdateInputSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error };
+    }
+    const updated = await updateStoryStats(parsed.data);
+    revalidatePath("/");
+    revalidatePath("/admin/landing");
+    return { success: true, data: { updatedCount: updated.length } };
+  } catch (e) {
+    return toActionError(e, "storyStatsAction");
   }
 }

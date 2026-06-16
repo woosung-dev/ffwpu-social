@@ -16,6 +16,7 @@ export async function listForAdmin(section: "impact" | "story" = "impact") {
       slug: kpiMetrics.slug,
       section: kpiMetrics.section,
       label: kpiMetrics.label,
+      sublabel: kpiMetrics.sublabel,
       value: kpiMetrics.value,
       displayValue: kpiMetrics.displayValue,
       unit: kpiMetrics.unit,
@@ -34,6 +35,8 @@ export async function updateBySlug(
   slug: string,
   data: {
     label: string;
+    // undefined = 미변경(Drizzle 가 undefined set 키를 생략) / null = 비우기 / string = 설정
+    sublabel?: string | null;
     value: number | null;
     displayValue: string;
     unit: string | null;
@@ -43,6 +46,7 @@ export async function updateBySlug(
     .update(kpiMetrics)
     .set({
       label: data.label,
+      sublabel: data.sublabel,
       value: data.value,
       displayValue: data.displayValue,
       unit: data.unit,

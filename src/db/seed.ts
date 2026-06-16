@@ -330,7 +330,8 @@ async function seed() {
     },
     {
       slug: "helped_household_count",
-      label: "도움을 주게 된 가정 수",
+      label: "행복응원 가정수",
+      sublabel: "지원가정",
       value: 80257,
       displayValue: "80,257개+",
       unit: "개",
@@ -344,8 +345,17 @@ async function seed() {
       unit: "회",
       sortOrder: 4,
     },
-    // StorySection 통계 (section: story) — 지원가정·지역시설. hide-when-empty: value 0/null 이면 메인 비노출
-    // (후원 기관 metric 제거 — 사용자 요청). ⚠️ 초기값은 drizzle 마이그레이션 INSERT 와 동기화 필요
+    // StorySection 통계 (section: story) — 라벨·표시값 자유 텍스트(운영자 편집). hide-when-empty: displayValue 비면 메인 비노출
+    // slug story_supported_orgs 는 '후원 기관' → '나눈 사랑(쌀)의 무게' 로 전환(사용자 요청). 표시값 빈값 = kg 입력 전까지 숨김
+    {
+      slug: "story_supported_orgs",
+      section: "story" as const,
+      label: "나눈 사랑(쌀)의 무게",
+      value: null,
+      displayValue: "",
+      unit: null,
+      sortOrder: 1,
+    },
     {
       slug: "story_supported_households",
       section: "story" as const,
@@ -353,7 +363,7 @@ async function seed() {
       value: 23,
       displayValue: "23가정",
       unit: "가정",
-      sortOrder: 1,
+      sortOrder: 2,
     },
     {
       slug: "story_local_facilities",
@@ -362,7 +372,7 @@ async function seed() {
       value: 2,
       displayValue: "2시설",
       unit: "시설",
-      sortOrder: 2,
+      sortOrder: 3,
     },
   ]);
 
