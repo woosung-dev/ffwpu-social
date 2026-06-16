@@ -103,8 +103,8 @@ export function StorySection({ stats, slots }: Props) {
             lg(content 905px 고정): 이미지그룹 545 + 텍스트 360, 이미지1 347 / 이미지2 186, h333 (Figma 1439 프레임 332:8976).
             wide(content 1200): 이미지그룹 817(이미지1 527 / 이미지2 278), h425. */}
         <div className="flex w-full flex-row gap-1.5 md:gap-3 h-[221px] md:h-[294px] lg:h-[333px] lg:w-[545px] lg:flex-none wide:h-[425px] wide:w-[817px]">
-          {/* 이미지 1 (좌) + 장식(SOW·heart) — 이 이미지 기준 px offset */}
-          <div className="relative h-full flex-1" data-fid="story-img1">
+          {/* 이미지 1 (좌) + 장식(SOW·heart) — 이 이미지 기준 px offset. data-reveal: 사진+스티커 한 덩어리로 페이드업(스티커는 독립 모션 없이 사진과 함께 이동) */}
+          <div className="relative h-full flex-1" data-fid="story-img1" data-reveal>
             <StoryImage
               slot={slots[0] ?? null}
               fallback={FALLBACK_IMAGES[0]}
@@ -132,8 +132,8 @@ export function StorySection({ stats, slots }: Props) {
             />
           </div>
 
-          {/* 이미지 2 (우) + 장식(sparkles·Go·od = Good) — 이 이미지 기준 px offset */}
-          <div className="relative h-full w-[165px] shrink-0 md:w-[186px] wide:w-[278px]" data-fid="story-img2">
+          {/* 이미지 2 (우) + 장식(sparkles·Go·od = Good) — 이 이미지 기준 px offset. data-reveal: 사진2(+스티커) 페이드업 */}
+          <div className="relative h-full w-[165px] shrink-0 md:w-[186px] wide:w-[278px]" data-fid="story-img2" data-reveal>
             <StoryImage
               slot={slots[1] ?? null}
               fallback={FALLBACK_IMAGES[1]}
@@ -182,8 +182,11 @@ export function StorySection({ stats, slots }: Props) {
               {STORY_SECTION_CONTENT.tag}
             </span>
 
-            {/* 헤딩 — Figma 22(375)/28(768)/32(1025+), lh 1.3 공통 */}
-            <h2 className="mt-3.5 whitespace-pre-line break-keep text-[22px] font-bold leading-[1.3] md:mt-[18px] md:text-[28px] lg:text-[32px]">
+            {/* 헤딩 — Figma 22(375)/28(768)/32(1025+), lh 1.3 공통. data-reveal: 헤딩만 페이드업(태그·설명·통계는 즉시). transform 은 flex item 시각 이동이라 mt 간격·reflow 영향 0 */}
+            <h2
+              data-reveal
+              className="mt-3.5 whitespace-pre-line break-keep text-[22px] font-bold leading-[1.3] md:mt-[18px] md:text-[28px] lg:text-[32px]"
+            >
               {STORY_SECTION_CONTENT.title}
             </h2>
 
