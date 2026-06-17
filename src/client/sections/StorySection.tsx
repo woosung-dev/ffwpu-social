@@ -182,17 +182,28 @@ export function StorySection({ stats, slots }: Props) {
               {STORY_SECTION_CONTENT.tag}
             </span>
 
-            {/* 헤딩 — Figma 22(375)/28(768)/32(1025+), lh 1.3 공통. data-reveal: 헤딩만 페이드업(태그·설명·통계는 즉시). transform 은 flex item 시각 이동이라 mt 간격·reflow 영향 0 */}
+            {/* 헤딩 — Figma 22(375)/28(768)/32(1025+), lh 1.3 공통. 줄마다 block 엘리먼트로 분리해
+                줄바꿈 지점 고정(통짜 \n 의존 제거). gap 없이 쌓으면 line-height 130% 와 동일한 행간 재현.
+                data-reveal: 헤딩만 페이드업(태그·설명·통계는 즉시). transform 은 flex item 시각 이동이라 mt 간격·reflow 영향 0 */}
             <h2
               data-reveal
-              className="mt-3.5 whitespace-pre-line break-keep text-[22px] font-bold leading-[1.3] md:mt-[18px] md:text-[28px] lg:text-[32px]"
+              className="mt-3.5 break-keep text-[22px] font-bold leading-[1.3] md:mt-[18px] md:text-[28px] lg:text-[32px]"
             >
-              {STORY_SECTION_CONTENT.title}
+              {STORY_SECTION_CONTENT.titleLines.map((line) => (
+                <span key={line} className="block">
+                  {line}
+                </span>
+              ))}
             </h2>
 
-            {/* Figma 14px 이나 본문 16px 접근성 제약 우선 */}
-            <p className="mt-1 text-base font-medium leading-[1.6] md:mt-3 lg:max-w-[420px]">
-              {STORY_SECTION_CONTENT.subtitle}
+            {/* 부제 — Figma 14px 이나 본문 16px 접근성 제약 우선. 줄마다 block 엘리먼트로 분리해
+                "전하며," 뒤에서만 줄바꿈(통짜 자연 래핑의 "가/족" 어긋남 제거). lh 150% gap0 으로 통짜 행간 재현 */}
+            <p className="mt-1 break-keep text-base font-medium leading-[1.5] md:mt-3 lg:max-w-[420px]">
+              {STORY_SECTION_CONTENT.subtitleLines.map((line) => (
+                <span key={line} className="block">
+                  {line}
+                </span>
+              ))}
             </p>
           </div>
 
