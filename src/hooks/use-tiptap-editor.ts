@@ -27,7 +27,9 @@ export function useTiptapEditor(providedEditor?: Editor | null): {
   const editorState = useEditorState({
     editor: mainEditor,
     selector(context) {
-      if (!context.editor) {
+      // isDestroyed 가드 — dev HMR/Fast-Refresh 로 파괴된 에디터 인스턴스를 잠깐 참조할 때
+      // 모든 소비 훅(canSetLink·canExecuteUndoRedo 등)의 editor.can() null deref 를 단일 지점에서 차단.
+      if (!context.editor || context.editor.isDestroyed) {
         return {
           editor: null,
           editorState: undefined,

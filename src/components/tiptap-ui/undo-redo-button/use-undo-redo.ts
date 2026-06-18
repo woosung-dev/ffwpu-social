@@ -58,10 +58,12 @@ export function canExecuteUndoRedoAction(
   editor: Editor | null,
   action: UndoRedoAction
 ): boolean {
-  if (!editor || !editor.isEditable) return false
+  // isDestroyed 가드 — dev HMR/Fast-Refresh 로 파괴된 에디터 인스턴스를 잠깐 참조할 때 editor.can() null deref 방지
+  if (!editor || editor.isDestroyed || !editor.isEditable) return false
   if (isNodeTypeSelected(editor, ["image"])) return false
 
-  return action === "undo" ? editor.can().undo() : editor.can().redo()
+  const can = editor.can()
+  return action === "undo" ? !!can?.undo() : !!can?.redo()
 }
 
 /**
