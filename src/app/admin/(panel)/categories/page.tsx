@@ -3,21 +3,23 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { listAllForAdmin } from "@/features/categories/service";
 import { CategoryManager } from "@/admin/components/CategoryManager";
+import { AdminPageHeader } from "@/admin/components/AdminPageHeader";
+import { HelpTip } from "@/admin/components/HelpTip";
+import { ADMIN_COPY } from "@/admin/copy";
 
 export const metadata: Metadata = {
-  title: "카테고리 관리 | 사회공헌단 어드민",
+  title: "소식 카테고리 | 사회공헌단 어드민",
   robots: { index: false, follow: false },
 };
 
 export default function AdminCategoriesPage() {
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-3xl font-extrabold tracking-tight text-ink-strong">카테고리 관리</h1>
-        <p className="text-sm text-ink-subtle">
-          소식 분류를 추가하거나 노출 순서·활성 여부를 조정합니다. slug 는 변경할 수 없습니다.
-        </p>
-      </header>
+      <AdminPageHeader
+        title={ADMIN_COPY.categories.title}
+        description={ADMIN_COPY.categories.description}
+        helpTip={<HelpTip>{ADMIN_COPY.categories.titleHelp}</HelpTip>}
+      />
       <Suspense fallback={<CategoriesLoading />}>
         <CategoriesData />
       </Suspense>

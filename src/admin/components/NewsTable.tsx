@@ -4,6 +4,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, Heart, Share2 } from "lucide-react";
 import {
   deleteNewsAction,
   publishNewsAction,
@@ -18,6 +19,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { HelpTip } from "@/admin/components/HelpTip";
+import { ADMIN_COPY } from "@/admin/copy";
 
 export type NewsRow = {
   id: string;
@@ -32,11 +35,19 @@ export type NewsRow = {
 export type NewsStatus = "all" | "draft" | "scheduled" | "published";
 type NewsPublishState = Exclude<NewsStatus, "all">;
 
+export type NewsStats = {
+  views: number;
+  heartClicks: number;
+  shareClicks: number;
+};
+export type NewsStatsMap = Record<string, NewsStats>;
+
 type Props = {
   rows: NewsRow[];
   page: number;
   totalPages: number;
   status: NewsStatus;
+  stats: NewsStatsMap;
 };
 
 const STATUS_LABEL: Record<NewsStatus, string> = {
@@ -67,7 +78,38 @@ function getPublishState(publishedAt: Date | null): NewsPublishState {
   return new Date(publishedAt).getTime() > Date.now() ? "scheduled" : "published";
 }
 
-export function NewsTable({ rows, page, totalPages, status }: Props) {
+// 글별 누적 반응 — 아이콘 + 숫자. 지표명은 hover(title)·스크린리더(aria-label)로 표시(영역 절약, 운영자 요청)
+function StatCell({ s }: { s: NewsStats | undefined }) {
+  const v = s?.views ?? 0;
+  const h = s?.heartClicks ?? 0;
+  const sh = s?.shareClicks ?? 0;
+  return (
+    <span className="inline-flex items-center gap-3 text-xs tabular-nums text-ink-subtle">
+      <span className="inline-flex items-center gap-1" title="조회" aria-label={`조회 ${v}`}>
+        <Eye className="size-3.5" aria-hidden />
+        {v}
+      </span>
+      <span
+        className="inline-flex items-center gap-1"
+        title="공감 클릭"
+        aria-label={`공감 클릭 ${h}`}
+      >
+        <Heart className="size-3.5" aria-hidden />
+        {h}
+      </span>
+      <span
+        className="inline-flex items-center gap-1"
+        title="공유 클릭"
+        aria-label={`공유 클릭 ${sh}`}
+      >
+        <Share2 className="size-3.5" aria-hidden />
+        {sh}
+      </span>
+    </span>
+  );
+}
+
+export function NewsTable({ rows, page, totalPages, status, stats }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -149,7 +191,7 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
     <div className="space-y-4">
       {/* 상태 탭 */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           {(["all", "draft", "scheduled", "published"] as const).map((s) => (
             <Button
               key={s}
@@ -161,6 +203,7 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
               {STATUS_LABEL[s]}
             </Button>
           ))}
+          <HelpTip>{ADMIN_COPY.news.statusHelp}</HelpTip>
         </div>
         <Button asChild>
           <Link href="/admin/news/new">+ 새 글</Link>
@@ -197,13 +240,19 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
             <>
               {/* 데스크탑 — 테이블 (md 이상) */}
               <div className="hidden overflow-x-auto md:block">
-                <table className="w-full min-w-[720px] text-sm">
+                <table className="w-full min-w-[860px] text-sm">
                   <thead className="border-b text-ink-subtle">
                     <tr className="text-left">
                       <th className="py-3 pr-4 font-medium">제목</th>
                       <th className="py-3 pr-4 font-medium">카테고리</th>
                       <th className="py-3 pr-4 font-medium">상태</th>
                       <th className="py-3 pr-4 font-medium">작성일</th>
+                      <th className="py-3 pr-4 font-medium">
+                        <span className="inline-flex items-center gap-1">
+                          반응
+                          <HelpTip>{ADMIN_COPY.news.statsHelp}</HelpTip>
+                        </span>
+                      </th>
                       <th className="py-3 font-medium text-right">관리</th>
                     </tr>
                   </thead>
@@ -234,6 +283,9 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
                           </td>
                           <td className="py-3 pr-4 text-ink-subtle">
                             {formatDate(row.createdAt)}
+                          </td>
+                          <td className="py-3 pr-4">
+                            <StatCell s={stats[row.id]} />
                           </td>
                           <td className="py-3 text-right">
                             {renderRowActions(row, hasPublishAt)}
@@ -271,6 +323,7 @@ export function NewsTable({ rows, page, totalPages, status }: Props) {
                       <p className="text-xs text-ink-subtle">
                         {row.categoryName} · {formatDate(row.createdAt)}
                       </p>
+                      <StatCell s={stats[row.id]} />
                       {renderRowActions(row, hasPublishAt)}
                     </li>
                   );

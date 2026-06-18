@@ -1,4 +1,4 @@
-// 어드민 좌측 네비게이션 — 대시보드 단독 + 콘텐츠/메인 페이지/시스템 그룹. 1024↓ 토글, 인덱스(/admin)는 정확 일치로 활성 판정. ADR-024 F3 src/admin/ 전용
+// 어드민 좌측 네비게이션 — 대시보드 단독 + 소식/메인 페이지/설정 그룹(공개 사이트 섹션명 정합). 라벨은 copy.ts SSoT. 1024↓ 토글, 인덱스(/admin)는 정확 일치로 활성 판정. ADR-024 F3 src/admin/ 전용
 "use client";
 
 import Link from "next/link";
@@ -7,6 +7,7 @@ import { useState } from "react";
 import { BarChart3, FolderTree, LayoutDashboard, LogOut, Menu, Newspaper, Sparkles, Star, Users, X } from "lucide-react";
 
 import { logoutAction } from "@/features/auth/actions";
+import { ADMIN_COPY } from "@/admin/copy";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -26,27 +27,27 @@ const NAV_GROUPS: readonly NavGroup[] = [
   {
     label: null,
     items: [
-      { href: "/admin", label: "대시보드", icon: LayoutDashboard, exact: true },
+      { href: "/admin", label: ADMIN_COPY.nav.dashboard, icon: LayoutDashboard, exact: true },
     ],
   },
   {
-    label: "콘텐츠",
+    label: ADMIN_COPY.nav.groupNews,
     items: [
-      { href: "/admin/news", label: "소식 관리", icon: Newspaper },
-      { href: "/admin/news-hero", label: "소식 히어로", icon: Star },
-      { href: "/admin/categories", label: "카테고리 관리", icon: FolderTree },
+      { href: "/admin/news", label: ADMIN_COPY.nav.news, icon: Newspaper },
+      { href: "/admin/categories", label: ADMIN_COPY.nav.categories, icon: FolderTree },
+      { href: "/admin/news-hero", label: ADMIN_COPY.nav.newsHero, icon: Star },
     ],
   },
   {
-    label: "메인 페이지",
+    label: ADMIN_COPY.nav.groupMain,
     items: [
-      { href: "/admin/kpi", label: "KPI 관리", icon: BarChart3 },
-      { href: "/admin/landing", label: "메인 큐레이션", icon: Sparkles },
+      { href: "/admin/kpi", label: ADMIN_COPY.nav.kpi, icon: BarChart3 },
+      { href: "/admin/landing", label: ADMIN_COPY.nav.landing, icon: Sparkles },
     ],
   },
   {
-    label: "시스템",
-    items: [{ href: "/admin/accounts", label: "계정 관리", icon: Users }],
+    label: ADMIN_COPY.nav.groupSystem,
+    items: [{ href: "/admin/accounts", label: ADMIN_COPY.nav.accounts, icon: Users }],
   },
 ] as const;
 
@@ -91,9 +92,9 @@ export function AdminSidebar() {
       >
         <div className="border-b border-border px-5 py-5">
           <p className="text-base font-extrabold tracking-tight text-brand-primary">
-            Sow Good 어드민
+            {ADMIN_COPY.nav.brand}
           </p>
-          <p className="mt-0.5 text-xs text-ink-date">사회공헌국 전용</p>
+          <p className="mt-0.5 text-xs text-ink-date">{ADMIN_COPY.nav.brandSub}</p>
         </div>
 
         <nav className="flex-1 space-y-3 overflow-y-auto px-3 py-4">
@@ -142,7 +143,7 @@ export function AdminSidebar() {
               className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-ink-subtle transition-colors hover:bg-white hover:text-ink-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-cool"
             >
               <LogOut className="size-4" aria-hidden />
-              로그아웃
+              {ADMIN_COPY.nav.logout}
             </button>
           </form>
         </div>

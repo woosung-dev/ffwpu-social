@@ -41,3 +41,12 @@ export const storyStatsUpdateInputSchema = z.object({
 });
 
 export type StoryStatsUpdateInput = z.infer<typeof storyStatsUpdateInputSchema>;
+
+// StorySection 카피 — 태그(1줄)·제목(여러 줄)·부제(여러 줄). 줄바꿈 \n 허용. 빈값이면 공개에서 코드 상수로 fallback
+export const storyTextUpdateSchema = z.object({
+  tag: z.string().trim().max(40),
+  title: z.string().trim().max(120),
+  subtitle: z.string().trim().max(300),
+});
+
+export type StoryTextUpdateInput = z.infer<typeof storyTextUpdateSchema>;

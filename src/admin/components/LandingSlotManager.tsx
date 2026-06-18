@@ -15,6 +15,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { HelpTip } from "@/admin/components/HelpTip";
+import { ADMIN_COPY } from "@/admin/copy";
+
+const LAND = ADMIN_COPY.landing;
 
 export type CurationNews = {
   id: string;
@@ -27,11 +31,19 @@ export type CurationNews = {
   featuredRank: number | null;
 };
 
+export type FeaturedPreviewItem = {
+  id: string;
+  title: string;
+  categoryName: string;
+  pinned: boolean; // true = 운영자 지정(featured_rank), false = 자동 fallback
+};
+
 type Props = {
   storyCandidates: CurationNews[]; // 상단 슬롯 후보 — 발행된 쌀 나눔 글
   featuredCandidates: CurationNews[]; // 하단 슬롯 후보 — 발행된 전 카테고리 글 (ADR-038)
   storySlots: Array<CurationNews | null>;
   featuredSlots: Array<CurationNews | null>;
+  featuredPreview: Array<FeaturedPreviewItem | null>; // 메인 스토리 실제 노출(공개 동일 해석)
 };
 
 const STORY_SLOT_COUNT = 2;
@@ -43,6 +55,7 @@ export function LandingSlotManager({
   featuredCandidates,
   storySlots,
   featuredSlots,
+  featuredPreview,
 }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -220,12 +233,15 @@ export function LandingSlotManager({
           발행된 모든 카테고리 글
         </strong>
         을 선택할 수 있어요. 미발행 글은 선택지에 나타나지 않습니다. (소식
-        페이지(/news) 상단 노출은 ‘소식 히어로’ 메뉴에서 설정합니다.)
+        페이지(/news) 상단 노출은 ‘소식 대표 글’ 메뉴에서 설정합니다.)
       </div>
 
       <Card className="min-w-0">
         <CardHeader>
-          <CardTitle className="text-xl">상단 — 쌀 나눔 활동 (StorySection)</CardTitle>
+          <CardTitle className="flex items-center gap-1.5 text-xl">
+            {LAND.storyTitle} (상단 사진 2장)
+            <HelpTip>{LAND.storyHelp}</HelpTip>
+          </CardTitle>
           <p className="text-sm text-ink-subtle">
             ※ 지정한 글의 대표 이미지가 메인 상단 사진 2장에 노출됩니다(클릭 시 해당 소식으로 이동). 미지정 자리는 기본 사진.
           </p>
@@ -239,7 +255,10 @@ export function LandingSlotManager({
 
       <Card className="min-w-0">
         <CardHeader>
-          <CardTitle className="text-xl">하단 — 메인 스토리 (ArticleGrid)</CardTitle>
+          <CardTitle className="flex items-center gap-1.5 text-xl">
+            {LAND.featuredTitle} (하단 7개)
+            <HelpTip>{LAND.featuredHelp}</HelpTip>
+          </CardTitle>
           <p className="text-sm text-ink-subtle">
             ※ 전 카테고리 발행 글 지정 가능. 지정한 자리만 점유, 미지정 자리는
             최신 글이 자동 채움
@@ -254,44 +273,57 @@ export function LandingSlotManager({
 
       <Card className="min-w-0">
         <CardHeader>
-          <CardTitle className="text-xl">발행된 글 (참고)</CardTitle>
+          <CardTitle className="flex items-center gap-1.5 text-xl">
+            메인 스토리 미리보기
+            <HelpTip>
+              지금 사용자 메인 페이지 ‘메인 스토리’에 실제로 보이는 7개 글이에요.
+              ‘지정’은 직접 고른 글, ‘자동’은 빈 자리에 최신 글이 채워진 거예요.
+            </HelpTip>
+          </CardTitle>
+          <p className="text-sm text-ink-subtle">
+            사용자 메인 페이지 ‘메인 스토리’에 보이는 순서 그대로입니다.
+          </p>
         </CardHeader>
         <CardContent>
-          {featuredCandidates.length === 0 ? (
-            <p className="py-6 text-center text-sm text-ink-subtle">
-              발행된 글이 없습니다.
-            </p>
-          ) : (
-            <ul className="divide-y">
-              {featuredCandidates.map((n) => (
-                <li
-                  key={n.id}
-                  className="flex items-center justify-between gap-3 py-3 text-sm"
+          <ol className="space-y-2">
+            {featuredPreview.map((item, i) => (
+              <li
+                key={item?.id ?? `empty-${i}`}
+                className="flex items-center gap-3 rounded-lg border border-border bg-white p-3 text-sm"
+              >
+                <span
+                  className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-soft text-xs font-semibold tabular-nums text-ink-subtle"
+                  aria-hidden
                 >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span className="shrink-0 rounded-full bg-surface-soft px-2 py-0.5 text-xs text-ink-subtle">
-                      {n.categoryName}
+                  {i + 1}
+                </span>
+                {item ? (
+                  <>
+                    <span
+                      className={cn(
+                        "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
+                        item.pinned
+                          ? "bg-brand-primary/10 text-brand-primary"
+                          : "bg-surface-soft text-ink-subtle",
+                      )}
+                    >
+                      {item.pinned ? "지정" : "자동"}
                     </span>
-                    <span className="truncate text-ink-strong">{n.title}</span>
+                    <span className="shrink-0 rounded-full bg-surface-soft px-2 py-0.5 text-xs text-ink-subtle">
+                      {item.categoryName}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-ink-strong">
+                      {item.title}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-ink-subtle">
+                    비어 있음 (표시할 글 없음)
                   </span>
-                  <span className="shrink-0 text-xs text-ink-date">
-                    {n.storySlot != null && (
-                      <span className="mr-2 rounded-full bg-warm/15 px-2 py-0.5 text-amber-700">
-                        상단 {n.storySlot}
-                      </span>
-                    )}
-                    {n.featuredRank != null && (
-                      <span className="mr-2 rounded-full bg-brand-primary/10 px-2 py-0.5 text-brand-primary">
-                        하단 {n.featuredRank}
-                      </span>
-                    )}
-                    {n.publishedAt &&
-                      new Date(n.publishedAt).toLocaleDateString("ko-KR")}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+                )}
+              </li>
+            ))}
+          </ol>
         </CardContent>
       </Card>
     </div>

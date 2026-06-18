@@ -4,23 +4,21 @@ import { Suspense } from "react";
 
 import { getHeroNews, getHeroCandidates } from "@/features/news";
 import { HeroOrderManager } from "@/admin/components/HeroOrderManager";
+import { AdminPageHeader } from "@/admin/components/AdminPageHeader";
+import { ADMIN_COPY } from "@/admin/copy";
 
 export const metadata: Metadata = {
-  title: "소식 히어로 | 사회공헌단 어드민",
+  title: "소식 대표 글 | 사회공헌단 어드민",
   robots: { index: false, follow: false },
 };
 
 export default function AdminNewsHeroPage() {
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-3xl font-extrabold tracking-tight text-ink-strong">
-          소식 히어로
-        </h1>
-        <p className="text-sm text-ink-subtle">
-          소식 페이지(/news) 상단에 우선 보여줄 글을 지정·정렬합니다.
-        </p>
-      </header>
+      <AdminPageHeader
+        title={ADMIN_COPY.newsHero.title}
+        description={ADMIN_COPY.newsHero.description}
+      />
       <Suspense fallback={<HeroLoading />}>
         <HeroData />
       </Suspense>

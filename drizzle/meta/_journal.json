@@ -71,6 +71,13 @@
       "when": 1781605171897,
       "tag": "0009_repurpose_story_supported_orgs",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1781750160312,
+      "tag": "0010_magical_smasher",
+      "breakpoints": true
     }
   ]
 }

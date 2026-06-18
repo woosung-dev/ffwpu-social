@@ -31,6 +31,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "./PasswordInput";
+import { HelpTip } from "@/admin/components/HelpTip";
+import { ADMIN_COPY } from "@/admin/copy";
+
+const ACC = ADMIN_COPY.accounts;
 
 export type AccountRow = {
   id: string;
@@ -44,6 +48,13 @@ type Props = {
   accounts: AccountRow[];
   currentUserId: string;
   superCount: number;
+};
+
+// 권한 코드 → 운영자 친화 라벨. v1 은 super 단일 계정이나 타입상 editor/viewer 도 매핑
+const ROLE_LABEL: Record<AccountRow["role"], string> = {
+  super: ACC.roleSuper,
+  editor: "편집자",
+  viewer: "보기 전용",
 };
 
 function formatDate(d: Date): string {
@@ -177,9 +188,7 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-ink-subtle">
-          신규 계정은 관리자(super) 권한으로 생성됩니다.
-        </p>
+        <p className="text-sm text-ink-subtle">{ACC.createNotice}</p>
         <Button onClick={() => setAddOpen(true)}>+ 계정 추가</Button>
       </div>
 
@@ -209,7 +218,12 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
                 <tr className="text-left">
                   <th className="py-3 pr-4 font-medium">이름</th>
                   <th className="py-3 pr-4 font-medium">이메일</th>
-                  <th className="py-3 pr-4 font-medium">권한</th>
+                  <th className="py-3 pr-4 font-medium">
+                    <span className="inline-flex items-center gap-1">
+                      권한
+                      <HelpTip>{ACC.roleSuperHelp}</HelpTip>
+                    </span>
+                  </th>
                   <th className="py-3 pr-4 font-medium">생성일</th>
                   <th className="py-3 text-right font-medium">관리</th>
                 </tr>
@@ -235,7 +249,7 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
                       </td>
                       <td className="py-3 pr-4">
                         <span className="rounded-full bg-brand-primary/10 px-2 py-1 text-xs font-medium text-brand-primary">
-                          {account.role}
+                          {ROLE_LABEL[account.role]}
                         </span>
                       </td>
                       <td className="py-3 pr-4 text-ink-subtle">
@@ -270,7 +284,7 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
                       )}
                     </span>
                     <span className="shrink-0 rounded-full bg-brand-primary/10 px-2 py-1 text-xs font-medium text-brand-primary">
-                      {account.role}
+                      {ROLE_LABEL[account.role]}
                     </span>
                   </div>
                   <p className="break-all text-sm text-ink-subtle">
@@ -299,7 +313,7 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
           <DialogHeader>
             <DialogTitle>계정 추가</DialogTitle>
             <DialogDescription>
-              새 운영자 계정을 만듭니다. 신규 계정은 super 권한으로 생성됩니다.
+              새 운영자 계정을 만듭니다. 신규 계정은 ‘최고 관리자’ 권한으로 생성됩니다.
             </DialogDescription>
           </DialogHeader>
           <form

@@ -2,14 +2,18 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { listNewsForAdmin } from "@/features/news";
+import { getNewsStatsForAdmin } from "@/features/analytics";
 import {
   NewsTable,
   type NewsRow,
   type NewsStatus,
+  type NewsStatsMap,
 } from "@/admin/components/NewsTable";
+import { AdminPageHeader } from "@/admin/components/AdminPageHeader";
+import { ADMIN_COPY } from "@/admin/copy";
 
 export const metadata: Metadata = {
-  title: "뉴스 관리 | 사회공헌단 어드민",
+  title: "소식 글 관리 | 사회공헌단 어드민",
   robots: { index: false, follow: false },
 };
 
@@ -43,12 +47,10 @@ export default function AdminNewsListPage(props: {
 }) {
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-3xl font-extrabold tracking-tight text-ink-strong">뉴스 관리</h1>
-        <p className="text-sm text-ink-subtle">
-          발행·예약·임시 저장 글을 한 곳에서 관리합니다.
-        </p>
-      </header>
+      <AdminPageHeader
+        title={ADMIN_COPY.news.title}
+        description={ADMIN_COPY.news.description}
+      />
       <Suspense fallback={<ListLoading />}>
         <NewsListData searchParamsPromise={props.searchParams} />
       </Suspense>
@@ -81,12 +83,22 @@ async function NewsListData({
     createdAt: i.createdAt,
     updatedAt: i.updatedAt,
   }));
+
+  // 글별 누적 통계 — analytics 미가용(예: analytics_events 미마이그레이션)이어도 목록은 정상 렌더되도록 degrade
+  let stats: NewsStatsMap = {};
+  try {
+    stats = await getNewsStatsForAdmin(rows.map((r) => r.id));
+  } catch {
+    stats = {};
+  }
+
   return (
     <NewsTable
       rows={rows}
       page={result.page}
       totalPages={result.totalPages}
       status={status}
+      stats={stats}
     />
   );
 }

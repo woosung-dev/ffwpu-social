@@ -63,13 +63,10 @@ export async function listNewsForAdmin(opts: {
   return { items, total, totalPages, page: opts.page, limit: opts.limit };
 }
 
-// 대시보드 (T11) — 최근 N건 + 카테고리별 글 수
-export async function getAdminDashboard(latestLimit = 5) {
-  const [latest, perCategory] = await Promise.all([
-    newsDb.listLatest(latestLimit),
-    newsDb.countNewsByCategory(),
-  ]);
-  return { latest, perCategory };
+// 대시보드 — 글 현황 건수(발행·예약·임시저장). 글 목록은 /admin/news 로 분리 (운영자 피드백 [대시보드/글 분리])
+export async function getAdminDashboard() {
+  const statusCounts = await newsDb.countNewsByStatus();
+  return { statusCounts };
 }
 
 // 태그 자동완성 — TagsInput(T8) 진입점. 빈도순

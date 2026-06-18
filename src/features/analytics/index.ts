@@ -2,7 +2,10 @@
 import "server-only";
 
 export { recordAnalyticsEventAction } from "./actions";
-export { getAdminAnalyticsDashboard } from "./service";
+export {
+  getAdminAnalyticsDashboard,
+  getNewsStatsForAdmin,
+} from "./service";
 export {
   analyticsEventInputSchema,
   type AnalyticsEventInput,
