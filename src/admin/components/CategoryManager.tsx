@@ -62,6 +62,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { HelpTip } from "@/admin/components/HelpTip";
+import { CategoryTabsPreview } from "@/admin/components/CategoryTabsPreview";
+import { ADMIN_COPY } from "@/admin/copy";
+
+const CAT = ADMIN_COPY.categories;
 
 export type CategoryRow = {
   id: string;
@@ -86,6 +91,9 @@ export function CategoryManager({ rows }: Props) {
 
   return (
     <div className="space-y-8">
+      <CategoryTabsPreview
+        names={rows.filter((r) => r.isActive).map((r) => r.name)}
+      />
       <CreateForm onError={setError} />
       <ErrorBanner message={error} onClose={() => setError(null)} />
       <CategoryOrderList
@@ -150,7 +158,10 @@ function CreateForm({ onError }: { onError: (msg: string | null) => void }) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>이름</FormLabel>
+                  <div className="flex items-center gap-1.5">
+                    <FormLabel>{CAT.nameLabel}</FormLabel>
+                    <HelpTip>{CAT.nameHelp}</HelpTip>
+                  </div>
                   <FormControl>
                     <Input
                       placeholder="예: 환경 캠페인"
@@ -167,10 +178,13 @@ function CreateForm({ onError }: { onError: (msg: string | null) => void }) {
               name="slug"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>slug (URL)</FormLabel>
+                  <div className="flex items-center gap-1.5">
+                    <FormLabel>{CAT.slugLabel}</FormLabel>
+                    <HelpTip>{CAT.slugHelp}</HelpTip>
+                  </div>
                   <FormControl>
                     <Input
-                      placeholder="environment"
+                      placeholder={CAT.slugPlaceholder}
                       disabled={isPending}
                       {...field}
                     />
@@ -201,7 +215,7 @@ function ActiveBadge({ active }: { active: boolean }) {
           : "bg-muted text-ink-subtle",
       )}
     >
-      {active ? "활성" : "비활성"}
+      {active ? CAT.activeOn : CAT.activeOff}
     </span>
   );
 }
@@ -460,12 +474,12 @@ function EditDialog({
         <DialogHeader>
           <DialogTitle>카테고리 수정</DialogTitle>
           <DialogDescription>
-            카테고리 이름과 노출 활성 여부를 수정합니다.
+            카테고리 이름과 사용자 사이트 표시 여부를 수정합니다.
           </DialogDescription>
         </DialogHeader>
         <div className="rounded-md border bg-muted/30 px-4 py-3 text-xs text-ink-subtle">
-          slug <span className="font-mono text-ink-strong">{row.slug}</span> 는
-          변경할 수 없습니다 (ADR-025). 순서는 목록에서 드래그로 조정하세요.
+          <span className="font-mono text-ink-strong">{row.slug}</span> —{" "}
+          {CAT.slugLockNotice}
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
@@ -492,10 +506,8 @@ function EditDialog({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-md border px-4 py-3">
                   <div>
-                    <FormLabel>활성</FormLabel>
-                    <p className="text-xs text-ink-subtle">
-                      비활성 시 사용자 사이트 탭과 어드민 글 작성 선택지에서 숨김.
-                    </p>
+                    <FormLabel>{CAT.activeLabel}</FormLabel>
+                    <p className="text-xs text-ink-subtle">{CAT.activeHelp}</p>
                   </div>
                   <FormControl>
                     <Switch

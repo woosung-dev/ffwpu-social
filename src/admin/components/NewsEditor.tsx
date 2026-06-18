@@ -16,6 +16,8 @@ import { newsInputSchema, type NewsInput } from "@/features/news/schemas";
 import { CoverImageUploader } from "./CoverImageUploader";
 import { DateTimePicker } from "./DateTimePicker";
 import { TagsInput } from "./TagsInput";
+import { HelpTip } from "./HelpTip";
+import { ADMIN_COPY } from "@/admin/copy";
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 import "@/styles/admin-editor-embed.scss";
 import { Button } from "@/components/ui/button";
@@ -353,9 +355,10 @@ export function NewsEditor({ mode, categories, initial }: Props) {
             {/* 태그 */}
             <Card>
               <CardContent className="space-y-3 pt-6">
-                <h3 className="text-sm font-semibold text-ink-strong">
-                  태그
-                </h3>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="text-sm font-semibold text-ink-strong">태그</h3>
+                  <HelpTip>{ADMIN_COPY.news.tagsHelp}</HelpTip>
+                </div>
                 <Controller
                   control={form.control}
                   name="tags"

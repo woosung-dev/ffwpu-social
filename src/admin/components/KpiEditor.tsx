@@ -17,6 +17,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { HelpTip } from "@/admin/components/HelpTip";
+import { ADMIN_COPY } from "@/admin/copy";
+
+const KPI = ADMIN_COPY.kpi;
 
 export type KpiInitialRow = {
   slug: string;
@@ -94,9 +98,13 @@ export function KpiEditor({ initialRows }: Props) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor={`label-${idx}`}>
-                  라벨 <span className="text-destructive" aria-hidden>*</span>
-                </Label>
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor={`label-${idx}`}>
+                    {KPI.labelLabel}{" "}
+                    <span className="text-destructive" aria-hidden>*</span>
+                  </Label>
+                  <HelpTip>{KPI.labelHelp}</HelpTip>
+                </div>
                 <Input
                   id={`label-${idx}`}
                   required
@@ -118,9 +126,10 @@ export function KpiEditor({ initialRows }: Props) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor={`sublabel-${idx}`}>
-                  서브라벨 <span className="text-ink-date">(라벨 아래 작은 글씨, 선택)</span>
-                </Label>
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor={`sublabel-${idx}`}>{KPI.sublabelLabel}</Label>
+                  <HelpTip>{KPI.sublabelHelp}</HelpTip>
+                </div>
                 <Controller
                   control={form.control}
                   name={`rows.${idx}.sublabel` as const}
@@ -140,10 +149,13 @@ export function KpiEditor({ initialRows }: Props) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor={`display-${idx}`}>
-                  표시 값 (메인 노출){" "}
-                  <span className="text-destructive" aria-hidden>*</span>
-                </Label>
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor={`display-${idx}`}>
+                    {KPI.displayValueLabel}{" "}
+                    <span className="text-destructive" aria-hidden>*</span>
+                  </Label>
+                  <HelpTip>{KPI.displayValueHelp}</HelpTip>
+                </div>
                 <Input
                   id={`display-${idx}`}
                   placeholder="예: 45,217명+"
@@ -171,9 +183,10 @@ export function KpiEditor({ initialRows }: Props) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label htmlFor={`value-${idx}`}>
-                    숫자 값 <span className="text-ink-date">(차트용)</span>
-                  </Label>
+                  <div className="flex items-center gap-1.5">
+                    <Label htmlFor={`value-${idx}`}>{KPI.valueLabel}</Label>
+                    <HelpTip>{KPI.valueHelp}</HelpTip>
+                  </div>
                   <Controller
                     control={form.control}
                     name={`rows.${idx}.value` as const}

@@ -13,6 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { HelpTip } from "@/admin/components/HelpTip";
+import { ADMIN_COPY } from "@/admin/copy";
+
+const LAND = ADMIN_COPY.landing;
 
 export type StoryStatRow = {
   slug: string;
@@ -86,12 +90,13 @@ export function StoryStatsEditor({ initialStats }: Props) {
   return (
     <Card className="min-w-0">
       <CardHeader>
-        <CardTitle className="text-xl">
-          쌀 나눔 통계 (StorySection)
+        <CardTitle className="flex items-center gap-1.5 text-xl">
+          {LAND.statsTitle}
+          <HelpTip>{LAND.statsHelp}</HelpTip>
         </CardTitle>
         <p className="text-sm text-ink-subtle">
-          메인 &ldquo;쌀 나눔 활동&rdquo; 영역의 통계입니다. 라벨·표시값을 자유롭게
-          입력할 수 있고, 표시값을 비우면 해당 항목은 메인에 노출되지 않습니다.
+          메인 페이지 &ldquo;밥이 사랑이다&rdquo; 영역의 통계입니다. 제목·값을 자유롭게
+          입력할 수 있고, 화면에 보이는 값을 비우면 해당 항목은 메인에 노출되지 않습니다.
         </p>
       </CardHeader>
       <CardContent>
@@ -117,7 +122,7 @@ export function StoryStatsEditor({ initialStats }: Props) {
                 >
                   <div className="space-y-1.5">
                     <Label htmlFor={`story-label-${idx}`}>
-                      라벨 <span className="text-destructive" aria-hidden>*</span>
+                      제목 <span className="text-destructive" aria-hidden>*</span>
                     </Label>
                     <Input
                       id={`story-label-${idx}`}
@@ -131,7 +136,7 @@ export function StoryStatsEditor({ initialStats }: Props) {
                     )}
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor={`story-display-${idx}`}>표시값</Label>
+                    <Label htmlFor={`story-display-${idx}`}>화면에 보이는 값</Label>
                     <Controller
                       control={form.control}
                       name={`rows.${idx}.displayValue` as const}

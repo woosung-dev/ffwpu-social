@@ -1,4 +1,4 @@
-// KPI 지표 — 'impact' = 랜딩 KpiSection "한 해동안 만들어낸 변화" (Image #2, 4행) / 'story' = StorySection 통계 (후원기관·지원가정·지역시설, 3행).
+// KPI 지표 — 'impact' = 랜딩 KpiSection "한 해동안 만들어낸 변화" (4행) / 'story' = StorySection 통계 (후원기관·지원가정·지역시설, 3행) / 'story_text' = StorySection 카피(태그·제목·부제, displayValue 에 줄바꿈 \n 포함).
 // 누적·삭제 금지 (ADR-003) — isActive 토글. slug immutable. shape 동일하여 section 판별 컬럼으로 한 테이블 재사용 (anti-slop 중복 회피)
 import { sql } from "drizzle-orm";
 import {
@@ -17,8 +17,8 @@ export const kpiMetrics = pgTable(
   id: uuid("id").primaryKey().defaultRandom(),
   // 식별자 — Figma 디자인 매핑. slug 변경 금지
   slug: text("slug").notNull().unique(),
-  // 노출 섹션 판별 — 'impact' (KpiSection) / 'story' (StorySection). 기존 행은 마이그레이션 기본값 'impact'
-  section: text("section", { enum: ["impact", "story"] })
+  // 노출 섹션 판별 — 'impact' (KpiSection) / 'story' (StorySection 통계) / 'story_text' (StorySection 카피). 기존 행은 마이그레이션 기본값 'impact'
+  section: text("section", { enum: ["impact", "story", "story_text"] })
     .notNull()
     .default("impact"),
   // "누적 봉사자 수" — 디스플레이용 라벨
@@ -40,7 +40,7 @@ export const kpiMetrics = pgTable(
   (table) => [
     check(
       "kpi_metrics_section_check",
-      sql`${table.section} in ('impact', 'story')`,
+      sql`${table.section} in ('impact', 'story', 'story_text')`,
     ),
   ],
 );

@@ -26,6 +26,10 @@ export type StorySlotItem = {
 type Props = {
   stats: StoryStat[];
   slots: Array<StorySlotItem | null>; // [상단 1번(큰), 상단 2번(작은)]
+  // 카피 — 운영자가 /admin/landing 에서 편집. 빈값이면 STORY_SECTION_CONTENT 상수 fallback (DB 미시드·미입력 안전)
+  tag?: string;
+  titleLines?: string[];
+  subtitleLines?: string[];
 };
 
 const FALLBACK_IMAGES = [
@@ -86,7 +90,25 @@ function StoryImage({
 export const STORY_SECTION_SHELL =
   "w-full bg-surface-tint-faint py-20 lg:py-18";
 
-export function StorySection({ stats, slots }: Props) {
+export function StorySection({
+  stats,
+  slots,
+  tag,
+  titleLines,
+  subtitleLines,
+}: Props) {
+  // 카피 — 운영자 입력값 우선, 빈값이면 코드 상수 fallback
+  const content = {
+    tag: tag && tag.trim() !== "" ? tag : STORY_SECTION_CONTENT.tag,
+    titleLines:
+      titleLines && titleLines.length > 0
+        ? titleLines
+        : STORY_SECTION_CONTENT.titleLines,
+    subtitleLines:
+      subtitleLines && subtitleLines.length > 0
+        ? subtitleLines
+        : STORY_SECTION_CONTENT.subtitleLines,
+  };
   // hide-when-empty — 표시값(displayValue) 비면 제외(운영자 자유 텍스트). 전부 숨으면 통계 블록 자체 비노출
   const visibleStats = stats.filter((s) => s.displayValue.trim() !== "");
   return (
@@ -179,7 +201,7 @@ export function StorySection({ stats, slots }: Props) {
           <div className="flex flex-col md:max-w-[300px] lg:max-w-none lg:items-end">
             {/* 태그칩 — Figma 375: 14px·py6(h30) / 768: 16px·py8(h40) / 1025·1440: h35(Tag 117×35 — py6·lh1.4) */}
             <span className="self-start rounded-full bg-surface-dark px-4 py-1.5 text-sm leading-[1.3] font-semibold text-ink-on-purple md:py-2 md:text-base md:leading-normal lg:self-end lg:py-1.5 lg:leading-[1.4]">
-              {STORY_SECTION_CONTENT.tag}
+              {content.tag}
             </span>
 
             {/* 헤딩 — Figma 22(375)/28(768)/32(1025+), lh 1.3 공통. 줄마다 block 엘리먼트로 분리해
@@ -189,7 +211,7 @@ export function StorySection({ stats, slots }: Props) {
               data-reveal
               className="mt-3.5 break-keep text-[22px] font-bold leading-[1.3] md:mt-[18px] md:text-[28px] lg:text-[32px]"
             >
-              {STORY_SECTION_CONTENT.titleLines.map((line) => (
+              {content.titleLines.map((line) => (
                 <span key={line} className="block">
                   {line}
                 </span>
@@ -199,7 +221,7 @@ export function StorySection({ stats, slots }: Props) {
             {/* 부제 — Figma 14px 이나 본문 16px 접근성 제약 우선. 줄마다 block 엘리먼트로 분리해
                 "전하며," 뒤에서만 줄바꿈(통짜 자연 래핑의 "가/족" 어긋남 제거). lh 150% gap0 으로 통짜 행간 재현 */}
             <p className="mt-1 break-keep text-base font-medium leading-[1.5] md:mt-3 lg:max-w-[420px]">
-              {STORY_SECTION_CONTENT.subtitleLines.map((line) => (
+              {content.subtitleLines.map((line) => (
                 <span key={line} className="block">
                   {line}
                 </span>

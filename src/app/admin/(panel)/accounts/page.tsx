@@ -5,23 +5,21 @@ import { Suspense } from "react";
 import { auth } from "@/auth";
 import { listAccounts } from "@/features/accounts";
 import { AccountManager } from "@/admin/components/AccountManager";
+import { AdminPageHeader } from "@/admin/components/AdminPageHeader";
+import { ADMIN_COPY } from "@/admin/copy";
 
 export const metadata: Metadata = {
-  title: "계정 관리 | 사회공헌단 어드민",
+  title: "관리자 계정 | 사회공헌단 어드민",
   robots: { index: false, follow: false },
 };
 
 export default function AdminAccountsPage() {
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-3xl font-extrabold tracking-tight text-ink-strong">
-          계정 관리
-        </h1>
-        <p className="text-sm text-ink-subtle">
-          사회공헌국 운영자 계정을 추가·관리합니다.
-        </p>
-      </header>
+      <AdminPageHeader
+        title={ADMIN_COPY.accounts.title}
+        description={ADMIN_COPY.accounts.description}
+      />
       <Suspense fallback={<AccountsLoading />}>
         <AccountsData />
       </Suspense>

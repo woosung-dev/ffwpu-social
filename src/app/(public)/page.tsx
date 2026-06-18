@@ -87,9 +87,10 @@ async function ArticleGridSectionWithData() {
 }
 
 async function StorySectionWithData() {
-  const [stats, slotRows] = await Promise.all([
+  const [stats, slotRows, storyText] = await Promise.all([
     landingDb.listStoryStats(),
     landingDb.listStorySlots(),
+    landingDb.listStorySectionText(),
   ]);
   // 상단 슬롯 2자리 매핑 — 운영자가 /admin/landing 에서 지정한 글 (story_slot 1~2)
   const slots: Array<StorySlotItem | null> = [null, null];
@@ -102,7 +103,21 @@ async function StorySectionWithData() {
       };
     }
   }
-  return <StorySection stats={stats} slots={slots} />;
+  // 줄바꿈 \n → 줄 단위 배열(빈 줄 제거). 빈값이면 StorySection 이 상수 fallback
+  const splitLines = (s: string) =>
+    s
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l !== "");
+  return (
+    <StorySection
+      stats={stats}
+      slots={slots}
+      tag={storyText.tag}
+      titleLines={splitLines(storyText.title)}
+      subtitleLines={splitLines(storyText.subtitle)}
+    />
+  );
 }
 
 function KpiLoading() {

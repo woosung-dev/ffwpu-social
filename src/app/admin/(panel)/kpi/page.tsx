@@ -4,24 +4,23 @@ import { Suspense } from "react";
 
 import { listKpisForAdmin } from "@/features/kpi";
 import { KpiEditor, type KpiInitialRow } from "@/admin/components/KpiEditor";
+import { AdminPageHeader } from "@/admin/components/AdminPageHeader";
+import { HelpTip } from "@/admin/components/HelpTip";
+import { ADMIN_COPY } from "@/admin/copy";
 
 export const metadata: Metadata = {
-  title: "KPI 관리 | 사회공헌단 어드민",
+  title: "임팩트 데이터 | 사회공헌단 어드민",
   robots: { index: false, follow: false },
 };
 
 export default function AdminKpiPage() {
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-3xl font-extrabold tracking-tight text-ink-strong">
-          KPI 관리
-        </h1>
-        <p className="text-sm text-ink-subtle">
-          메인 페이지 &ldquo;한 해동안 만들어낸 변화&rdquo; 영역의 KPI 수치를
-          갱신합니다. 저장 시 사용자 사이트에 즉시 반영됩니다.
-        </p>
-      </header>
+      <AdminPageHeader
+        title={ADMIN_COPY.kpi.title}
+        description={ADMIN_COPY.kpi.description}
+        helpTip={<HelpTip>{ADMIN_COPY.kpi.titleHelp}</HelpTip>}
+      />
       <Suspense fallback={<KpiLoading />}>
         <KpiFormData />
       </Suspense>

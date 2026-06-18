@@ -46,6 +46,21 @@ export async function listStoryStats() {
     .orderBy(asc(kpiMetrics.sortOrder));
 }
 
+// StorySection 카피 — 태그·제목·부제 (displayValue, 제목·부제는 \n 줄바꿈). 공개 렌더용. 빈값이면 StorySection 이 코드 상수 fallback
+export async function listStorySectionText() {
+  const rows = await db
+    .select({ slug: kpiMetrics.slug, displayValue: kpiMetrics.displayValue })
+    .from(kpiMetrics)
+    .where(eq(kpiMetrics.section, "story_text"));
+  const bySlug = (slug: string) =>
+    rows.find((r) => r.slug === slug)?.displayValue ?? "";
+  return {
+    tag: bySlug("story_tag"),
+    title: bySlug("story_title"),
+    subtitle: bySlug("story_subtitle"),
+  };
+}
+
 // StorySection 상단 슬롯 — 운영자 직접 지정 (1~2). 자동 fallback 없음 (사용자 결정 2026-06-01)
 // 쌀 나눔 카테고리 + 발행된 글 + story_slot NOT NULL
 export async function listStorySlots() {

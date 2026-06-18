@@ -3,7 +3,11 @@ import "server-only";
 
 import { db } from "@/db";
 import * as kpiDb from "./db";
-import type { KpiUpdateInput, StoryStatsUpdateInput } from "./schemas";
+import type {
+  KpiUpdateInput,
+  StoryStatsUpdateInput,
+  StoryTextUpdateInput,
+} from "./schemas";
 
 export async function listKpisForAdmin() {
   return kpiDb.listForAdmin("impact");
@@ -28,6 +32,43 @@ export async function updateKpis(input: KpiUpdateInput) {
       });
       if (!result) {
         throw new Error(`KPI slug not found: ${row.slug}`);
+      }
+      updated.push(result);
+    }
+    return updated;
+  });
+}
+
+// StorySection 카피 조회 — 태그·제목·부제 (displayValue, 제목·부제는 \n 줄바꿈 포함). 어드민 폼 초기값
+export async function listStorySectionText() {
+  const rows = await kpiDb.listForAdmin("story_text");
+  const bySlug = (slug: string) =>
+    rows.find((r) => r.slug === slug)?.displayValue ?? "";
+  return {
+    tag: bySlug("story_tag"),
+    title: bySlug("story_title"),
+    subtitle: bySlug("story_subtitle"),
+  };
+}
+
+// StorySection 카피 갱신 — 3행(태그·제목·부제) displayValue 갱신. 빈값 허용(공개는 상수 fallback)
+export async function updateStorySectionText(input: StoryTextUpdateInput) {
+  const entries: Array<{ slug: string; label: string; displayValue: string }> = [
+    { slug: "story_tag", label: "태그", displayValue: input.tag },
+    { slug: "story_title", label: "제목", displayValue: input.title },
+    { slug: "story_subtitle", label: "부제", displayValue: input.subtitle },
+  ];
+  return db.transaction(async (tx) => {
+    const updated = [];
+    for (const e of entries) {
+      const result = await kpiDb.updateBySlug(tx, e.slug, {
+        label: e.label,
+        value: null,
+        displayValue: e.displayValue,
+        unit: null,
+      });
+      if (!result) {
+        throw new Error(`Story text slug not found: ${e.slug}`);
       }
       updated.push(result);
     }

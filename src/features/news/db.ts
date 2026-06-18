@@ -208,42 +208,20 @@ export async function getAdminNewsById(id: string) {
   return { ...row, tags: tags.map((t) => t.tag) };
 }
 
-// 대시보드 최근 N건 — 모든 글 (어드민 컨텍스트, draft 도 노출)
-export async function listLatest(limit: number) {
-  return db
+// 대시보드 글 현황 — 발행·예약·임시저장 건수 (한 쿼리). adminStatusWhere 와 동일 기준
+export async function countNewsByStatus() {
+  const [row] = await db
     .select({
-      id: news.id,
-      title: news.title,
-      categoryName: categories.name,
-      categorySlug: categories.slug,
-      publishedAt: news.publishedAt,
-      createdAt: news.createdAt,
+      published: sql<number>`count(*) filter (where ${news.publishedAt} is not null and ${news.publishedAt} <= now())::int`,
+      scheduled: sql<number>`count(*) filter (where ${news.publishedAt} is not null and ${news.publishedAt} > now())::int`,
+      draft: sql<number>`count(*) filter (where ${news.publishedAt} is null)::int`,
     })
-    .from(news)
-    .innerJoin(categories, eq(news.categoryId, categories.id))
-    .orderBy(desc(news.createdAt))
-    .limit(limit);
-}
-
-// 대시보드 카테고리별 글 수 — 활성 카테고리만 (결정 로그 [T11 활성만])
-export async function countNewsByCategory() {
-  return db
-    .select({
-      categoryId: categories.id,
-      categoryName: categories.name,
-      categorySlug: categories.slug,
-      count: sql<number>`count(${news.id})::int`,
-    })
-    .from(categories)
-    .leftJoin(news, eq(news.categoryId, categories.id))
-    .where(eq(categories.isActive, true))
-    .groupBy(
-      categories.id,
-      categories.name,
-      categories.slug,
-      categories.sortOrder,
-    )
-    .orderBy(categories.sortOrder);
+    .from(news);
+  return {
+    published: row?.published ?? 0,
+    scheduled: row?.scheduled ?? 0,
+    draft: row?.draft ?? 0,
+  };
 }
 
 // 태그 자동완성 — prefix 매칭 + 빈도순 (결정 로그 [T6 빈도순])

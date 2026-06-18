@@ -40,6 +40,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { HelpTip } from "@/admin/components/HelpTip";
+import { ADMIN_COPY } from "@/admin/copy";
+
+const HERO = ADMIN_COPY.newsHero;
 
 export type HeroItem = {
   id: string;
@@ -208,7 +212,7 @@ export function HeroOrderManager({ initialItems, candidates }: Props) {
         );
         return;
       }
-      toast.success("히어로 순서가 저장되었습니다. /news 상단에 즉시 반영됩니다.");
+      toast.success("대표 글 순서가 저장되었습니다. /news 상단에 즉시 반영됩니다.");
       router.refresh();
     });
   };
@@ -216,10 +220,13 @@ export function HeroOrderManager({ initialItems, candidates }: Props) {
   return (
     <Card className="min-w-0">
       <CardHeader>
-        <CardTitle className="text-xl">소식 히어로 (최대 {MAX_HERO}개)</CardTitle>
+        <CardTitle className="flex items-center gap-1.5 text-xl">
+          {HERO.title} (최대 {MAX_HERO}개)
+          <HelpTip>{HERO.titleHelp}</HelpTip>
+        </CardTitle>
         <p className="text-sm text-ink-subtle">
           /news 소식 페이지 상단에 우선 노출할 글을 최대 {MAX_HERO}개까지 지정하고
-          드래그로 순서를 바꾼 뒤 저장하세요. 미지정 시 히어로는 노출되지 않습니다.
+          드래그로 순서를 바꾼 뒤 저장하세요. 미지정 시 대표 글은 노출되지 않습니다.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -234,7 +241,7 @@ export function HeroOrderManager({ initialItems, candidates }: Props) {
 
         {items.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border py-10 text-center text-sm text-ink-subtle">
-            히어로에 표시할 소식이 없습니다. ‘소식 추가’로 최대 {MAX_HERO}개까지
+            대표 글로 표시할 소식이 없습니다. ‘소식 추가’로 최대 {MAX_HERO}개까지
             선택하세요.
           </div>
         ) : (
@@ -331,7 +338,7 @@ export function HeroOrderManager({ initialItems, candidates }: Props) {
           <DialogHeader>
             <DialogTitle>소식 추가</DialogTitle>
             <DialogDescription>
-              소식 히어로에 노출할 발행 글을 선택해 추가합니다.
+              소식 대표 글에 노출할 발행 글을 선택해 추가합니다.
             </DialogDescription>
           </DialogHeader>
           <Input

@@ -1,5 +1,5 @@
 // 분석 이벤트 Drizzle 쿼리를 전담하는 DAL
-import { and, desc, eq, gte, isNotNull, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, lte, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { analyticsEvents, news } from "@/db/schema";
@@ -22,11 +22,12 @@ export async function isPublicNews(newsId: string) {
   return row != null;
 }
 
-function recentAnalyticsWhere() {
-  return gte(analyticsEvents.createdAt, sql`now() - interval '30 days'`);
+// 기간 파라미터화 — make_interval(days => N) 로 바인딩(SQL 인젝션 안전). 호출부에서 허용 프리셋(7/30/90)으로 정규화
+function recentAnalyticsWhere(days: number) {
+  return gte(analyticsEvents.createdAt, sql`now() - make_interval(days => ${days})`);
 }
 
-export async function getNewsAnalyticsSummary(limit = 5) {
+export async function getNewsAnalyticsSummary(days: number, limit = 5) {
   const [totals] = await db
     .select({
       views: sql<number>`count(*) filter (where ${analyticsEvents.eventType} = 'news_view')::int`,
@@ -35,7 +36,7 @@ export async function getNewsAnalyticsSummary(limit = 5) {
       shareClicks: sql<number>`count(*) filter (where ${analyticsEvents.eventType} = 'share_click')::int`,
     })
     .from(analyticsEvents)
-    .where(recentAnalyticsWhere());
+    .where(recentAnalyticsWhere(days));
 
   const topNews = await db
     .select({
@@ -50,7 +51,7 @@ export async function getNewsAnalyticsSummary(limit = 5) {
     .from(news)
     .leftJoin(
       analyticsEvents,
-      and(eq(analyticsEvents.newsId, news.id), recentAnalyticsWhere()),
+      and(eq(analyticsEvents.newsId, news.id), recentAnalyticsWhere(days)),
     )
     .where(publicPublishedWhere())
     .groupBy(news.id)
@@ -68,7 +69,7 @@ export async function getNewsAnalyticsSummary(limit = 5) {
     .from(analyticsEvents)
     .where(
       and(
-        recentAnalyticsWhere(),
+        recentAnalyticsWhere(days),
         eq(analyticsEvents.eventType, "news_view"),
         isNotNull(analyticsEvents.referrer),
       ),
@@ -87,4 +88,19 @@ export async function getNewsAnalyticsSummary(limit = 5) {
     topNews,
     referrers,
   };
+}
+
+// 어드민 글 목록용 — 글별 누적 조회·공감 클릭·공유 클릭 (전체 기간). 목록에 보이는 글 id 만 집계
+export async function getNewsStatsForAdmin(newsIds: string[]) {
+  if (newsIds.length === 0) return [];
+  return db
+    .select({
+      newsId: analyticsEvents.newsId,
+      views: sql<number>`count(*) filter (where ${analyticsEvents.eventType} = 'news_view')::int`,
+      heartClicks: sql<number>`count(*) filter (where ${analyticsEvents.eventType} = 'heart_on')::int`,
+      shareClicks: sql<number>`count(*) filter (where ${analyticsEvents.eventType} = 'share_click')::int`,
+    })
+    .from(analyticsEvents)
+    .where(inArray(analyticsEvents.newsId, newsIds))
+    .groupBy(analyticsEvents.newsId);
 }
