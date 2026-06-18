@@ -8,13 +8,14 @@ import { StarterKit } from "@tiptap/starter-kit"
 import { Image } from "@/components/tiptap-node/image-node/image-node-extension"
 import { TaskItem, TaskList } from "@tiptap/extension-list"
 import { TextAlign } from "@tiptap/extension-text-align"
-import { Typography } from "@tiptap/extension-typography"
 import { Highlight } from "@tiptap/extension-highlight"
 import { Subscript } from "@tiptap/extension-subscript"
 import { Superscript } from "@tiptap/extension-superscript"
 import { Selection } from "@tiptap/extensions"
 import { TextStyleKit } from "@tiptap/extension-text-style"
+import { TableKit } from "@tiptap/extension-table"
 import { Youtube } from "@tiptap/extension-youtube"
+import { Fragment, Slice, type Node as ProseMirrorNode } from "@tiptap/pm/model"
 
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button"
@@ -49,6 +50,8 @@ import {
   ColorHighlightPopoverContent,
   ColorHighlightPopoverButton,
 } from "@/components/tiptap-ui/color-highlight-popover"
+import { TextColorPopover } from "@/components/tiptap-ui/text-color-popover"
+import { TableButton } from "@/components/tiptap-ui/table-button"
 import {
   LinkPopover,
   LinkContent,
@@ -74,10 +77,50 @@ import {
   makeBodyImageUploader,
   type EditorScope,
 } from "@/admin/components/editor-image-upload"
+import {
+  normalizeColor,
+  normalizeFontSize,
+} from "@/features/news/render/editor-allowlist"
 
 // --- Styles ---
 import "@/styles/tiptap-editor-globals.scss"
 import "@/components/tiptap-templates/simple/simple-editor.scss"
+
+// Word/구글독스 붙여넣기 정규화 — textStyle 의 fontSize(pt→px·clamp)·color(rgb→hex) 를 저장 직전(에디터 단계)에
+// sanitize 와 동일 규칙으로 변환해, 에디터 표시와 공개 렌더가 일치하도록 한다. 변환 불가 값은 해당 attr 제거.
+function normalizePastedFragment(fragment: Fragment): Fragment {
+  const nodes: ProseMirrorNode[] = []
+  fragment.forEach((child) => {
+    let next = child
+    if (child.marks.length) {
+      const marks = child.marks.map((mark) => {
+        if (mark.type.name !== "textStyle") return mark
+        const attrs: Record<string, unknown> = { ...mark.attrs }
+        if (typeof attrs.fontSize === "string") {
+          attrs.fontSize = normalizeFontSize(attrs.fontSize)
+        }
+        if (typeof attrs.color === "string") {
+          attrs.color = normalizeColor(attrs.color)
+        }
+        return mark.type.create(attrs)
+      })
+      next = child.mark(marks)
+    }
+    if (next.content.size) {
+      next = next.copy(normalizePastedFragment(next.content))
+    }
+    nodes.push(next)
+  })
+  return Fragment.fromArray(nodes)
+}
+
+function normalizePastedSlice(slice: Slice): Slice {
+  return new Slice(
+    normalizePastedFragment(slice.content),
+    slice.openStart,
+    slice.openEnd,
+  )
+}
 
 const MainToolbarContent = ({
   onHighlighterClick,
@@ -118,6 +161,7 @@ const MainToolbarContent = ({
         <MarkButton type="strike" />
         <MarkButton type="code" />
         <MarkButton type="underline" />
+        <TextColorPopover />
         {!isMobile ? (
           <ColorHighlightPopover />
         ) : (
@@ -148,6 +192,7 @@ const MainToolbarContent = ({
         <ImageUploadButton text="Add" />
         <ImageRowButton scope={scope} />
         <YoutubeButton />
+        <TableButton />
       </ToolbarGroup>
     </>
   )
@@ -215,6 +260,8 @@ export function SimpleEditor({
         "aria-label": "Main content area, start typing to enter text.",
         class: "simple-editor",
       },
+      // 붙여넣기(Word/구글독스) 시 글자크기 pt→px·색 rgb→hex 를 sanitize 규칙으로 정규화
+      transformPasted: (slice) => normalizePastedSlice(slice),
     },
     extensions: [
       StarterKit.configure({
@@ -227,13 +274,14 @@ export function SimpleEditor({
       HorizontalRule,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       TextStyleKit.configure({ fontSize: { types: ["textStyle"] } }),
+      // 표(table) — docx 붙여넣기 보존 + 편집. 렌더·sanitize 는 이미 table 지원
+      TableKit.configure({ table: { resizable: true } }),
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
       // 인라인 이미지(한 문단에 여러 장 나란히) + 커스텀 코너 리사이즈(image-node-extension)
       Image,
       Youtube.configure({ nocookie: true, controls: true, width: 640, height: 360 }),
-      Typography,
       Superscript,
       Subscript,
       Selection,

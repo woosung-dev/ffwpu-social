@@ -33,12 +33,18 @@
   outline: none;
   caret-color: var(--tt-cursor-color);
 
-  // Paragraph spacing
+  // Paragraph spacing — 공개 렌더(news-body-renderer)·티스토리 모델과 동일: 줄높이 1.75 + 문단 마진 0.
+  // 줄 pitch = line-height 만(28px) → Enter 한 번은 촘촘하게, 문단 구분은 빈 줄로. (마진을 주면 매 줄이 벌어져 보임)
+  p {
+    line-height: 1.75;
+    margin-top: 0;
+  }
+
   p:not(:first-child) {
     font-size: 1rem;
-    line-height: 1.6;
+    line-height: 1.75;
     font-weight: normal;
-    margin-top: 20px;
+    margin-top: 0;
   }
 
   // Selection styles

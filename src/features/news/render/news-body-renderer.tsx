@@ -1,6 +1,7 @@
 // Tiptap JSON 본문 렌더링 — sanitize 통과한 노드만 React 로 변환. Server Component (codex P1#3 안전 렌더링).
 // 새 노드/마크(밑줄·글자색·형광펜·정렬·인용·표·유튜브·이미지 정렬/폭/캡션) — 값은 sanitize 가 화이트리스트 완료.
 import type { CSSProperties, ReactNode } from "react";
+import { cn } from "@/lib/utils";
 import { isAllowedImagePublicUrl } from "@/lib/s3";
 import {
   type SafeMark,
@@ -20,10 +21,16 @@ export function NewsBodyRenderer({ body }: Props) {
     return <p className="text-sm text-ink-subtle">본문이 없습니다.</p>;
   }
   return (
-    // 본문 타이포 — Figma 749:8077: lg 단락 20px/lh1.5 (base 16 모바일 유지 [추론 — 모바일 프레임 없음]).
-    // 단락 간격 24 는 prose em 마진(1.25em×20=25px)으로 ±2px 내 충족 — 별도 마진 override 시 first-child 0 마진이 깨져 미적용.
-    // 리드 단락 Bold 는 콘텐츠(에디터) 스타일이므로 렌더러에서 강제하지 않음.
-    <article className="prose prose-neutral max-w-none lg:[&_p]:text-xl lg:[&_p]:leading-[1.5]">
+    // 본문 타이포 — 에디터(Tiptap)와 WYSIWYG 일치 + 티스토리/네이버 모델.
+    // 16px / line-height 1.75 / 문단 마진 0 → 줄 pitch = line-height 만(티스토리와 동일, 28px).
+    // 문단 구분은 "빈 줄"(빈 문단=한 줄)로. prose 기본 마진(위·아래 1.25em)을 0 으로 무력화해야 줄이 벌어지지 않음.
+    <article
+      className={cn(
+        "prose prose-neutral max-w-none",
+        "text-[16px] leading-[1.75] text-ink-strong",
+        "[&_p]:my-0 [&_p]:leading-[1.75]",
+      )}
+    >
       {safe.content.map((node, i) => renderNode(node, i))}
     </article>
   );
@@ -56,7 +63,11 @@ function renderMarks(marks: SafeMark[] | undefined, children: ReactNode): ReactN
       case "textStyle": {
         const style: CSSProperties = {};
         if (mark.attrs?.color) style.color = mark.attrs.color;
-        if (mark.attrs?.fontSize) style.fontSize = mark.attrs.fontSize;
+        // 큰 글씨(docx 제목)는 행간을 1.3 으로 확보해 줄에 끼지 않게 — 에디터와 동일
+        if (mark.attrs?.fontSize) {
+          style.fontSize = mark.attrs.fontSize;
+          style.lineHeight = 1.3;
+        }
         return <span style={style}>{acc}</span>;
       }
       case "link":
@@ -77,7 +88,7 @@ function renderNode(node: SafeNode, key: number): ReactNode {
 
   switch (node.type) {
     case "paragraph":
-      // 빈 단락(여러 줄바꿈)은 에디터처럼 한 줄 높이를 유지 — 빈 <p> 는 0px 로 뭉개지므로 <br/> 삽입.
+      // 빈 문단 = 한 줄(빈 <p> 는 0px 로 뭉개지므로 <br/>). 문단 마진 0 이므로 빈 줄이 곧 "한 줄 간격" = 티스토리 모델.
       return (
         <p key={key} style={textAlign ? { textAlign } : undefined}>
           {kids.length > 0 ? kids : <br />}
@@ -97,7 +108,7 @@ function renderNode(node: SafeNode, key: number): ReactNode {
     case "horizontalRule":
       return <hr key={key} />;
     case "bulletList":
-      // prose 플러그인 미사용 + Tailwind preflight 가 list-style 제거 → 마커·들여쓰기 명시
+      // prose 사용 중이나 Tailwind preflight 가 ul/ol list-style 을 리셋 → 마커·들여쓰기를 명시 유지
       return (
         <ul key={key} className="my-3 list-disc pl-6">
           {kids}
@@ -146,9 +157,10 @@ function renderNode(node: SafeNode, key: number): ReactNode {
         </pre>
       );
     case "table":
+      // 격자 테두리 명시 — 에디터 편집 화면과 동일한 표 모양(prose 기본 대신 full grid)
       return (
         <div key={key} className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full border-collapse border border-border">
             <tbody>{kids}</tbody>
           </table>
         </div>
@@ -161,6 +173,7 @@ function renderNode(node: SafeNode, key: number): ReactNode {
           key={key}
           colSpan={(node.attrs?.colspan as number) ?? 1}
           rowSpan={(node.attrs?.rowspan as number) ?? 1}
+          className="border border-border bg-surface-soft px-3 py-2 text-left align-top font-semibold"
         >
           {kids}
         </th>
@@ -171,6 +184,7 @@ function renderNode(node: SafeNode, key: number): ReactNode {
           key={key}
           colSpan={(node.attrs?.colspan as number) ?? 1}
           rowSpan={(node.attrs?.rowspan as number) ?? 1}
+          className="border border-border px-3 py-2 align-top"
         >
           {kids}
         </td>
