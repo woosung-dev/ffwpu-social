@@ -260,7 +260,7 @@ describe("sanitizeTiptapJson — 신규 노드", () => {
     const th = result!.content![2].content![0].content![0];
     expect(th.attrs!.colspan).toBe(10); // 99 → max 10
     expect(result!.content![3].attrs).toEqual({ textAlign: "center" });
-    expect(result!.content![4].attrs).toBeUndefined(); // justify 미허용 → attrs 없음
+    expect(result!.content![4].attrs).toEqual({ textAlign: "justify" }); // 에디터 정렬 4종과 정합 — justify 보존
   });
 
   it("(12) 외부 도메인 이미지 drop (인라인 문단 안에서도)", () => {
