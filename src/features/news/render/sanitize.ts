@@ -36,10 +36,10 @@ function clampInt(v: unknown, min: number, max: number, def: number): number {
   return Math.min(max, Math.max(min, Math.round(n)));
 }
 
-// 정렬 attr — center/right 만 보존(left 는 기본, 생략)
+// 정렬 attr — center/right/justify 만 보존(left 는 기본, 생략). 에디터 툴바 정렬 4종과 정합.
 function alignAttr(node: Record<string, unknown>): { textAlign?: string } {
   const a = isObject(node.attrs) ? node.attrs.textAlign : undefined;
-  return a === "center" || a === "right" ? { textAlign: a } : {};
+  return a === "center" || a === "right" || a === "justify" ? { textAlign: a } : {};
 }
 
 function sanitizeMark(mark: unknown): SafeMark | null {
