@@ -1,10 +1,10 @@
-// 본문 렌더러 회귀 테스트 — 빈 단락(여러 줄바꿈)이 공개 렌더에서 한 줄 높이를 유지하는지 검증
+// 본문 렌더러 회귀 테스트 — 빈 단락(붙여넣기 빈 줄)이 블록 마진 누적 없이 가벼운 spacer 로 렌더되는지 검증
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { NewsBodyRenderer } from "./news-body-renderer";
 
 describe("NewsBodyRenderer 빈 단락", () => {
-  it("빈 단락은 <br/> 로 렌더되어 줄 높이가 유지된다", () => {
+  it("빈 단락은 <br/> 로 렌더 — 문단 마진 0 이므로 빈 줄이 곧 한 줄 간격", () => {
     const doc = {
       type: "doc",
       content: [
@@ -14,7 +14,6 @@ describe("NewsBodyRenderer 빈 단락", () => {
       ],
     };
     const html = renderToStaticMarkup(<NewsBodyRenderer body={doc} />);
-    // 빈 단락 = <p><br/></p> (0px 뭉개짐 방지), 내용 단락은 텍스트 포함
     expect(html).toContain("<br");
     expect(html).toContain("첫 줄");
     expect(html).toContain("둘째 줄");
