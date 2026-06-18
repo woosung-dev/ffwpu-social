@@ -1,11 +1,10 @@
 // Tiptap JSON whitelist 정화 — pure 함수. React/next 의존 0(단위테스트 호환).
 // 허용 노드/마크만 통과 + inline 값은 editor-allowlist 로 화이트리스트(XSS 차단). codex P1#3 + 에디터 업그레이드.
 import {
-  ALLOWED_COLORS,
   YOUTUBE_ID_REGEX,
   clampImagePx,
   extractYoutubeId,
-  isAllowedValue,
+  normalizeColor,
   normalizeFontSize,
   resolveHighlightColor,
 } from "./editor-allowlist";
@@ -70,7 +69,8 @@ function sanitizeMark(mark: unknown): SafeMark | null {
       const attrs: Record<string, string> = {};
       const color = isObject(mark.attrs) ? mark.attrs.color : undefined;
       const fontSize = isObject(mark.attrs) ? mark.attrs.fontSize : undefined;
-      if (isString(color) && isAllowedValue(ALLOWED_COLORS, color)) attrs.color = color;
+      const safeColor = normalizeColor(color);
+      if (safeColor) attrs.color = safeColor;
       const safeFontSize = normalizeFontSize(fontSize);
       if (safeFontSize) attrs.fontSize = safeFontSize;
       // 유효 attr 없으면 drop (임의 style 차단)

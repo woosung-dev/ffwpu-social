@@ -117,7 +117,7 @@ describe("sanitizeTiptapJson — 서식 마크 화이트리스트", () => {
     });
   });
 
-  it("(7) textStyle 임의 color/fontSize 는 drop (style 인젝션 차단)", () => {
+  it("(7) textStyle color 인젝션 차단 + fontSize clamp (color drop, fontSize 64로 cap)", () => {
     const result = run({
       type: "doc",
       content: [
@@ -138,42 +138,57 @@ describe("sanitizeTiptapJson — 서식 마크 화이트리스트", () => {
         },
       ],
     });
-    // 허용값 없음 → textStyle 마크 전체 제거
-    expect(result!.content![0].content![0].marks).toBeUndefined();
+    // 임의 color 는 hex 검증 실패 → drop. fontSize 999px 는 상한 64px 로 clamp(텍스트 크기 손실 방지)
+    expect(result!.content![0].content![0].marks).toEqual([
+      { type: "textStyle", attrs: { fontSize: "64px" } },
+    ]);
   });
 
-  it("(7-1) textStyle 숫자 px 직접 입력은 12~40px 범위만 유지", () => {
+  it("(7-1) textStyle fontSize — 범위 내 유지, 범위 밖 clamp, 잘못된 단위 drop, pt→px 변환", () => {
     const result = run({
       type: "doc",
       content: [
         {
           type: "paragraph",
           content: [
-            {
-              type: "text",
-              text: "ok",
-              marks: [{ type: "textStyle", attrs: { fontSize: "19px" } }],
-            },
-            {
-              type: "text",
-              text: "small",
-              marks: [{ type: "textStyle", attrs: { fontSize: "11px" } }],
-            },
-            {
-              type: "text",
-              text: "unit",
-              marks: [{ type: "textStyle", attrs: { fontSize: "1.5rem" } }],
-            },
+            { type: "text", text: "ok", marks: [{ type: "textStyle", attrs: { fontSize: "19px" } }] },
+            { type: "text", text: "small", marks: [{ type: "textStyle", attrs: { fontSize: "11px" } }] },
+            { type: "text", text: "unit", marks: [{ type: "textStyle", attrs: { fontSize: "1.5rem" } }] },
+            // docx 는 pt 로 들어옴 — 24pt=32px, 11pt≈15px (반올림)
+            { type: "text", text: "pt-title", marks: [{ type: "textStyle", attrs: { fontSize: "24pt" } }] },
+            { type: "text", text: "pt-body", marks: [{ type: "textStyle", attrs: { fontSize: "11pt" } }] },
           ],
         },
       ],
     });
     const nodes = result!.content![0].content!;
-    expect(nodes[0].marks).toEqual([
-      { type: "textStyle", attrs: { fontSize: "19px" } },
-    ]);
-    expect(nodes[1].marks).toBeUndefined();
-    expect(nodes[2].marks).toBeUndefined();
+    expect(nodes[0].marks).toEqual([{ type: "textStyle", attrs: { fontSize: "19px" } }]);
+    expect(nodes[1].marks).toEqual([{ type: "textStyle", attrs: { fontSize: "12px" } }]); // 11→min 12 clamp
+    expect(nodes[2].marks).toBeUndefined(); // rem 단위 거부
+    expect(nodes[3].marks).toEqual([{ type: "textStyle", attrs: { fontSize: "32px" } }]); // 24pt→32px
+    expect(nodes[4].marks).toEqual([{ type: "textStyle", attrs: { fontSize: "15px" } }]); // 11pt≈14.67→15px
+  });
+
+  it("(7-2) textStyle color — 임의 hex 통과, rgb()→hex 변환, 키워드 거부", () => {
+    const result = run({
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            { type: "text", text: "hex", marks: [{ type: "textStyle", attrs: { color: "#1A3A5C" } }] },
+            { type: "text", text: "rgb", marks: [{ type: "textStyle", attrs: { color: "rgb(200, 64, 43)" } }] },
+            { type: "text", text: "short", marks: [{ type: "textStyle", attrs: { color: "#abc" } }] },
+            { type: "text", text: "kw", marks: [{ type: "textStyle", attrs: { color: "windowtext" } }] },
+          ],
+        },
+      ],
+    });
+    const nodes = result!.content![0].content!;
+    expect(nodes[0].marks).toEqual([{ type: "textStyle", attrs: { color: "#1a3a5c" } }]); // 임의 hex 통과(소문자화)
+    expect(nodes[1].marks).toEqual([{ type: "textStyle", attrs: { color: "#c8402b" } }]); // rgb→hex
+    expect(nodes[2].marks).toEqual([{ type: "textStyle", attrs: { color: "#aabbcc" } }]); // #rgb→#rrggbb
+    expect(nodes[3].marks).toBeUndefined(); // 키워드 거부
   });
 
   it("(8) highlight 임의 색은 기본 형광으로 강등(색 attr 제거)", () => {

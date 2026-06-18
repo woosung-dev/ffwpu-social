@@ -80,3 +80,59 @@ body,
     padding: 1rem 1.5rem 30vh;
   }
 }
+
+/* 표(table) — 에디터 편집 시 격자/헤더 가시화 (공개 렌더는 prose 가 담당) */
+.simple-editor .tableWrapper {
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.simple-editor table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.simple-editor table td,
+.simple-editor table th {
+  border: 1px solid var(--tt-gray-light-a-300, #d6d6d6);
+  padding: 6px 10px;
+  vertical-align: top;
+  min-width: 3em;
+}
+
+.simple-editor table th {
+  background: var(--tt-gray-light-a-100, #f3f3f3);
+  font-weight: 600;
+  text-align: left;
+}
+
+/* 셀 선택 하이라이트 */
+.simple-editor table .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(37, 99, 235, 0.12);
+  pointer-events: none;
+}
+
+.simple-editor table td,
+.simple-editor table th {
+  position: relative;
+}
+
+/* 열 리사이즈 핸들 */
+.simple-editor .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--tt-brand-color-500, #2563eb);
+  pointer-events: none;
+}
+
+/* 큰 글씨가 줄에 끼지 않도록 — docx 제목용 큰 fontSize 보존 시 행간 확보 */
+.simple-editor [style*="font-size"] {
+  line-height: 1.3;
+}

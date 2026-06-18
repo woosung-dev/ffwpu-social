@@ -2,9 +2,11 @@
 // 툴바는 여기 값만 노출하고, sanitize 는 여기 값만 통과시킨다. inline style 값은 반드시 화이트리스트.
 
 // 글자 크기 프리셋 + 직접 입력 허용 범위. 저장값은 반드시 정수 px 로 정규화한다.
+// docx 붙여넣기(pt) 보존을 위해 상한을 64px 로 확장 — pt 는 normalizeFontSize 가 px 로 변환.
 export const FONT_SIZE_MIN = 12;
-export const FONT_SIZE_MAX = 40;
+export const FONT_SIZE_MAX = 64;
 export const ALLOWED_FONT_SIZES = [
+  "12px",
   "14px",
   "16px",
   "18px",
@@ -12,9 +14,14 @@ export const ALLOWED_FONT_SIZES = [
   "24px",
   "28px",
   "32px",
+  "40px",
+  "48px",
+  "56px",
+  "64px",
 ] as const;
 
-// 글자 색 팔레트(자유 컬러피커 금지) — 먹/회색 + 브랜드 + 강조 6
+// 글자 색 "빠른 선택" 팔레트(툴바 프리셋) — 먹/회색 + 브랜드 + 강조 6.
+// 자유 색은 normalizeColor 가 hex 검증으로 통과시킨다(고정 화이트리스트 아님).
 export const ALLOWED_COLORS = [
   "#242424",
   "#8a8f98",
@@ -69,15 +76,50 @@ export function resolveHighlightColor(color: unknown): string | null {
   return null;
 }
 
+// pt → px 환산 계수 (CSS 표준: 96px / 72pt)
+const PT_TO_PX = 96 / 72;
+
+// 글자크기 정규화 — px/pt 입력을 정수 px 로. 범위를 벗어나면 clamp(드롭 아님 — 붙여넣기 손실 방지),
+// px/pt 외 단위(rem/em/%)나 비수치는 null. docx 는 pt 로 들어오므로 pt 변환 필수.
 export function normalizeFontSize(v: unknown): string | null {
   if (typeof v !== "string") return null;
-  const match = v.trim().match(/^(\d{1,2})px$/);
+  const match = v.trim().match(/^(\d+(?:\.\d+)?)(px|pt)$/i);
   if (!match) return null;
-  const n = Number(match[1]);
-  if (!Number.isInteger(n) || n < FONT_SIZE_MIN || n > FONT_SIZE_MAX) {
-    return null;
-  }
+  let n = Number(match[1]);
+  if (!Number.isFinite(n)) return null;
+  if (match[2].toLowerCase() === "pt") n *= PT_TO_PX;
+  n = Math.round(n);
+  if (n < FONT_SIZE_MIN) n = FONT_SIZE_MIN;
+  if (n > FONT_SIZE_MAX) n = FONT_SIZE_MAX;
   return `${n}px`;
+}
+
+// 글자 색 정규화 — #rgb/#rrggbb 또는 rgb()/rgba() 만 통과(소문자 #rrggbb 로). 키워드(windowtext 등)·
+// 임의 CSS·url()·expression 은 null. 붙여넣기 시 브라우저가 색을 rgb() 로 직렬화하므로 rgb 변환 필수(XSS 가드).
+export function normalizeColor(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const s = v.trim().toLowerCase();
+  const hex = s.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/);
+  if (hex) {
+    const body = hex[1];
+    return body.length === 3
+      ? `#${body
+          .split("")
+          .map((c) => c + c)
+          .join("")}`
+      : `#${body}`;
+  }
+  const rgb = s.match(
+    /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*(?:,\s*[\d.]+\s*)?\)$/,
+  );
+  if (rgb) {
+    const toHex = (x: string) => {
+      const n = Math.min(255, Math.max(0, Number(x)));
+      return n.toString(16).padStart(2, "0");
+    };
+    return `#${toHex(rgb[1])}${toHex(rgb[2])}${toHex(rgb[3])}`;
+  }
+  return null;
 }
 
 export function fontSizeToNumber(v: unknown): number | null {

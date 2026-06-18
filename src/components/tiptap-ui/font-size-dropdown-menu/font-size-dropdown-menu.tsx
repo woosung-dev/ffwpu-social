@@ -19,16 +19,16 @@ import {
 } from "@/components/tiptap-ui-primitive/dropdown-menu"
 import { Card, CardBody } from "@/components/tiptap-ui-primitive/card"
 
-export const FONT_SIZES = [
-  "12px",
-  "14px",
-  "16px",
-  "18px",
-  "20px",
-  "24px",
-  "30px",
-  "36px",
-] as const
+// --- Lib ---
+import {
+  ALLOWED_FONT_SIZES,
+  FONT_SIZE_MIN,
+  FONT_SIZE_MAX,
+  normalizeFontSize,
+} from "@/features/news/render/editor-allowlist"
+
+// 프리셋은 sanitize 와 공유하는 SSOT(ALLOWED_FONT_SIZES). 직접 입력은 normalizeFontSize 로 clamp.
+export const FONT_SIZES = ALLOWED_FONT_SIZES
 
 export interface FontSizeDropdownMenuProps extends Omit<ButtonProps, "type"> {
   /** 공유 컨텍스트 대신 명시적으로 editor 를 주입할 때 사용 */
@@ -53,6 +53,7 @@ export const FontSizeDropdownMenu = React.forwardRef<
   ) => {
     const { editor } = useTiptapEditor(providedEditor)
     const [isOpen, setIsOpen] = React.useState(false)
+    const [customValue, setCustomValue] = React.useState("")
 
     const applySize = React.useCallback(
       (size: string | null) => {
@@ -64,6 +65,15 @@ export const FontSizeDropdownMenu = React.forwardRef<
       },
       [editor]
     )
+
+    // 직접 입력 — 숫자(px)를 normalizeFontSize 로 clamp 후 적용
+    const applyCustom = React.useCallback(() => {
+      const normalized = normalizeFontSize(`${customValue.trim()}px`)
+      if (normalized) {
+        applySize(normalized)
+        setCustomValue("")
+      }
+    }, [customValue, applySize])
 
     if (!editor) {
       return null
@@ -116,6 +126,32 @@ export const FontSizeDropdownMenu = React.forwardRef<
                     <span className="tiptap-button-text">Default</span>
                   </Button>
                 </DropdownMenuItem>
+                {/* 직접 입력 — 12~64px clamp */}
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px" }}
+                  onKeyDown={(e) => e.stopPropagation()}
+                >
+                  <input
+                    type="number"
+                    min={FONT_SIZE_MIN}
+                    max={FONT_SIZE_MAX}
+                    inputMode="numeric"
+                    aria-label={`직접 입력 (${FONT_SIZE_MIN}~${FONT_SIZE_MAX}px)`}
+                    placeholder="px"
+                    value={customValue}
+                    onChange={(e) => setCustomValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        applyCustom()
+                      }
+                    }}
+                    style={{ width: 56, padding: "2px 6px", border: "1px solid var(--tt-gray-light-a-400, #ccc)", borderRadius: 4 }}
+                  />
+                  <Button type="button" data-style="ghost" onClick={applyCustom}>
+                    <span className="tiptap-button-text">적용</span>
+                  </Button>
+                </div>
               </ButtonGroup>
             </CardBody>
           </Card>
