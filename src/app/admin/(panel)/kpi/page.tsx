@@ -38,8 +38,19 @@ async function KpiFormData() {
     displayValue: r.displayValue,
     unit: r.unit,
     sortOrder: r.sortOrder,
+    syncSource: r.syncSource,
   }));
-  return <KpiEditor initialRows={initialRows} />;
+  // 가장 최근 자동 동기화 시각 — 폼 상단에 표시
+  const lastSyncedAt = rows.reduce<Date | null>((latest, r) => {
+    if (!r.lastSyncedAt) return latest;
+    return !latest || r.lastSyncedAt > latest ? r.lastSyncedAt : latest;
+  }, null);
+  return (
+    <KpiEditor
+      initialRows={initialRows}
+      lastSyncedAt={lastSyncedAt ? lastSyncedAt.toISOString() : null}
+    />
+  );
 }
 
 function KpiLoading() {

@@ -1,0 +1,28 @@
+# KPI 시트 주간 자동 동기화 — 매주 월요일, 배포 플랫폼과 무관(GitHub 이 사이트의 /api/cron/sync-kpi 를 호출만 함).
+# Vercel→AWS 이전 시 KPI_SYNC_ENDPOINT secret 의 URL 만 교체하면 됨. 수동 실행도 가능(workflow_dispatch).
+name: Sync KPI from Sheet (weekly)
+
+on:
+  schedule:
+    # 매주 월요일 00:00 UTC = 09:00 KST. 시트는 주 단위(금~목) 갱신이라 주간으로 충분.
+    - cron: "0 0 * * 1"
+  workflow_dispatch: {}
+
+concurrency:
+  group: sync-kpi
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger KPI sync endpoint
+        run: |
+          curl -fsS -X GET "$KPI_SYNC_ENDPOINT" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -w '\nHTTP %{http_code}\n'
+        env:
+          # 배포된 사이트의 동기화 엔드포인트 전체 URL (예: https://<도메인>/api/cron/sync-kpi). GitHub Secrets 등록.
+          KPI_SYNC_ENDPOINT: ${{ secrets.KPI_SYNC_ENDPOINT }}
+          # 라우트 Bearer 가드와 동일 값. 런타임 env 의 CRON_SECRET 과 일치해야 함.
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

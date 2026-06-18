@@ -69,6 +69,7 @@ async function KpiSectionWithData() {
       {
         label: m.label,
         sublabel: m.sublabel,
+        value: m.value,
         displayValue: m.displayValue,
         unit: m.unit,
       },

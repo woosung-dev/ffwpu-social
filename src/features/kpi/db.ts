@@ -25,10 +25,32 @@ export async function listForAdmin(
       sortOrder: kpiMetrics.sortOrder,
       isActive: kpiMetrics.isActive,
       updatedAt: kpiMetrics.updatedAt,
+      syncSource: kpiMetrics.syncSource,
+      lastSyncedAt: kpiMetrics.lastSyncedAt,
     })
     .from(kpiMetrics)
     .where(eq(kpiMetrics.section, section))
     .orderBy(asc(kpiMetrics.sortOrder));
+}
+
+// 시트 동기화 갱신 — 숫자(value)만 갱신(숫자 우선 모델) + 출처 메타. 단위·표시값·label 은 운영자 소유라 미변경. 화면 표시는 value+unit 자동.
+export async function updateSyncedValue(
+  tx: Tx,
+  slug: string,
+  data: { value: number; externalId: string },
+) {
+  const [updated] = await tx
+    .update(kpiMetrics)
+    .set({
+      value: data.value,
+      syncSource: "google_sheets",
+      lastSyncedAt: new Date(),
+      externalId: data.externalId,
+      updatedAt: new Date(),
+    })
+    .where(eq(kpiMetrics.slug, slug))
+    .returning();
+  return updated ?? null;
 }
 
 // 단건 갱신 — service 의 transaction 안에서 호출

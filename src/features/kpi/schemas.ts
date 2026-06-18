@@ -6,12 +6,10 @@ export const kpiUpdateRowSchema = z.object({
   label: z.string().min(1, "라벨을 입력해주세요").max(50),
   // 라벨 아래 작은 보조 라벨 "지원가정" — 선택. 생략(undefined) 시 미변경(StoryStatsEditor 등 호환)
   sublabel: z.string().max(20).nullable().optional(),
-  // 정렬·차트용 수치 — 기간 같은 비숫자 (38년 5개월) 는 null
-  value: z.number().int().min(0).max(99_999_999).nullable(),
-  displayValue: z
-    .string()
-    .min(1, "표시 값을 입력해주세요")
-    .max(50),
+  // 표시 주도 수치 — 소수(529.4) 허용. 비숫자(38년 5개월)는 null + displayValue 사용
+  value: z.number().min(0).max(99_999_999).nullable(),
+  // 표시 override(선택) — 비우면 value+unit 자동. 특수 표기만 직접 입력
+  displayValue: z.string().max(50),
   unit: z.string().max(10).nullable(),
 });
 
@@ -30,7 +28,7 @@ export const storyStatUpdateRowSchema = z.object({
   slug: z.string().min(1).max(50),
   label: z.string().min(1, "라벨을 입력해주세요").max(50),
   displayValue: z.string().max(60),
-  value: z.number().int().min(0).max(99_999_999).nullable().optional(),
+  value: z.number().min(0).max(99_999_999).nullable().optional(),
   unit: z.string().max(10).nullable().optional(),
 });
 
