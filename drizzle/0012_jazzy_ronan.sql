@@ -1,0 +1,1 @@
+ALTER TABLE "kpi_metrics" ALTER COLUMN "value" SET DATA TYPE double precision;

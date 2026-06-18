@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { requireSuperAdmin } from "@/lib/auth-guards";
 import { type ActionResult, toActionError } from "@/lib/action-result";
 import { updateKpis, updateStoryStats, updateStorySectionText } from "./service";
+import { fetchSheetMetrics } from "./sync/service";
 import {
   kpiUpdateInputSchema,
   storyStatsUpdateInputSchema,
@@ -31,6 +32,29 @@ export async function updateKpisAction(
     return { success: true, data: { updatedCount: updated.length } };
   } catch (e) {
     return toActionError(e, "kpiAction");
+  }
+}
+
+// 어드민 "시트에서 불러오기" — 시트 숫자를 폼의 '숫자' 칸에 채우기용으로 반환만 함(DB 미기록). 단위는 운영자 소유라 미포함. 확인 후 "저장 + 발행" 으로 적용.
+export type SheetKpiValue = {
+  slug: string;
+  value: number;
+};
+
+export async function fetchSheetKpiValuesAction(): Promise<
+  ActionResult<{ metrics: SheetKpiValue[] }>
+> {
+  try {
+    await requireSuperAdmin();
+    const metrics = await fetchSheetMetrics();
+    return {
+      success: true,
+      data: {
+        metrics: metrics.map((m) => ({ slug: m.slug, value: m.value })),
+      },
+    };
+  } catch (e) {
+    return toActionError(e, "fetchSheetKpiValuesAction");
   }
 }
 

@@ -1,5 +1,6 @@
 // 사용자 랜딩 KPI 섹션 — Figma discrete 구간별 고정(base/md768/lg1024/wide1440). 유동 vw 스케일 0. 좌 헤딩 + 우 대시보드 비대칭 벤토. DB kpi_metrics props — 운영자 어드민 갱신
 import { SectionContainer } from "@/client/components/layout";
+import { formatKpiDisplay } from "@/features/kpi/format";
 
 type Props = {
   metricsBySlug: ReadonlyMap<
@@ -7,19 +8,22 @@ type Props = {
     {
       label: string;
       sublabel: string | null;
+      value: number | null;
       displayValue: string;
       unit: string | null;
     }
   >;
 };
 
-// 운영자가 비활성·미입력해도 카드 모양 유지 — slug 기반 안전 조회
+// 운영자가 비활성·미입력해도 카드 모양 유지 — slug 기반 안전 조회. 숫자 우선: 숫자+단위 자동, 없으면 표시값.
 function pickDisplay(
   m: Props["metricsBySlug"],
   slug: string,
   fallback: string,
 ): string {
-  return m.get(slug)?.displayValue ?? fallback;
+  const row = m.get(slug);
+  if (!row) return fallback;
+  return formatKpiDisplay(row.value, row.unit, row.displayValue, fallback);
 }
 
 // DB 라벨/서브라벨 — 운영자 어드민 편집분 노출(가정수 카드). 미입력 시 fallback.
@@ -66,6 +70,18 @@ export function KpiSection({ metricsBySlug }: Props) {
     "helped_household_count",
     "—",
   );
+  // 카드 제목 — 4개 모두 DB 라벨(어드민 편집) 반영. 미입력 시 Figma 기본 카피 fallback.
+  const volunteerCountLabel = pickLabel(
+    metricsBySlug,
+    "volunteer_count",
+    "누적 봉사자 수",
+  );
+  const volunteerPeriodLabel = pickLabel(
+    metricsBySlug,
+    "volunteer_period",
+    "누적 봉사 기간",
+  );
+  const eventCountLabel = pickLabel(metricsBySlug, "event_count", "봉사활동 횟수");
   // 가정수 카드 — DB 라벨(어드민 편집) + 작은 서브라벨. 미입력 시 기본 카피.
   const householdLabel = pickLabel(
     metricsBySlug,
@@ -135,7 +151,7 @@ export function KpiSection({ metricsBySlug }: Props) {
               className="relative flex min-w-0 flex-1 flex-col justify-center gap-[2px] overflow-hidden rounded-[12px] bg-kpi-gray px-[14px] py-3 text-ink-strong-mid md:gap-1 md:rounded-[20px] md:px-6 md:py-5"
             >
               <p className="text-[14px] font-semibold md:text-[22px]">
-                누적 봉사자 수
+                {volunteerCountLabel}
               </p>
               <p className="whitespace-nowrap text-[26px] font-bold leading-none tabular-nums md:text-[42px]">
                 {volunteerCount}
@@ -177,7 +193,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                   className="flex flex-col justify-between gap-3 rounded-[12px] bg-kpi-gray px-[18px] py-3 text-ink-strong-mid md:rounded-[20px] md:px-[30px] md:py-5"
                 >
                   <p className="text-[14px] font-semibold md:text-[22px]">
-                    누적 봉사 기간
+                    {volunteerPeriodLabel}
                   </p>
                   <p className="whitespace-nowrap text-right text-[26px] font-bold leading-none tabular-nums md:text-left md:text-[32px]">
                     {volunteerPeriod}
@@ -205,7 +221,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                 className="flex flex-1 flex-col justify-between gap-2 overflow-hidden rounded-[12px] bg-kpi-lime px-[14px] py-3 text-ink-on-lime md:rounded-[20px] md:px-6 md:py-5"
               >
                 <p className="text-[14px] font-semibold md:text-[22px]">
-                  봉사활동 횟수
+                  {eventCountLabel}
                 </p>
                 {/* 일러스트 좌하단 + 값 우하단(Figma): label top / value-row bottom. 값 = 24/40 + nowrap(전 BP 1줄) */}
                 <div className="flex items-end justify-between gap-2">
@@ -293,7 +309,7 @@ export function KpiSection({ metricsBySlug }: Props) {
               className="flex flex-1 items-start justify-between gap-6 rounded-[20px] bg-kpi-gray px-6 py-5"
             >
               <div className="flex flex-col gap-1 text-ink-strong-mid">
-                <p className="text-[22px] font-semibold">누적 봉사자 수</p>
+                <p className="text-[22px] font-semibold">{volunteerCountLabel}</p>
                 <p className="text-[54px] font-bold leading-none tabular-nums">
                   {volunteerCount}
                 </p>
@@ -334,7 +350,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                   data-reveal
                   className="flex flex-col justify-between rounded-[20px] bg-kpi-gray px-[30px] py-5 text-ink-strong-mid"
                 >
-                  <p className="text-[22px] font-semibold">누적 봉사 기간</p>
+                  <p className="text-[22px] font-semibold">{volunteerPeriodLabel}</p>
                   <p className="whitespace-nowrap text-[47px] font-bold leading-none tabular-nums">
                     {volunteerPeriod}
                   </p>
@@ -361,7 +377,7 @@ export function KpiSection({ metricsBySlug }: Props) {
                 data-reveal
                 className="flex flex-1 flex-col justify-between gap-[31px] rounded-[20px] bg-kpi-lime px-6 py-5 text-ink-on-lime"
               >
-                <p className="text-[22px] font-semibold">봉사활동 횟수</p>
+                <p className="text-[22px] font-semibold">{eventCountLabel}</p>
                 <div className="flex items-end justify-between">
                   {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
                   <img
