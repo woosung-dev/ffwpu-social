@@ -109,6 +109,13 @@ body,
 
 /* 셀 배경색 인라인 style 은 위 th 기본 배경/특이도를 덮는다 (renderHTML style 우선) */
 
+/* 표 팝오버 — 셀 배경색 섹션 라벨 */
+.tiptap-table-color-label {
+  font-size: 0.75rem;
+  color: var(--tt-gray-light-a-600, #6b7280);
+  padding: 0.25rem 0.5rem 0.125rem;
+}
+
 /* 셀 선택 하이라이트 */
 .simple-editor table .selectedCell::after {
   content: "";
