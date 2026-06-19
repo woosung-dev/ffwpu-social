@@ -14,6 +14,10 @@ import { Superscript } from "@tiptap/extension-superscript"
 import { Selection } from "@tiptap/extensions"
 import { TextStyleKit } from "@tiptap/extension-text-style"
 import { TableKit } from "@tiptap/extension-table"
+import {
+  TableCellWithBackground,
+  TableHeaderWithBackground,
+} from "@/components/tiptap-node/table-node/table-cell-extension"
 import { Youtube } from "@tiptap/extension-youtube"
 import { Fragment, Slice, type Node as ProseMirrorNode } from "@tiptap/pm/model"
 
@@ -274,8 +278,14 @@ export function SimpleEditor({
       HorizontalRule,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       TextStyleKit.configure({ fontSize: { types: ["textStyle"] } }),
-      // 표(table) — docx 붙여넣기 보존 + 편집. 렌더·sanitize 는 이미 table 지원
-      TableKit.configure({ table: { resizable: true } }),
+      // 표(table) — docx 붙여넣기 보존 + 편집. 셀 배경색 지원 위해 기본 cell/header 를 끄고 커스텀으로 대체
+      TableKit.configure({
+        table: { resizable: true },
+        tableCell: false,
+        tableHeader: false,
+      }),
+      TableCellWithBackground,
+      TableHeaderWithBackground,
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),

@@ -167,28 +167,35 @@ function renderNode(node: SafeNode, key: number): ReactNode {
       );
     case "tableRow":
       return <tr key={key}>{kids}</tr>;
-    case "tableHeader":
+    case "tableHeader": {
+      // 셀 배경색 지정 시 인라인 style 로 — 미지정이면 prose 기본(bg-surface-soft) 유지
+      const bg = node.attrs?.backgroundColor as string | undefined;
       return (
         <th
           key={key}
           colSpan={(node.attrs?.colspan as number) ?? 1}
           rowSpan={(node.attrs?.rowspan as number) ?? 1}
+          style={bg ? { backgroundColor: bg } : undefined}
           className="border border-border bg-surface-soft px-3 py-2 text-left align-top font-semibold"
         >
           {kids}
         </th>
       );
-    case "tableCell":
+    }
+    case "tableCell": {
+      const bg = node.attrs?.backgroundColor as string | undefined;
       return (
         <td
           key={key}
           colSpan={(node.attrs?.colspan as number) ?? 1}
           rowSpan={(node.attrs?.rowspan as number) ?? 1}
+          style={bg ? { backgroundColor: bg } : undefined}
           className="border border-border px-3 py-2 align-top"
         >
           {kids}
         </td>
       );
+    }
     case "youtube": {
       const id = node.attrs?.videoId as string;
       // id-only sandbox iframe — 임의 src 불가(sanitize 가 id 만 통과)

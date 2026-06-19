@@ -278,6 +278,32 @@ describe("sanitizeTiptapJson — 신규 노드", () => {
     expect(result!.content![4].attrs).toEqual({ textAlign: "justify" }); // 에디터 정렬 4종과 정합 — justify 보존
   });
 
+  it("(11-1) table 셀 backgroundColor — hex 유지·rgb()→hex 변환·임의값 drop", () => {
+    const result = run({
+      type: "doc",
+      content: [
+        {
+          type: "table",
+          content: [
+            {
+              type: "tableRow",
+              content: [
+                { type: "tableHeader", attrs: { backgroundColor: "#FFF3A3" }, content: [] },
+                { type: "tableCell", attrs: { backgroundColor: "rgb(205, 236, 207)" }, content: [] },
+                { type: "tableCell", attrs: { backgroundColor: "url(x)" }, content: [] },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const cells = result!.content![0].content![0].content!;
+    expect(cells[0].attrs!.backgroundColor).toBe("#fff3a3"); // hex 소문자화
+    expect(cells[1].attrs!.backgroundColor).toBe("#cdeccf"); // rgb()→hex
+    expect(cells[2].attrs!.backgroundColor).toBeUndefined(); // 임의 CSS drop, colspan/rowspan 만 유지
+    expect(cells[2].attrs!.colspan).toBe(1);
+  });
+
   it("(12) 외부 도메인 이미지 drop (인라인 문단 안에서도)", () => {
     const result = run({
       type: "doc",

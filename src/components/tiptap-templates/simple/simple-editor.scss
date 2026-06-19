@@ -107,6 +107,55 @@ body,
   text-align: left;
 }
 
+/* 셀 배경색 인라인 style 은 위 th 기본 배경/특이도를 덮는다 (renderHTML style 우선) */
+
+/* 표 셀 배경색 스와치 (TableButton 드롭다운, 본문 밖 팝오버) */
+.tiptap-table-cell-colors {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem 0.125rem;
+}
+
+.tiptap-table-cell-colors-label {
+  font-size: 0.75rem;
+  color: var(--tt-gray-light-a-600, #6b7280);
+  white-space: nowrap;
+}
+
+.tiptap-table-cell-colors-swatches {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tiptap-table-cell-color-swatch {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--tt-gray-light-a-300, #d6d6d6);
+  cursor: pointer;
+  padding: 0;
+}
+
+.tiptap-table-cell-color-swatch:hover {
+  outline: 2px solid var(--tt-gray-light-a-400, #b3b3b3);
+  outline-offset: 1px;
+}
+
+/* 지우기 — 대각선 빗금으로 '없음' 표시 */
+.tiptap-table-cell-color-clear {
+  background:
+    linear-gradient(
+      to top right,
+      transparent calc(50% - 1px),
+      #e5484d calc(50% - 1px),
+      #e5484d calc(50% + 1px),
+      transparent calc(50% + 1px)
+    ),
+    #fff;
+}
+
 /* 셀 선택 하이라이트 */
 .simple-editor table .selectedCell::after {
   content: "";
