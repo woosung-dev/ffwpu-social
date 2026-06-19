@@ -76,8 +76,11 @@ describe("extractCumulativeMetrics", () => {
     });
   });
 
-  it("봉사시간 → volunteer_period (소수 보존)", () => {
-    expect(bySlug.get("volunteer_period")?.value).toBe(529.4);
+  it("연인원봉사시간 누계 → volunteer_period (총 누적 봉사시간 아님, 소수 보존)", () => {
+    expect(bySlug.get("volunteer_period")).toMatchObject({
+      value: 7873.5,
+      externalId: "연인원봉사시간 누계",
+    });
   });
 
   it("활동건수 → event_count", () => {
