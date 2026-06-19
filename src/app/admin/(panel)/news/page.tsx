@@ -1,7 +1,11 @@
-// 어드민 뉴스 목록 — Server Component + Suspense (Cache Components, 결정 #17). searchParams 는 Suspense 자식에서 await
+// 어드민 활동 스토리 관리 — 탭[스토리 대표글(소식 상단 슬라이드) / 스토리 관리(글 목록·CRUD)]. Server Component + Suspense (Cache Components). searchParams 는 Suspense 자식에서 await
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { listNewsForAdmin } from "@/features/news";
+import {
+  listNewsForAdmin,
+  getHeroNews,
+  getHeroCandidates,
+} from "@/features/news";
 import { getNewsStatsForAdmin } from "@/features/analytics";
 import {
   NewsTable,
@@ -9,11 +13,14 @@ import {
   type NewsStatus,
   type NewsStatsMap,
 } from "@/admin/components/NewsTable";
+import { HeroOrderManager } from "@/admin/components/HeroOrderManager";
+import { StoryTabs } from "@/admin/components/StoryTabs";
 import { AdminPageHeader } from "@/admin/components/AdminPageHeader";
 import { ADMIN_COPY } from "@/admin/copy";
+import { normalizeNewsSort } from "@/features/news/admin-sort";
 
 export const metadata: Metadata = {
-  title: "소식 글 관리 | 사회공헌단 어드민",
+  title: "활동 스토리 관리 | 사회공헌단 어드민",
   robots: { index: false, follow: false },
 };
 
@@ -21,6 +28,11 @@ export const metadata: Metadata = {
 const PAGE_SIZE = 10;
 
 type SearchParams = Record<string, string | string[] | undefined>;
+
+function pickTab(raw: string | string[] | undefined): "manage" | "featured" {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return value === "featured" ? "featured" : "manage";
+}
 
 function pickStatus(raw: string | string[] | undefined): NewsStatus {
   const value = Array.isArray(raw) ? raw[0] : raw;
@@ -42,7 +54,7 @@ function pickCategorySlug(
   return undefined;
 }
 
-export default function AdminNewsListPage(props: {
+export default function AdminStoryPage(props: {
   searchParams: Promise<SearchParams>;
 }) {
   return (
@@ -51,28 +63,50 @@ export default function AdminNewsListPage(props: {
         title={ADMIN_COPY.news.title}
         description={ADMIN_COPY.news.description}
       />
+      <Suspense fallback={<div className="h-11 border-b border-border" />}>
+        <StoryTabs />
+      </Suspense>
       <Suspense fallback={<ListLoading />}>
-        <NewsListData searchParamsPromise={props.searchParams} />
+        <StoryTabContent searchParamsPromise={props.searchParams} />
       </Suspense>
     </div>
   );
 }
 
-async function NewsListData({
+async function StoryTabContent({
   searchParamsPromise,
 }: {
   searchParamsPromise: Promise<SearchParams>;
 }) {
   const searchParams = await searchParamsPromise;
+  if (pickTab(searchParams.tab) === "featured") {
+    return <FeaturedTab />;
+  }
+  return <ManageTab searchParams={searchParams} />;
+}
+
+// 스토리 대표글 탭 — /news 상단 우선 노출 글 최대 4개 드래그 정렬
+async function FeaturedTab() {
+  const [current, candidates] = await Promise.all([
+    getHeroNews(),
+    getHeroCandidates(),
+  ]);
+  return <HeroOrderManager initialItems={current} candidates={candidates} />;
+}
+
+// 스토리 관리 탭 — 글 목록·작성·수정·발행
+async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
   const page = pickPage(searchParams.page);
   const status = pickStatus(searchParams.status);
   const categorySlug = pickCategorySlug(searchParams.categorySlug);
+  const sort = normalizeNewsSort(searchParams.sort);
 
   const result = await listNewsForAdmin({
     page,
     limit: PAGE_SIZE,
     status,
     categorySlug,
+    sort,
   });
   const rows: NewsRow[] = result.items.map((i) => ({
     id: i.id,
@@ -98,6 +132,7 @@ async function NewsListData({
       page={result.page}
       totalPages={result.totalPages}
       status={status}
+      sort={sort}
       stats={stats}
     />
   );

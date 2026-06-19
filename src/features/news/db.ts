@@ -1,8 +1,9 @@
 // 소식(news) Drizzle 쿼리 전담 — DAL. db import는 여기서만 (fullstack.md §3). 공개(published_at <= now) / 어드민(모두) 분리 (codex P1#7). mutation 은 tx 인자 강제 (codex P1#5)
 import { and, asc, desc, eq, gt, ilike, inArray, isNotNull, isNull, like, lte, or, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { categories, heartEvents, news, newsTags } from "@/db/schema";
+import { analyticsEvents, categories, heartEvents, news, newsTags } from "@/db/schema";
 import { ALL_CATEGORY_SLUG } from "./constants";
+import type { NewsSort } from "./admin-sort";
 import { likePattern } from "./search-query";
 import { RICE_SHARING_SLUG } from "./slot-rules";
 
@@ -134,7 +135,33 @@ type AdminListOpts = {
   limit: number;
   status?: "all" | "draft" | "scheduled" | "published";
   categorySlug?: string;
+  sort?: NewsSort;
 };
+
+// 글별 analytics 이벤트 카운트 상관 서브쿼리 — listPublicNews 의 heartCount 서브쿼리 패턴과 동일.
+// '반응' 컬럼(getNewsStatsForAdmin)과 같은 기준으로 정렬(news_view·heart_on)
+function analyticsCount(eventType: "news_view" | "heart_on") {
+  return sql`(select count(*) from ${analyticsEvents} where ${analyticsEvents.newsId} = ${news.id} and ${analyticsEvents.eventType} = ${eventType})`;
+}
+
+// 어드민 정렬 — 발행일(nulls last, draft 는 끝으로) / 제목 가나다 / 작성일 / 조회·공감 많은순. 동순위는 createdAt DESC 로 안정화
+function adminOrderBy(sort: NewsSort = "published_desc") {
+  switch (sort) {
+    case "published_asc":
+      return [sql`${news.publishedAt} asc nulls last`, desc(news.createdAt)];
+    case "title_asc":
+      return [asc(news.title), desc(news.createdAt)];
+    case "created_desc":
+      return [desc(news.createdAt)];
+    case "views_desc":
+      return [desc(analyticsCount("news_view")), desc(news.createdAt)];
+    case "hearts_desc":
+      return [desc(analyticsCount("heart_on")), desc(news.createdAt)];
+    case "published_desc":
+    default:
+      return [sql`${news.publishedAt} desc nulls last`, desc(news.createdAt)];
+  }
+}
 
 function adminStatusWhere(status?: AdminListOpts["status"]) {
   if (status === "draft") return isNull(news.publishedAt);
@@ -145,7 +172,7 @@ function adminStatusWhere(status?: AdminListOpts["status"]) {
   return undefined;
 }
 
-// 어드민 목록 — 모든 글 + 상태/카테고리 필터, createdAt DESC (결정 로그 [T6 정렬키])
+// 어드민 목록 — 모든 글 + 상태/카테고리 필터 + 정렬(기본 발행일 최신순, 운영자 요청)
 export async function listForAdmin(opts: AdminListOpts) {
   const offset = (opts.page - 1) * opts.limit;
   return db
@@ -162,7 +189,7 @@ export async function listForAdmin(opts: AdminListOpts) {
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
     .where(and(adminStatusWhere(opts.status), categoryWhere(opts.categorySlug)))
-    .orderBy(desc(news.createdAt))
+    .orderBy(...adminOrderBy(opts.sort))
     .limit(opts.limit)
     .offset(offset);
 }

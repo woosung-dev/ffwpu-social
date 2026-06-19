@@ -4,6 +4,7 @@ import { cache } from "react";
 import { db } from "@/db";
 import { deleteByPrefix } from "@/features/storage";
 import * as newsDb from "./db";
+import { ANALYTICS_SORTS, DEFAULT_NEWS_SORT, type NewsSort } from "./admin-sort";
 import { slotsToClearOnTransition } from "./slot-rules";
 import type { ListNewsQuery, NewsInput } from "./schemas";
 
@@ -45,15 +46,16 @@ export async function getAdminNewsDetail(id: string) {
   return newsDb.getAdminNewsById(id);
 }
 
-// 어드민 목록 (T10) — 페이지네이션 + status·categorySlug 필터
+// 어드민 목록 (T10) — 페이지네이션 + status·categorySlug 필터 + 정렬(기본 발행일 최신순)
 export async function listNewsForAdmin(opts: {
   page: number;
   limit: number;
   status?: "all" | "draft" | "scheduled" | "published";
   categorySlug?: string;
+  sort?: NewsSort;
 }) {
   const [items, total] = await Promise.all([
-    newsDb.listForAdmin(opts),
+    listForAdminResilient(opts),
     newsDb.countForAdmin({
       status: opts.status,
       categorySlug: opts.categorySlug,
@@ -61,6 +63,20 @@ export async function listNewsForAdmin(opts: {
   ]);
   const totalPages = Math.max(1, Math.ceil(total / opts.limit));
   return { items, total, totalPages, page: opts.page, limit: opts.limit };
+}
+
+// 조회·공감 정렬은 analytics_events 집계 의존 — 미마이그레이션 등으로 쿼리 실패 시 기본 정렬로 폴백(목록은 항상 렌더, 어드민 page.tsx stats degrade 와 동일 철학)
+async function listForAdminResilient(
+  opts: Parameters<typeof newsDb.listForAdmin>[0],
+) {
+  try {
+    return await newsDb.listForAdmin(opts);
+  } catch (error) {
+    if (opts.sort && ANALYTICS_SORTS.has(opts.sort)) {
+      return newsDb.listForAdmin({ ...opts, sort: DEFAULT_NEWS_SORT });
+    }
+    throw error;
+  }
 }
 
 // 대시보드 — 글 현황 건수(발행·예약·임시저장). 글 목록은 /admin/news 로 분리 (운영자 피드백 [대시보드/글 분리])
