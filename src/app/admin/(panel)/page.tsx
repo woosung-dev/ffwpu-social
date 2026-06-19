@@ -1,4 +1,4 @@
-// 어드민 대시보드 — 글 현황 + 빠른 작업 + 최근 콘텐츠 분석(기간 선택 7/30/90). 글 목록 관리는 /admin/news 로 분리 (운영자 피드백 [대시보드/글 분리]).
+// 어드민 대시보드 — 최근 콘텐츠 분석(기간 선택 7/30/90) + 글 현황 + 빠른 작업(운영자 요청 순서). 글 목록 관리는 /admin/news 로 분리 (운영자 피드백 [대시보드/글 분리]).
 // 분석 본문은 독립 ErrorBoundary+Suspense 로 격리 — 조회 실패(예: analytics_events 미마이그레이션)가 대시보드 전체를 죽이지 않게 부분 degrade. 헤더·기간 선택은 항상 렌더.
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -34,15 +34,16 @@ export default function AdminDashboardPage({
     <div className="space-y-6">
       <AdminPageHeader title={C.title} description={C.description} />
 
+      {/* 운영자 요청 순서: 최근 콘텐츠 분석 → 글 현황 → 빠른 작업 */}
+      <Suspense fallback={<AnalyticsCardLoading />}>
+        <AnalyticsCard searchParamsPromise={searchParams} />
+      </Suspense>
+
       <Suspense fallback={<StatusLoading />}>
         <StatusSection />
       </Suspense>
 
       <QuickActions />
-
-      <Suspense fallback={<AnalyticsCardLoading />}>
-        <AnalyticsCard searchParamsPromise={searchParams} />
-      </Suspense>
     </div>
   );
 }
