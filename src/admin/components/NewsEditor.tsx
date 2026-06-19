@@ -78,8 +78,12 @@ export function NewsEditor({ mode, categories, initial }: Props) {
   const router = useRouter();
   const isEdit = mode === "edit";
 
+  // 새 글 세션 nonce — 발행/저장 성공 후 다음 "새 글" 을 위한 깨끗한 식별자 재생성용.
+  // cacheComponents(PPR)가 /admin/news/new 세그먼트의 클라 상태를 보존·복원하므로, nonce 를 올려
+  // generatedId·에디터 key·폼 상태를 함께 비워야 이전 글이 남지 않는다 (prod 재현·검증).
+  const [newPostNonce, setNewPostNonce] = useState(0);
   // 새 글도 client 에서 UUID 생성 → 업로드 prefix(news/{id}/) 와 news.id 를 동일하게 (codex v2 P2#2, temp prefix 제거)
-  const generatedId = useMemo(() => crypto.randomUUID(), []);
+  const generatedId = useMemo(() => crypto.randomUUID(), [newPostNonce]);
   const newsId = isEdit ? initial!.id : generatedId;
   const scope = { newsId };
 
@@ -128,6 +132,21 @@ export function NewsEditor({ mode, categories, initial }: Props) {
               : "입력값을 확인해주세요.";
           setError(msg);
           return;
+        }
+        // 새 글 성공 시 보존된 인스턴스를 직접 비운다 — PPR Router Cache 가 /admin/news/new 세그먼트를
+        // 복원해 다음 "새 글" 진입 시 이전 입력(제목·본문 등)이 남는 버그 차단. nonce 를 올려 에디터도 리마운트.
+        if (!isEdit) {
+          form.reset({
+            title: "",
+            categoryId: "",
+            tags: [],
+            coverImageUrl: null,
+            coverImageWidth: null,
+            coverImageHeight: null,
+          });
+          setBody({ type: "doc", content: [] });
+          setPublishAt(new Date());
+          setNewPostNonce((n) => n + 1);
         }
         // 성공 토스트 후 목록으로 이동 — 신규·수정 공통(사용자 요청). 토스트는 sonner 가 네비게이션 넘어 유지
         const state = getPublishState(publishedAt);
@@ -204,6 +223,7 @@ export function NewsEditor({ mode, categories, initial }: Props) {
               </Label>
               <div className="admin-editor-embed">
                 <SimpleEditor
+                  key={newsId}
                   defaultValue={initial?.body}
                   onChange={setBody}
                   scope={scope}
