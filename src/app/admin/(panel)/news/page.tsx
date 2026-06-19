@@ -17,6 +17,7 @@ import { HeroOrderManager } from "@/admin/components/HeroOrderManager";
 import { StoryTabs } from "@/admin/components/StoryTabs";
 import { AdminPageHeader } from "@/admin/components/AdminPageHeader";
 import { ADMIN_COPY } from "@/admin/copy";
+import { normalizeNewsSort } from "@/features/news/admin-sort";
 
 export const metadata: Metadata = {
   title: "활동 스토리 관리 | 사회공헌단 어드민",
@@ -98,12 +99,14 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
   const page = pickPage(searchParams.page);
   const status = pickStatus(searchParams.status);
   const categorySlug = pickCategorySlug(searchParams.categorySlug);
+  const sort = normalizeNewsSort(searchParams.sort);
 
   const result = await listNewsForAdmin({
     page,
     limit: PAGE_SIZE,
     status,
     categorySlug,
+    sort,
   });
   const rows: NewsRow[] = result.items.map((i) => ({
     id: i.id,
@@ -129,6 +132,7 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
       page={result.page}
       totalPages={result.totalPages}
       status={status}
+      sort={sort}
       stats={stats}
     />
   );
