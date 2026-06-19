@@ -56,6 +56,7 @@ import {
 } from "@/components/tiptap-ui/color-highlight-popover"
 import { TextColorPopover } from "@/components/tiptap-ui/text-color-popover"
 import { TableButton } from "@/components/tiptap-ui/table-button"
+import { TableCellColorPopover } from "@/components/tiptap-ui/table-cell-color-popover"
 import {
   LinkPopover,
   LinkContent,
@@ -197,6 +198,7 @@ const MainToolbarContent = ({
         <ImageRowButton scope={scope} />
         <YoutubeButton />
         <TableButton />
+        <TableCellColorPopover />
       </ToolbarGroup>
     </>
   )

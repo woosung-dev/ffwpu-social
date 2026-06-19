@@ -41,16 +41,6 @@ export const ALLOWED_HIGHLIGHTS = [
   "#d6e4ff",
 ] as const;
 
-// 표 셀 배경색 "빠른 선택" 팔레트(툴바 프리셋) — 헤더용 회색 + 파스텔 4.
-// 자유 색은 sanitize 의 normalizeColor 가 hex 검증으로 통과(붙여넣은 표 음영 보존).
-export const ALLOWED_TABLE_CELL_COLORS = [
-  "#f1f3f5",
-  "#fff3a3",
-  "#cdeccf",
-  "#d6e4ff",
-  "#ffd1e8",
-] as const;
-
 // 이미지 크기 — 네이티브 resize 가 px(width/height)로 저장. 공개 렌더는 max-width:100% 로 모바일 캡.
 export const IMAGE_PX_MAX = 4000;
 

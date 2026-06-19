@@ -8,9 +8,6 @@ import { ChevronDownIcon } from "@/components/tiptap-icons/chevron-down-icon"
 // --- Hooks ---
 import { useTiptapEditor } from "@/hooks/use-tiptap-editor"
 
-// --- Lib ---
-import { ALLOWED_TABLE_CELL_COLORS } from "@/features/news/render/editor-allowlist"
-
 // --- UI Primitives ---
 import type { ButtonProps } from "@/components/tiptap-ui-primitive/button"
 import { Button, ButtonGroup } from "@/components/tiptap-ui-primitive/button"
@@ -101,47 +98,6 @@ export const TableButton = React.forwardRef<HTMLButtonElement, TableButtonProps>
                   </DropdownMenuItem>
                 ))}
               </ButtonGroup>
-
-              {/* 선택 셀 배경색 — 표 안에서만. 스와치 클릭 시 setCellAttribute 로 선택 셀(들) 적용 */}
-              {inTable && (
-                <div className="tiptap-table-cell-colors">
-                  <span className="tiptap-table-cell-colors-label">셀 색</span>
-                  <div className="tiptap-table-cell-colors-swatches">
-                    {ALLOWED_TABLE_CELL_COLORS.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        aria-label={`셀 배경색 ${color}`}
-                        title={color}
-                        className="tiptap-table-cell-color-swatch"
-                        style={{ backgroundColor: color }}
-                        onClick={() => {
-                          editor
-                            .chain()
-                            .focus()
-                            .setCellAttribute("backgroundColor", color)
-                            .run()
-                          setIsOpen(false)
-                        }}
-                      />
-                    ))}
-                    <button
-                      type="button"
-                      aria-label="셀 배경색 지우기"
-                      title="지우기"
-                      className="tiptap-table-cell-color-swatch tiptap-table-cell-color-clear"
-                      onClick={() => {
-                        editor
-                          .chain()
-                          .focus()
-                          .setCellAttribute("backgroundColor", null)
-                          .run()
-                        setIsOpen(false)
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
             </CardBody>
           </Card>
         </DropdownMenuContent>
