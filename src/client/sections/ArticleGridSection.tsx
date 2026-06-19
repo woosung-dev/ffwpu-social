@@ -59,7 +59,7 @@ export function ArticleGridSection({ items }: Props) {
             href="/news"
             className="mt-10 inline-flex shrink-0 items-center gap-2 py-2 text-base font-bold text-[#E9CFFF] hover:opacity-90 md:mt-0 wide:mt-[60px]"
           >
-            아티클 더 보러가기
+            더 많은 스토리 보러가기
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset */}
             <img
               src="/icons/article-cta-arrow.svg"

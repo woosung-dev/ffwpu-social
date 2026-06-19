@@ -95,7 +95,7 @@ export function KpiSection({ metricsBySlug }: Props) {
       className={KPI_SECTION_SHELL}
     >
       {/* 섹션 방향: base/md/lg column · wide row(헤딩 좌 | 대시보드 우). 헤딩↔대시보드 gap = 30/40/40/70 (discrete) */}
-      {/* 헤더 클릭 착지(ADR-038): id 를 콘텐츠 래퍼에 둬 상단 패딩을 헤더 뒤로 흡수 → "한 해동안…" 헤딩이 헤더 아래 호흡 간격(16/20/24)으로 착지 */}
+      {/* 헤더 클릭 착지(ADR-038): id 를 콘텐츠 래퍼에 둬 상단 패딩을 헤더 뒤로 흡수 → "숫자로 보는…" 헤딩이 헤더 아래 호흡 간격(16/20/24)으로 착지 */}
       <SectionContainer
         id="kpi"
         className="flex scroll-mt-4 flex-col gap-[30px] md:scroll-mt-5 md:gap-10 lg:scroll-mt-6 wide:flex-row wide:items-start wide:gap-[70px]"
@@ -111,9 +111,9 @@ export function KpiSection({ metricsBySlug }: Props) {
             className="text-[22px] font-bold leading-[1.3] md:text-[36px]"
           >
             {/* <wide: 풀폭 자연 줄바꿈 · wide+: 좁은 251 컬럼 강제 2줄 */}
-            한 해동안{" "}
+            숫자로 보는{" "}
             <br className="hidden wide:block" />
-            만들어낸 변화
+            우리의 변화
           </h2>
           <p className="text-[14px] font-medium leading-[1.35] text-pretty md:text-[16px] md:leading-[1.5]">
             가정연합은 도움이 필요한 사람들에게 오랜기간 손을 건네왔습니다.

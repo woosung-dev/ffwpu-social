@@ -1,4 +1,4 @@
-// 사용자 랜딩 페이지 — Figma 96:7689 (1440) / 331:7984 (1920). 5섹션 (Hero / KPI / Story / ArticleGrid / Partners) + Footer는 PublicLayout 처리.
+// 사용자 랜딩 페이지 — Figma 96:7689 (1440) / 331:7984 (1920). Hero / KPI / Story / ArticleGrid (+ Partners 섹션은 파트너 미확정으로 임시 숨김) + Footer는 PublicLayout 처리.
 // DB 연결 (PR B): kpi_metrics + news.story_slot/featured_rank. 섹션별 *WithData 래퍼가 자기 데이터만 단독 쿼리 — Suspense 격리 (Next.js 16 Cache Components)
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -8,13 +8,12 @@ import {
   HeroBanner,
   KpiSection,
   KPI_SECTION_SHELL,
-  PartnersSection,
   StorySection,
   STORY_SECTION_SHELL,
   type StorySlotItem,
 } from "@/client/sections";
 import { SectionContainer } from "@/client/components/layout";
-import { Reveal, RevealGroup } from "@/client/components/motion";
+import { RevealGroup } from "@/client/components/motion";
 import { landingDb } from "@/features/landing";
 
 export const metadata: Metadata = {
@@ -54,9 +53,11 @@ export default function Home() {
       <Suspense fallback={<ArticleGridLoading />}>
         <ArticleGridSectionWithData />
       </Suspense>
-      <Reveal>
-        <PartnersSection />
-      </Reveal>
+      {/* 사회공헌국 요청 — 파트너 미확정으로 섹션 전체 임시 숨김. 파트너 확정 시
+          PartnersSection·Reveal import 복원 + 아래 블록 주석 해제로 복구.
+          <Reveal>
+            <PartnersSection />
+          </Reveal> */}
     </>
   );
 }

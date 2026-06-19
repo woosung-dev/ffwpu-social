@@ -21,10 +21,9 @@ export function SubBanner() {
           />
           <div className="h-px w-32 bg-brand-soft/40" aria-hidden />
           <p className="text-[14px] font-medium leading-relaxed text-brand-soft">
-            <span className="font-black text-brand-primary">Sow Good</span>{" "}
-            가족이 아니어도, 같은 동네가 아니어도,
+            위하는 마음으로
             <br />
-            밥상을 함께하는 사람이 있다면 우리는 이미 식구입니다.
+            나눔과 봉사의 씨앗을 심겠습니다.
           </p>
         </div>
 
@@ -39,10 +38,9 @@ export function SubBanner() {
           />
           <div aria-hidden className="h-9 w-px shrink-0 bg-brand-soft/40" />
           <p className="break-keep text-[16px] font-medium leading-relaxed text-brand-soft">
-            <span className="font-black text-brand-primary">Sow Good</span>{" "}
-            가족이 아니어도, 같은 동네가 아니어도,
+            위하는 마음으로
             <br />
-            밥상을 함께하는 사람이 있다면 우리는 이미 식구입니다.
+            나눔과 봉사의 씨앗을 심겠습니다.
           </p>
         </div>
       </SectionContainer>
