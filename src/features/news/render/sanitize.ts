@@ -168,7 +168,13 @@ function sanitizeNode(
         20,
         1,
       );
-      return { type: node.type, attrs: { colspan, rowspan }, content: childContent() };
+      const attrs: Record<string, string | number> = { colspan, rowspan };
+      // 셀 배경색 — hex/rgb 만 통과(임의 CSS·url() 차단). 붙여넣은 표 음영도 normalizeColor 로 보존.
+      const bg = normalizeColor(
+        isObject(node.attrs) ? node.attrs.backgroundColor : undefined,
+      );
+      if (bg) attrs.backgroundColor = bg;
+      return { type: node.type, attrs, content: childContent() };
     }
     case "youtube": {
       const src =
