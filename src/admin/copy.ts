@@ -7,13 +7,20 @@ export const ADMIN_COPY = {
     brand: "Sow Good 어드민",
     brandSub: "사회공헌국 전용",
     dashboard: "대시보드",
-    groupNews: "소식",
-    news: "소식 글 관리",
-    newsHero: "소식 대표 글",
-    categories: "소식 카테고리",
-    groupMain: "메인 페이지",
-    kpi: "임팩트 데이터",
-    landing: "메인 페이지 노출 글·통계",
+    // 숫자로 보는 실천 (구 '메인 페이지' KPI)
+    groupNumbers: "숫자로 보는 실천",
+    kpi: "데이터 관리",
+    // 밥이 사랑이다 (구 랜딩 'StorySection' — 카피·통계·상단 대표 사진)
+    groupBob: "밥이 사랑이다",
+    landing: "데이터 관리",
+    // 스토리 (메인 스토리 카드 + 소식 운영 + 카테고리)
+    groupStory: "스토리",
+    mainStory: "메인 스토리 관리",
+    story: "활동 스토리 관리",
+    storyTabFeatured: "스토리 대표글",
+    storyTabManage: "스토리 관리",
+    categories: "스토리 카테고리",
+    // 설정
     groupSystem: "설정",
     accounts: "관리자 계정",
     logout: "로그아웃",
@@ -29,8 +36,8 @@ export const ADMIN_COPY = {
     quickTitle: "빠른 작업",
     quickNew: "새 글 작성",
     quickNewSub: "소식 글을 새로 씁니다",
-    quickNews: "소식 글 관리",
-    quickNewsSub: "글 목록·수정·발행",
+    quickNews: "활동 스토리 관리",
+    quickNewsSub: "대표글·글 목록·수정·발행",
     quickMain: "메인 페이지 꾸미기",
     quickMainSub: "노출 글·통계 설정",
     quickSite: "공개 사이트 보기",
@@ -50,9 +57,9 @@ export const ADMIN_COPY = {
     referrerEmpty: "기록된 외부 유입이 없습니다.",
   },
 
-  // ─── 소식 카테고리 ───
+  // ─── 스토리 카테고리 (구 소식 카테고리) ───
   categories: {
-    title: "소식 카테고리",
+    title: "스토리 카테고리",
     description:
       "사용자 소식 페이지의 탭을 관리합니다. 순서를 드래그로 바꾸면 탭 순서도 그대로 바뀝니다.",
     titleHelp:
@@ -91,11 +98,11 @@ export const ADMIN_COPY = {
       "숫자 뒤에 붙는 단위예요. 예: 명, 시간, 건. '이상'을 뜻하는 '+'를 붙이려면 '명+'처럼 함께 적으면 계속 유지돼요.",
   },
 
-  // ─── 메인 페이지 노출 글·통계 (구 메인 큐레이션) ───
+  // ─── 밥이 사랑이다 (구 랜딩 StorySection — 카피·통계·상단 대표 사진) ───
   landing: {
-    title: "메인 페이지 노출 글·통계",
+    title: "밥이 사랑이다",
     description:
-      "메인(랜딩) 페이지의 '밥이 사랑이다'와 '메인 스토리'에 어떤 글·숫자를 보여줄지 정합니다.",
+      "메인(랜딩) 페이지 '밥이 사랑이다' 영역의 카피·통계·상단 대표 사진을 정합니다.",
     statsTitle: "'밥이 사랑이다' 통계",
     statsHelp:
       "메인 페이지 '밥이 사랑이다' 영역의 작은 숫자예요. 화면에 보이는 값이 비어 있으면 그 통계는 숨겨집니다.",
@@ -119,9 +126,16 @@ export const ADMIN_COPY = {
       "엔터로 줄을 나눠 주세요.\n예:\n온기가 필요한 이웃에게 밥 한 공기의 진심을 전하며,\n더 큰 가족을 만들어갑니다.",
   },
 
-  // ─── 소식 대표 글 (구 소식 히어로) ───
+  // ─── 메인 스토리 관리 (랜딩 ArticleGrid 카드 큐레이션, 구 landing featured) ───
+  mainStory: {
+    title: "메인 스토리 관리",
+    description:
+      "메인(랜딩) 페이지 '메인 스토리' 카드에 어떤 글을 보여줄지 정합니다.",
+  },
+
+  // ─── 스토리 대표글 탭 (구 소식 히어로) ───
   newsHero: {
-    title: "소식 대표 글",
+    title: "스토리 대표글",
     description: "활동 스토리(소식) 페이지 맨 위에 크게 도는 슬라이드를 정합니다.",
     titleHelp: "소식 페이지 맨 위 슬라이드에 크게 보이는 글이에요. 최대 4개까지 넣을 수 있어요.",
   },
@@ -135,10 +149,11 @@ export const ADMIN_COPY = {
     createNotice: "새 계정은 '최고 관리자' 권한으로 만들어져요.",
   },
 
-  // ─── 소식 글 관리 / 작성 ───
+  // ─── 활동 스토리 관리 (소식 운영 — 대표글 슬라이드 + 글 목록/작성/수정) ───
   news: {
-    title: "소식 글 관리",
-    description: "글 목록·작성·수정·발행을 여기서 모두 처리합니다.",
+    title: "활동 스토리 관리",
+    description:
+      "소식 페이지 상단 대표 슬라이드와 글 목록·작성·수정·발행을 탭으로 관리합니다.",
     statusHelp:
       "임시 저장은 나만 보는 초안, 예약은 정한 시각에 자동 발행, 발행은 지금 사용자에게 보이는 상태예요.",
     statsHelp:

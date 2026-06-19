@@ -50,7 +50,7 @@ export default function NewsListPage({
     <>
       <SubBanner />
 
-      {/* 소식 히어로 — /admin/news-hero 에서 지정한 우선 글 (없으면 비노출) */}
+      {/* 소식 히어로 — '활동 스토리 관리 → 스토리 대표글' 탭에서 지정한 우선 글 (없으면 비노출) */}
       <Suspense fallback={null}>
         <NewsHero />
       </Suspense>
