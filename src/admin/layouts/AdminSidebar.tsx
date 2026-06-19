@@ -1,10 +1,10 @@
-// 어드민 좌측 네비게이션 — 대시보드 단독 + 소식/메인 페이지/설정 그룹(공개 사이트 섹션명 정합). 라벨은 copy.ts SSoT. 1024↓ 토글, 인덱스(/admin)는 정확 일치로 활성 판정. ADR-024 F3 src/admin/ 전용
+// 어드민 좌측 네비게이션 — 대시보드 단독 + 숫자로 보는 실천/밥이 사랑이다/스토리/설정 그룹(공개 사이트 섹션명 정합). 라벨은 copy.ts SSoT. 1024↓ 토글, 인덱스(/admin)는 정확 일치로 활성 판정. ADR-024 F3 src/admin/ 전용
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { BarChart3, FolderTree, LayoutDashboard, LogOut, Menu, Newspaper, Sparkles, Star, Users, X } from "lucide-react";
+import { BarChart3, FolderTree, Heart, LayoutDashboard, LogOut, Menu, Newspaper, Star, Users, X } from "lucide-react";
 
 import { logoutAction } from "@/features/auth/actions";
 import { ADMIN_COPY } from "@/admin/copy";
@@ -31,18 +31,23 @@ const NAV_GROUPS: readonly NavGroup[] = [
     ],
   },
   {
-    label: ADMIN_COPY.nav.groupNews,
+    label: ADMIN_COPY.nav.groupNumbers,
     items: [
-      { href: "/admin/news", label: ADMIN_COPY.nav.news, icon: Newspaper },
-      { href: "/admin/categories", label: ADMIN_COPY.nav.categories, icon: FolderTree },
-      { href: "/admin/news-hero", label: ADMIN_COPY.nav.newsHero, icon: Star },
+      { href: "/admin/kpi", label: ADMIN_COPY.nav.kpi, icon: BarChart3 },
     ],
   },
   {
-    label: ADMIN_COPY.nav.groupMain,
+    label: ADMIN_COPY.nav.groupBob,
     items: [
-      { href: "/admin/kpi", label: ADMIN_COPY.nav.kpi, icon: BarChart3 },
-      { href: "/admin/landing", label: ADMIN_COPY.nav.landing, icon: Sparkles },
+      { href: "/admin/landing", label: ADMIN_COPY.nav.landing, icon: Heart },
+    ],
+  },
+  {
+    label: ADMIN_COPY.nav.groupStory,
+    items: [
+      { href: "/admin/main-story", label: ADMIN_COPY.nav.mainStory, icon: Star },
+      { href: "/admin/news", label: ADMIN_COPY.nav.story, icon: Newspaper },
+      { href: "/admin/categories", label: ADMIN_COPY.nav.categories, icon: FolderTree },
     ],
   },
   {

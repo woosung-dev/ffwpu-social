@@ -19,8 +19,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { HelpTip } from "@/admin/components/HelpTip";
 import { ADMIN_COPY } from "@/admin/copy";
+import { NEWS_SORT_KEYS, type NewsSort } from "@/features/news/admin-sort";
 
 export type NewsRow = {
   id: string;
@@ -47,7 +55,18 @@ type Props = {
   page: number;
   totalPages: number;
   status: NewsStatus;
+  sort: NewsSort;
   stats: NewsStatsMap;
+};
+
+// 정렬 라벨 — 키는 admin-sort.ts SSoT, 운영자 대면 문구는 이 렌더러에 (STATUS_LABEL 패턴 동일)
+const SORT_LABEL: Record<NewsSort, string> = {
+  published_desc: "발행일 최신순",
+  published_asc: "발행일 오래된순",
+  title_asc: "제목 가나다순",
+  created_desc: "작성일 최신순",
+  views_desc: "조회 많은순",
+  hearts_desc: "공감 많은순",
 };
 
 const STATUS_LABEL: Record<NewsStatus, string> = {
@@ -71,6 +90,11 @@ function formatDate(d: Date): string {
     month: "2-digit",
     day: "2-digit",
   });
+}
+
+// 발행일 표시 — 기본 정렬(발행일 최신순) 검증용. 임시저장은 발행일 없음 → '미발행'
+function formatPublishDate(publishedAt: Date | null): string {
+  return publishedAt ? formatDate(publishedAt) : "미발행";
 }
 
 function getPublishState(publishedAt: Date | null): NewsPublishState {
@@ -109,7 +133,7 @@ function StatCell({ s }: { s: NewsStats | undefined }) {
   );
 }
 
-export function NewsTable({ rows, page, totalPages, status, stats }: Props) {
+export function NewsTable({ rows, page, totalPages, status, sort, stats }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -127,6 +151,15 @@ export function NewsTable({ rows, page, totalPages, status, stats }: Props) {
   const setPage = (p: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(p));
+    router.push(`/admin/news?${params}`);
+  };
+
+  // 정렬 변경 — 기본값(발행일 최신순)이면 쿼리 비움, 페이지는 1로 리셋. tab=manage 등 다른 파라미터는 보존
+  const setSort = (newSort: NewsSort) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (newSort === "published_desc") params.delete("sort");
+    else params.set("sort", newSort);
+    params.delete("page");
     router.push(`/admin/news?${params}`);
   };
 
@@ -205,9 +238,29 @@ export function NewsTable({ rows, page, totalPages, status, stats }: Props) {
           ))}
           <HelpTip>{ADMIN_COPY.news.statusHelp}</HelpTip>
         </div>
-        <Button asChild>
-          <Link href="/admin/news/new">+ 새 글</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* 정렬 — 기본 발행일 최신순. URL ?sort= 구동(뒤로가기 시 정렬 보존) */}
+          <Select
+            value={sort}
+            onValueChange={(v) => setSort(v as NewsSort)}
+            disabled={isPending}
+          >
+            <SelectTrigger className="h-9 w-[148px]" aria-label="정렬 기준">
+              <span className="text-ink-subtle">정렬</span>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {NEWS_SORT_KEYS.map((key) => (
+                <SelectItem key={key} value={key}>
+                  {SORT_LABEL[key]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button asChild>
+            <Link href="/admin/news/new">+ 새 글</Link>
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -246,7 +299,7 @@ export function NewsTable({ rows, page, totalPages, status, stats }: Props) {
                       <th className="py-3 pr-4 font-medium">제목</th>
                       <th className="py-3 pr-4 font-medium">카테고리</th>
                       <th className="py-3 pr-4 font-medium">상태</th>
-                      <th className="py-3 pr-4 font-medium">작성일</th>
+                      <th className="py-3 pr-4 font-medium">발행일</th>
                       <th className="py-3 pr-4 font-medium">
                         <span className="inline-flex items-center gap-1">
                           반응
@@ -282,7 +335,7 @@ export function NewsTable({ rows, page, totalPages, status, stats }: Props) {
                             </span>
                           </td>
                           <td className="py-3 pr-4 text-ink-subtle">
-                            {formatDate(row.createdAt)}
+                            {formatPublishDate(row.publishedAt)}
                           </td>
                           <td className="py-3 pr-4">
                             <StatCell s={stats[row.id]} />
@@ -321,7 +374,7 @@ export function NewsTable({ rows, page, totalPages, status, stats }: Props) {
                         </span>
                       </div>
                       <p className="text-xs text-ink-subtle">
-                        {row.categoryName} · {formatDate(row.createdAt)}
+                        {row.categoryName} · {formatPublishDate(row.publishedAt)}
                       </p>
                       <StatCell s={stats[row.id]} />
                       {renderRowActions(row, hasPublishAt)}
