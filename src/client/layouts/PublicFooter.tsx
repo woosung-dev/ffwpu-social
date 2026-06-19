@@ -9,7 +9,7 @@ export function PublicFooter() {
         <div aria-hidden className="h-[17px] w-px bg-ink-on-purple/40" />
         {/* 법인명(H-2 미회신) 회신 시 카피라이트 앞 또는 뒤에 추가 */}
         <p className="text-[10px] font-semibold whitespace-nowrap md:text-base">
-          COPYRIGHT 2026 © Sow Good All rights reserved
+          © 2026 Sow Good All rights reserved.
         </p>
       </div>
     </footer>

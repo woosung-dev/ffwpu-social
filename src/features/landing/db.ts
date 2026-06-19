@@ -12,7 +12,7 @@ function publicPublishedWhere() {
   return and(isNotNull(news.publishedAt), lte(news.publishedAt, sql`now()`));
 }
 
-// 활성 impact KPI — KpiSection "한 해동안 만들어낸 변화" (4행). section='impact' 필수 — 없으면 story 3행이 섞여 7개로 깨짐
+// 활성 impact KPI — KpiSection "숫자로 보는 우리의 변화" (4행). section='impact' 필수 — 없으면 story 3행이 섞여 7개로 깨짐
 export async function listActiveKpiMetrics() {
   return db
     .select({

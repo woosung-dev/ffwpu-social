@@ -7,8 +7,8 @@ export const ADMIN_COPY = {
     brand: "Sow Good 어드민",
     brandSub: "사회공헌국 전용",
     dashboard: "대시보드",
-    // 숫자로 보는 실천 (구 '메인 페이지' KPI)
-    groupNumbers: "숫자로 보는 실천",
+    // 숫자로 보는 우리의 변화 (구 '메인 페이지' KPI) — 공개 섹션명과 그룹명 일치
+    groupNumbers: "숫자로 보는 우리의 변화",
     kpi: "데이터 관리",
     // 밥이 사랑이다 (구 랜딩 'StorySection' — 카피·통계·상단 대표 사진)
     groupBob: "밥이 사랑이다",
@@ -78,11 +78,11 @@ export const ADMIN_COPY = {
     slugLockNotice: "URL 주소는 한 번 정하면 바꿀 수 없어요. 순서는 목록에서 드래그로 조정하세요.",
   },
 
-  // ─── 임팩트 데이터 (구 KPI) ───
+  // ─── 숫자로 보는 우리의 변화 (구 KPI/임팩트 데이터) ───
   kpi: {
-    title: "임팩트 데이터",
+    title: "숫자로 보는 우리의 변화",
     description:
-      "메인 페이지 '한 해동안 만들어낸 변화'에 보이는 숫자예요. 저장하면 사용자 사이트에 바로 반영됩니다.",
+      "메인 페이지 '숫자로 보는 우리의 변화'에 보이는 숫자예요. 저장하면 사용자 사이트에 바로 반영됩니다.",
     titleHelp: "방문자에게 우리 활동의 성과를 숫자로 보여주는 영역이에요.",
     labelLabel: "제목",
     labelHelp: "예: 누적 봉사자 수",
