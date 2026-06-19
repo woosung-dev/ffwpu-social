@@ -12,7 +12,7 @@ export const ADMIN_COPY = {
     newsHero: "소식 대표 글",
     categories: "소식 카테고리",
     groupMain: "메인 페이지",
-    kpi: "임팩트 데이터",
+    kpi: "숫자로 보는 우리의 변화",
     landing: "메인 페이지 노출 글·통계",
     groupSystem: "설정",
     accounts: "관리자 계정",
@@ -71,9 +71,9 @@ export const ADMIN_COPY = {
     slugLockNotice: "URL 주소는 한 번 정하면 바꿀 수 없어요. 순서는 목록에서 드래그로 조정하세요.",
   },
 
-  // ─── 임팩트 데이터 (구 KPI) ───
+  // ─── 숫자로 보는 우리의 변화 (구 KPI/임팩트 데이터) ───
   kpi: {
-    title: "임팩트 데이터",
+    title: "숫자로 보는 우리의 변화",
     description:
       "메인 페이지 '숫자로 보는 우리의 변화'에 보이는 숫자예요. 저장하면 사용자 사이트에 바로 반영됩니다.",
     titleHelp: "방문자에게 우리 활동의 성과를 숫자로 보여주는 영역이에요.",

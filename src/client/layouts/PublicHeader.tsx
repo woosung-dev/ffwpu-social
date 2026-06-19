@@ -34,9 +34,9 @@ type MenuItem = {
   activeOnSubpage?: boolean;
 };
 
-// 매핑(ADR-038): 임팩트 데이터→#kpi / 밥이 사랑이다→#story / 메인 스토리→#stories(랜딩 카드 그리드) / 활동 스토리→/news(소식 게시판).
+// 매핑(ADR-038): 숫자로 보는 우리의 변화→#kpi / 밥이 사랑이다→#story / 메인 스토리→#stories(랜딩 카드 그리드) / 활동 스토리→/news(소식 게시판).
 const MENU: readonly MenuItem[] = [
-  { id: "kpi", label: "임팩트 데이터", section: "kpi" },
+  { id: "kpi", label: "숫자로 보는 우리의 변화", section: "kpi" },
   { id: "story", label: "밥이 사랑이다", section: "story" },
   { id: "stories", label: "메인 스토리", section: "stories" },
   { id: "news", label: "활동 스토리", href: "/news", activeOnSubpage: true },
