@@ -53,8 +53,14 @@ async function EditNewsData({
       name: c.isActive ? c.name : `${c.name} (비활성)`,
     }));
 
+  // cacheComponents 가 네비게이션 간 NewsEditor 클라 상태를 보존(React Activity)하므로, 새 push 진입마다
+  // 새 key 로 리마운트해 DB 현재값(initial)으로 재초기화한다(미저장 편집 잔존 차단). back/forward 는 보존.
+  // key 는 React 재조정용일 뿐 — 업로드 scope·news.id 는 아래 initial.id 가 그대로 담당.
+  const draftKey = crypto.randomUUID();
+
   return (
     <NewsEditor
+      key={draftKey}
       mode="edit"
       categories={categories}
       initial={{
