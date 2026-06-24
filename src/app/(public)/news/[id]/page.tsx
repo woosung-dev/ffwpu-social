@@ -116,31 +116,32 @@ async function NewsDetailContent({
           publishedAt={item.publishedAt}
         />
 
-        {/* 태그 — 해시태그 알약 (Figma 749:8073: bg #F9FAFB·Medium 18). 1440 리듬: 제목 블록 →60→ 태그. 모바일 mt-8 유지 [추론 — 모바일 상세 프레임 없음] */}
-        {item.tags.length > 0 && (
-          <ul className="mt-8 flex flex-wrap items-center gap-2 lg:mt-[60px]">
-            {item.tags.map((tag) => (
-              <li key={tag}>
-                <span className="inline-flex items-center rounded-full border-[1.3px] border-tag-default bg-gray-50 px-4 py-1 text-base font-medium text-tag-default lg:text-lg">
-                  #{tag}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {/* 본문 — 1440 리듬: 태그 →60→ 본문 */}
+        {/* 본문 — 1440 리듬: 제목 블록 →60→ 본문 */}
         <div className="mt-10 lg:mt-[60px]">
           <NewsBodyRenderer body={item.body} />
         </div>
 
-        {/* Bottom 줄 — 공유(좌) + 공감 pill(우). Figma 749:8083, 본문 →50→ Bottom(h40) */}
-        <div className="mt-8 flex items-center justify-between lg:mt-[50px]">
-          <ShareRow title={item.title} newsId={item.id} />
-          <DetailHeart newsId={item.id} count={item.heartCount} />
+        {/* 하단 — Figma 1024:7940/7930: 공감(중앙) → 공유(중앙·30) → 태그(좌·50). 본문 →120→ 공감.
+            모바일 값은 wide 리듬 비례 축소 [추론 — 모바일 상세 프레임 없음] */}
+        <div className="mt-16 lg:mt-[120px]">
+          <div className="flex flex-col items-center gap-7 lg:gap-[30px]">
+            <DetailHeart newsId={item.id} count={item.heartCount} />
+            <ShareRow title={item.title} newsId={item.id} />
+          </div>
+          {item.tags.length > 0 && (
+            <ul className="mt-10 flex flex-wrap items-center gap-2 lg:mt-[50px]">
+              {item.tags.map((tag) => (
+                <li key={tag}>
+                  <span className="inline-flex items-center rounded-full border-[1.3px] border-tag-default bg-gray-50 px-4 py-1 text-base font-medium text-tag-default lg:text-lg">
+                    #{tag}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        {/* 1440 리듬: Bottom →70→ 디바이더 */}
+        {/* 1440 리듬: 태그 →70→ 디바이더 */}
         <hr className="mt-12 border-border lg:mt-[70px]" />
 
         <PrevNextNav prev={adjacent.prev} next={adjacent.next} />
