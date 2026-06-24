@@ -262,7 +262,7 @@ export function NewsTable({
           ))}
           <HelpTip>{ADMIN_COPY.news.statusHelp}</HelpTip>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           {/* 정렬 — 기본 발행일 최신순. URL ?sort= 구동(뒤로가기 시 정렬 보존) */}
           <Select
             value={sort}

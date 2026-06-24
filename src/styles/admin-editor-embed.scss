@@ -35,3 +35,14 @@
   height: auto;
   padding: 0.375rem 0.5rem;
 }
+
+// 480px 이하: toolbar.scss 가 fixed 툴바를 position:absolute; width:100% 로 만들어
+// static 래퍼(.simple-editor-wrapper) 기준 containing block 부재 → ICB(html) 폭으로 오버플로.
+// 임베드에서는 정적 흐름으로 되돌려 컬럼 폭 안에 머물게 함.
+@media (max-width: 480px) {
+  .admin-editor-embed .tiptap-toolbar[data-variant="fixed"] {
+    position: static;
+    height: auto;
+    inset: auto;
+  }
+}
