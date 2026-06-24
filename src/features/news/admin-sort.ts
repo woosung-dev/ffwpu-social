@@ -28,3 +28,20 @@ export function normalizeNewsSort(raw: string | string[] | undefined): NewsSort 
     ? (value as NewsSort)
     : DEFAULT_NEWS_SORT;
 }
+
+// 어드민 목록 페이지당 개수 — ?pageSize= 쿼리 검증 단일 출처(서버 page + 클라 NewsTable 공용)
+export const NEWS_PAGE_SIZES = [10, 20, 50] as const;
+
+export type NewsPageSize = (typeof NEWS_PAGE_SIZES)[number];
+
+export const DEFAULT_NEWS_PAGE_SIZE: NewsPageSize = 10;
+
+// ?pageSize= 쿼리값을 허용 개수로 정규화 (벗어나면 기본 10)
+export function normalizeNewsPageSize(
+  raw: string | string[] | undefined,
+): NewsPageSize {
+  const n = Number(Array.isArray(raw) ? raw[0] : raw);
+  return NEWS_PAGE_SIZES.includes(n as NewsPageSize)
+    ? (n as NewsPageSize)
+    : DEFAULT_NEWS_PAGE_SIZE;
+}

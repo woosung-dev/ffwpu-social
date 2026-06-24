@@ -28,7 +28,13 @@ import {
 } from "@/components/ui/select";
 import { HelpTip } from "@/admin/components/HelpTip";
 import { ADMIN_COPY } from "@/admin/copy";
-import { NEWS_SORT_KEYS, type NewsSort } from "@/features/news/admin-sort";
+import {
+  NEWS_SORT_KEYS,
+  NEWS_PAGE_SIZES,
+  DEFAULT_NEWS_PAGE_SIZE,
+  type NewsSort,
+  type NewsPageSize,
+} from "@/features/news/admin-sort";
 
 export type NewsRow = {
   id: string;
@@ -56,6 +62,7 @@ type Props = {
   totalPages: number;
   status: NewsStatus;
   sort: NewsSort;
+  pageSize: NewsPageSize;
   stats: NewsStatsMap;
 };
 
@@ -133,7 +140,15 @@ function StatCell({ s }: { s: NewsStats | undefined }) {
   );
 }
 
-export function NewsTable({ rows, page, totalPages, status, sort, stats }: Props) {
+export function NewsTable({
+  rows,
+  page,
+  totalPages,
+  status,
+  sort,
+  pageSize,
+  stats,
+}: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -159,6 +174,15 @@ export function NewsTable({ rows, page, totalPages, status, sort, stats }: Props
     const params = new URLSearchParams(searchParams.toString());
     if (newSort === "published_desc") params.delete("sort");
     else params.set("sort", newSort);
+    params.delete("page");
+    router.push(`/admin/news?${params}`);
+  };
+
+  // 페이지당 개수 변경 — 기본값(10)이면 쿼리 비움, 페이지는 1로 리셋(개수 변경 시 현재 page 가 범위 밖일 수 있음)
+  const setPageSize = (newSize: NewsPageSize) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (newSize === DEFAULT_NEWS_PAGE_SIZE) params.delete("pageSize");
+    else params.set("pageSize", String(newSize));
     params.delete("page");
     router.push(`/admin/news?${params}`);
   };
@@ -253,6 +277,23 @@ export function NewsTable({ rows, page, totalPages, status, sort, stats }: Props
               {NEWS_SORT_KEYS.map((key) => (
                 <SelectItem key={key} value={key}>
                   {SORT_LABEL[key]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {/* 페이지당 개수 — URL ?pageSize= 구동(기본 10). 정렬 Select 와 동일 패턴 */}
+          <Select
+            value={String(pageSize)}
+            onValueChange={(v) => setPageSize(Number(v) as NewsPageSize)}
+            disabled={isPending}
+          >
+            <SelectTrigger className="h-9 w-[124px]" aria-label="페이지당 개수">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {NEWS_PAGE_SIZES.map((size) => (
+                <SelectItem key={size} value={String(size)}>
+                  {size}개씩 보기
                 </SelectItem>
               ))}
             </SelectContent>

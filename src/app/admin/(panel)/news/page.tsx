@@ -17,15 +17,15 @@ import { HeroOrderManager } from "@/admin/components/HeroOrderManager";
 import { StoryTabs } from "@/admin/components/StoryTabs";
 import { AdminPageHeader } from "@/admin/components/AdminPageHeader";
 import { ADMIN_COPY } from "@/admin/copy";
-import { normalizeNewsSort } from "@/features/news/admin-sort";
+import {
+  normalizeNewsSort,
+  normalizeNewsPageSize,
+} from "@/features/news/admin-sort";
 
 export const metadata: Metadata = {
   title: "활동 스토리 관리 | 사회공헌단 어드민",
   robots: { index: false, follow: false },
 };
-
-// 한 페이지 10건 — 어드민 목록 가독성 + 페이지네이션 활성화(20건이 한 페이지에 다 들어가 안 보이던 문제)
-const PAGE_SIZE = 10;
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -100,10 +100,11 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
   const status = pickStatus(searchParams.status);
   const categorySlug = pickCategorySlug(searchParams.categorySlug);
   const sort = normalizeNewsSort(searchParams.sort);
+  const pageSize = normalizeNewsPageSize(searchParams.pageSize);
 
   const result = await listNewsForAdmin({
     page,
-    limit: PAGE_SIZE,
+    limit: pageSize,
     status,
     categorySlug,
     sort,
@@ -133,6 +134,7 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
       totalPages={result.totalPages}
       status={status}
       sort={sort}
+      pageSize={pageSize}
       stats={stats}
     />
   );
