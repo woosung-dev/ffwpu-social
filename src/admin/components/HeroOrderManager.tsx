@@ -62,14 +62,14 @@ const MAX_HERO = 4;
 
 function Thumb({ item }: { item: HeroItem }) {
   if (!item.coverImageUrl) {
-    return <div className="size-12 shrink-0 rounded bg-surface-soft" aria-hidden />;
+    return <div className="size-10 shrink-0 rounded bg-surface-soft md:size-12" aria-hidden />;
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element -- MinIO/R2 직접 URL, next/image unoptimized 불필요
     <img
       src={item.coverImageUrl}
       alt=""
-      className="size-12 shrink-0 rounded object-cover"
+      className="size-10 shrink-0 rounded object-cover md:size-12"
     />
   );
 }
@@ -96,7 +96,7 @@ function SortableHeroRow({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center gap-3 rounded-lg border border-border bg-white p-3",
+        "flex items-center gap-2 rounded-lg border border-border bg-white p-2.5 md:gap-3 md:p-3",
         isDragging && "opacity-60 shadow-md",
       )}
     >
@@ -128,7 +128,7 @@ function SortableHeroRow({
         size="sm"
         onClick={() => onRemove(item.id)}
         aria-label={`${item.title} 히어로에서 제거`}
-        className="shrink-0 text-ink-subtle"
+        className="min-h-10 shrink-0 text-ink-subtle md:min-h-8"
       >
         <X className="size-4" aria-hidden />
       </Button>
@@ -294,6 +294,7 @@ export function HeroOrderManager({ initialItems, candidates }: Props) {
             size="sm"
             onClick={() => setPickerOpen(true)}
             disabled={items.length >= MAX_HERO || isPending}
+            className="min-h-10 md:min-h-8"
           >
             <Plus className="mr-1 size-4" aria-hidden />
             소식 추가

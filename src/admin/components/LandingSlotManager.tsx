@@ -212,7 +212,7 @@ export function LandingSlotManager(props: Props) {
             size="sm"
             onClick={() => onSlotChange(kind, slot, null)}
             disabled={isPending}
-            className="shrink-0 text-xs text-ink-subtle"
+            className="min-h-10 shrink-0 text-xs text-ink-subtle md:min-h-8"
           >
             해제
           </Button>

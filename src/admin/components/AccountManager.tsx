@@ -161,12 +161,13 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
         ? "마지막 관리자는 삭제할 수 없습니다"
         : undefined;
     return (
-      <div className="flex justify-end gap-1">
+      <div className="flex justify-end gap-2">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => openReset(account)}
           disabled={isPending}
+          className="min-h-10 md:min-h-8"
         >
           비밀번호 재설정
         </Button>
@@ -177,7 +178,7 @@ export function AccountManager({ accounts, currentUserId, superCount }: Props) {
           disabled={deleteDisabled}
           title={deleteReason}
           aria-disabled={deleteDisabled}
-          className="text-destructive hover:text-destructive"
+          className="min-h-10 text-destructive hover:text-destructive md:min-h-8"
         >
           삭제
         </Button>
