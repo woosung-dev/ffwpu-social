@@ -242,7 +242,7 @@ function SortableCategoryRow({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center gap-3 rounded-lg border border-border bg-white p-3",
+        "flex items-center gap-2 rounded-lg border border-border bg-white p-2.5 md:gap-3 md:p-3",
         isDragging && "opacity-60 shadow-md",
       )}
     >
@@ -278,7 +278,7 @@ function SortableCategoryRow({
         variant="ghost"
         size="sm"
         onClick={() => onEdit(row)}
-        className="shrink-0"
+        className="min-h-10 shrink-0 md:min-h-8"
       >
         수정
       </Button>

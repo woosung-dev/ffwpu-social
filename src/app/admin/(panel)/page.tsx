@@ -245,7 +245,7 @@ async function AnalyticsBody({ days }: { days: number }) {
         <Metric label={C.metricShare} value={analytics.totals.shareClicks} />
       </div>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div>
+        <div className="min-w-0">
           <h3 className="text-sm font-semibold text-ink-strong">
             {C.popularTitle}
           </h3>
@@ -256,15 +256,15 @@ async function AnalyticsBody({ days }: { days: number }) {
               {analytics.topNews.map((item) => (
                 <li
                   key={item.newsId}
-                  className="flex items-center justify-between gap-4 py-2"
+                  className="flex flex-col items-start gap-1 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                 >
                   <Link
                     href={`/admin/news/${item.newsId}/edit`}
-                    className="min-w-0 truncate text-sm font-medium text-ink-strong hover:text-brand-primary"
+                    className="w-full truncate text-sm font-medium text-ink-strong hover:text-brand-primary sm:w-auto sm:min-w-0"
                   >
                     {item.title}
                   </Link>
-                  <span className="shrink-0 text-xs tabular-nums text-ink-subtle">
+                  <span className="sm:shrink-0 text-xs tabular-nums text-ink-subtle">
                     {C.metricViews} {item.views} · {C.metricHeart}{" "}
                     {item.heartClicks} · {C.metricShare} {item.shareClicks}
                   </span>
@@ -273,7 +273,7 @@ async function AnalyticsBody({ days }: { days: number }) {
             </ul>
           )}
         </div>
-        <div>
+        <div className="min-w-0">
           <h3 className="text-sm font-semibold text-ink-strong">
             {C.referrerTitle}
           </h3>
