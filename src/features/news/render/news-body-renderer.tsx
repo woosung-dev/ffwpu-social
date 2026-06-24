@@ -104,7 +104,17 @@ function renderNode(node: SafeNode, key: number): ReactNode {
       );
     }
     case "blockquote":
-      return <blockquote key={key}>{kids}</blockquote>;
+      // 에디터(Tiptap)와 동일한 인용구 모양 — prose 기본(기울임·흐린색·prose 얇은 보더) 대신
+      // 똑바른 본문색 + 짙은 회색 굵은 좌측 바(에디터 blockquote-node.scss 0.25em·#222325 ≈ ink-strong).
+      // 따옴표 자동 부착은 globals.css 에서 별도 차단(WYSIWYG 정합).
+      return (
+        <blockquote
+          key={key}
+          className="my-6 border-l-4 border-ink-strong pl-4 font-normal not-italic text-ink-strong"
+        >
+          {kids}
+        </blockquote>
+      );
     case "horizontalRule":
       return <hr key={key} />;
     case "bulletList":
