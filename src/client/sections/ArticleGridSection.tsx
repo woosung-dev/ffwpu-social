@@ -45,11 +45,10 @@ export function ArticleGridSection({ items }: Props) {
             wide 한정 섹션 내 스티키: 우측 마조네리가 길면 다크블록이 헤더 아래(--sticky-top)에 핀 → 섹션 하단서 해제(earthrap 인터랙션). 부모 wide:items-start 전제. */}
         <div className="rounded-xl bg-surface-dark px-4 py-5 md:flex md:items-center md:justify-between md:gap-6 md:px-[26px] md:py-[30px] wide:sticky wide:top-[var(--sticky-top)] wide:block wide:w-[319px] wide:shrink-0 wide:self-start wide:py-10">
           <div>
-            {/* 타이틀 — 375 20 / 768+ 31. break-keep(단어 중간 안 끊김) + max-w 로 자연 줄바꿈을
+            {/* 타이틀 — 375 20 / 768~1439 31. break-keep(단어 중간 안 끊김) + max-w 로 자연 줄바꿈을
                 "다정한 이웃, 따뜻한 공동체가 / 전하는 이야기" 2줄 유도(하드 br 없음, 폭+단어경계 기준).
-                wide(1440+)는 사이드바 폭 319px라 31px 헤딩이 3줄이 되므로 text-wrap:balance 로 줄 길이 균형
-                ("이야기" 단독 외톨이 방지). 다른 BP 2줄은 영향 없음 — wide 한정 적용 */}
-            <h2 className="max-w-[270px] text-xl font-extrabold leading-tight break-keep text-ink-on-purple md:max-w-[420px] md:text-[31px] wide:text-balance">
+                wide(1440+)는 사이드바 폭 319px라 31px면 3줄이 되므로 28px 로 축소해 2줄 정합 */}
+            <h2 className="max-w-[270px] text-xl font-extrabold leading-tight break-keep text-ink-on-purple md:max-w-[420px] md:text-[31px] wide:text-[28px]">
               다정한 이웃, 따뜻한 공동체가 전하는 이야기
             </h2>
             {/* 서브 — Figma: 375 16 / 768+ 18, 행간 normal(≈22) → leading-tight 로 블록 h172 정합 */}
