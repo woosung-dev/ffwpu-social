@@ -1,10 +1,10 @@
 // 어드민 뉴스 목록 — 페이지네이션·상태 탭·발행 토글·수정·삭제. 페이지네이션은 queryString (결정 로그 [T10 URL])
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, Heart, Share2 } from "lucide-react";
+import { Eye, Heart, Search, Share2, Tag, X } from "lucide-react";
 import {
   deleteNewsAction,
   publishNewsAction,
@@ -31,6 +31,7 @@ import { ADMIN_COPY } from "@/admin/copy";
 import {
   NEWS_SORT_KEYS,
   NEWS_PAGE_SIZES,
+  NEWS_SEARCH_MAX_LENGTH,
   DEFAULT_NEWS_PAGE_SIZE,
   type NewsSort,
   type NewsPageSize,
@@ -60,11 +61,77 @@ type Props = {
   rows: NewsRow[];
   page: number;
   totalPages: number;
+  total: number;
   status: NewsStatus;
   sort: NewsSort;
   pageSize: NewsPageSize;
+  q: string;
+  tag: string;
   stats: NewsStatsMap;
 };
+
+// 어드민 목록 검색 필드 — 300ms 디바운스 + ✕ 클리어. committed(URL 반영값) 변경 시 로컬 동기화.
+// 한글 입력은 300ms 디바운스가 IME 조합을 자연 코얼레스(조합 종료 후 발화) — 중간 음절 검색돼도 무해, 입력 지속 시 정제됨
+function AdminSearchField({
+  committed,
+  onCommit,
+  placeholder,
+  ariaLabel,
+  icon,
+}: {
+  committed: string;
+  onCommit: (value: string) => void;
+  placeholder: string;
+  ariaLabel: string;
+  icon: React.ReactNode;
+}) {
+  const [value, setValue] = useState(committed);
+  // 최신 입력값 ref — sync effect 가 value 를 dep 로 갖지 않도록(타이핑마다 재동기화 방지). eslint-disable 없이 exhaustive-deps 충족
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
+  // 외부 committed 변경(네비게이션·다른 필드 클리어) → 로컬 입력 동기화. 입력 중 동일 값(trim)은 보존
+  useEffect(() => {
+    if (committed !== valueRef.current.trim()) setValue(committed);
+  }, [committed]);
+
+  // 디바운스 → URL 반영. committed 와 같아지면 멈춤(네비게이션 완료 후 루프 없음)
+  useEffect(() => {
+    if (value.trim() === committed) return;
+    const timer = setTimeout(() => onCommit(value.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [value, committed, onCommit]);
+
+  return (
+    <div className="relative flex h-11 w-full items-center md:flex-1">
+      <span className="pointer-events-none absolute left-3 text-ink-subtle" aria-hidden>
+        {icon}
+      </span>
+      <input
+        type="search"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={placeholder}
+        aria-label={ariaLabel}
+        maxLength={NEWS_SEARCH_MAX_LENGTH}
+        className="h-11 w-full min-w-0 rounded-md border border-input bg-transparent pl-9 pr-9 text-sm text-ink-strong outline-none transition-colors placeholder:text-ink-subtle focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [&::-webkit-search-cancel-button]:appearance-none"
+      />
+      {value && (
+        <button
+          type="button"
+          onClick={() => {
+            setValue("");
+            onCommit("");
+          }}
+          aria-label="검색어 지우기"
+          className="absolute right-2 flex size-7 items-center justify-center rounded-full text-ink-subtle transition-colors hover:text-ink-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        >
+          <X className="size-4" aria-hidden />
+        </button>
+      )}
+    </div>
+  );
+}
 
 // 정렬 라벨 — 키는 admin-sort.ts SSoT, 운영자 대면 문구는 이 렌더러에 (STATUS_LABEL 패턴 동일)
 const SORT_LABEL: Record<NewsSort, string> = {
@@ -144,9 +211,12 @@ export function NewsTable({
   rows,
   page,
   totalPages,
+  total,
   status,
   sort,
   pageSize,
+  q,
+  tag,
   stats,
 }: Props) {
   const router = useRouter();
@@ -154,6 +224,33 @@ export function NewsTable({
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // 검색어 반영 — ?q=(제목)·?tag=(태그). 빈 값이면 파라미터 제거, page 리셋. AdminSearchField onCommit dep 라 useCallback 으로 안정화
+  const setSearchParam = useCallback(
+    (key: "q" | "tag", value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) params.set(key, value);
+      else params.delete(key);
+      params.delete("page");
+      startTransition(() => router.push(`/admin/news?${params}`));
+    },
+    [router, searchParams],
+  );
+  const setQ = useCallback(
+    (value: string) => setSearchParam("q", value),
+    [setSearchParam],
+  );
+  const setTag = useCallback(
+    (value: string) => setSearchParam("tag", value),
+    [setSearchParam],
+  );
+  const clearSearch = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("q");
+    params.delete("tag");
+    params.delete("page");
+    startTransition(() => router.push(`/admin/news?${params}`));
+  };
 
   const setStatus = (newStatus: NewsStatus) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -246,6 +343,24 @@ export function NewsTable({
 
   return (
     <div className="space-y-4">
+      {/* 검색 — 제목·태그 분리. 필터 툴바와 분리된 전용 블록(모바일 세로/PC 가로)이라 툴바 줄바꿈에 간섭 없음 */}
+      <div className="flex flex-col gap-2 md:flex-row">
+        <AdminSearchField
+          committed={q}
+          onCommit={setQ}
+          placeholder="제목 검색"
+          ariaLabel="제목으로 검색"
+          icon={<Search className="size-4" aria-hidden />}
+        />
+        <AdminSearchField
+          committed={tag}
+          onCommit={setTag}
+          placeholder="태그 검색"
+          ariaLabel="태그로 검색"
+          icon={<Tag className="size-4" aria-hidden />}
+        />
+      </div>
+
       {/* 상태 탭 */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
@@ -321,15 +436,35 @@ export function NewsTable({
         </div>
       )}
 
+      {/* 결과 건수 — 검색·필터 적용 결과 총합 */}
+      <p className="text-xs text-ink-subtle" aria-live="polite">
+        총 {total}건
+      </p>
+
       {/* 테이블 */}
       <Card>
         <CardContent className="pt-6">
           {rows.length === 0 ? (
-            <p className="py-8 text-center text-sm text-ink-subtle">
-              {status === "all"
-                ? "등록된 글이 없습니다."
-                : `${STATUS_LABEL[status]} 상태의 글이 없습니다.`}
-            </p>
+            <div className="py-8 text-center">
+              <p className="text-sm text-ink-subtle">
+                {q || tag
+                  ? "검색 조건에 맞는 글이 없어요."
+                  : status === "all"
+                    ? "등록된 글이 없습니다."
+                    : `${STATUS_LABEL[status]} 상태의 글이 없습니다.`}
+              </p>
+              {(q || tag) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={clearSearch}
+                  disabled={isPending}
+                >
+                  검색 조건 지우기
+                </Button>
+              )}
+            </div>
           ) : (
             <>
               {/* 데스크탑 — 테이블 (md 이상) */}

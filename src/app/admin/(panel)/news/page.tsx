@@ -20,6 +20,7 @@ import { ADMIN_COPY } from "@/admin/copy";
 import {
   normalizeNewsSort,
   normalizeNewsPageSize,
+  normalizeNewsSearch,
 } from "@/features/news/admin-sort";
 
 export const metadata: Metadata = {
@@ -101,6 +102,8 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
   const categorySlug = pickCategorySlug(searchParams.categorySlug);
   const sort = normalizeNewsSort(searchParams.sort);
   const pageSize = normalizeNewsPageSize(searchParams.pageSize);
+  const q = normalizeNewsSearch(searchParams.q);
+  const tag = normalizeNewsSearch(searchParams.tag);
 
   const result = await listNewsForAdmin({
     page,
@@ -108,6 +111,8 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
     status,
     categorySlug,
     sort,
+    q,
+    tag,
   });
   const rows: NewsRow[] = result.items.map((i) => ({
     id: i.id,
@@ -132,9 +137,12 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
       rows={rows}
       page={result.page}
       totalPages={result.totalPages}
+      total={result.total}
       status={status}
       sort={sort}
       pageSize={pageSize}
+      q={q ?? ""}
+      tag={tag ?? ""}
       stats={stats}
     />
   );

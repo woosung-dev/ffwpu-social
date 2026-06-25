@@ -46,19 +46,23 @@ export async function getAdminNewsDetail(id: string) {
   return newsDb.getAdminNewsById(id);
 }
 
-// 어드민 목록 (T10) — 페이지네이션 + status·categorySlug 필터 + 정렬(기본 발행일 최신순)
+// 어드민 목록 (T10) — 페이지네이션 + status·categorySlug 필터 + 제목·태그 검색 + 정렬(기본 발행일 최신순)
 export async function listNewsForAdmin(opts: {
   page: number;
   limit: number;
   status?: "all" | "draft" | "scheduled" | "published";
   categorySlug?: string;
   sort?: NewsSort;
+  q?: string;
+  tag?: string;
 }) {
   const [items, total] = await Promise.all([
     listForAdminResilient(opts),
     newsDb.countForAdmin({
       status: opts.status,
       categorySlug: opts.categorySlug,
+      q: opts.q,
+      tag: opts.tag,
     }),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / opts.limit));

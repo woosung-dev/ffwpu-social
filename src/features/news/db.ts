@@ -45,6 +45,20 @@ function searchWhere(q?: string) {
   );
 }
 
+// 어드민 제목 검색 — 제목만 부분일치(ILIKE). 공개 searchWhere(제목 OR 태그)와 달리 제목·태그를 분리(AND 결합)
+function titleWhere(q?: string) {
+  const trimmed = q?.trim();
+  return trimmed ? ilike(news.title, likePattern(trimmed)) : undefined;
+}
+
+// 어드민 태그 검색 — 태그만 부분일치(ILIKE EXISTS). titleWhere 와 AND 결합되어 "제목 AND 태그" 좁히기
+function tagWhere(tag?: string) {
+  const trimmed = tag?.trim();
+  if (!trimmed) return undefined;
+  const pattern = likePattern(trimmed);
+  return sql`EXISTS (SELECT 1 FROM ${newsTags} WHERE ${newsTags.newsId} = ${news.id} AND ${newsTags.tag} ILIKE ${pattern})`;
+}
+
 // ─── 사용자 사이트 — 현재 공개 글만 (codex P1#7 + 예약 발행) ─────────────────
 
 // 공개 목록 — published_at <= now 강제 (draft·예약글 노출 차단)
@@ -136,6 +150,8 @@ type AdminListOpts = {
   status?: "all" | "draft" | "scheduled" | "published";
   categorySlug?: string;
   sort?: NewsSort;
+  q?: string;
+  tag?: string;
 };
 
 // 글별 analytics 이벤트 카운트 상관 서브쿼리 — listPublicNews 의 heartCount 서브쿼리 패턴과 동일.
@@ -188,21 +204,35 @@ export async function listForAdmin(opts: AdminListOpts) {
     })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
-    .where(and(adminStatusWhere(opts.status), categoryWhere(opts.categorySlug)))
+    .where(
+      and(
+        adminStatusWhere(opts.status),
+        categoryWhere(opts.categorySlug),
+        titleWhere(opts.q),
+        tagWhere(opts.tag),
+      ),
+    )
     .orderBy(...adminOrderBy(opts.sort))
     .limit(opts.limit)
     .offset(offset);
 }
 
-// 어드민 카운트 — listForAdmin 페이지네이션용. 동일 필터
+// 어드민 카운트 — listForAdmin 페이지네이션용. 동일 필터(제목·태그 검색 포함)
 export async function countForAdmin(
-  opts: Pick<AdminListOpts, "status" | "categorySlug">,
+  opts: Pick<AdminListOpts, "status" | "categorySlug" | "q" | "tag">,
 ) {
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
-    .where(and(adminStatusWhere(opts.status), categoryWhere(opts.categorySlug)));
+    .where(
+      and(
+        adminStatusWhere(opts.status),
+        categoryWhere(opts.categorySlug),
+        titleWhere(opts.q),
+        tagWhere(opts.tag),
+      ),
+    );
   return row?.count ?? 0;
 }
 
