@@ -45,9 +45,10 @@ export function ArticleGridSection({ items }: Props) {
             wide 한정 섹션 내 스티키: 우측 마조네리가 길면 다크블록이 헤더 아래(--sticky-top)에 핀 → 섹션 하단서 해제(earthrap 인터랙션). 부모 wide:items-start 전제. */}
         <div className="rounded-xl bg-surface-dark px-4 py-5 md:flex md:items-center md:justify-between md:gap-6 md:px-[26px] md:py-[30px] wide:sticky wide:top-[var(--sticky-top)] wide:block wide:w-[319px] wide:shrink-0 wide:self-start wide:py-10">
           <div>
-            {/* 타이틀 — Figma: 375 20 / 768+ 31. md 가로 배너에서 1줄 렌더 방지용 max-w (Figma 헤딩 2줄, 블록 h172) */}
-            <h2 className="text-xl font-extrabold leading-tight break-keep text-ink-on-purple md:max-w-[360px] md:text-[31px]">
-              고소한 사랑의 향기가 퍼져나가고 있어요
+            {/* 타이틀 — 375 20 / 768+ 31. break-keep(단어 중간 안 끊김) + max-w 로 자연 줄바꿈을
+                "다정한 이웃, 따뜻한 공동체가 / 전하는 이야기" 2줄로 유도 (하드 br 없음, 폭+단어경계 기준) */}
+            <h2 className="max-w-[270px] text-xl font-extrabold leading-tight break-keep text-ink-on-purple md:max-w-[420px] md:text-[31px]">
+              다정한 이웃, 따뜻한 공동체가 전하는 이야기
             </h2>
             {/* 서브 — Figma: 375 16 / 768+ 18, 행간 normal(≈22) → leading-tight 로 블록 h172 정합 */}
             <p className="mt-3 text-base font-semibold leading-tight text-ink-on-purple md:text-lg">
