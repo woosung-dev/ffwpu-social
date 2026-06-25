@@ -45,3 +45,15 @@ export function normalizeNewsPageSize(
     ? (n as NewsPageSize)
     : DEFAULT_NEWS_PAGE_SIZE;
 }
+
+// 어드민 목록 검색어 최대 길이 — 입력창 maxLength 와 동일(공개 SearchInput 100자 정합)
+export const NEWS_SEARCH_MAX_LENGTH = 100;
+
+// ?q=(제목)·?tag=(태그) 검색어 정규화 — 배열 → 첫 값, trim, 최대 길이 절단. 빈 문자열은 undefined(필터 미적용)
+export function normalizeNewsSearch(
+  raw: string | string[] | undefined,
+): string | undefined {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const trimmed = value?.trim().slice(0, NEWS_SEARCH_MAX_LENGTH);
+  return trimmed ? trimmed : undefined;
+}
