@@ -261,14 +261,14 @@ export function KpiSection({ metricsBySlug }: Props) {
                   {helpedHousehold}
                 </p>
               </div>
-              {/* 인물 컷아웃 사진: **absolute** 바닥중앙 앵커(카드 폭 영향無). 밴드 375~767 은 표시 높이 고정(폭 176 고정·-bottom-42 로 머리가 상단 값 텍스트 아래로 내려와 겹침 방지)·중앙정렬 — 카드가 넓어져도 인물 크기 불변. md(768~1023, h392)는 255·바닥 overhang. object-cover object-bottom 으로 투명상단 크롭. personOutline drop-shadow 유지 */}
-              <div className="absolute -bottom-[42px] left-1/2 aspect-[176/203] w-[176px] max-w-none -translate-x-1/2 md:aspect-[297/343] md:-bottom-[45px] md:w-[255px]">
+              {/* 인물 컷아웃 사진(하트 만드는 봉사자 2인, 537² 정사각): **absolute** 바닥중앙 앵커(카드 폭 영향無). 폭을 카드보다 키워 좌우(외측 팔) overhang 클립. 바닥은 조끼+흰 테두리가 카드 아래로 overhang 되어 흰 하단선이 안 보이도록 -bottom overhang 유지하되, 그 한도 내에서 최대한 끌어올려 하트가 값 텍스트 아래에 오게 함(Figma 1920 시안 331-7984). object-cover object-bottom. personOutline 흰 스티커 테두리(실루엣 추종) */}
+              <div className="absolute -bottom-[24px] left-1/2 aspect-square w-[210px] max-w-none -translate-x-1/2 md:-bottom-[6px] md:w-[310px]">
                 {/* eslint-disable-next-line @next/next/no-img-element -- decorative photo */}
                 <img
-                  src="/images/kpi-purple-card-photo.png"
+                  src="/images/kpi-helped-household-heart.png"
                   alt=""
-                  width={366}
-                  height={423}
+                  width={537}
+                  height={537}
                   aria-hidden
                   style={{ filter: personOutline(2) }}
                   className="absolute inset-0 h-full w-full object-cover object-bottom"
@@ -414,14 +414,14 @@ export function KpiSection({ metricsBySlug }: Props) {
                   {helpedHousehold}
                 </p>
               </div>
-              {/* 인물 컷아웃 사진: object-cover object-bottom(자산 0.746 < 프레임0.865 → 가로주도 cover·투명상단 바닥앵커로 프레임 밖, 박스 하단만 overhang → overflow-hidden 바닥 클립). **absolute** 라 카드 폭(flex-1=256/282)에 영향無(in-flow 면 프레임 폭이 대시보드 폭 밀어 910 으로 깨짐). 바닥중앙 앵커·-bottom overhang. personOutline drop-shadow 유지 */}
-              <div className="absolute bottom-0 left-1/2 aspect-[366/423] w-[335px] max-w-none -translate-x-1/2 translate-y-[40px]">
+              {/* 인물 컷아웃 사진(하트 2인, 537² 정사각): 폭을 카드(flex-1=256/282)보다 키워 좌우 overhang 클립. 바닥은 조끼+흰 테두리가 카드 아래로 overhang 되어 흰 하단선 미노출, 그 한도 내 최대한 끌어올려 하트가 값 텍스트 아래로(Figma 1920 시안 331-7984). **absolute** 라 카드 폭에 영향無. object-cover object-bottom. personOutline 흰 테두리 유지 */}
+              <div className="absolute bottom-0 left-1/2 aspect-square w-[400px] max-w-none -translate-x-1/2 translate-y-[6px]">
                 {/* eslint-disable-next-line @next/next/no-img-element -- decorative photo */}
                 <img
-                  src="/images/kpi-purple-card-photo.png"
+                  src="/images/kpi-helped-household-heart.png"
                   alt=""
-                  width={366}
-                  height={423}
+                  width={537}
+                  height={537}
                   aria-hidden
                   style={{ filter: personOutline(3) }}
                   className="absolute inset-0 h-full w-full object-cover object-bottom"
