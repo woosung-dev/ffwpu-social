@@ -270,6 +270,8 @@ export function KpiSection({ metricsBySlug }: Props) {
                   width={537}
                   height={537}
                   aria-hidden
+                  loading="lazy"
+                  decoding="async"
                   style={{ filter: personOutline(2) }}
                   className="absolute inset-0 h-full w-full object-cover object-bottom"
                 />
@@ -423,6 +425,8 @@ export function KpiSection({ metricsBySlug }: Props) {
                   width={537}
                   height={537}
                   aria-hidden
+                  loading="lazy"
+                  decoding="async"
                   style={{ filter: personOutline(3) }}
                   className="absolute inset-0 h-full w-full object-cover object-bottom"
                 />
