@@ -1,0 +1,72 @@
+# 프로덕션 단일 노드 스택(EC2) — Caddy(자동TLS·host분기) + Next 앱 + 내부 Postgres + 1회성 migrate
+# DB는 docker 내부 네트워크 전용(호스트 포트 미개방). 이미지는 GHCR에서 pull(E3 CI/CD).
+# 사용: deploy/.env(인터폴레이션 변수) + deploy/.env.production(앱 런타임 시크릿) 두 파일 필요.
+name: ffwpu-prod
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?deploy/.env에 설정}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:?deploy/.env에 설정}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+
+  app:
+    image: ${APP_IMAGE:?deploy/.env에 설정 (예 ghcr.io/fornerds/ffwpu-social:<sha>)}
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    expose:
+      - "3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # 배포 시 1회 실행 — advisory lock으로 동시성 방어, 앱 기동 전 완료 보장
+  migrate:
+    image: ${MIGRATE_IMAGE:?deploy/.env에 설정 (예 ghcr.io/fornerds/ffwpu-social-migrate:<sha>)}
+    env_file:
+      - .env.production
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ffwpu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?deploy/.env에 설정}
+      POSTGRES_DB: ${POSTGRES_DB:-ffwpu_social}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ffwpu} -d ${POSTGRES_DB:-ffwpu_social}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # 호스트 포트 미개방 — 5432는 docker 내부 네트워크 전용(외부 비노출, 보안 필수)
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:

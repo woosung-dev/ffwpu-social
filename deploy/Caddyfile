@@ -1,0 +1,11 @@
+# apex(메인) + admin 서브도메인 2호스트 자동 TLS·리버스 프록시.
+# Caddy는 기본적으로 Host 헤더 보존 + X-Forwarded-Proto/For/Host 전달 → proxy.ts host 분기 + NextAuth(trustHost) 정합.
+# 도메인은 docker-compose 환경변수(SITE_DOMAIN/ADMIN_DOMAIN)로 치환. DNS A레코드가 이 인스턴스를 가리켜야 ACME 발급됨.
+
+{$SITE_DOMAIN} {
+	reverse_proxy app:3000
+}
+
+{$ADMIN_DOMAIN} {
+	reverse_proxy app:3000
+}

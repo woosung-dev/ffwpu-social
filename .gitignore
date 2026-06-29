@@ -17,6 +17,13 @@ AGENTS.override.md
 .env*
 !.env.example
 
+# === deploy 시크릿 (보스 EC2 툴킷 — 평문 AWS 키·GitHub PAT·EC2 키페어. 절대 커밋 금지) ===
+deploy/config.sh
+deploy/keys/
+# deploy 예시 env는 추적 (.env* 규칙에서 예외 복원)
+!deploy/.env.example
+!deploy/.env.production.example
+
 # === AI 룰 프레임워크 (로컬 자산으로 운용) ===
 .ai/
 .claude/
