@@ -13,9 +13,10 @@ AGENTS.override.md
 .claude/settings.local.json
 
 # === 환경 변수 ===
-# global.md §4 강제: .env* 무시, .env.example 만 예외
+# global.md §4 강제: .env* 무시, .example 템플릿만 예외
 .env*
 !.env.example
+!.env.prod.example
 
 # === AI 룰 프레임워크 (로컬 자산으로 운용) ===
 .ai/
