@@ -81,11 +81,10 @@ async function NoticesData({
   const query = parsed.success ? parsed.data : listNoticesQuerySchema.parse({});
 
   const result = await listNotices(query);
-  const rows: NoticeListRow[] = result.items.map((item, idx) => ({
+  const rows: NoticeListRow[] = result.items.map((item) => ({
     id: item.id,
-    // 발행 기준 역순 전체 번호 — 최신 글이 가장 큰 번호. 고정 글은 상단 P개를 점유하고 번호는 숨기므로
-    // 비고정 행은 자연히 (total−P)…1 로 이어짐 (공식 무변경)
-    no: result.total - (result.page - 1) * result.limit - idx,
+    // 게시글 고유 번호 — 서버 ROW_NUMBER(발행순). 고정 행도 자기 번호 유지 (Figma 정합, db.ts 참조)
+    no: item.seqNo,
     title: item.title,
     hasAttachment: item.hasAttachment,
     pinned: item.pinnedRank != null,

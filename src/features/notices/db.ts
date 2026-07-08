@@ -24,6 +24,9 @@ export async function listPublicNotices(opts: { page: number; limit: number }) {
       title: notices.title,
       publishedAt: notices.publishedAt,
       pinnedRank: notices.pinnedRank,
+      // 게시글 고유 번호 — 발행 오름차순 순위(1=최초 발행). 고정으로 상단 이동해도 값 불변 (Figma 1103:7882: 고정 행이 비순차 번호 유지).
+      // 윈도우 함수는 WHERE 통과 전체 집합 기준(LIMIT 이전 논리 단계) → 페이지·고정정렬과 무관하게 각 행이 전역 번호 보존
+      seqNo: sql<number>`(ROW_NUMBER() OVER (ORDER BY ${notices.publishedAt} ASC, ${notices.id} ASC))::int`,
       // 상관 서브쿼리는 raw 정규화 이름 필수 — 조인 없는 select 에서 drizzle 이 보간 컬럼을 비정규화("id")해
       // 내부 테이블로 오결합(notice_id = notice_attachments.id → 항상 false)되는 버그 (E2E 검증에서 발견)
       hasAttachment: sql<boolean>`EXISTS (SELECT 1 FROM notice_attachments WHERE notice_attachments.notice_id = notices.id)`,

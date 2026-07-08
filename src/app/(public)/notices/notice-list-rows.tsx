@@ -14,11 +14,11 @@ import { cn } from "@/lib/utils";
 
 export type NoticeListRow = {
   id: string;
-  /** 발행 기준 역순 전체 번호 — 서버 계산 (total − offset − index) */
+  /** 게시글 고유 번호 — 서버 ROW_NUMBER(발행 오름차순). 고정 이동과 무관하게 불변 */
   no: number;
   title: string;
   hasAttachment: boolean;
-  /** 상위 고정 여부 — 고정 행은 번호 대신 '고정' 칩 (ADR-043) */
+  /** 상위 고정 여부 — 고정 행은 보라 하이라이트 + 선행 핀 아이콘 (Figma 1103:7882, ADR-043 개정 2026-07-08) */
   pinned: boolean;
   /** 서버 포맷 완료 텍스트 (YYYY.MM.DD) — TZ 차이로 인한 hydration mismatch 방지 */
   dateText: string;
@@ -70,7 +70,9 @@ export function NoticeListRows({
           {rows.map((row, idx) => {
             const isVisited = visited.has(row.id);
             const isEven = idx % 2 === 1;
-            // 고정 그룹의 마지막 행 — 고정/일반 경계에 구분선 (시안 B). 고정은 항상 상단 정렬이라 연속 블록
+            // 보라 하이라이트(핀·보라 텍스트·연보라 워시) = 고정 OR 읽음. 고정은 읽음 여부와 무관하게 항상 적용 (Figma 1103:7882)
+            const highlighted = row.pinned || isVisited;
+            // 고정 그룹의 마지막 행 — 고정/일반 경계 구분선 (Figma Line 1254). 고정은 항상 상단 연속 블록
             const isLastPinned =
               row.pinned && (idx === rows.length - 1 || !rows[idx + 1].pinned);
             return (
@@ -80,15 +82,14 @@ export function NoticeListRows({
                   className={cn(
                     ROW_GRID_CLASS,
                     "group border-b transition-colors",
-                    // 행 높이 (Figma 4-BP) — 일반 48/56/62/62 · 읽음 48/62/70/70
-                    isVisited
+                    // 행 높이 (Figma 4-BP) — 일반 48/56/62 · 하이라이트(고정·읽음) 48/62/70
+                    highlighted
                       ? "min-h-12 border-[#ece1f3] md:min-h-[62px] lg:min-h-[70px]"
                       : "min-h-12 border-[#cbcbcb] md:min-h-14 lg:min-h-[62px]",
-                    // 상위 고정 행 (시안 B) — 읽음 하이라이트(#f9f4ff)보다 진한 보라 워시로 그룹핑. 지브라 override
+                    // 배경 — 고정: flat #fcfaff (Figma) · 읽음: 지브라 #fcfaff/#f9f4ff · 일반: 지브라 white/#f9f9fc. 호버는 항상 #f9f4ff
                     row.pinned
-                      ? "bg-[#efe4ff] hover:bg-[#e6d4ff]"
+                      ? "bg-[#fcfaff] hover:bg-[#f9f4ff]"
                       : cn(
-                          // 지브라 — 일반: white/#f9f9fc · 읽음: #fcfaff/#f9f4ff. 호버는 항상 #f9f4ff
                           isVisited
                             ? isEven
                               ? "bg-[#f9f4ff]"
@@ -98,35 +99,29 @@ export function NoticeListRows({
                               : "bg-white",
                           "hover:bg-[#f9f4ff]",
                         ),
-                    // 고정 그룹 하단 경계선 (마지막 고정 행) — 고정↔일반 시각 분리
+                    // 고정 그룹 하단 경계선 (마지막 고정 행) — 고정↔일반 시각 분리 (Figma Line 1254)
                     isLastPinned && "border-b-2 border-[#d9c2f5]",
                   )}
                 >
-                  {/* No·Date 는 모바일(375)에서 숨김 — Figma 는 Title 단일 열. 고정 행은 번호 대신 비움('고정' 칩은 제목 셀에) */}
+                  {/* No·Date 는 모바일(375)에서 숨김 — Figma 는 Title 단일 열. 고정 행도 고유 번호 표시(Figma) */}
                   <span
                     className={cn(
                       "hidden text-center text-base font-medium tabular-nums transition-colors md:block lg:text-lg",
-                      isVisited ? "text-[#c8a3e6]" : "text-[#959ba9]",
+                      highlighted ? "text-[#c8a3e6]" : "text-[#959ba9]",
                       "group-hover:text-[#c8a3e6]",
                     )}
                   >
-                    {row.pinned ? "" : row.no}
+                    {row.no}
                   </span>
                   <span className="flex min-w-0 items-center gap-2.5">
-                    {/* 상위 고정 칩 — 전 BP 노출(모바일은 No 열 숨김). 읽음 마커 핀과 시각 구분 위해 라벨형 */}
-                    {row.pinned && (
-                      <span className="shrink-0 rounded-[4px] bg-[#f3e8ff] px-1.5 py-0.5 text-xs font-semibold text-[#a34df3]">
-                        고정
-                      </span>
-                    )}
-                    {/* 읽음 마커 핀 — Figma No/PinIcon (읽은 행에만, fill #E1C8F9). 20/20/24/24 */}
-                    {isVisited && (
+                    {/* 선행 핀 마커 — 고정·읽음 행 (Figma No/PinIcon, fill #E1C8F9). 20/20/24/24 */}
+                    {highlighted && (
                       <NoticePinIcon className="size-5 text-[#e1c8f9] lg:size-6" />
                     )}
                     <span
                       className={cn(
                         "truncate text-base font-medium transition-colors lg:text-lg",
-                        isVisited ? "text-[#a34df3]" : "text-[#2d2d2d]",
+                        highlighted ? "text-[#a34df3]" : "text-[#2d2d2d]",
                         "group-hover:text-[#a34df3]",
                       )}
                     >
@@ -137,7 +132,7 @@ export function NoticeListRows({
                         aria-label="첨부파일 있음"
                         className={cn(
                           "size-5 transition-colors",
-                          isVisited ? "text-[#c8a3e6]" : "text-[#d6d0d8]",
+                          highlighted ? "text-[#c8a3e6]" : "text-[#d6d0d8]",
                           "group-hover:text-[#c8a3e6]",
                         )}
                       />
@@ -146,7 +141,7 @@ export function NoticeListRows({
                   <span
                     className={cn(
                       "hidden text-center text-base font-medium tabular-nums transition-colors md:block lg:text-lg",
-                      isVisited ? "text-[#c8a3e6]" : "text-[#959ba9]",
+                      highlighted ? "text-[#c8a3e6]" : "text-[#959ba9]",
                       "group-hover:text-[#c8a3e6]",
                     )}
                   >
