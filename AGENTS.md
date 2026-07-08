@@ -95,7 +95,7 @@ pnpm drizzle-kit studio        # DB 브라우저
 
 ### 현재 작업
 
-- 진행 중: **공지사항(notices) 신설** (branch `feat/notices`) — 어드민 CRUD(에디터+첨부 20MB·최대 5개) + 공개 목록/상세(읽음 하이라이트). 디테일 `docs/plans/active/TASK-20260708-notices.md`. 마이그레이션 0013.
+- 완료(미머지, **PR #82**): **공지사항(notices) 신설** (branch `feat/notices`) — 어드민 CRUD(에디터+첨부 문서형 20MB·최대 5개) + 공개 목록/상세(읽음 하이라이트·다운로드 섹션) + 헤더 5번째 메뉴(케이스 A). Figma 4노드 정합(`docs/design/figma-export/notices/`). ADR-041/042, **마이그레이션 0013**. tsc0·lint0·test98·build✓·E2E PASS. 디테일 `docs/plans/active/TASK-20260708-notices.md`.
 - 완료(미머지, **PR #45**): **소식 상세 하트 B 시안 + Figma 정합 전수 감사** (branch `feat/news-heart-bottom-fidelity` = main + PR #40 머지 + 사용자 분석 커밋·마이그레이션 0007) — 하트를 상단 날짜줄→하단 공유줄 "공감해요" pill 로 이동(Figma 749:7920) + 3면×4BP 전수 감사(confirmed 108 → fixed 95·정책기각 16, ±2px 수렴). 디테일 `docs/plans/active/TASK-20260610-news-heart-bottom-fidelity.md` · 리포트 `docs/design/audit-2026-06-10/report.md`. tsc0·lint0·test52·build✓. **PR #40 선머지 → #45 자동 재타게팅.**
 - 진행 중: **랜딩 실데이터화 + 반응형 4-BP 정합** (branch `feat/client-foundation`) — 디테일 `docs/plans/active/2026-06-03-landing-data-responsive.md`. WS1 시드 실데이터화(사진 11장→MinIO `news/seed/`, 소식 14건·슬롯 전배정) + WS2 어드민 슬롯 썸네일 + WS3 ArticleGrid fetch 호이스트 + WS4 TanStack Query /news 목록 Streaming SSR(useSuspenseQuery, ADR-034) + WS5 7면 4-BP 정합(ADR-035, design.md 매트릭스 정정). **스키마 변경 0.** 🔴 사진 11장 수령 대기(`src/db/seed-assets/`) · Gmarket Sans 라이선스 확인.
 - 진행 중: **어드민 v1.0 ship-전 하드닝** (branch `feat/admin-ship-hardening`) — 디테일 `docs/plans/active/2026-06-01-admin-ship-hardening.md`. HIGH 6(슬롯 eligibility·JWT 무효화·색대비·rate-limit·동시성) + 접근성 + 모바일 카드뷰 + 아키텍처 옵션1. 다단 검토 GO-WITH-FIXES + codex v2. **스키마 변경 없음.**

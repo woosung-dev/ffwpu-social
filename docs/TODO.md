@@ -6,7 +6,7 @@
 
 ## 진행 중 (2026-07-08)
 
-- **공지사항(notices) 신설** — `docs/plans/active/TASK-20260708-notices.md` (branch `feat/notices`). 어드민 CRUD(에디터+첨부 문서형 20MB·5개) + 공개 목록(/notices, 읽음 하이라이트)·상세(download section) + 헤더 5번째 메뉴(케이스 A). ADR-041/042, **마이그레이션 0013**. S0~S8 전부 완료 — Figma 4노드 픽셀 정합 반영·E2E PASS. ground truth `docs/design/figma-export/notices/`. 카피 escalation 3건은 아래 §공지사항 Figma 정합 escalation.
+- **공지사항(notices) 신설 — PR #82 (리뷰 대기)** — `docs/plans/active/TASK-20260708-notices.md` (branch `feat/notices`). 어드민 CRUD(에디터+첨부 문서형 20MB·5개) + 공개 목록(/notices, 읽음 하이라이트)·상세(download section) + 헤더 5번째 메뉴(케이스 A). ADR-041/042, **마이그레이션 0013**. S0~S8 전부 완료 — Figma 4노드 픽셀 정합 반영·E2E PASS. ground truth `docs/design/figma-export/notices/`. 카피 escalation 3건은 아래 §공지사항 Figma 정합 escalation.
 
 ## 진행 중 (2026-06-03)
 
