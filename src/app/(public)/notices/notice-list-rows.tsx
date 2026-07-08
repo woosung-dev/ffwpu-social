@@ -70,6 +70,9 @@ export function NoticeListRows({
           {rows.map((row, idx) => {
             const isVisited = visited.has(row.id);
             const isEven = idx % 2 === 1;
+            // 고정 그룹의 마지막 행 — 고정/일반 경계에 구분선 (시안 B). 고정은 항상 상단 정렬이라 연속 블록
+            const isLastPinned =
+              row.pinned && (idx === rows.length - 1 || !rows[idx + 1].pinned);
             return (
               <li key={row.id}>
                 <Link
@@ -81,15 +84,22 @@ export function NoticeListRows({
                     isVisited
                       ? "min-h-12 border-[#ece1f3] md:min-h-[62px] lg:min-h-[70px]"
                       : "min-h-12 border-[#cbcbcb] md:min-h-14 lg:min-h-[62px]",
-                    // 지브라 — 일반: white/#f9f9fc · 읽음: #fcfaff/#f9f4ff. 호버는 항상 #f9f4ff
-                    isVisited
-                      ? isEven
-                        ? "bg-[#f9f4ff]"
-                        : "bg-[#fcfaff]"
-                      : isEven
-                        ? "bg-[#f9f9fc]"
-                        : "bg-white",
-                    "hover:bg-[#f9f4ff]",
+                    // 상위 고정 행 (시안 B) — 읽음 하이라이트(#f9f4ff)보다 진한 보라 워시로 그룹핑. 지브라 override
+                    row.pinned
+                      ? "bg-[#efe4ff] hover:bg-[#e6d4ff]"
+                      : cn(
+                          // 지브라 — 일반: white/#f9f9fc · 읽음: #fcfaff/#f9f4ff. 호버는 항상 #f9f4ff
+                          isVisited
+                            ? isEven
+                              ? "bg-[#f9f4ff]"
+                              : "bg-[#fcfaff]"
+                            : isEven
+                              ? "bg-[#f9f9fc]"
+                              : "bg-white",
+                          "hover:bg-[#f9f4ff]",
+                        ),
+                    // 고정 그룹 하단 경계선 (마지막 고정 행) — 고정↔일반 시각 분리
+                    isLastPinned && "border-b-2 border-[#d9c2f5]",
                   )}
                 >
                   {/* No·Date 는 모바일(375)에서 숨김 — Figma 는 Title 단일 열. 고정 행은 번호 대신 비움('고정' 칩은 제목 셀에) */}
