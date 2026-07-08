@@ -102,7 +102,7 @@ pnpm drizzle-kit studio        # DB 브라우저
 - 완료(미머지): **소식 검색·정렬 + /news 정합** (branch `feat/news-search`, PR #35) — 검색(제목+태그 ILIKE) + 정렬(최신순/제목순) + 툴바 2행(탭 단독 + 검색·정렬, familyfed 1272-7363) + 768 카드 2열 정정 + 랜딩 밴드폭(SectionContainer) 정합 + 카드 hover 줌 + 탭 hover center-out 라인. Generator-Evaluator(baseline 4BP → 구현 → 2-pass 적대 → codex C1 반복q 500 → 4차 피드백). ADR-036. 디테일 `docs/plans/active/2026-06-07-news-search.md` · 검증 `docs/design/review-news-search-2026-06-07.md`. tsc0·lint0·test48. **스키마 변경 0.**
 - 완료: **Sprint 2 (어드민 마무리)** — PR #14 (`feat/sprint-2-admin-finish`). 계정 관리(3) + 쌀나눔 통계 DB화(4-2) + 소식 히어로 드래그(4-3) + /news 통합(PR #11 흡수) + 디자인·반응형 감사. 슬라이스별 qa∥codex→evaluator 교차검증 (NO-GO/ITERATE 2건 포착·수정). 단위테스트 22, 마이그레이션 0003/0004/0005 (배포 시 `pnpm drizzle-kit migrate` 필요)
 - 디테일: `~/.claude/plans/compressed-sprouting-salamander.md` (plan 본문) / ADR-027·028·029 (`docs/decisions.md`)
-- 어드민 surface (7): /admin · /admin/news · /admin/news-hero · /admin/categories · /admin/kpi · /admin/landing · /admin/accounts
+- 어드민 surface (8): /admin · /admin/news · /admin/news-hero · /admin/categories · /admin/kpi · /admin/landing · /admin/accounts · /admin/notices
 - 로컬 가동: `docker compose ps` (postgres 5433 + minio) → `pnpm dev`
 - 임시 어드민: `admin@ffwpu-social.local` / `bRhHR2CWkqrMnj0L` (배포 전 변경 필수)
 - 후속 (`docs/TODO.md`): 에러박스 대비 전역검증 · NewsTable 페이지네이션 윈도잉(latent) · `/news/[id]` 상세 · templates/ 빌드(PR #9)

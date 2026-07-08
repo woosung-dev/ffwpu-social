@@ -4,6 +4,11 @@
 
 > **목적:** AI ↔ 사용자 매개. 차단 상태가 아닌 질문·확인 항목은 여기에 누적 후 자연스러운 타이밍에 일괄 전달.
 
+## 진행 중 (2026-07-08)
+
+- **공지사항(notices) 신설** — `docs/plans/active/TASK-20260708-notices.md` (branch `feat/notices`). 어드민 CRUD(에디터+첨부 문서형 20MB·5개) + 공개 목록(/notices, 읽음 하이라이트)·상세(download section). ADR-041/042, **마이그레이션 0013**. S1~S7 완료·E2E PASS.
+  - 🔴 **Figma OAuth 승인 대기** — 4노드(1103-7882·1104-10813·1104-10001·1104-11167) 픽셀 대조 + 공개 헤더 메뉴 추가 여부(케이스 A/B) 확정용.
+
 ## 진행 중 (2026-06-03)
 
 - **랜딩 실데이터화 + 반응형 4-BP 정합** — `docs/plans/active/2026-06-03-landing-data-responsive.md` (branch `feat/client-foundation`). WS1 시드 실데이터화(사진 11장→MinIO) + WS2 슬롯 썸네일 + WS3 ArticleGrid 호이스트 + WS4 RQ /news 목록 캐시(useSuspenseQuery 안정 패턴) + WS5 7면 4-BP 정합. **스키마 변경 없음.**
@@ -19,6 +24,7 @@
 ## 배포 전 필수 (🔴 차단성)
 
 - [ ] **DB 마이그레이션 0007 적용** — 관리자 방문자 분석용 `analytics_events` 테이블 추가. 배포 DB에서 `pnpm db:migrate` 또는 배포 절차의 Drizzle migrate 적용 필요.
+- [ ] **DB 마이그레이션 0013 적용** — 공지사항 `notices` + `notice_attachments` 테이블 (feat/notices 머지 시, GHA migrate 파이프라인 자동 or 수동 1회).
 - [x] **`next build` 타입체크 블로커 해소 (2026-06-01)** — pre-existing `templates/` 스캐폴드(PR #9)가 tsconfig `**/*.ts` 에 포함돼 빌드 실패하던 것 → tsconfig `exclude` 에 `templates` 추가. `pnpm tsc`·`pnpm build` 모두 그린(exit 0). **후속(v1.1): templates monorepo 구조 재정비(PR #9) — 사용자 메모 "추후 구조 다시 잡아야".**
 - [x] **모노레포/폴더 구조 결정 (2026-06-02, ADR-033)** — velog 4부작(Nx·Turbo·pnpm) 교차검증 + 5옵션 점수화(AI-DevX 우선). 결론: 현행 **F3 단일앱 유지**가 v1.0/근미래 최적(OPT-2 8.34 > OPT-1 8.13, OPT-3/5 fails·OPT-4 weakened). velog와 **갈리지 않음**(직교+철학 수렴), template과도 거의 일치. **마이그레이션 부채(v1.1+, 보류)** — 복합 트리거(팀≥3 OR CI 빌드병목 실측 OR web/admin 독립배포 케이던스) 발화 시에만 F2(pnpm→측정후 Turbo, **Nx 금지**)로. 도메인수 7개 단독으로는 발화 금지. 상세 `docs/decisions.md` ADR-033.
 - [ ] **A7 — 로그인 rate limit** — Vercel Firewall rate-limit 룰을 `/api/auth/*` 에 적용(코드 0). 단일 super 브루트포스·credential stuffing 방어. 배포 대시보드 설정. (Vercel 배포 확정 — 2026-06-01)
@@ -138,6 +144,7 @@
 ### v1.1+ 백로그
 
 - [ ] **랜딩 스크롤 fade-in 인터랙션** — Figma 리뷰어 코멘트 요청 (KPI 영역 "지구랩 인터랙션 참고 https://earthrap.imweb.me/", Story 영역 "스크롤 위치에 따라 하단→위로 페이드인 되며 올라오는 인터렉션이 전체적으로 적용되면 좋을 것 같습니다 https://www.netive.co.kr/"). 정적 시안과 별개의 인터랙션 요청이며 현재 애니메이션 라이브러리·코드 전무. 구현 시 IntersectionObserver(기존 `src/client/hooks/useScrollSpy.ts` 패턴 재사용) 또는 CSS `animation-timeline: view()` 로 `translateY(16px)→0` + `opacity 0→1`, `prefers-reduced-motion` 가드 필수·진입 blocking 금지 (anti-slop 모션). 🔴 **사회공헌국 우선순위 확정 필요** — 2026-06-07 KPI·Story Figma 정합 검증에서 제외 결정(정적 정합 우선).
+- [ ] **스토리지 orphan cleanup job** — 업로드 후 미저장 이탈 객체 정리 (news `news/temp-*`·본문 이미지 + notices 첨부·본문 이미지 공통, ADR-041 잔존 리스크). DB key 목록과 S3 목록 diff 배치.
 - [ ] PublicFooter © 연도 자동 갱신 — BUILD_TIME 환경변수 또는 빌드 스크립트.
 - [ ] HeroBanner 60px 슬로건에 Gmarket Sans Medium 본격 도입.
 - [ ] PublicHeader 검색 기능 본격 구현 (ADR-011 1차 범위 외).
