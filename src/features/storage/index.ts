@@ -12,4 +12,6 @@ export {
   type UploadTarget,
 } from "./upload";
 
+export { createPresignedAttachmentUpload } from "./attachments";
+// 순수 정책(attachment-policy.ts)은 클라 공유용이라 이 server-only 배럴에 안 태움 — 직접 import
 export { deleteByPrefix } from "./cleanup";
