@@ -26,21 +26,20 @@ const ACTIVE_PILL_CLASS =
 type MenuItem = {
   id: string;
   label: string;
-  /** 랜딩에서 스크롤·강조할 섹션 id (DOM 순서: kpi→story→stories). href 없는 항목에 필수 */
+  /** 랜딩에서 스크롤·강조할 섹션 id (DOM 순서: kpi→story→stories) */
   section?: string;
-  /** 직접 이동 링크(예: /news) — section 대신 사용. 스크롤스파이 대상 아님 */
+  /** 직접 이동 링크(예: /news) — 클릭 시 이동. section 과 병용 가능(스크롤 강조 + 클릭 이동) */
   href?: string;
   /** 비랜딩(/news 등) 페이지에서 active 고정 */
   activeOnSubpage?: boolean;
 };
 
-// 매핑(ADR-038): 숫자로 보는 우리의 변화→#kpi / 밥이 사랑이다→#story / 메인 스토리→#stories(랜딩 카드 그리드) / 활동 스토리→/news(소식 게시판).
-// 공지사항→/notices — Figma 공지 목록(1103:7882) 헤더에 메뉴 항목으로 확인 (ADR-042 케이스 A). 라벨은 ADR-038 확정 IA 유지
+// 매핑(ADR-038 개정): 숫자로 보는 우리의 변화→#kpi / 밥이 사랑이다→#story / 활동 스토리→/news(클릭) + #stories(카드 그리드) 스크롤 시 강조 / 공지사항→/notices.
+// "메인 스토리" 메뉴 제거 — 카드 그리드(#stories) 스크롤 강조를 "활동 스토리"로 흡수(section+href 병용). 공지사항 = Figma 공지 목록(1103:7882) 헤더 항목, ADR-042 케이스 A.
 const MENU: readonly MenuItem[] = [
   { id: "kpi", label: "숫자로 보는 우리의 변화", section: "kpi" },
   { id: "story", label: "밥이 사랑이다", section: "story" },
-  { id: "stories", label: "메인 스토리", section: "stories" },
-  { id: "news", label: "활동 스토리", href: "/news", activeOnSubpage: true },
+  { id: "news", label: "활동 스토리", href: "/news", section: "stories", activeOnSubpage: true },
   { id: "notices", label: "공지사항", href: "/notices" },
 ] as const;
 
