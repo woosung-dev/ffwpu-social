@@ -26,7 +26,8 @@ export type PresignedUploadResult = {
 };
 
 // scope: 작성 모드는 tempId (글 저장 전), 수정 모드는 newsId. orphan 정리는 v1.1 cleanup job (codex P2#4)
-export type UploadScope = { newsId: string } | { tempId: string };
+// noticeId: 공지 본문 이미지 — 공지는 클라 UUID 선생성이라 temp 변형 없음 (ADR-042)
+export type UploadScope = { newsId: string } | { tempId: string } | { noticeId: string };
 
 type CreatePresignedUploadArgs = {
   scope: UploadScope;
@@ -52,7 +53,11 @@ function buildObjectKey(
 ): string {
   const ext = extFromFilenameOrMime(filename, mime);
   const prefix =
-    "newsId" in scope ? `news/${scope.newsId}` : `news/temp-${scope.tempId}`;
+    "newsId" in scope
+      ? `news/${scope.newsId}`
+      : "noticeId" in scope
+        ? `notices/${scope.noticeId}`
+        : `news/temp-${scope.tempId}`;
   return `${prefix}/${randomUUID()}.${ext}`;
 }
 

@@ -1,7 +1,26 @@
 // 본문 이미지 업로드 — 공식 ImageUploadNode 의 upload 시그니처를 우리 R2 presigned PUT 에 배선
 import { uploadImageAction } from "@/features/news/actions";
+import { uploadNoticeImageAction } from "@/features/notices/actions";
 
-export type EditorScope = { newsId: string } | { tempId: string };
+export type EditorScope =
+  | { newsId: string }
+  | { tempId: string }
+  | { noticeId: string };
+
+// scope 별 presign 액션 분기 — 공지는 notices/{id}/ prefix (ADR-042), 소식은 기존 news 경로
+async function requestPresign(
+  scope: EditorScope,
+  file: File,
+): Promise<
+  | { success: true; data: { uploadUrl: string; contentType: string; publicUrl: string } }
+  | { success: false; error: unknown }
+> {
+  const base = { filename: file.name, mime: file.type, size: file.size };
+  if ("noticeId" in scope) {
+    return uploadNoticeImageAction({ ...base, noticeId: scope.noticeId });
+  }
+  return uploadImageAction({ ...base, target: "body", ...scope });
+}
 
 // (file, onProgress?, abortSignal?) => Promise<publicUrl> — ImageUploadNode 호환
 export function makeBodyImageUploader(scope?: EditorScope) {
@@ -11,13 +30,7 @@ export function makeBodyImageUploader(scope?: EditorScope) {
     abortSignal?: AbortSignal,
   ): Promise<string> => {
     if (!scope) throw new Error("이미지 업로드 scope 가 없습니다.");
-    const presign = await uploadImageAction({
-      filename: file.name,
-      mime: file.type,
-      size: file.size,
-      target: "body",
-      ...scope,
-    });
+    const presign = await requestPresign(scope, file);
     if (!presign.success) {
       const msg =
         typeof presign.error === "string" ? presign.error : "업로드 URL 발급 실패";

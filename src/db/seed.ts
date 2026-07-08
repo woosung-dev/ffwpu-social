@@ -25,7 +25,8 @@ if (!adminPassword) {
 }
 
 const { db } = await import("./index");
-const { users, categories, news, newsTags, kpiMetrics } = await import("./schema");
+const { users, categories, news, newsTags, notices, noticeAttachments, kpiMetrics } =
+  await import("./schema");
 const { s3, S3_BUCKET, getPublicUrl } = await import("../lib/s3");
 
 // ---------------------------------------------------------------------------
@@ -304,10 +305,116 @@ const samples: SeedSample[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// 샘플 공지 8건 — 발행 6 + 예약 1 + 임시 1, 그중 2건 첨부(PDF)
+// id 고정 UUID — 첨부 키(notices/{id}/attachments/)가 재시드에도 동일해 orphan 미발생
+// ---------------------------------------------------------------------------
+
+// 최소 유효 PDF — 첨부 다운로드 경로(presigned GET 302) 검증용 더미
+const MINIMAL_PDF = Buffer.from(
+  "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]>>endobj\ntrailer<</Size 4/Root 1 0 R>>\n%%EOF\n",
+);
+
+async function uploadNoticeSeedPdf(noticeId: string, filename: string) {
+  const key = `notices/${noticeId}/attachments/seed-${filename}`;
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: key,
+      Body: MINIMAL_PDF,
+      ContentType: "application/pdf",
+    }),
+  );
+  return key;
+}
+
+type SeedNotice = {
+  id: string;
+  title: string;
+  // null = 임시저장, 미래 Date = 예약 발행
+  publishedAt: Date | null;
+  paragraphs: string[];
+  attachmentFiles?: string[];
+};
+
+const noticeSamples: SeedNotice[] = [
+  {
+    id: "0d9b2a51-6a4f-4c1e-9b3a-1f2e3d4c5b6a",
+    title: "2026년 여름 쌀 나눔 자원봉사자 모집 안내",
+    publishedAt: new Date("2026-06-20"),
+    attachmentFiles: ["모집요강.pdf", "신청서양식.pdf"],
+    paragraphs: [
+      "2026년 여름 쌀 나눔 활동에 함께할 자원봉사자를 모집합니다. 포장·전달·안부 방문 등 다양한 역할이 준비되어 있습니다.",
+      "자세한 일정과 신청 방법은 첨부된 모집요강을 확인해 주세요. 신청서 양식을 작성해 사무국 메일로 보내주시면 됩니다.",
+    ],
+  },
+  {
+    id: "1e8c3b62-7b5a-4d2f-8c4b-2a3f4e5d6c7b",
+    title: "사회공헌단 Sow Good 홈페이지 오픈 안내",
+    publishedAt: new Date("2026-06-10"),
+    paragraphs: [
+      "사회공헌단 Sow Good 의 공식 홈페이지가 문을 열었습니다. 쌀 나눔을 비롯한 활동 소식과 공지사항을 이곳에서 확인하실 수 있습니다.",
+      "앞으로도 투명하고 따뜻한 나눔 소식으로 찾아뵙겠습니다.",
+    ],
+  },
+  {
+    id: "2f7d4c73-8c6b-4e3a-9d5c-3b4a5f6e7d8c",
+    title: "[안내] 7월 정기 나눔 일정 변경",
+    publishedAt: new Date("2026-07-01"),
+    paragraphs: [
+      "7월 정기 쌀 나눔 일정이 우천 예보로 하루 앞당겨졌습니다. 참여 예정이신 봉사자분들은 변경된 일정을 확인해 주세요.",
+      "일정 변경으로 불편을 드려 죄송합니다. 문의는 사무국으로 부탁드립니다.",
+    ],
+  },
+  {
+    id: "3a6e5d84-9d7c-4f4b-8e6d-4c5b6a7f8e9d",
+    title: "후원 물품 전달 절차 안내",
+    publishedAt: new Date("2026-05-28"),
+    attachmentFiles: ["전달절차안내.pdf"],
+    paragraphs: [
+      "후원 물품이 이웃에게 전달되기까지의 절차를 안내드립니다. 접수부터 전달 확인까지 모든 단계는 기록으로 남깁니다.",
+      "자세한 절차는 첨부 문서를 참고해 주세요.",
+    ],
+  },
+  {
+    id: "4b5f6e95-ae8d-4a5c-9f7e-5d6c7b8a9f0e",
+    title: "개인정보 처리방침 개정 안내",
+    publishedAt: new Date("2026-05-15"),
+    paragraphs: [
+      "개인정보 처리방침이 2026년 5월 15일자로 개정되었습니다. 주요 변경 사항은 수집 항목 최소화와 보관 기간 명시입니다.",
+      "궁금하신 점은 사무국으로 문의해 주시기 바랍니다.",
+    ],
+  },
+  {
+    id: "5c4a7f06-bf9e-4b6d-8a8f-6e7d8c9b0a1f",
+    title: "설 연휴 사무국 운영 안내",
+    publishedAt: new Date("2026-02-10"),
+    paragraphs: [
+      "설 연휴 기간(2026년 2월 16일~18일) 사무국 운영을 쉽니다. 연휴 중 접수된 문의는 업무 재개 후 순차적으로 답변드립니다.",
+      "따뜻한 명절 보내시기 바랍니다.",
+    ],
+  },
+  {
+    id: "6d3b8a17-c0af-4c7e-9b9a-7f8e9d0c1b2a",
+    title: "8월 봉사자 안전 교육 일정 안내",
+    // 예약 발행 — 시드 시점 기준 미래
+    publishedAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    paragraphs: [
+      "8월 정기 봉사자 안전 교육 일정을 안내드립니다. 신규 봉사자는 필수 참석입니다.",
+    ],
+  },
+  {
+    id: "7e2c9b28-d1ba-4d8f-8cab-8a9f0e1d2c3b",
+    title: "(작성 중) 2026 상반기 활동 보고",
+    publishedAt: null,
+    paragraphs: ["상반기 활동 보고 초안입니다. 발행 전 검토 중입니다."],
+  },
+];
+
 async function seed() {
   console.log("[seed] truncating existing rows...");
   await db.execute(
-    sql`TRUNCATE TABLE news_tags, heart_events, audit_logs, news, categories, users, kpi_metrics RESTART IDENTITY CASCADE`,
+    sql`TRUNCATE TABLE news_tags, heart_events, audit_logs, news, notice_attachments, notices, categories, users, kpi_metrics RESTART IDENTITY CASCADE`,
   );
 
   console.log("[seed] inserting KPI metrics (디자이너 더미 — 사회공헌국 정확값 수령 후 어드민에서 교체)...");
@@ -448,10 +555,34 @@ async function seed() {
     }
   }
 
+  console.log(`[seed] inserting ${noticeSamples.length} notice samples...`);
+  let noticeAttachmentCount = 0;
+  for (const notice of noticeSamples) {
+    await db.insert(notices).values({
+      id: notice.id,
+      title: notice.title,
+      body: buildBody(notice.paragraphs),
+      publishedAt: notice.publishedAt,
+      createdBy: admin.id,
+    });
+    for (const [i, filename] of (notice.attachmentFiles ?? []).entries()) {
+      const key = await uploadNoticeSeedPdf(notice.id, filename);
+      await db.insert(noticeAttachments).values({
+        noticeId: notice.id,
+        fileName: filename,
+        key,
+        mime: "application/pdf",
+        size: MINIMAL_PDF.length,
+        sortOrder: i,
+      });
+      noticeAttachmentCount += 1;
+    }
+  }
+
   const tagCount = samples.reduce((sum, s) => sum + s.tags.length, 0);
   const coverCount = [...coverMetaByFile.values()].filter(Boolean).length;
   console.log(
-    `[seed] done. admin: ${adminEmail} / news ${samples.length}건 (커버 ${coverCount}) + 태그 ${tagCount}건 / story 슬롯 2 · featured 6 · hero 4 배정`,
+    `[seed] done. admin: ${adminEmail} / news ${samples.length}건 (커버 ${coverCount}) + 태그 ${tagCount}건 / story 슬롯 2 · featured 6 · hero 4 배정 / 공지 ${noticeSamples.length}건 (첨부 ${noticeAttachmentCount})`,
   );
   process.exit(0);
 }

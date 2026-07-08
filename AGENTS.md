@@ -95,13 +95,14 @@ pnpm drizzle-kit studio        # DB 브라우저
 
 ### 현재 작업
 
+- 완료(미머지, **PR #82**): **공지사항(notices) 신설** (branch `feat/notices`) — 어드민 CRUD(에디터+첨부 문서형 20MB·최대 5개) + 공개 목록/상세(읽음 하이라이트·다운로드 섹션) + 헤더 5번째 메뉴(케이스 A) + **상위 고정(순서 드래그, S9)** — `pinned_rank`·공개 고정우선 정렬(번호 대신 '고정' 칩)·어드민 상단 `NoticePinOrderManager`(HeroOrderManager 이식)·발행 해제 시 동반 해제(news `hero_rank` 패턴). Figma 4노드 정합(`docs/design/figma-export/notices/`). ADR-041/042/**043**, **마이그레이션 0013·0014**. tsc0·lint0·**test103**·build✓·E2E PASS. "관리자 안 됨" 원인 = migrate 0013 미적용(코드 정상). **상위 고정 시각 시안(design-shotgun)은 후속.** 디테일 `docs/plans/active/TASK-20260708-notices.md`.
 - 완료(미머지, **PR #45**): **소식 상세 하트 B 시안 + Figma 정합 전수 감사** (branch `feat/news-heart-bottom-fidelity` = main + PR #40 머지 + 사용자 분석 커밋·마이그레이션 0007) — 하트를 상단 날짜줄→하단 공유줄 "공감해요" pill 로 이동(Figma 749:7920) + 3면×4BP 전수 감사(confirmed 108 → fixed 95·정책기각 16, ±2px 수렴). 디테일 `docs/plans/active/TASK-20260610-news-heart-bottom-fidelity.md` · 리포트 `docs/design/audit-2026-06-10/report.md`. tsc0·lint0·test52·build✓. **PR #40 선머지 → #45 자동 재타게팅.**
 - 진행 중: **랜딩 실데이터화 + 반응형 4-BP 정합** (branch `feat/client-foundation`) — 디테일 `docs/plans/active/2026-06-03-landing-data-responsive.md`. WS1 시드 실데이터화(사진 11장→MinIO `news/seed/`, 소식 14건·슬롯 전배정) + WS2 어드민 슬롯 썸네일 + WS3 ArticleGrid fetch 호이스트 + WS4 TanStack Query /news 목록 Streaming SSR(useSuspenseQuery, ADR-034) + WS5 7면 4-BP 정합(ADR-035, design.md 매트릭스 정정). **스키마 변경 0.** 🔴 사진 11장 수령 대기(`src/db/seed-assets/`) · Gmarket Sans 라이선스 확인.
 - 진행 중: **어드민 v1.0 ship-전 하드닝** (branch `feat/admin-ship-hardening`) — 디테일 `docs/plans/active/2026-06-01-admin-ship-hardening.md`. HIGH 6(슬롯 eligibility·JWT 무효화·색대비·rate-limit·동시성) + 접근성 + 모바일 카드뷰 + 아키텍처 옵션1. 다단 검토 GO-WITH-FIXES + codex v2. **스키마 변경 없음.**
 - 완료(미머지): **소식 검색·정렬 + /news 정합** (branch `feat/news-search`, PR #35) — 검색(제목+태그 ILIKE) + 정렬(최신순/제목순) + 툴바 2행(탭 단독 + 검색·정렬, familyfed 1272-7363) + 768 카드 2열 정정 + 랜딩 밴드폭(SectionContainer) 정합 + 카드 hover 줌 + 탭 hover center-out 라인. Generator-Evaluator(baseline 4BP → 구현 → 2-pass 적대 → codex C1 반복q 500 → 4차 피드백). ADR-036. 디테일 `docs/plans/active/2026-06-07-news-search.md` · 검증 `docs/design/review-news-search-2026-06-07.md`. tsc0·lint0·test48. **스키마 변경 0.**
 - 완료: **Sprint 2 (어드민 마무리)** — PR #14 (`feat/sprint-2-admin-finish`). 계정 관리(3) + 쌀나눔 통계 DB화(4-2) + 소식 히어로 드래그(4-3) + /news 통합(PR #11 흡수) + 디자인·반응형 감사. 슬라이스별 qa∥codex→evaluator 교차검증 (NO-GO/ITERATE 2건 포착·수정). 단위테스트 22, 마이그레이션 0003/0004/0005 (배포 시 `pnpm drizzle-kit migrate` 필요)
 - 디테일: `~/.claude/plans/compressed-sprouting-salamander.md` (plan 본문) / ADR-027·028·029 (`docs/decisions.md`)
-- 어드민 surface (7): /admin · /admin/news · /admin/news-hero · /admin/categories · /admin/kpi · /admin/landing · /admin/accounts
+- 어드민 surface (8): /admin · /admin/news · /admin/news-hero · /admin/categories · /admin/kpi · /admin/landing · /admin/accounts · /admin/notices
 - 로컬 가동: `docker compose ps` (postgres 5433 + minio) → `pnpm dev`
 - 임시 어드민: `admin@ffwpu-social.local` / `bRhHR2CWkqrMnj0L` (배포 전 변경 필수)
 - 후속 (`docs/TODO.md`): 에러박스 대비 전역검증 · NewsTable 페이지네이션 윈도잉(latent) · `/news/[id]` 상세 · templates/ 빌드(PR #9)

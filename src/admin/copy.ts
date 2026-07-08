@@ -20,6 +20,9 @@ export const ADMIN_COPY = {
     storyTabFeatured: "스토리 대표글",
     storyTabManage: "스토리 관리",
     categories: "스토리 카테고리",
+    // 공지사항 (공지 CRUD + 첨부파일)
+    groupNotices: "공지사항",
+    notices: "공지사항 관리",
     // 설정
     groupSystem: "설정",
     accounts: "관리자 계정",
@@ -147,6 +150,19 @@ export const ADMIN_COPY = {
     roleSuper: "최고 관리자",
     roleSuperHelp: "모든 기능을 사용할 수 있는 관리자 권한이에요.",
     createNotice: "새 계정은 '최고 관리자' 권한으로 만들어져요.",
+  },
+
+  // ─── 공지사항 관리 (공지 목록/작성/수정 + 첨부파일) ───
+  notices: {
+    title: "공지사항 관리",
+    description: "공지 목록·작성·수정·발행과 첨부파일을 관리합니다.",
+    statusHelp:
+      "임시 저장은 나만 보는 초안, 예약은 정한 시각에 자동 발행, 발행은 지금 사용자에게 보이는 상태예요.",
+    attachmentsHelp:
+      "PDF·Word·Excel·PPT·한글(hwp)·ZIP·이미지 파일을 개당 20MB, 최대 5개까지 올릴 수 있어요. 순서는 화살표로 바꿀 수 있어요.",
+    pinTitle: "상위 고정",
+    pinHelp:
+      "중요한 공지를 목록 맨 위에 고정해요. 발행된 공지만 고정할 수 있고, 드래그로 순서를 바꾼 뒤 ‘순서 저장’을 눌러야 반영돼요. 발행을 해제하면 고정도 함께 풀려요.",
   },
 
   // ─── 활동 스토리 관리 (소식 운영 — 대표글 슬라이드 + 글 목록/작성/수정) ───

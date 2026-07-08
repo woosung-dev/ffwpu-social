@@ -580,6 +580,8 @@ module.exports = {
 - 본문 rich text 에디터에서 이미지만 인라인 삽입.
 - PDF가 필요한 보고서 등은 *이미지로 변환*하거나 v1.1에서 별도 첨부 지원.
 
+> **2026-07-08 갱신**: 공지사항(notices) 첨부에 한해 ADR-041이 본 결정을 supersede — 문서형(PDF·Office·한글·ZIP) 20MB 허용. 소식(news)은 여전히 이미지만.
+
 ---
 
 ## ADR-018: 해석 원칙 — "왜·정체성·톤" 영역은 추론으로 채우되 명시한다
@@ -1537,3 +1539,86 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 - 리빌은 `[data-reveal]` 요소에만 영향 → /news·어드민 무영향(검증: /news revealLeak 0). 전역 `--header-h` 변경도 /news scroll-padding-top 88px 정상.
 - 신규 프리미티브 `src/client/components/motion/Reveal.tsx` + `useInViewReveal` — 재사용 가능(랜딩 한정 운용).
 - 검증(2026-06-13): 1440/1280/720 스티키 핀↔해제·헤더 비겹침·`<wide` static, 리빌 발동·초기숨김 15/15·reduced-motion/scripting 규칙 CSSOM 확인, 4-BP 가로 오버플로 0·콘솔 0, Figma 4-BP 재감사(audit-2026-06-13). tsc0·lint0·test56.
+
+## ADR-041: 공지 첨부 스토리지 — 문서형 확장자 allowlist + canonical MIME 서명 + presigned GET 302 다운로드
+
+- **Status**: Accepted (Supersedes ADR-017 — 공지 첨부 범위 한정)
+- **Date**: 2026-07-08
+
+### Context
+
+공지사항(notices) 기능에 첨부파일(운영 문서 배포)이 필요. 기존 업로드 인프라(ADR-017)는 이미지(JPG/PNG/WEBP, 5MB) 전용. R2 는 presigned POST 미지원(PUT만)이고, R2 public URL 은 Content-Disposition 제어 불가 + cross-origin `<a download>` 무시 — 한글 원본 파일명 다운로드가 불가능.
+
+### Decision
+
+1. **허용 정책 = 확장자 1차 + 신고 MIME 2차** (`src/features/storage/attachment-policy.ts`, 순수 모듈 — 클라 선검증 공유). PDF·docx·xlsx·pptx·hwp/hwpx·zip + jpg/png/webp, 개당 **20MB**, 공지당 **최대 5개**. MIME 검증은 보안 경계가 아니라 UX 사전검증(클라 신고값은 위조 가능) — 보안은 확장자 allowlist + canonical 서명이 담당.
+2. **presign Content-Type 은 canonical MIME 고정.** hwp/hwpx 등 문서형은 OS/브라우저별 신고 MIME 편차(x-hwp/haansofthwp/octet-stream/빈 문자열)가 커서 accepted 를 넓게 두되, 서명은 canonical 로 고정해 서명 불일치를 원천 차단. 문서형은 octet-stream·빈 문자열 신고 허용, 이미지는 엄격.
+3. **key = `notices/{noticeId}/attachments/{uuid}.{ext}`** — 본문 이미지(`notices/{id}/`)와 하위 구분, `deleteByPrefix("notices/{id}/")` 한 번에 청소. 원본 파일명은 DB(`notice_attachments.file_name`)에 보존. service 가 key 의 소유 prefix(startsWith) 를 검증해 타 공지 key 위조 차단.
+4. **다운로드 = presigned GET 302 Route Handler** (`/api/notices/attachments/[id]`, fullstack.md §6 정합). `ResponseContentDisposition: attachment; filename*=UTF-8''…`(RFC 5987 + ASCII fallback)로 한글 원본 파일명 보존. **부모 공지 미발행/예약이면 404** — 첨부 URL 추측 차단. `Cache-Control: no-store`(60초 만료 presign 재사용 방지).
+5. **첨부 저장 = tx 내 delete-all + re-insert**(공지당 ≤5행), S3 는 "기존 − 신규 key 차집합"만 best-effort 삭제(`deleteByKeys`).
+
+**잔존 리스크 (수용)**: presigned PUT 은 content-length 서명 불가 → size 는 발급 전 선언값 검증만(ADR-017 동일 트레이드오프). 객체 수동 소실 시 다운로드는 R2/MinIO 404. 미저장 이탈 orphan 은 v1.1 cleanup job 대상(news 동일).
+
+### Consequences
+
+- 소식(news)은 여전히 이미지 전용 — ADR-017 유효 범위 유지. 공지 첨부만 문서형 확장.
+- E2E 검증(2026-07-08, dev+MinIO): pdf/hwp 업로드(hwp canonical `application/x-hwp` 저장)·exe 거부·다운로드 302→200(한글 파일명)·미발행/예약/불량 uuid 404·수정 시 제거분만 MinIO diff 삭제.
+
+## ADR-042: 공지사항(notices) 독립 도메인 — news 미재사용 + 크로스 도메인 재사용 범위
+
+- **Status**: Accepted
+- **Date**: 2026-07-08
+
+### Context
+
+공지사항(어드민 CRUD + 공개 목록/상세) 추가. 기존 `news` 테이블에 type 플래그로 얹는 안과 별도 도메인 신설 안 중 택일 필요.
+
+### Decision
+
+**별도 `notices` + `notice_attachments` 테이블 + `src/features/notices/` 신규 도메인** (사용자 확정 2026-07-08).
+
+- 근거: 공지는 카테고리 FK(notNull)·태그·커버·랜딩/히어로 슬롯·하트가 **없고**, 첨부파일·읽음표시·순번(No.)이 **있음** — news 재사용 시 더미 카테고리 강제 + 슬롯 eligibility 오염 + 목록 API 필터 복잡화.
+- 발행 시맨틱은 news 와 동일: `publishedAt` nullable (null=임시, 미래=예약). 공개 노출 조건은 db.ts 단일 헬퍼(`published_at IS NOT NULL AND <= now()`)로 목록·상세·다운로드·카운트 통일.
+- **크로스 도메인 재사용 허용 범위** (중복 생성 금지): `SimpleEditor`(Tiptap)·`NewsBodyRenderer`/`sanitizeTiptapJson`(본문 렌더 SSOT)·`bodyToExcerpt`·`likePattern`·presigned 인프라(`features/storage`). `Pagination` 은 news 전속에서 `src/client/components/` 로 승격(news 배럴 re-export 유지). `PrevNextNav` 는 경로 하드코딩 문제로 notices 사본 유지 — Figma 대조 후 동일 확정 시 공용화 후보.
+- **공개 목록은 순수 Server Component** — 검색·정렬·탭이 없어(?page= 만) RQ Streaming SSR(ADR-034) 불필요. 무효화는 `revalidatePath("/notices")`. 읽음표시는 localStorage(`sg_visited_notices`, 상한 200) — mount 후 적용해 hydration-safe, 개인정보 미수집(ADR-026 결).
+- 어드민은 사이드바 신규 그룹 "공지사항"(스토리 그룹은 공개 섹션명 정합으로 닫혀 있어 혼입 시 그룹명 충돌). 어드민 surface 7→8.
+
+### Consequences
+
+- 마이그레이션 0013 (`notices` + `notice_attachments`). 배포 시 `pnpm db:migrate` 필요.
+- 공지 발행/해제는 랜딩·큐레이션과 무관 — revalidate 묶음이 news 보다 좁음(`/notices`, `/admin/notices`).
+- 시드에 공지 8건(발행 6·예약 1·임시 1, 첨부 3) 추가 — 고정 UUID 로 첨부 키 결정성(재시드 orphan 방지).
+- 공개 진입 경로 = **케이스 A 확정** (2026-07-08 Figma 1103:7882 헤더 실측): "공지사항" 을 헤더 5번째 메뉴로 추가 + 비랜딩 active 판정을 pathname 경로 매칭으로 확장(매칭 없으면 기존 activeOnSubpage 폴백). Figma 프레임의 타 메뉴 라벨(임팩트 데이터 등)은 pre-ADR-038 디자이너 더미로 판단 — ADR-038 확정 라벨 유지, 사회공헌국 확인 항목으로 escalation (docs/TODO.md).
+- 공개 페이지 타이틀 eyebrow "News" 는 Figma 그대로 채택하되 공지 게시판 카피로 적절한지 검수 대상 (docs/TODO.md Questions). Figma ground truth: `docs/design/figma-export/notices/`.
+
+### Addendum (2026-07-08, 후속 — 리뷰 피드백)
+
+- **다운로드 섹션 본문 위 → 아래 이동** (사용자 피드백). 디자이너가 갱신한 상세 프레임(`1104-10813` 등)도 `타이틀→본문→다운로드→구분선→이전/다음` 으로 확정돼 코드와 일치. `PrevNextNav`(notices 사본)는 이번 대조에서도 news 와 동일 레이아웃 확인 — 공용화 후보 유지(별도 PR).
+- **반응형 4-BP 실측 정합** — 디자이너가 구간별 프레임 10 추가(목록/상세 각 375/767/768/1025/1440). 당초 "1440 단일 + 하위 BP 비례 [추론]" 를 실측 교체. 핵심: 모바일(<768) 목록 **No·Date 열 제거**(Title 단일) · 누락 `lg:`(1024) 스텝 보강 · 목록 타이포 전 BP 고정(eyebrow18/h1 32). **헤더·푸터·배너는 참고 대상 제외**(사용자 지시). 측정/조치 `docs/design/notices-fidelity-2026-07-08.md`, Playwright ±2px 검증. 마이그레이션·데이터·다운로드 route 변경 없음.
+
+---
+
+## ADR-043: 공지사항 상위 고정(순서 드래그) — news heroRank 패턴 이식
+
+- **Status**: Accepted
+- **Date**: 2026-07-08
+
+### Context
+
+운영자가 중요한 공지를 목록 맨 위에 고정하고 싶어 함(사용자 요청 2026-07-08). ADR-042 는 공지에서 랜딩/히어로 슬롯을 의도적으로 제외하고 공개 목록을 "정렬 없는 순수 Server Component(`published_at DESC`)" 로 규정했으나, "상위 고정" 은 그 결정의 부분 개정에 해당한다. 고정 방식은 **순서 지정 드래그**, 조작은 **어드민 목록 화면**으로 확정.
+
+### Decision
+
+**news `hero_rank` 큐레이션 패턴을 notices 에 이식** — 신규 설계가 아니라 검증된 자산 복제.
+
+- 스키마: `notices.pinned_rank integer nullable` + `notices_pinned_rank_uniq` **partial unique index (`WHERE pinned_rank IS NOT NULL`)** — 같은 자리 중복 불가, NULL(미고정) 다수 허용. 마이그레이션 **0014** (ADD COLUMN + CREATE INDEX, 무손실).
+- 공개 정렬: `listPublicNotices` orderBy 를 `pinned_rank ASC NULLS LAST, published_at DESC` 로. **번호(No.) 공식은 무변경** — 고정 글이 전역 상단 P개를 점유하고 번호를 숨기므로 비고정 행이 자연히 `(total−P)…1` 로 이어짐. 고정 행은 번호 대신 '고정' 칩(읽음 마커 핀과 시각 구분).
+- 조작 UI: `/admin/notices` 목록 상단 전용 카드 `NoticePinOrderManager`(HeroOrderManager 이식 — 썸네일·카테고리 제거, 제목+발행일). picker 추가 + @dnd-kit 드래그 순서 + 명시 "순서 저장". **작성·수정 폼 미변경**(사용자 지시). 어드민 목록 테이블은 고정 배지(읽기)만 추가, 정렬은 유지.
+- 저장: `setNoticePinOrder` 2-phase(전체 NULL 리셋 → `1..N` 부여, Phase2 `publicPublishedWhere` 가드로 TOCTOU 차단) + advisory lock `740033`(news hero 740031·landing 740032 와 분리). **발행 공지만 고정**(예약·임시 차단) — service 에서 `countPublishedIn` 검증.
+- 발행 해제 동반 정리: `setPublishedAt(false)`·`updateNotice`(임시·예약 전환) 시 `clearPinnedRank` 호출 — 미공개 공지의 고아 pinned_rank 방지. **최대 고정 3개**(`MAX_PINNED_NOTICES`).
+
+### Consequences
+
+- ADR-042 의 "공개 목록 정렬 없음 / 슬롯 제외" 를 **부분 개정** — 공지도 단일 큐레이션 축(pinned_rank)을 가짐. 단 news 처럼 다축(story/featured/hero)은 아님.
+- 마이그레이션 **0014** 배포 필요(GHA migrate 자동). 기존 시드 공지는 pinned_rank NULL 로 무영향.
+- 공개 목록 고정 표시 = **시안 B 확정**(design-shotgun 4안 비교, 사용자 선택 2026-07-08). Figma 시안 부재분을 이 단계에서 확정: 고정 행 **그룹 배경 워시 `#efe4ff`**(읽음 하이라이트 `#f9f4ff` 보다 진한 보라로 구분) + **마지막 고정 행 하단 구분선 `#d9c2f5`**(고정↔일반 시각 분리) + 제목 앞 **'고정' 소프트 칩**(`#f3e8ff`/`#a34df3`, 번호는 숨김). Playwright 렌더 확인. 어드민 카드는 별도 시안 없이 HeroOrderManager 이식형 그대로 확정.
