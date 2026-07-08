@@ -23,7 +23,9 @@ export async function listPublicNotices(opts: { page: number; limit: number }) {
       id: notices.id,
       title: notices.title,
       publishedAt: notices.publishedAt,
-      hasAttachment: sql<boolean>`EXISTS (SELECT 1 FROM ${noticeAttachments} WHERE ${noticeAttachments.noticeId} = ${notices.id})`,
+      // 상관 서브쿼리는 raw 정규화 이름 필수 — 조인 없는 select 에서 drizzle 이 보간 컬럼을 비정규화("id")해
+      // 내부 테이블로 오결합(notice_id = notice_attachments.id → 항상 false)되는 버그 (E2E 검증에서 발견)
+      hasAttachment: sql<boolean>`EXISTS (SELECT 1 FROM notice_attachments WHERE notice_attachments.notice_id = notices.id)`,
     })
     .from(notices)
     .where(publicPublishedWhere())
@@ -149,7 +151,8 @@ export async function listForAdmin(opts: AdminListOpts) {
       publishedAt: notices.publishedAt,
       createdAt: notices.createdAt,
       updatedAt: notices.updatedAt,
-      attachmentCount: sql<number>`(SELECT count(*)::int FROM ${noticeAttachments} WHERE ${noticeAttachments.noticeId} = ${notices.id})`,
+      // raw 정규화 이름 — hasAttachment(listPublicNotices)와 동일 사유
+      attachmentCount: sql<number>`(SELECT count(*)::int FROM notice_attachments WHERE notice_attachments.notice_id = notices.id)`,
     })
     .from(notices)
     .where(and(adminStatusWhere(opts.status), titleWhere(opts.q)))
