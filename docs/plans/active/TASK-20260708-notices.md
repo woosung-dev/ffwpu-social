@@ -45,4 +45,5 @@ related_adr: ADR-041, ADR-042
 - 미저장 이탈 orphan 객체는 news와 동일하게 v1.1 cleanup job 대상 (docs/TODO.md).
 - 2026-07-08 (E2E 발견 버그): drizzle 은 **조인 없는 select** 의 sql`` 보간 컬럼을 비정규화("id")해 상관 서브쿼리가 내부 테이블로 오결합 → 카운트 항상 0. raw 정규화 이름(`notice_attachments.notice_id = notices.id`)으로 수정. news heartCount 는 categories 조인 덕에 정규화되어 무사했음 — **동일 패턴 신규 작성 시 주의**.
 - 2026-07-08: 어드민 E2E 전 구간 PASS — 작성→pdf/hwp 첨부(hwp canonical MIME 저장)→exe 거부→발행→수정(제거분 MinIO diff 삭제)→본문 이미지(notices/{id}/ prefix)→다운로드 302(한글 파일명)·미발행 404. 공개 목록·상세·읽음 하이라이트(localStorage→bg #F9F4FF+제목 brand-primary) PASS.
+- 2026-07-08 (S8 발견): dev 에서 상세 미방문 공지가 읽음 처리되는 팬텀 기록 관측(라우터 프리페치/세그먼트 프리렌더 계열 추정 — 격리 재현은 안 됨). NoticeVisitTracker 에 `location.pathname === /notices/{id}` 가드 추가 — 실제 상세 URL 에 있을 때만 마킹. 가드 후 방치 8초·hover 프리페치에도 재발 0, 실방문 1건만 기록 확인.
 - 잔여: ① Figma 4노드 픽셀 대조(+헤더 케이스 A/B 확정) ② prod 배포 시 `pnpm db:migrate`(0013) 필요.

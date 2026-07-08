@@ -10,6 +10,9 @@ export function NoticeVisitTracker({ noticeId }: { noticeId: string }) {
   const marked = useRef(false);
   useEffect(() => {
     if (marked.current) return;
+    // 현재 URL 이 이 공지의 상세일 때만 마킹 — 라우터 프리페치/세그먼트 프리렌더가 상세 컴포넌트를
+    // 백그라운드 마운트해도 "안 읽은 글" 이 읽음 처리되지 않도록 (dev E2E 에서 팬텀 기록 관측)
+    if (window.location.pathname !== `/notices/${noticeId}`) return;
     marked.current = true;
     markNoticeVisited(noticeId);
   }, [noticeId]);
