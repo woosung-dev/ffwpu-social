@@ -14,7 +14,12 @@ import {
 } from "@/features/storage";
 import { validateAttachment } from "@/features/storage/attachment-policy";
 import * as noticeService from "./service";
-import { noticeInputSchema, type NoticeInput } from "./schemas";
+import {
+  noticeInputSchema,
+  setNoticePinOrderInputSchema,
+  type NoticeInput,
+  type SetNoticePinOrderInput,
+} from "./schemas";
 
 // 공지 변경 시 공개 + 어드민 캐시 무효화 — 공지는 랜딩·큐레이션과 무관해 news 보다 좁은 묶음
 function revalidateNoticeRoutes(id?: string) {
@@ -101,6 +106,29 @@ export async function publishNoticeAction(
     if (!updated) return { success: false, error: "Not Found" };
     revalidateNoticeRoutes(id);
     return { success: true, data: updated };
+  } catch (e) {
+    return toActionError(e, "noticeAction");
+  }
+}
+
+// 상위 고정 순서 저장 — 최대 N개·중복 불가·발행 공지만. 명시 Save (드롭마다 자동저장 아님). revalidate 공개+어드민
+export async function setNoticePinOrderAction(
+  input: SetNoticePinOrderInput,
+): Promise<ActionResult<{ count: number }, SetNoticePinOrderInput>> {
+  try {
+    await requireSuperAdmin();
+    const parsed = setNoticePinOrderInputSchema.safeParse(input);
+    if (!parsed.success) return { success: false, error: parsed.error };
+
+    const result = await noticeService.setNoticePinOrder(parsed.data.orderedNoticeIds);
+    if (result.kind === "has_unpublished") {
+      return {
+        success: false,
+        error: "발행된 공지만 상위 고정할 수 있습니다.",
+      };
+    }
+    revalidateNoticeRoutes();
+    return { success: true, data: { count: parsed.data.orderedNoticeIds.length } };
   } catch (e) {
     return toActionError(e, "noticeAction");
   }

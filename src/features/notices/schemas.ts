@@ -57,3 +57,22 @@ export const listNoticesQuerySchema = z.object({
 });
 
 export type ListNoticesQuery = z.infer<typeof listNoticesQuerySchema>;
+
+// 상위 고정 최대 개수 — 목록 상단 과점유 방지. Client(NoticePinOrderManager)·Server(action) 단일 출처
+export const MAX_PINNED_NOTICES = 3;
+
+// 상위 고정 순서 저장 입력 — 발행 공지 uuid 배열, 최대 N개·중복 불가 (news setHeroOrderInputSchema 동일)
+export const setNoticePinOrderInputSchema = z
+  .object({
+    orderedNoticeIds: z
+      .array(z.uuid())
+      .max(
+        MAX_PINNED_NOTICES,
+        `상위 고정은 최대 ${MAX_PINNED_NOTICES}개까지 지정할 수 있습니다.`,
+      ),
+  })
+  .refine((v) => new Set(v.orderedNoticeIds).size === v.orderedNoticeIds.length, {
+    message: "중복된 공지가 포함되어 있습니다.",
+  });
+
+export type SetNoticePinOrderInput = z.infer<typeof setNoticePinOrderInputSchema>;

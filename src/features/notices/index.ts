@@ -7,6 +7,7 @@ export {
   updateNoticeAction,
   deleteNoticeAction,
   publishNoticeAction,
+  setNoticePinOrderAction,
   uploadNoticeImageAction,
   uploadNoticeAttachmentAction,
   type NoticeUploadInput,
@@ -19,14 +20,18 @@ export {
   getPublishedAttachment,
   listNoticesForAdmin,
   getAdminNoticeDetail,
+  getNoticePinBoard,
 } from "./service";
 
 export {
   noticeInputSchema,
   listNoticesQuerySchema,
+  setNoticePinOrderInputSchema,
+  MAX_PINNED_NOTICES,
   type NoticeInput,
   type NoticeAttachmentInput,
   type ListNoticesQuery,
+  type SetNoticePinOrderInput,
 } from "./schemas";
 
 export { attachmentContentDisposition } from "./content-disposition";

@@ -101,13 +101,17 @@ export async function createNotice(
 // 공지 수정 — 첨부는 전체 교체. 제거된 key 만 S3 best-effort 삭제 (기존 − 신규 차집합)
 export async function updateNotice(id: string, input: NoticeInput) {
   assertAttachmentKeysOwned(id, input.attachments);
+  const publishedAt = input.publishedAt ?? null;
   const result = await db.transaction(async (tx) => {
     const updated = await noticeDb.updateNotice(tx, id, {
       title: input.title,
       body: input.body,
-      publishedAt: input.publishedAt ?? null,
+      publishedAt,
     });
     if (!updated) return null;
+    // 발행 상태(과거·현재)가 아니면 고정 해제 — 임시·예약 전환된 공지의 고아 pinned_rank 방지
+    const isPublic = publishedAt != null && publishedAt.getTime() <= Date.now();
+    if (!isPublic) await noticeDb.clearPinnedRank(tx, id);
     const oldKeys = await noticeDb.listAttachmentKeys(tx, id);
     await noticeDb.replaceAttachments(tx, id, input.attachments);
     const kept = new Set(input.attachments.map((a) => a.key));
@@ -136,9 +140,40 @@ export async function deleteNotice(id: string) {
   return deleted;
 }
 
-// 발행 상태 토글 — 어드민 목록 row 버튼용. true → now, false → null (공지는 해제 시 정리할 슬롯 없음)
+// 발행 상태 토글 — 어드민 목록 row 버튼용. true → now, false → null.
+// 발행 해제 시 상위 고정도 동반 해제 (미공개 공지가 상단 고정으로 남지 않도록)
 export async function setPublishedAt(id: string, publish: boolean) {
-  return db.transaction(async (tx) =>
-    noticeDb.updateNotice(tx, id, { publishedAt: publish ? new Date() : null }),
-  );
+  return db.transaction(async (tx) => {
+    const updated = await noticeDb.updateNotice(tx, id, {
+      publishedAt: publish ? new Date() : null,
+    });
+    if (updated && !publish) await noticeDb.clearPinnedRank(tx, id);
+    return updated;
+  });
+}
+
+// ─── 상위 고정 (pinned_rank) ─────────────────────────────────────────────
+
+// 고정 관리 카드 데이터 — 현재 고정(rank 순) + 지정 가능 후보(발행·미고정 최신순)
+export async function getNoticePinBoard() {
+  const [pinned, candidates] = await Promise.all([
+    noticeDb.listPinnedNotices(),
+    noticeDb.listPinCandidates(),
+  ]);
+  return { pinned, candidates };
+}
+
+// 상위 고정 순서 저장 — 발행 공지만 허용(예약·임시 pin 차단). advisory lock + 2-phase (news setHeroOrder 동일)
+export async function setNoticePinOrder(orderedNoticeIds: string[]) {
+  return db.transaction(async (tx) => {
+    await noticeDb.acquireNoticePinLock(tx);
+    if (orderedNoticeIds.length > 0) {
+      const publishedCount = await noticeDb.countPublishedIn(tx, orderedNoticeIds);
+      if (publishedCount !== orderedNoticeIds.length) {
+        return { kind: "has_unpublished" as const };
+      }
+    }
+    await noticeDb.setNoticePinOrder(tx, orderedNoticeIds);
+    return { kind: "ok" as const };
+  });
 }

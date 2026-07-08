@@ -1,5 +1,5 @@
 // 공지(notices) Drizzle 쿼리 전담 — DAL. 공개(published_at <= now) / 어드민(모두) 분리, mutation 은 tx 인자 강제 (news db.ts 컨벤션)
-import { and, asc, desc, eq, gt, ilike, isNotNull, isNull, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, ilike, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { noticeAttachments, notices } from "@/db/schema";
 import { likePattern } from "@/features/news/search-query";
@@ -23,13 +23,15 @@ export async function listPublicNotices(opts: { page: number; limit: number }) {
       id: notices.id,
       title: notices.title,
       publishedAt: notices.publishedAt,
+      pinnedRank: notices.pinnedRank,
       // 상관 서브쿼리는 raw 정규화 이름 필수 — 조인 없는 select 에서 drizzle 이 보간 컬럼을 비정규화("id")해
       // 내부 테이블로 오결합(notice_id = notice_attachments.id → 항상 false)되는 버그 (E2E 검증에서 발견)
       hasAttachment: sql<boolean>`EXISTS (SELECT 1 FROM notice_attachments WHERE notice_attachments.notice_id = notices.id)`,
     })
     .from(notices)
     .where(publicPublishedWhere())
-    .orderBy(desc(notices.publishedAt))
+    // 고정 우선 — pinned_rank ASC(1..N) NULLS LAST, 그다음 발행 최신순 (ADR-043)
+    .orderBy(sql`${notices.pinnedRank} asc nulls last`, desc(notices.publishedAt))
     .limit(opts.limit)
     .offset(offset);
 }
@@ -149,6 +151,7 @@ export async function listForAdmin(opts: AdminListOpts) {
       id: notices.id,
       title: notices.title,
       publishedAt: notices.publishedAt,
+      pinnedRank: notices.pinnedRank,
       createdAt: notices.createdAt,
       updatedAt: notices.updatedAt,
       // raw 정규화 이름 — hasAttachment(listPublicNotices)와 동일 사유
@@ -156,6 +159,7 @@ export async function listForAdmin(opts: AdminListOpts) {
     })
     .from(notices)
     .where(and(adminStatusWhere(opts.status), titleWhere(opts.q)))
+    // 어드민 목록 정렬은 유지(발행 최신순) — 고정 순서 관리는 상단 전용 카드가 담당
     .orderBy(sql`${notices.publishedAt} desc nulls last`, desc(notices.createdAt))
     .limit(opts.limit)
     .offset(offset);
@@ -255,4 +259,76 @@ export async function replaceAttachments(
       sortOrder: i,
     })),
   );
+}
+
+// ─── 상위 고정 (pinned_rank) — news heroRank 패턴 이식 (ADR-043) ──────────────
+
+// 고정 정렬 전용 advisory lock — 동시 setNoticePinOrder 직렬화 (2-step unique 충돌·인터리빙 race 차단).
+// news hero(740031)·landing(740032)과 다른 키 (불필요한 상호 직렬화 방지). raw SQL 은 pg_advisory_xact_lock 헬퍼 부재
+const NOTICE_PIN_LOCK_KEY = 740033;
+export async function acquireNoticePinLock(tx: Tx) {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(${NOTICE_PIN_LOCK_KEY})`);
+}
+
+// 주어진 id 중 현재 공개(발행) 공지 수 — 예약·임시 pin 차단 검증용 (news countPublishedIn 동일)
+export async function countPublishedIn(tx: Tx, ids: string[]) {
+  if (ids.length === 0) return 0;
+  const [row] = await tx
+    .select({ count: sql<number>`count(*)::int` })
+    .from(notices)
+    .where(and(inArray(notices.id, ids), publicPublishedWhere()));
+  return row?.count ?? 0;
+}
+
+// 상위 고정 일괄 정렬 — 2-phase: (1) 기존 pinned_rank 전부 해제 → partial unique index 비움(충돌 원천 제거),
+// (2) 새 순서대로 1..N 부여. 단일 tx, 실패 시 롤백. 호출 전 acquireNoticePinLock 직렬화 필수.
+// Phase2 는 publicPublishedWhere 가드 — 검증 후 미발행·예약 전환된 공지가 pin 되는 TOCTOU 차단 (news setHeroOrder 동일)
+export async function setNoticePinOrder(tx: Tx, orderedNoticeIds: string[]) {
+  await tx
+    .update(notices)
+    .set({ pinnedRank: null, updatedAt: new Date() })
+    .where(isNotNull(notices.pinnedRank));
+  for (let i = 0; i < orderedNoticeIds.length; i++) {
+    await tx
+      .update(notices)
+      .set({ pinnedRank: i + 1, updatedAt: new Date() })
+      .where(and(eq(notices.id, orderedNoticeIds[i]), publicPublishedWhere()));
+  }
+}
+
+// 단일 공지 고정 해제 — 발행 해제(임시/예약 전환) 시 고아 pinned_rank 방지 (news clearHeroRank 동일)
+export async function clearPinnedRank(tx: Tx, id: string) {
+  await tx
+    .update(notices)
+    .set({ pinnedRank: null, updatedAt: new Date() })
+    .where(eq(notices.id, id));
+}
+
+// 고정 관리 카드 — 현재 고정 공지(발행 + pinned_rank NOT NULL), rank 순
+export async function listPinnedNotices() {
+  return db
+    .select({
+      id: notices.id,
+      title: notices.title,
+      publishedAt: notices.publishedAt,
+      pinnedRank: notices.pinnedRank,
+    })
+    .from(notices)
+    .where(and(publicPublishedWhere(), isNotNull(notices.pinnedRank)))
+    .orderBy(asc(notices.pinnedRank));
+}
+
+// 고정 관리 카드 picker 후보 — 발행 + 미고정, 최신순
+export async function listPinCandidates(limit = 50) {
+  return db
+    .select({
+      id: notices.id,
+      title: notices.title,
+      publishedAt: notices.publishedAt,
+      pinnedRank: notices.pinnedRank,
+    })
+    .from(notices)
+    .where(and(publicPublishedWhere(), isNull(notices.pinnedRank)))
+    .orderBy(desc(notices.publishedAt))
+    .limit(limit);
 }

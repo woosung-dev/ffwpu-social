@@ -1595,3 +1595,30 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 
 - **다운로드 섹션 본문 위 → 아래 이동** (사용자 피드백). 디자이너가 갱신한 상세 프레임(`1104-10813` 등)도 `타이틀→본문→다운로드→구분선→이전/다음` 으로 확정돼 코드와 일치. `PrevNextNav`(notices 사본)는 이번 대조에서도 news 와 동일 레이아웃 확인 — 공용화 후보 유지(별도 PR).
 - **반응형 4-BP 실측 정합** — 디자이너가 구간별 프레임 10 추가(목록/상세 각 375/767/768/1025/1440). 당초 "1440 단일 + 하위 BP 비례 [추론]" 를 실측 교체. 핵심: 모바일(<768) 목록 **No·Date 열 제거**(Title 단일) · 누락 `lg:`(1024) 스텝 보강 · 목록 타이포 전 BP 고정(eyebrow18/h1 32). **헤더·푸터·배너는 참고 대상 제외**(사용자 지시). 측정/조치 `docs/design/notices-fidelity-2026-07-08.md`, Playwright ±2px 검증. 마이그레이션·데이터·다운로드 route 변경 없음.
+
+---
+
+## ADR-043: 공지사항 상위 고정(순서 드래그) — news heroRank 패턴 이식
+
+- **Status**: Accepted
+- **Date**: 2026-07-08
+
+### Context
+
+운영자가 중요한 공지를 목록 맨 위에 고정하고 싶어 함(사용자 요청 2026-07-08). ADR-042 는 공지에서 랜딩/히어로 슬롯을 의도적으로 제외하고 공개 목록을 "정렬 없는 순수 Server Component(`published_at DESC`)" 로 규정했으나, "상위 고정" 은 그 결정의 부분 개정에 해당한다. 고정 방식은 **순서 지정 드래그**, 조작은 **어드민 목록 화면**으로 확정.
+
+### Decision
+
+**news `hero_rank` 큐레이션 패턴을 notices 에 이식** — 신규 설계가 아니라 검증된 자산 복제.
+
+- 스키마: `notices.pinned_rank integer nullable` + `notices_pinned_rank_uniq` **partial unique index (`WHERE pinned_rank IS NOT NULL`)** — 같은 자리 중복 불가, NULL(미고정) 다수 허용. 마이그레이션 **0014** (ADD COLUMN + CREATE INDEX, 무손실).
+- 공개 정렬: `listPublicNotices` orderBy 를 `pinned_rank ASC NULLS LAST, published_at DESC` 로. **번호(No.) 공식은 무변경** — 고정 글이 전역 상단 P개를 점유하고 번호를 숨기므로 비고정 행이 자연히 `(total−P)…1` 로 이어짐. 고정 행은 번호 대신 '고정' 칩(읽음 마커 핀과 시각 구분).
+- 조작 UI: `/admin/notices` 목록 상단 전용 카드 `NoticePinOrderManager`(HeroOrderManager 이식 — 썸네일·카테고리 제거, 제목+발행일). picker 추가 + @dnd-kit 드래그 순서 + 명시 "순서 저장". **작성·수정 폼 미변경**(사용자 지시). 어드민 목록 테이블은 고정 배지(읽기)만 추가, 정렬은 유지.
+- 저장: `setNoticePinOrder` 2-phase(전체 NULL 리셋 → `1..N` 부여, Phase2 `publicPublishedWhere` 가드로 TOCTOU 차단) + advisory lock `740033`(news hero 740031·landing 740032 와 분리). **발행 공지만 고정**(예약·임시 차단) — service 에서 `countPublishedIn` 검증.
+- 발행 해제 동반 정리: `setPublishedAt(false)`·`updateNotice`(임시·예약 전환) 시 `clearPinnedRank` 호출 — 미공개 공지의 고아 pinned_rank 방지. **최대 고정 3개**(`MAX_PINNED_NOTICES`).
+
+### Consequences
+
+- ADR-042 의 "공개 목록 정렬 없음 / 슬롯 제외" 를 **부분 개정** — 공지도 단일 큐레이션 축(pinned_rank)을 가짐. 단 news 처럼 다축(story/featured/hero)은 아님.
+- 마이그레이션 **0014** 배포 필요(GHA migrate 자동). 기존 시드 공지는 pinned_rank NULL 로 무영향.
+- 공개 목록 고정 표시(칩·배경 구분)는 Figma 시안 부재 → 1차 최소 마커, 시각 시안 단계(design-shotgun)에서 다듬음.

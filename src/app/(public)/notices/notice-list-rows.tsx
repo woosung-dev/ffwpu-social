@@ -18,6 +18,8 @@ export type NoticeListRow = {
   no: number;
   title: string;
   hasAttachment: boolean;
+  /** 상위 고정 여부 — 고정 행은 번호 대신 '고정' 칩 (ADR-043) */
+  pinned: boolean;
   /** 서버 포맷 완료 텍스트 (YYYY.MM.DD) — TZ 차이로 인한 hydration mismatch 방지 */
   dateText: string;
 };
@@ -90,7 +92,7 @@ export function NoticeListRows({
                     "hover:bg-[#f9f4ff]",
                   )}
                 >
-                  {/* No·Date 는 모바일(375)에서 숨김 — Figma 는 Title 단일 열 */}
+                  {/* No·Date 는 모바일(375)에서 숨김 — Figma 는 Title 단일 열. 고정 행은 번호 대신 비움('고정' 칩은 제목 셀에) */}
                   <span
                     className={cn(
                       "hidden text-center text-base font-medium tabular-nums transition-colors md:block lg:text-lg",
@@ -98,9 +100,15 @@ export function NoticeListRows({
                       "group-hover:text-[#c8a3e6]",
                     )}
                   >
-                    {row.no}
+                    {row.pinned ? "" : row.no}
                   </span>
                   <span className="flex min-w-0 items-center gap-2.5">
+                    {/* 상위 고정 칩 — 전 BP 노출(모바일은 No 열 숨김). 읽음 마커 핀과 시각 구분 위해 라벨형 */}
+                    {row.pinned && (
+                      <span className="shrink-0 rounded-[4px] bg-[#f3e8ff] px-1.5 py-0.5 text-xs font-semibold text-[#a34df3]">
+                        고정
+                      </span>
+                    )}
                     {/* 읽음 마커 핀 — Figma No/PinIcon (읽은 행에만, fill #E1C8F9). 20/20/24/24 */}
                     {isVisited && (
                       <NoticePinIcon className="size-5 text-[#e1c8f9] lg:size-6" />

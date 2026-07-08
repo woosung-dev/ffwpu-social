@@ -83,10 +83,12 @@ async function NoticesData({
   const result = await listNotices(query);
   const rows: NoticeListRow[] = result.items.map((item, idx) => ({
     id: item.id,
-    // 발행 기준 역순 전체 번호 — 최신 글이 가장 큰 번호
+    // 발행 기준 역순 전체 번호 — 최신 글이 가장 큰 번호. 고정 글은 상단 P개를 점유하고 번호는 숨기므로
+    // 비고정 행은 자연히 (total−P)…1 로 이어짐 (공식 무변경)
     no: result.total - (result.page - 1) * result.limit - idx,
     title: item.title,
     hasAttachment: item.hasAttachment,
+    pinned: item.pinnedRank != null,
     dateText: fmtDate(item.publishedAt),
   }));
 

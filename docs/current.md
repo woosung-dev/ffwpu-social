@@ -104,10 +104,11 @@ Figma 노드: 목록 페이지 `1103-7882` · 상세 페이지 `1104-10813` · �
 
 - **필드**: 제목 (required) / 본문 (rich text, Tiptap — news 와 동일 에디터·렌더러) / 발행일 (null=임시, 미래=예약 — news 동일 시맨틱) / **첨부파일** (최대 5개, 개당 20MB — PDF·Word·Excel·PPT·한글·ZIP·이미지, ADR-041)
 - **news 와 구분**: 카테고리·태그·커버·랜딩 슬롯·좋아요 **없음**. 별도 `notices` + `notice_attachments` 테이블 (마이그레이션 0013).
-- **목록 페이지 (`/notices`)**: 테이블형 No./Title/Date — 첨부 있으면 제목 옆 클립 표시, 페이지네이션(10개). **모바일(<768)은 No./Date 열 숨김·Title 단일 열**. **읽음 표시**: 상세를 본 공지는 목록에서 호버와 동일한 하이라이트 유지 (localStorage `sg_visited_notices`, 개인정보 미수집).
+- **목록 페이지 (`/notices`)**: 테이블형 No./Title/Date — 첨부 있으면 제목 옆 클립 표시, 페이지네이션(10개). **모바일(<768)은 No./Date 열 숨김·Title 단일 열**. **읽음 표시**: 상세를 본 공지는 목록에서 호버와 동일한 하이라이트 유지 (localStorage `sg_visited_notices`, 개인정보 미수집). **상위 고정 글은 최상단에 순서대로 노출**(번호 대신 '고정' 칩) — 비고정 글은 그 아래 발행 최신순·연속 번호 (ADR-043).
 - **상세 페이지 (`/notices/[id]`)**: 제목(중앙·News eyebrow)·날짜 + 본문 + **첨부 download section(본문 아래)**(원본 파일명·용량, presigned GET 302 다운로드) + 이전/다음. 미발행·예약 접근 404.
 - **반응형 4-BP 정합 (2026-07-08)**: 디자이너 구간별 프레임 10 실측(375/768/1024/1440, ±2px). 측정·조치 `docs/design/notices-fidelity-2026-07-08.md`, ground truth `docs/design/figma-export/notices/`. 헤더·푸터·배너는 참고 대상 제외.
-- **어드민 (`/admin/notices`)**: 목록(상태 탭·제목 검색·발행 토글·삭제) + 작성/수정(Tiptap + 다중 첨부 업로더).
+- **상위 고정 (ADR-043, 마이그레이션 0014)**: 운영자가 발행 공지를 목록 최상단에 **드래그로 순서 지정**해 고정(최대 3개). news `hero_rank` 패턴 이식 — `pinned_rank` 정수 + partial unique index, 2-phase 저장 + advisory lock. 발행 해제 시 고정 자동 해제.
+- **어드민 (`/admin/notices`)**: 목록(상태 탭·제목 검색·발행 토글·삭제 + 고정 배지) + **상단 상위 고정 관리 카드**(발행 공지 picker·드래그 정렬·순서 저장) + 작성/수정(Tiptap + 다중 첨부 업로더).
 - 공개 진입 경로(헤더 메뉴 여부): Figma 목록 페이지 헤더 확인 후 확정 [확인 필요].
 
 ## 5. 사용자 인터랙션 — Figma 기반 (2026-05-26 확정)

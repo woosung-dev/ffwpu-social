@@ -1,7 +1,20 @@
-// 공지 스키마 회귀 테스트 — body JSON 문자열 파싱·첨부 상한·목록 쿼리 기본값
+// 공지 스키마 회귀 테스트 — body JSON 문자열 파싱·첨부 상한·목록 쿼리 기본값·상위 고정 정렬 입력
 import { describe, expect, it } from "vitest";
 
-import { listNoticesQuerySchema, noticeInputSchema } from "./schemas";
+import {
+  MAX_PINNED_NOTICES,
+  listNoticesQuerySchema,
+  noticeInputSchema,
+  setNoticePinOrderInputSchema,
+} from "./schemas";
+
+// 고정 순서 입력 테스트용 uuid 풀 (MAX + 여유분)
+const UUIDS = [
+  "11111111-1111-4111-8111-111111111111",
+  "22222222-2222-4222-8222-222222222222",
+  "33333333-3333-4333-8333-333333333333",
+  "44444444-4444-4444-8444-444444444444",
+];
 
 const validBody = JSON.stringify({ type: "doc", content: [] });
 
@@ -72,5 +85,40 @@ describe("listNoticesQuerySchema", () => {
   it("0·음수 page 는 거부한다", () => {
     expect(listNoticesQuerySchema.safeParse({ page: "0" }).success).toBe(false);
     expect(listNoticesQuerySchema.safeParse({ page: "-1" }).success).toBe(false);
+  });
+});
+
+describe("setNoticePinOrderInputSchema", () => {
+  it("최대 개수 이내의 고유 uuid 배열을 통과시킨다", () => {
+    const r = setNoticePinOrderInputSchema.safeParse({
+      orderedNoticeIds: UUIDS.slice(0, MAX_PINNED_NOTICES),
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it("빈 배열(전체 고정 해제)을 허용한다", () => {
+    const r = setNoticePinOrderInputSchema.safeParse({ orderedNoticeIds: [] });
+    expect(r.success).toBe(true);
+  });
+
+  it("최대 개수를 초과하면 거부한다", () => {
+    const r = setNoticePinOrderInputSchema.safeParse({
+      orderedNoticeIds: UUIDS.slice(0, MAX_PINNED_NOTICES + 1),
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it("중복 uuid 는 거부한다", () => {
+    const r = setNoticePinOrderInputSchema.safeParse({
+      orderedNoticeIds: [UUIDS[0], UUIDS[0]],
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it("uuid 형식이 아니면 거부한다", () => {
+    const r = setNoticePinOrderInputSchema.safeParse({
+      orderedNoticeIds: ["not-a-uuid"],
+    });
+    expect(r.success).toBe(false);
   });
 });

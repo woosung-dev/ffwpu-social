@@ -1,13 +1,17 @@
 // 어드민 공지사항 관리 — 목록·발행 토글·삭제. Server Component + Suspense (Cache Components). searchParams 는 Suspense 자식에서 await
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { listNoticesForAdmin } from "@/features/notices";
+import { getNoticePinBoard, listNoticesForAdmin } from "@/features/notices";
 import {
   NoticesTable,
   NOTICE_SEARCH_MAX_LENGTH,
   type NoticeRow,
   type NoticeStatus,
 } from "@/admin/components/NoticesTable";
+import {
+  NoticePinOrderManager,
+  type NoticePinItem,
+} from "@/admin/components/NoticePinOrderManager";
 import { AdminPageHeader } from "@/admin/components/AdminPageHeader";
 import { ADMIN_COPY } from "@/admin/copy";
 
@@ -39,6 +43,13 @@ function pickSearch(raw: string | string[] | undefined): string | undefined {
   return trimmed || undefined;
 }
 
+// 서버 포맷(YYYY.MM.DD) — 고정 카드가 클라에서 Date 포맷 시 발생하는 TZ hydration mismatch 회피
+function formatDate(d: Date | null): string {
+  if (!d) return "";
+  const dt = new Date(d);
+  return `${dt.getFullYear()}.${String(dt.getMonth() + 1).padStart(2, "0")}.${String(dt.getDate()).padStart(2, "0")}`;
+}
+
 export default function AdminNoticesPage(props: {
   searchParams: Promise<SearchParams>;
 }) {
@@ -48,10 +59,39 @@ export default function AdminNoticesPage(props: {
         title={ADMIN_COPY.notices.title}
         description={ADMIN_COPY.notices.description}
       />
+      <Suspense fallback={<PinLoading />}>
+        <PinBoard />
+      </Suspense>
       <Suspense fallback={<ListLoading />}>
         <NoticesData searchParamsPromise={props.searchParams} />
       </Suspense>
     </div>
+  );
+}
+
+// 상위 고정 관리 카드 — searchParams 무관(페이지·검색과 독립)이라 별도 Suspense
+async function PinBoard() {
+  const { pinned, candidates } = await getNoticePinBoard();
+  const toItem = (n: {
+    id: string;
+    title: string;
+    publishedAt: Date | null;
+  }): NoticePinItem => ({
+    id: n.id,
+    title: n.title,
+    dateText: formatDate(n.publishedAt),
+  });
+  return (
+    <NoticePinOrderManager
+      initialItems={pinned.map(toItem)}
+      candidates={candidates.map(toItem)}
+    />
+  );
+}
+
+function PinLoading() {
+  return (
+    <div className="h-64 animate-pulse rounded-md bg-muted/60" aria-busy />
   );
 }
 
@@ -73,6 +113,7 @@ async function NoticesData({
     createdAt: i.createdAt,
     updatedAt: i.updatedAt,
     attachmentCount: i.attachmentCount,
+    pinned: i.pinnedRank != null,
   }));
 
   return (

@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Paperclip, Search, X } from "lucide-react";
+import { Paperclip, Pin, Search, X } from "lucide-react";
 import {
   deleteNoticeAction,
   publishNoticeAction,
@@ -29,7 +29,21 @@ export type NoticeRow = {
   createdAt: Date;
   updatedAt: Date;
   attachmentCount: number;
+  pinned: boolean;
 };
+
+// 상위 고정 표시 — 목록 상단 고정 관리 카드가 조작, 여기선 읽기 배지만
+function PinnedBadge() {
+  return (
+    <span
+      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-primary/10 px-2 py-0.5 text-xs font-medium text-brand-primary"
+      title="상위 고정된 공지"
+    >
+      <Pin className="size-3" aria-hidden />
+      고정
+    </span>
+  );
+}
 
 export type NoticeStatus = "all" | "draft" | "scheduled" | "published";
 type NoticePublishState = Exclude<NoticeStatus, "all">;
@@ -327,12 +341,15 @@ export function NoticesTable({ rows, page, totalPages, total, status, q }: Props
                           className="border-b last:border-b-0 transition-colors hover:bg-surface-soft/60"
                         >
                           <td className="py-3 pr-4 font-medium text-ink-strong">
-                            <Link
-                              href={`/admin/notices/${row.id}/edit`}
-                              className="rounded transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2"
-                            >
-                              {row.title}
-                            </Link>
+                            <span className="flex min-w-0 items-center gap-2">
+                              {row.pinned && <PinnedBadge />}
+                              <Link
+                                href={`/admin/notices/${row.id}/edit`}
+                                className="truncate rounded transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2"
+                              >
+                                {row.title}
+                              </Link>
+                            </span>
                           </td>
                           <td className="py-3 pr-4">
                             <AttachmentCell count={row.attachmentCount} />
@@ -366,12 +383,15 @@ export function NoticesTable({ rows, page, totalPages, total, status, q }: Props
                       className="space-y-2 rounded-lg border border-border p-4"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <Link
-                          href={`/admin/notices/${row.id}/edit`}
-                          className="rounded font-medium text-ink-strong transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2"
-                        >
-                          {row.title}
-                        </Link>
+                        <span className="flex min-w-0 flex-wrap items-center gap-2">
+                          {row.pinned && <PinnedBadge />}
+                          <Link
+                            href={`/admin/notices/${row.id}/edit`}
+                            className="rounded font-medium text-ink-strong transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2"
+                          >
+                            {row.title}
+                          </Link>
+                        </span>
                         <span className={`shrink-0 ${STATUS_BADGE_CLASS[state]}`}>
                           {STATUS_LABEL[state]}
                         </span>
