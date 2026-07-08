@@ -1,4 +1,4 @@
-// 공지사항 상세 페이지 — Figma 1104-10813. 제목·날짜 + 본문(NewsBodyRenderer 재사용) + 첨부 DownloadSection + 이전/다음
+// 공지사항 상세 페이지 — Figma 1104:10813 정합. 중앙 타이틀 블록(News eyebrow·클립) + 첨부 다운로드(본문 위) + 본문 + 목록/이전다음
 // 미발행·예약·불량 uuid 는 404. Next 16 params Promise + Suspense 격리 (news 상세 미러)
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -7,10 +7,12 @@ import { z } from "zod";
 
 import { getAdjacentNotices, getNoticeDetail } from "@/features/notices";
 import { DownloadSection } from "@/features/notices/components";
+import { NoticeClipIcon } from "@/features/notices/components/notice-icons";
 import { bodyToExcerpt } from "@/features/news/excerpt";
 import { NewsBodyRenderer } from "@/features/news/render/news-body-renderer";
 
 import { SubBanner } from "../../news/sub-banner";
+import { ScrollTopButton } from "../../news/[id]/scroll-top";
 import { NoticePrevNext } from "./notice-prev-next";
 import { NoticeVisitTracker } from "./notice-visit-tracker";
 
@@ -69,19 +71,25 @@ export default function NoticeDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {
   return (
-    <>
+    // 배경 밴드 기준 래퍼 — 하단 그라데이션을 콘텐츠 뒤에 격리 (Figma Background h598)
+    <div className="relative isolate">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[360px] bg-gradient-to-b from-white to-[#F9F4FF]/80 wide:h-[598px]"
+      />
       <SubBanner />
       <Suspense fallback={<DetailLoading />}>
         <NoticeDetailContent paramsPromise={props.params} />
       </Suspense>
-    </>
+      <ScrollTopButton />
+    </div>
   );
 }
 
 function DetailLoading() {
   return (
-    <div className="mx-auto w-full max-w-[905px] px-4 py-12 lg:py-20" aria-busy>
-      <div className="h-8 w-2/3 animate-pulse rounded bg-surface-soft" />
+    <div className="mx-auto w-full max-w-[900px] px-4 py-12 wide:py-[154px]" aria-busy>
+      <div className="mx-auto h-8 w-2/3 animate-pulse rounded bg-surface-soft" />
       <div className="mt-6 h-[420px] animate-pulse rounded-2xl bg-surface-soft" />
     </div>
   );
@@ -101,28 +109,36 @@ async function NoticeDetailContent({
     : { prev: null, next: null };
 
   return (
-    // 본문폭 — news 상세와 동일 정합 (md648/lg905, wide 는 가독 cap)
-    <div className="mx-auto w-full px-4 py-12 md:max-w-[648px] md:px-0 lg:max-w-[905px] lg:py-20">
+    // 본문폭 — Figma 1440: Wrap x270 w900. md 648 [추론 news 정합]. 배너 →154→ 타이틀 (wide), 하위 BP 60 [추론]
+    <div className="mx-auto w-full px-4 pt-[60px] pb-[100px] md:max-w-[648px] md:px-0 lg:max-w-[900px] wide:pt-[154px] wide:pb-[180px]">
       <NoticeVisitTracker noticeId={notice.id} />
 
-      {/* 제목 블록 — news DetailHeader 리듬(카테고리 없음) */}
-      <header className="flex flex-col gap-5">
-        <h1 className="break-keep text-2xl font-semibold leading-snug text-ink-strong lg:text-[32px] lg:leading-[1.5]">
-          {notice.title}
-        </h1>
-        <p className="text-base font-medium text-ink-date">
+      {/* 타이틀 블록 — Figma 1104:10952: News eyebrow +4+ 제목(중앙, 첨부 시 클립 28) +20+ 날짜(중앙) */}
+      <header className="flex flex-col gap-3 text-center wide:gap-5">
+        <div className="flex flex-col gap-1">
+          <p className="text-base font-bold leading-[1.6] text-[#b35feb] wide:text-[18px]">
+            News
+          </p>
+          <div className="flex items-center justify-center gap-2 wide:gap-2.5">
+            <h1 className="break-keep text-2xl font-semibold leading-[1.5] text-[#1f2937] lg:text-[28px] wide:text-[32px]">
+              {notice.title}
+            </h1>
+            {notice.attachments.length > 0 && (
+              <NoticeClipIcon
+                aria-label="첨부파일 있음"
+                className="size-5 text-[#d6d0d8] wide:size-7"
+              />
+            )}
+          </div>
+        </div>
+        <p className="text-[15px] font-medium text-[#959ba9] wide:text-[16px]">
           {fmtDate(notice.publishedAt)}
         </p>
       </header>
 
-      {/* 본문 — news 상세와 동일 리듬 (제목 블록 →60→ 본문) */}
-      <div className="mt-10 lg:mt-[60px]">
-        <NewsBodyRenderer body={notice.body} />
-      </div>
-
-      {/* 첨부 다운로드 — Figma 1104-11167. 첨부 0개면 미렌더 */}
+      {/* 첨부 다운로드 — Figma: 타이틀 →60→ 다운로드 행들 (본문 위). 첨부 0개면 미렌더 */}
       {notice.attachments.length > 0 && (
-        <div className="mt-12 lg:mt-[70px]">
+        <div className="mt-8 wide:mt-[60px]">
           <DownloadSection
             attachments={notice.attachments.map((a) => ({
               id: a.id,
@@ -133,7 +149,13 @@ async function NoticeDetailContent({
         </div>
       )}
 
-      <hr className="mt-12 border-border lg:mt-[70px]" />
+      {/* 본문 — Figma: 다운로드(없으면 타이틀) →60→ 본문 */}
+      <div className="mt-8 wide:mt-[60px]">
+        <NewsBodyRenderer body={notice.body} />
+      </div>
+
+      {/* Figma: 본문 →70→ 디바이더 →16→ 목록/이전다음 */}
+      <hr className="mt-12 border-border wide:mt-[70px]" />
 
       <NoticePrevNext prev={adjacent.prev} next={adjacent.next} />
     </div>

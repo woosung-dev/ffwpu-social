@@ -1588,4 +1588,5 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 - 마이그레이션 0013 (`notices` + `notice_attachments`). 배포 시 `pnpm db:migrate` 필요.
 - 공지 발행/해제는 랜딩·큐레이션과 무관 — revalidate 묶음이 news 보다 좁음(`/notices`, `/admin/notices`).
 - 시드에 공지 8건(발행 6·예약 1·임시 1, 첨부 3) 추가 — 고정 UUID 로 첨부 키 결정성(재시드 orphan 방지).
-- 공개 진입 경로(헤더 메뉴 여부)는 Figma 목록 페이지(1103-7882) 확인 후 확정 — 케이스 A(메뉴 추가 시 PublicHeader activeOnSubpage 를 경로 매칭으로 확장) / 케이스 B(미추가) 양쪽 설계 완료.
+- 공개 진입 경로 = **케이스 A 확정** (2026-07-08 Figma 1103:7882 헤더 실측): "공지사항" 을 헤더 5번째 메뉴로 추가 + 비랜딩 active 판정을 pathname 경로 매칭으로 확장(매칭 없으면 기존 activeOnSubpage 폴백). Figma 프레임의 타 메뉴 라벨(임팩트 데이터 등)은 pre-ADR-038 디자이너 더미로 판단 — ADR-038 확정 라벨 유지, 사회공헌국 확인 항목으로 escalation (docs/TODO.md).
+- 공개 페이지 타이틀 eyebrow "News" 는 Figma 그대로 채택하되 공지 게시판 카피로 적절한지 검수 대상 (docs/TODO.md Questions). Figma ground truth: `docs/design/figma-export/notices/` 4장.

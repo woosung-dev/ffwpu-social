@@ -35,11 +35,13 @@ type MenuItem = {
 };
 
 // 매핑(ADR-038): 숫자로 보는 우리의 변화→#kpi / 밥이 사랑이다→#story / 메인 스토리→#stories(랜딩 카드 그리드) / 활동 스토리→/news(소식 게시판).
+// 공지사항→/notices — Figma 공지 목록(1103:7882) 헤더에 메뉴 항목으로 확인 (ADR-042 케이스 A). 라벨은 ADR-038 확정 IA 유지
 const MENU: readonly MenuItem[] = [
   { id: "kpi", label: "숫자로 보는 우리의 변화", section: "kpi" },
   { id: "story", label: "밥이 사랑이다", section: "story" },
   { id: "stories", label: "메인 스토리", section: "stories" },
   { id: "news", label: "활동 스토리", href: "/news", activeOnSubpage: true },
+  { id: "notices", label: "공지사항", href: "/notices" },
 ] as const;
 
 // DOM 순서(위→아래)로 전달 — 바닥 감지 시 마지막 섹션 정확도용 (useScrollSpy 참조). href 항목 제외
@@ -53,10 +55,13 @@ export function PublicHeader() {
   const isLanding = pathname === "/";
   const scrollActive = useScrollSpy(SCROLL_SECTIONS);
 
-  // 랜딩: 스크롤 구간 → 해당 메뉴 / 비랜딩: 서브페이지 active 메뉴(활동 스토리)
+  // 랜딩: 스크롤 구간 → 해당 메뉴 / 비랜딩: 현재 경로와 일치하는 href 메뉴 (서브페이지 2개+ 구분 — /news·/notices).
+  // 매칭 없는 비랜딩 경로는 activeOnSubpage 항목(활동 스토리) 폴백 — 기존 동작 보존
   const activeMenuId = isLanding
     ? MENU.find((m) => m.section === (scrollActive ?? FIRST_LANDING_SECTION))?.id
-    : MENU.find((m) => m.activeOnSubpage)?.id;
+    : (MENU.find(
+        (m) => m.href && (pathname === m.href || pathname.startsWith(`${m.href}/`)),
+      )?.id ?? MENU.find((m) => m.activeOnSubpage)?.id);
   // 모바일 트리거 라벨 — 현재 active 항목 (없으면 첫 항목 폴백)
   const activeItem = MENU.find((m) => m.id === activeMenuId) ?? MENU[0];
 

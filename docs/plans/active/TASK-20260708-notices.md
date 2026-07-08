@@ -27,14 +27,14 @@ related_adr: ADR-041, ADR-042
 
 ## 체크리스트
 
-- [ ] S0 Figma 4노드 추출(4-BP) + 미결 확정 — 🔴 **사용자 Figma OAuth 승인 대기** (인증 URL 발급됨). 폴백: 스크린샷 기반 구현 완료, 인증 후 픽셀 대조·헤더 분기만 잔여
+- [x] S0 Figma 4노드 추출 + 픽셀 정합 반영 (2026-07-08 OAuth 완료) — ground truth `docs/design/figma-export/notices/` 4장. 확정: **헤더 케이스 A**(공지사항 5번째 메뉴+경로 매칭 active) · 상세 PrevNext 있음/공유·하트 없음 · SubBanner 재사용 · limit 10 유지 · 목록 테이블 900px 중앙 · 지브라(#f9f9fc)/읽음(#fcfaff·#f9f4ff+핀 #E1C8F9) · 다운로드 섹션 본문 위(#f9f9f9 h41) · 타이틀 중앙(News eyebrow #b35feb 18 + 32 SemiBold) · 하단 그라데이션+ScrollTop. Figma 1440 단일 프레임 — 하위 BP 는 비례 [추론]
 - [x] S1 스키마 `notices` + `notice_attachments` + 마이그레이션 0013
 - [x] S2 storage 첨부 확장 — `attachments.ts`(확장자+canonical MIME 정책, 20MB/5개) + `UploadScope {noticeId}` + 테스트
 - [x] S3 `src/features/notices/` 3-layer + 다운로드 route + schemas 테스트
 - [x] S4 어드민 — /admin/notices 3라우트 + NoticesTable + NoticeEditor + NoticeAttachmentUploader + 사이드바 신규 그룹 (E2E 검증 완료)
 - [x] S5 공개 목록 — page + notice-list-rows(읽음 하이라이트, hydration-safe) + visited-notices.ts + Pagination 공용 승격
 - [x] S6 공개 상세 — page(OG·404) + DownloadSection + visit-tracker
-- [x] S7 seed 공지 8건(첨부 3, 고정 UUID) + ADR-041/042 + current.md §4-4 + 어드민 surface 7→8 — **헤더 진입만 Figma 대기**
+- [x] S7 seed 공지 8건(첨부 3, 고정 UUID) + ADR-041/042 + current.md §4-4 + 어드민 surface 7→8 + **헤더 케이스 A 반영**(PublicHeader 5메뉴·경로 매칭, /news·랜딩 회귀 확인, 768 5핀 수용·375 드롭다운 정상)
 - [ ] S8 tsc·lint·test·build + 4-BP Figma 대조 + anti-slop
 
 ## 컨텍스트 노트 (결정 로그)
@@ -46,4 +46,5 @@ related_adr: ADR-041, ADR-042
 - 2026-07-08 (E2E 발견 버그): drizzle 은 **조인 없는 select** 의 sql`` 보간 컬럼을 비정규화("id")해 상관 서브쿼리가 내부 테이블로 오결합 → 카운트 항상 0. raw 정규화 이름(`notice_attachments.notice_id = notices.id`)으로 수정. news heartCount 는 categories 조인 덕에 정규화되어 무사했음 — **동일 패턴 신규 작성 시 주의**.
 - 2026-07-08: 어드민 E2E 전 구간 PASS — 작성→pdf/hwp 첨부(hwp canonical MIME 저장)→exe 거부→발행→수정(제거분 MinIO diff 삭제)→본문 이미지(notices/{id}/ prefix)→다운로드 302(한글 파일명)·미발행 404. 공개 목록·상세·읽음 하이라이트(localStorage→bg #F9F4FF+제목 brand-primary) PASS.
 - 2026-07-08 (S8 발견): dev 에서 상세 미방문 공지가 읽음 처리되는 팬텀 기록 관측(라우터 프리페치/세그먼트 프리렌더 계열 추정 — 격리 재현은 안 됨). NoticeVisitTracker 에 `location.pathname === /notices/{id}` 가드 추가 — 실제 상세 URL 에 있을 때만 마킹. 가드 후 방치 8초·hover 프리페치에도 재발 0, 실방문 1건만 기록 확인.
-- 잔여: ① Figma 4노드 픽셀 대조(+헤더 케이스 A/B 확정) ② prod 배포 시 `pnpm db:migrate`(0013) 필요.
+- 2026-07-08 (S0 완료): Figma 대조로 v1 구조 구현에서 갱신된 것 — 타이틀 좌→중앙(News eyebrow), 다운로드 섹션 본문 아래→위(rows 스타일), 목록에 지브라·핀 마커·정확 색상(#242424/#959ba9/#2d2d2d/#a34df3/#c8a3e6/#d6d0d8), 테이블 900px 중앙, 그라데이션+ScrollTop 추가, 헤더 공지사항 메뉴. eyebrow "News" 카피·Figma 헤더 라벨 불일치·hover 핀 정책은 TODO escalation 3건.
+- 잔여: prod 배포 시 `pnpm db:migrate`(0013) 필요.

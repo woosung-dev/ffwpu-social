@@ -1,4 +1,4 @@
-// 공지사항 목록 페이지 — Figma 1103-7882. SubBanner + 헤딩 + 테이블형 목록(No./Title/Date) + 페이지네이션
+// 공지사항 목록 페이지 — Figma 1103:7882 정합. SubBanner + 중앙 타이틀(News eyebrow) + 테이블형 목록(900px) + 페이지네이션 + 하단 그라데이션
 // 검색·정렬·탭이 없어 순수 Server Component (?page= 만) — RQ Streaming SSR 불필요, 무효화는 revalidatePath("/notices")
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -7,6 +7,7 @@ import { listNotices, listNoticesQuerySchema } from "@/features/notices";
 import { SectionContainer } from "@/client/components/layout";
 
 import { SubBanner } from "../news/sub-banner";
+import { ScrollTopButton } from "../news/[id]/scroll-top";
 import { NoticeListRows, type NoticeListRow } from "./notice-list-rows";
 
 export const metadata: Metadata = {
@@ -37,23 +38,34 @@ export default function NoticesPage({
   searchParams: Promise<SearchParams>;
 }) {
   return (
-    <>
+    // 배경 밴드 기준 래퍼 — 하단 그라데이션(white→#F9F4FF)을 콘텐츠 뒤에 격리 (news 상세 동일 패턴, Figma Background h590)
+    <div className="relative isolate">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[360px] bg-gradient-to-b from-white to-[#F9F4FF]/80 wide:h-[590px]"
+      />
       <SubBanner />
 
-      {/* 수직 리듬 — /news 목록과 동일 밴드 고정폭(SectionContainer) + pt/pb 정합 */}
-      <section className="w-full pt-[30px] pb-[60px] wide:pt-[60px] wide:pb-[70px]">
+      {/* 수직 리듬 — Figma 1440: 배너 →101→ 타이틀 블록. 하위 BP 절반 [추론] */}
+      <section className="w-full pt-[50px] pb-[100px] wide:pt-[101px] wide:pb-[180px]">
         <SectionContainer>
-          {/* 헤딩 크기 — /news 목록 헤딩과 동일 스케일 (24/24/28/32) */}
-          <h2 className="text-2xl font-bold tracking-tight text-ink-strong lg:text-[28px] wide:text-[32px]">
-            공지사항
-          </h2>
+          {/* 타이틀 — Figma 1103:8022: News eyebrow(SUIT Bold 18 #b35feb) +4+ 공지사항(SemiBold 32 #1f2937), 중앙 정렬 */}
+          <div className="text-center">
+            <p className="text-base font-bold leading-[1.6] text-[#b35feb] wide:text-[18px]">
+              News
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold leading-[1.5] text-[#1f2937] lg:text-[28px] wide:text-[32px]">
+              공지사항
+            </h1>
+          </div>
 
           <Suspense fallback={<NoticeListLoading />}>
             <NoticesData searchParams={searchParams} />
           </Suspense>
         </SectionContainer>
       </section>
-    </>
+      <ScrollTopButton />
+    </div>
   );
 }
 
@@ -85,11 +97,11 @@ async function NoticesData({
 
 function NoticeListLoading() {
   return (
-    <div className="mt-[30px] wide:mt-10" aria-busy>
-      <div className="h-12 animate-pulse rounded-md bg-muted/60" />
+    <div className="mt-10 wide:mx-auto wide:mt-[82px] wide:max-w-[900px]" aria-busy>
+      <div className="h-11 animate-pulse rounded-[4px] bg-muted/60 md:h-12 wide:h-[53px]" />
       <ul className="mt-2 space-y-2">
         {Array.from({ length: 10 }).map((_, i) => (
-          <li key={i} className="h-12 animate-pulse rounded-md bg-muted/40" />
+          <li key={i} className="h-12 animate-pulse rounded-[4px] bg-muted/40 wide:h-[62px]" />
         ))}
       </ul>
     </div>

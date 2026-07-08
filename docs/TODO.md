@@ -6,8 +6,7 @@
 
 ## 진행 중 (2026-07-08)
 
-- **공지사항(notices) 신설** — `docs/plans/active/TASK-20260708-notices.md` (branch `feat/notices`). 어드민 CRUD(에디터+첨부 문서형 20MB·5개) + 공개 목록(/notices, 읽음 하이라이트)·상세(download section). ADR-041/042, **마이그레이션 0013**. S1~S7 완료·E2E PASS.
-  - 🔴 **Figma OAuth 승인 대기** — 4노드(1103-7882·1104-10813·1104-10001·1104-11167) 픽셀 대조 + 공개 헤더 메뉴 추가 여부(케이스 A/B) 확정용.
+- **공지사항(notices) 신설** — `docs/plans/active/TASK-20260708-notices.md` (branch `feat/notices`). 어드민 CRUD(에디터+첨부 문서형 20MB·5개) + 공개 목록(/notices, 읽음 하이라이트)·상세(download section) + 헤더 5번째 메뉴(케이스 A). ADR-041/042, **마이그레이션 0013**. S0~S8 전부 완료 — Figma 4노드 픽셀 정합 반영·E2E PASS. ground truth `docs/design/figma-export/notices/`. 카피 escalation 3건은 아래 §공지사항 Figma 정합 escalation.
 
 ## 진행 중 (2026-06-03)
 
@@ -68,6 +67,12 @@
 - [ ] **홈 페이지 placeholder 카피** — D-4 의 "준비 중" 임시 카피는 D-3 디자인 시안 적용 시 본격 구현으로 교체 예정. 시안 미수령 시 사회공헌국 카피 확정 필요.
 - [ ] **favicon 자산** — Sow Good BI 기반 favicon 사회공헌국 제공 또는 사내 제작.
 - [ ] **헤더 배경 디자인** — 코드 현재 `bg-white/90` vs Figma 명세 `#B769FF` (brand-bright 보라). D-3 시안 적용 시 Figma 정합 권고.
+
+### 공지사항 Figma 정합 2026-07-08 escalation (디자이너/사회공헌국)
+
+- [ ] **공지 타이틀 eyebrow "News" 카피** — Figma(1103:7882·1104:10813)가 공지사항 목록·상세 타이틀 위 eyebrow 를 "News" 로 표기. 공지 게시판인데 소식(News) 라벨이 맞는지 확인 필요. 코드에는 Figma 그대로 "News" 적용(문자열 2곳 — 목록·상세 page.tsx).
+- [ ] **공지 Figma 프레임 헤더 메뉴 라벨 불일치** — 해당 프레임 헤더가 "임팩트 데이터/활동 스토리/메인 스토리/공지사항" 4메뉴로 그려짐(pre-ADR-038 더미로 판단). 코드는 ADR-038 확정 4메뉴 + 공지사항 5번째 추가로 구현. 디자이너 의도(메뉴 교체 vs 추가) 확인 권장.
+- [ ] **읽은 행 hover 시 핀 아이콘·행 높이** — Figma 는 읽은 행(h70·핀)과 일반 행(h62)이 다른 레이아웃. hover 는 색만 전환(레이아웃 시프트 방지 [정책]) — 디자이너 확인 권장.
 
 ### Figma 정합 감사 2026-06-10 escalation (디자이너/사회공헌국 — 상세: `docs/design/audit-2026-06-10/report.md` §4)
 
