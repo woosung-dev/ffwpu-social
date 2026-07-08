@@ -1,4 +1,4 @@
-// 공지 상세 첨부파일 다운로드 — Figma 1104:11167 정합: 행 bg #f9f9f9 h41 rounded-4 px-10, 클립+파일명 좌 / 다운로드 우. Server Component
+// 공지 상세 첨부파일 다운로드(본문 아래) — Figma 1104:11167 정합: 행 bg #f9f9f9 h41 rounded-4 px-10, 클립+파일명 좌 / 다운로드 우. 전 BP 고정. Server Component
 import { NoticeClipIcon, NoticeDownloadIcon } from "./notice-icons";
 
 export type DownloadAttachment = {
@@ -31,11 +31,11 @@ export function DownloadSection({
           >
             <span className="flex min-w-0 items-center gap-2.5">
               <NoticeClipIcon className="size-5 text-[#c0bac2]" />
-              <span className="truncate text-[15px] font-semibold text-[#606063] wide:text-[16px]">
+              <span className="truncate text-base font-semibold text-[#606063]">
                 {a.fileName}
               </span>
             </span>
-            <span className="flex shrink-0 items-center gap-1.5 px-2.5 text-sm font-medium text-[#999999] wide:text-[15px]">
+            <span className="flex shrink-0 items-center gap-1.5 px-2.5 text-[15px] font-medium text-[#999999]">
               <NoticeDownloadIcon className="size-4" />
               다운로드
             </span>

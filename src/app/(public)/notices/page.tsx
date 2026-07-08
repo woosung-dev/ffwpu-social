@@ -46,15 +46,15 @@ export default function NoticesPage({
       />
       <SubBanner />
 
-      {/* 수직 리듬 — Figma 1440: 배너 →101→ 타이틀 블록. 하위 BP 절반 [추론] */}
-      <section className="w-full pt-[50px] pb-[100px] wide:pt-[101px] wide:pb-[180px]">
+      {/* 수직 리듬 — Figma 4-BP: 배너 →타이틀 51/113/183/183 (docs/design/notices-fidelity-2026-07-08.md) */}
+      <section className="w-full pt-[50px] pb-[100px] md:pt-[113px] lg:pt-[183px] wide:pb-[180px]">
         <SectionContainer>
-          {/* 타이틀 — Figma 1103:8022: News eyebrow(SUIT Bold 18 #b35feb) +4+ 공지사항(SemiBold 32 #1f2937), 중앙 정렬 */}
+          {/* 타이틀 — Figma 1103:8022: News eyebrow(SUIT Bold 18 #b35feb) +4+ 공지사항(SemiBold 32 #1f2937), 중앙. 전 BP 고정 크기 */}
           <div className="text-center">
-            <p className="text-base font-bold leading-[1.6] text-[#b35feb] wide:text-[18px]">
+            <p className="text-lg font-bold leading-[1.6] text-[#b35feb]">
               News
             </p>
-            <h1 className="mt-1 text-2xl font-semibold leading-[1.5] text-[#1f2937] lg:text-[28px] wide:text-[32px]">
+            <h1 className="mt-1 text-[32px] font-semibold leading-[1.5] text-[#1f2937]">
               공지사항
             </h1>
           </div>
@@ -97,11 +97,11 @@ async function NoticesData({
 
 function NoticeListLoading() {
   return (
-    <div className="mt-10 wide:mx-auto wide:mt-[82px] wide:max-w-[900px]" aria-busy>
-      <div className="h-11 animate-pulse rounded-[4px] bg-muted/60 md:h-12 wide:h-[53px]" />
+    <div className="mt-10 md:mt-[82px] wide:mx-auto wide:max-w-[900px]" aria-busy>
+      <div className="h-10 animate-pulse rounded-[4px] bg-muted/60 md:h-11 lg:h-[53px]" />
       <ul className="mt-2 space-y-2">
         {Array.from({ length: 10 }).map((_, i) => (
-          <li key={i} className="h-12 animate-pulse rounded-[4px] bg-muted/40 wide:h-[62px]" />
+          <li key={i} className="h-12 animate-pulse rounded-[4px] bg-muted/40 md:h-14 lg:h-[62px]" />
         ))}
       </ul>
     </div>

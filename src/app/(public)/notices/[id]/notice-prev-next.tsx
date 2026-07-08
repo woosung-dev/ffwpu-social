@@ -49,7 +49,7 @@ export function NoticePrevNext({
   next: Adjacent;
 }) {
   return (
-    <nav className="mt-6 flex items-center justify-between gap-2 text-base font-semibold text-ink-strong lg:mt-1.5">
+    <nav className="mt-4 flex items-center justify-between gap-2 text-base font-semibold text-ink-strong">
       <Link
         href="/notices"
         className="-mx-2 inline-flex min-h-11 items-center gap-2 rounded-lg px-2 py-2 hover:opacity-80"

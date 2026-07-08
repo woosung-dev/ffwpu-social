@@ -1589,4 +1589,9 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 - 공지 발행/해제는 랜딩·큐레이션과 무관 — revalidate 묶음이 news 보다 좁음(`/notices`, `/admin/notices`).
 - 시드에 공지 8건(발행 6·예약 1·임시 1, 첨부 3) 추가 — 고정 UUID 로 첨부 키 결정성(재시드 orphan 방지).
 - 공개 진입 경로 = **케이스 A 확정** (2026-07-08 Figma 1103:7882 헤더 실측): "공지사항" 을 헤더 5번째 메뉴로 추가 + 비랜딩 active 판정을 pathname 경로 매칭으로 확장(매칭 없으면 기존 activeOnSubpage 폴백). Figma 프레임의 타 메뉴 라벨(임팩트 데이터 등)은 pre-ADR-038 디자이너 더미로 판단 — ADR-038 확정 라벨 유지, 사회공헌국 확인 항목으로 escalation (docs/TODO.md).
-- 공개 페이지 타이틀 eyebrow "News" 는 Figma 그대로 채택하되 공지 게시판 카피로 적절한지 검수 대상 (docs/TODO.md Questions). Figma ground truth: `docs/design/figma-export/notices/` 4장.
+- 공개 페이지 타이틀 eyebrow "News" 는 Figma 그대로 채택하되 공지 게시판 카피로 적절한지 검수 대상 (docs/TODO.md Questions). Figma ground truth: `docs/design/figma-export/notices/`.
+
+### Addendum (2026-07-08, 후속 — 리뷰 피드백)
+
+- **다운로드 섹션 본문 위 → 아래 이동** (사용자 피드백). 디자이너가 갱신한 상세 프레임(`1104-10813` 등)도 `타이틀→본문→다운로드→구분선→이전/다음` 으로 확정돼 코드와 일치. `PrevNextNav`(notices 사본)는 이번 대조에서도 news 와 동일 레이아웃 확인 — 공용화 후보 유지(별도 PR).
+- **반응형 4-BP 실측 정합** — 디자이너가 구간별 프레임 10 추가(목록/상세 각 375/767/768/1025/1440). 당초 "1440 단일 + 하위 BP 비례 [추론]" 를 실측 교체. 핵심: 모바일(<768) 목록 **No·Date 열 제거**(Title 단일) · 누락 `lg:`(1024) 스텝 보강 · 목록 타이포 전 BP 고정(eyebrow18/h1 32). **헤더·푸터·배너는 참고 대상 제외**(사용자 지시). 측정/조치 `docs/design/notices-fidelity-2026-07-08.md`, Playwright ±2px 검증. 마이그레이션·데이터·다운로드 route 변경 없음.

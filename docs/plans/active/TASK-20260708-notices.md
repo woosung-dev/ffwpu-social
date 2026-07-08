@@ -35,7 +35,7 @@ related_adr: ADR-041, ADR-042
 - [x] S5 공개 목록 — page + notice-list-rows(읽음 하이라이트, hydration-safe) + visited-notices.ts + Pagination 공용 승격
 - [x] S6 공개 상세 — page(OG·404) + DownloadSection + visit-tracker
 - [x] S7 seed 공지 8건(첨부 3, 고정 UUID) + ADR-041/042 + current.md §4-4 + 어드민 surface 7→8 + **헤더 케이스 A 반영**(PublicHeader 5메뉴·경로 매칭, /news·랜딩 회귀 확인, 768 5핀 수용·375 드롭다운 정상)
-- [ ] S8 tsc·lint·test·build + 4-BP Figma 대조 + anti-slop
+- [x] S8 tsc0·lint0·test98·build✓ + **4-BP Figma 대조 완료**(디자이너 구간별 프레임 10 실측, Playwright ±2px) + anti-slop — 상세 `docs/design/notices-fidelity-2026-07-08.md`
 
 ## 컨텍스트 노트 (결정 로그)
 
@@ -47,4 +47,6 @@ related_adr: ADR-041, ADR-042
 - 2026-07-08: 어드민 E2E 전 구간 PASS — 작성→pdf/hwp 첨부(hwp canonical MIME 저장)→exe 거부→발행→수정(제거분 MinIO diff 삭제)→본문 이미지(notices/{id}/ prefix)→다운로드 302(한글 파일명)·미발행 404. 공개 목록·상세·읽음 하이라이트(localStorage→bg #F9F4FF+제목 brand-primary) PASS.
 - 2026-07-08 (S8 발견): dev 에서 상세 미방문 공지가 읽음 처리되는 팬텀 기록 관측(라우터 프리페치/세그먼트 프리렌더 계열 추정 — 격리 재현은 안 됨). NoticeVisitTracker 에 `location.pathname === /notices/{id}` 가드 추가 — 실제 상세 URL 에 있을 때만 마킹. 가드 후 방치 8초·hover 프리페치에도 재발 0, 실방문 1건만 기록 확인.
 - 2026-07-08 (S0 완료): Figma 대조로 v1 구조 구현에서 갱신된 것 — 타이틀 좌→중앙(News eyebrow), 다운로드 섹션 본문 아래→위(rows 스타일), 목록에 지브라·핀 마커·정확 색상(#242424/#959ba9/#2d2d2d/#a34df3/#c8a3e6/#d6d0d8), 테이블 900px 중앙, 그라데이션+ScrollTop 추가, 헤더 공지사항 메뉴. eyebrow "News" 카피·Figma 헤더 라벨 불일치·hover 핀 정책은 TODO escalation 3건.
+- 2026-07-08 (후속·리뷰 피드백): 디자이너가 **구간별 반응형 프레임 10 추가**(목록 `1103-7882`/`1149-7972`/`1149-8742`/`1149-9786`/`1149-9301` · 상세 `1104-10813`/`1149-11851`/`1149-11987`/`1149-12667`/`1149-12395`). S0 의 "1440 단일 + 하위 BP 비례 [추론]" 을 실측으로 교체(S8 종료). 핵심: **모바일(375) 목록 No·Date 열 제거(Title 단일)** · 누락 `lg:`(1024) 스텝 보강(헤더 53/행 62·70/텍스트 18) · md 정정(44/56·62/16) · 타이포 고정(목록 eyebrow18·h1 32 전 BP) · 상세 h1 28→32(md) · 다운로드 행 16/15. 헤더·푸터·배너는 사용자 지시로 미참고.
+- 2026-07-08 (후속·리뷰 피드백): **상세 다운로드 섹션 본문 위 → 아래로 이동**(사용자 피드백). 새 상세 프레임(1104-10813 등)도 `타이틀→본문→다운로드→구분선→이전/다음` 으로 확정돼 일치. 본문→다운로드 gap 60, 다운로드→구분선 70.
 - 잔여: prod 배포 시 `pnpm db:migrate`(0013) 필요.
