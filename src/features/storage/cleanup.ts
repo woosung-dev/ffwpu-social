@@ -39,3 +39,18 @@ export async function deleteByPrefix(
   } while (continuationToken);
   return { deleted };
 }
+
+// 지정 key 목록 삭제 — 공지 첨부 교체 시 제거분(기존 − 신규 차집합) 청소용 (ADR-041). 공지당 첨부 ≤5 라 단일 배치로 충분
+export async function deleteByKeys(keys: string[]): Promise<{ deleted: number }> {
+  if (keys.length === 0) return { deleted: 0 };
+  await s3.send(
+    new DeleteObjectsCommand({
+      Bucket: S3_BUCKET,
+      Delete: {
+        Objects: keys.slice(0, DELETE_BATCH_SIZE).map((Key) => ({ Key })),
+        Quiet: true,
+      },
+    }),
+  );
+  return { deleted: keys.length };
+}
