@@ -1,7 +1,7 @@
 // 공지 목록 행 — Figma 4-BP 정합(1149-9301/8742/7972·1103-7882, 측정 docs/design/notices-fidelity-2026-07-08.md).
-// 헤더/일반/읽음 행 높이 40·48·48(375) → 44·56·62(768) → 53·62·70(1025·1440). 모바일(375)은 No·Date 열 제거, Title 단일 열.
-// 호버 = 읽음 행 hover 상태(#f9f4ff + 보라)와 동일 색 처리 (Figma interaction annotation "중복 사용"). 색만 전환 — 레이아웃 시프트 방지 [정책]
-// 읽음 상태는 localStorage(visited-notices) — mount 후 적용해 SSR 마크업과 첫 클라 렌더 일치 (hydration-safe)
+// 헤더/일반/고정 행 높이 40·48·48(375) → 44·56·62(768) → 53·62·70(1025·1440). 일반·읽음 배경 없음(Figma 투명), 고정만 flat #fcfaff+핀. 모바일(375)은 No·Date 열 제거, Title 단일 열.
+// 호버 = #f9f4ff + 보라 텍스트 전환(전 행 공통). Figma 컴포넌트(1104-10001)는 일반행 hover 를 #f9f9fc/글자색 유지로 정의하나 #f9f4ff 통일 유지(사용자 선택 2026-07-09). 색만 전환 — 레이아웃 시프트 방지 [정책]
+// 읽음 상태는 localStorage(visited-notices) — mount 후 적용해 SSR 마크업과 첫 클라 렌더 일치(hydration-safe). 읽음 시각 = 보라 텍스트만(핀·배경 없음, 핀은 고정 전용)
 "use client";
 
 import { useEffect, useState } from "react";
@@ -69,9 +69,8 @@ export function NoticeListRows({
         <ul>
           {rows.map((row, idx) => {
             const isVisited = visited.has(row.id);
-            const isEven = idx % 2 === 1;
-            // 보라 하이라이트(핀·보라 텍스트·연보라 워시) = 고정 OR 읽음. 고정은 읽음 여부와 무관하게 항상 적용 (Figma 1103:7882)
-            const highlighted = row.pinned || isVisited;
+            // 보라 텍스트 = 고정 OR 읽음. 읽음은 '보라 텍스트만'(핀·배경 없음, 2026-07-09), 고정만 핀+배경 (Figma 1103:7882)
+            const purpleText = row.pinned || isVisited;
             // 고정 그룹의 마지막 행 — 고정/일반 경계 구분선 (Figma Line 1254). 고정은 항상 상단 연속 블록
             const isLastPinned =
               row.pinned && (idx === rows.length - 1 || !rows[idx + 1].pinned);
@@ -82,23 +81,14 @@ export function NoticeListRows({
                   className={cn(
                     ROW_GRID_CLASS,
                     "group border-b transition-colors",
-                    // 행 높이 (Figma 4-BP) — 일반 48/56/62 · 하이라이트(고정·읽음) 48/62/70
-                    highlighted
+                    // 행 높이 (Figma 4-BP) — 일반·읽음 48/56/62 · 고정 48/62/70
+                    row.pinned
                       ? "min-h-12 border-[#ece1f3] md:min-h-[62px] lg:min-h-[70px]"
                       : "min-h-12 border-[#cbcbcb] md:min-h-14 lg:min-h-[62px]",
-                    // 배경 — 고정: flat #fcfaff (Figma) · 읽음: 지브라 #fcfaff/#f9f4ff · 일반: 지브라 white/#f9f9fc. 호버는 항상 #f9f4ff
+                    // 배경 — 고정: flat #fcfaff (Figma) · 일반·읽음: 투명(Figma 일반 행 fill 없음). 호버만 #f9f4ff
                     row.pinned
                       ? "bg-[#fcfaff] hover:bg-[#f9f4ff]"
-                      : cn(
-                          isVisited
-                            ? isEven
-                              ? "bg-[#f9f4ff]"
-                              : "bg-[#fcfaff]"
-                            : isEven
-                              ? "bg-[#f9f9fc]"
-                              : "bg-white",
-                          "hover:bg-[#f9f4ff]",
-                        ),
+                      : "hover:bg-[#f9f4ff]",
                     // 고정 그룹 하단 경계선 (마지막 고정 행) — 고정↔일반 시각 분리 (Figma Line 1254)
                     isLastPinned && "border-b-2 border-[#d9c2f5]",
                   )}
@@ -107,21 +97,21 @@ export function NoticeListRows({
                   <span
                     className={cn(
                       "hidden text-center text-base font-medium tabular-nums transition-colors md:block lg:text-lg",
-                      highlighted ? "text-[#c8a3e6]" : "text-[#959ba9]",
+                      purpleText ? "text-[#c8a3e6]" : "text-[#959ba9]",
                       "group-hover:text-[#c8a3e6]",
                     )}
                   >
                     {row.no}
                   </span>
                   <span className="flex min-w-0 items-center gap-2.5">
-                    {/* 선행 핀 마커 — 고정·읽음 행 (Figma No/PinIcon, fill #E1C8F9). 20/20/24/24 */}
-                    {highlighted && (
+                    {/* 선행 핀 마커 — 고정 행 전용 (Figma No/PinIcon, fill #E1C8F9). 20/20/24/24 */}
+                    {row.pinned && (
                       <NoticePinIcon className="size-5 text-[#e1c8f9] lg:size-6" />
                     )}
                     <span
                       className={cn(
                         "truncate text-base font-medium transition-colors lg:text-lg",
-                        highlighted ? "text-[#a34df3]" : "text-[#2d2d2d]",
+                        purpleText ? "text-[#a34df3]" : "text-[#2d2d2d]",
                         "group-hover:text-[#a34df3]",
                       )}
                     >
@@ -132,7 +122,7 @@ export function NoticeListRows({
                         aria-label="첨부파일 있음"
                         className={cn(
                           "size-5 transition-colors",
-                          highlighted ? "text-[#c8a3e6]" : "text-[#d6d0d8]",
+                          purpleText ? "text-[#c8a3e6]" : "text-[#d6d0d8]",
                           "group-hover:text-[#c8a3e6]",
                         )}
                       />
@@ -141,7 +131,7 @@ export function NoticeListRows({
                   <span
                     className={cn(
                       "hidden text-center text-base font-medium tabular-nums transition-colors md:block lg:text-lg",
-                      highlighted ? "text-[#c8a3e6]" : "text-[#959ba9]",
+                      purpleText ? "text-[#c8a3e6]" : "text-[#959ba9]",
                       "group-hover:text-[#c8a3e6]",
                     )}
                   >
