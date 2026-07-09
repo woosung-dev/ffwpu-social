@@ -71,18 +71,14 @@ export default function NoticeDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {
   return (
-    // 배경 밴드 기준 래퍼 — 하단 그라데이션을 콘텐츠 뒤에 격리 (Figma Background h598)
-    <div className="relative isolate">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[360px] bg-gradient-to-b from-white to-[#F9F4FF]/80 wide:h-[598px]"
-      />
+    // 하단 그라데이션 제거 — 목록과 동일 처리, 흰 배경 (사용자 요청 2026-07-09, Figma Background h598 미반영)
+    <>
       <SubBanner />
       <Suspense fallback={<DetailLoading />}>
         <NoticeDetailContent paramsPromise={props.params} />
       </Suspense>
       <ScrollTopButton />
-    </div>
+    </>
   );
 }
 
