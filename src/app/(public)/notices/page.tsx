@@ -38,12 +38,8 @@ export default function NoticesPage({
   searchParams: Promise<SearchParams>;
 }) {
   return (
-    // 배경 밴드 기준 래퍼 — 하단 그라데이션(white→#F9F4FF)을 콘텐츠 뒤에 격리 (news 상세 동일 패턴, Figma Background h590)
-    <div className="relative isolate">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[360px] bg-gradient-to-b from-white to-[#F9F4FF]/80 wide:h-[590px]"
-      />
+    // 하단 그라데이션 제거 — 짧은 페이지에서 배경 워시처럼 보여 흰 배경으로 (사용자 요청 2026-07-09, Figma Background h590 미반영)
+    <>
       <SubBanner />
 
       {/* 수직 리듬 — Figma 4-BP: 배너 →타이틀 51/113/183/183 (docs/design/notices-fidelity-2026-07-08.md) */}
@@ -65,7 +61,7 @@ export default function NoticesPage({
         </SectionContainer>
       </section>
       <ScrollTopButton />
-    </div>
+    </>
   );
 }
 
