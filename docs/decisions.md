@@ -1635,3 +1635,52 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 - **읽음(visited) 시각 = '보라 텍스트만'**(핀·배경·높이 강조 제거, 사용자 선택 2026-07-09). **[정정]** Figma 는 읽음 표시를 **고정(Variant1)-hover 재사용(핀+보라+`#f9f4ff` 배경)** 으로 실제 정의함(행 컴포넌트 **`1104-10001`** 주석 "글 읽음 표시 컴포넌트로 중복 사용" — 이전 "읽음 변형 없음" 서술은 오판). 단 **핀=고정 전용** 원칙상 사용자가 핀·배경을 덜어낸 '보라 텍스트만'으로 **의도적 override**. 코드상 `highlighted → purpleText`(텍스트 색 전용), 높이·보더·핀은 `row.pinned` 기준. 읽음 추적(visit-tracker/localStorage) 기능은 유지.
 - **일반 행 hover** = Figma 컴포넌트는 `#f9f9fc`/글자색 유지이나 기존 `#f9f4ff`+보라 전환을 유지(사용자 선택 2026-07-09) — 의도적 미정합 1건.
 - **하단 그라데이션 제거(목록·상세)** — Figma `1103:7941 "Background"`(`#F9F4FF/80→white` h590/h598)에 실재하나 하단 고정 밴드라 공지가 적은 짧은 페이지에서 배경 전체가 보라로 물든 것처럼 보임 → 사용자 요청으로 제거, 항상 흰 배경(의도적 deviation, 2026-07-09). 그라데이션 전용 `relative isolate` 래퍼도 정리. 스크롤탑(`1103:8079`)·고정 행 `#fcfaff`(행 배경)는 유지.
+
+---
+
+## ADR-045: 비공개 KPI 시트 읽기 — Apps Script 웹앱(getKpi) 경유 (공개 게시·서비스 계정 기각)
+
+- **Status**: Accepted
+- **Date**: 2026-07-15
+
+### Context
+
+2026-07-13 주간 워크플로 `Sync KPI from Sheet (weekly)` #4 가 **HTTP 500** 으로 실패. 원인 추적 결과 코드 버그가 아니라 **시트 접근 권한 상실**이었다.
+
+- 기존 `KPI_SHEET_CSV_URL` = `docs.google.com/spreadsheets/d/<ID>/export?format=csv&gid=<GID>` 형식. 이 방식은 문서의 **링크 공유가 열려 있어야만** 익명으로 읽힌다.
+- 소유자(`ffsocial0303`)가 시트 일반 액세스를 **"제한됨"** 으로 유지 → 해당 URL 이 **401 + 구글 로그인 HTML** 반환 → `PublishedCsvReader` 가 throw → 라우트 500.
+- 시트 이름이 `현장 활동 보고(개인 정보/자료 무단 공유 및 사용 금지)` 로, **개인정보가 실재**한다. 공개 전환은 **ADR-004 개인정보 보호 제약 위반**이라 선택지가 아니다. 사용자도 "공유는 해줄 수 없다"고 확인(2026-07-15).
+- 요구는 2개이며 **둘 다 pull** 이다 — ① 매주 자동 반영(GHA) ② 어드민 "시트에서 불러오기" 클릭 시 폼에 3개 값 표시. 둘 다 `getSheetReader()` → `KPI_SHEET_CSV_URL` 단일 통로를 공유한다.
+- **진단이 늦은 이유**: `sync-kpi.yml` 이 `curl -fsS` 라 5xx 응답 본문을 버려, 라우트가 담아 보낸 실제 메시지(`KPI 시트 fetch 실패: HTTP 401`)가 로그에 안 남았다.
+
+### Decision
+
+**시트에 붙은 Apps Script 웹앱(`getKpi.gs`)이 소유자 권한으로 읽어 누적 지표 3개만 CSV 로 반환**하고, 앱은 그 URL 을 기존 reader 로 그대로 읽는다.
+
+- `KPI_SHEET_CSV_URL` = `https://script.google.com/macros/s/<배포ID>/exec?token=<ACCESS_TOKEN>`. **앱 코드 변경 0** — `PublishedCsvReader` 가 이미 `redirect: "follow"` 라 Apps Script 리다이렉트(1회) 통과, 반환 CSV(라벨 행 + 값 행)를 기존 `extractCumulativeMetrics` 가 그대로 파싱.
+- 웹앱 배포 설정 **실행: 나(소유자)** + **액세스: 모든 사용자**. 전자가 아니면 ⓐ 액세스 목록에서 "모든 사용자"가 사라지고 ⓑ 비공개 시트를 못 읽는다(둘 다 깨짐).
+- 잠금은 **토큰**(`ACCESS_TOKEN` 스크립트 속성 ↔ URL `?token=`). 불일치 시 `forbidden`. 토큰은 서버 env 에만 존재(브라우저 미노출).
+- 노출면은 **시트 라벨 3개에 해당하는 숫자뿐** — 스크립트가 `TARGET_LABELS` 만 꺼내므로 개인정보는 구조적으로 나올 수 없다. 그 3개 숫자는 어차피 랜딩에 공개되는 값이라 실질 위험 0.
+
+### 기각안
+
+| 안 | 기각 사유 |
+|---|---|
+| 시트 전체 링크 공개 | ADR-004 개인정보 제약 정면 위반 |
+| 요약 탭만 "웹에 게시" | 코드 0·가장 간단하나 소유자가 **공유 자체 불가**. (조직/소유자 정책이 풀리면 재검토 가치 있음 — 그 경우 URL 만 교체) |
+| **서비스 계정(GCP)** | 보안 최상(공개 URL 0)이나 **Next.js 단일 스택 유지** 요구로 기각(사용자, 2026-07-15). GCP 프로젝트·SA 키 관리·의존성 추가가 스택 밖 |
+| Apps Script **주간 푸시**(트리거 POST) | 요구 ①만 충족. 어드민 버튼은 on-demand pull 이라 **② 불가** → 요구 미달 |
+| 어드민 붙여넣기/수동 입력 | Next.js only 지만 요구 ①(무인 자동) 포기 |
+
+> 물리 법칙: **무인 주간 자동 + 시트 비공개 + GCP 없음 + Next.js only** 는 동시 성립 불가. 넷 중 "Next.js only" 를 양보해(구글 쪽 스크립트 1개 허용) 나머지 셋을 지킨 것이 본 결정.
+
+### Consequences
+
+- **스키마 변경 0 · 앱 코드 변경 0.** 변경면은 `KPI_SHEET_CSV_URL` 값 하나(로컬 + Vercel).
+- **결합 지점 3곳**: 시트 라벨 ↔ `src/features/kpi/sync/mapping.ts` ↔ `getKpi.gs` `TARGET_LABELS`. 라벨이 바뀌면 3자를 함께 고쳐야 한다(런북 자가진단표).
+- **Apps Script 가 SPOF** — 이 URL 이 죽으면 주간·버튼 **둘 다** 죽는다. 단 랜딩은 DB 값을 유지하므로 장애는 격리된다(값이 멈출 뿐 화면은 정상).
+- **운영 함정**: 스크립트 수정은 자동 반영 안 됨(배포 관리 → 편집 → 새 **버전**). "새 **배포**" 를 누르면 URL 이 바뀌어 env 동반 교체 필요.
+- 운영 문서: `docs/deploy-env-checklist.md` **§6**(런북·자가진단·EC2 이전) + §1 "어디에 넣나" 열. `.env.example` 의 죽은 export 형식 안내 제거.
+- **EC2 이전 시 Apps Script 무변경** — GitHub 은 사이트를 주소로만 부르므로 `KPI_SYNC_ENDPOINT` 만 교체.
+- 검증(2026-07-15): 웹앱 `200 text/csv` + 토큰 없이 `forbidden` · 로컬 `/api/cron/sync-kpi` `{"ok":true,"synced":[3],"missing":[]}` · 잘못된 시크릿 `403` · 어드민 버튼 클릭 시 폼 값 복구(391·5902·10879.9) · tsc0.
+- **남은 후속**: ⓐ `sync-kpi.yml` 의 `curl -fsS` 가 여전히 5xx 본문을 버려 다음 실패도 원인이 안 보임 ⓑ `KpiEditor.tsx:49` `toLocaleString` 이 SSR↔클라 시간대 불일치로 하이드레이션 미스매치(잠복 버그, sync 성공 후 표면화. `timeZone: "Asia/Seoul"` 명시로 해소 가능).
