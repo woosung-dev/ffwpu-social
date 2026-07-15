@@ -30,6 +30,7 @@ export {
   getRelatedNews,
   getAdjacentNews,
   listPublishedNewsForSitemap,
+  listPublishedNewsForFeed,
 } from "./service";
 
 export {

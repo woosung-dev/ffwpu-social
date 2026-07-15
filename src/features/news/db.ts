@@ -142,6 +142,21 @@ export async function listPublishedForSitemap() {
     .orderBy(desc(news.publishedAt));
 }
 
+// RSS 피드 용 — 발행글 최신 N건. body 는 excerpt 추출용(route 소비 지점), 태그·통계 제외 경량 select
+export async function listPublishedForFeed(limit: number) {
+  return db
+    .select({
+      id: news.id,
+      title: news.title,
+      body: news.body,
+      publishedAt: news.publishedAt,
+    })
+    .from(news)
+    .where(publicPublishedWhere())
+    .orderBy(desc(news.publishedAt))
+    .limit(limit);
+}
+
 // ─── 어드민 — 모든 글 (draft + published, codex P1#7 분리) ───────────────
 
 type AdminListOpts = {
