@@ -55,6 +55,13 @@ export default auth((req) => {
   if (isLogin && isSuper) {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
+
+  // 어드민 호스트 통과 응답은 색인 차단 — 페이지 메타 noindex 보강 (HTML 아닌 응답·크롤러 방어). 사용자 도메인·우회 호스트는 미적용
+  if (isAdminHost(host) && !isBranchBypassHost(host)) {
+    const res = NextResponse.next();
+    res.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return res;
+  }
 });
 
 // Next 16: proxy는 항상 Node.js Runtime — runtime 키 명시 금지.

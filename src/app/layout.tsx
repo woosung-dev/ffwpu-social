@@ -49,6 +49,15 @@ export const metadata: Metadata = {
     images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: SITE_NAME }],
   },
   twitter: { card: "summary_large_image" },
+  // 서치콘솔/서치어드바이저 HTML 태그 소유확인 — 환경변수 설정 시에만 <meta> 출력(미설정 시 키 없음 → 태그 미주입)
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION
+      ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+      : {}),
+    ...(process.env.NAVER_SITE_VERIFICATION
+      ? { other: { "naver-site-verification": process.env.NAVER_SITE_VERIFICATION } }
+      : {}),
+  },
 };
 
 export default function RootLayout({
