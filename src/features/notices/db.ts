@@ -124,6 +124,15 @@ export async function findAdjacentNotices(noticeId: string, publishedAt: Date) {
   return { prev: prev ?? null, next: next ?? null };
 }
 
+// sitemap 용 — 발행 공지 전체 id + 최종수정일. 경량 select(본문·첨부 제외). news listPublishedForSitemap 동일
+export async function listPublishedForSitemap() {
+  return db
+    .select({ id: notices.id, updatedAt: notices.updatedAt })
+    .from(notices)
+    .where(publicPublishedWhere())
+    .orderBy(desc(notices.publishedAt));
+}
+
 // ─── 어드민 — 모든 공지 (draft + scheduled + published) ─────────────────
 
 type AdminListOpts = {

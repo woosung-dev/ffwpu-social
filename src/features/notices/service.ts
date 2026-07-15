@@ -40,6 +40,11 @@ export async function getPublishedAttachment(attachmentId: string) {
   return noticeDb.getPublishedAttachmentById(attachmentId);
 }
 
+// sitemap 용 — 발행 공지 전체 (id + updatedAt). news listPublishedNewsForSitemap 동일
+export async function listPublishedNoticesForSitemap() {
+  return noticeDb.listPublishedForSitemap();
+}
+
 // ─── 어드민 ─────────────────────────────────────────────────────────────
 
 export async function listNoticesForAdmin(opts: {

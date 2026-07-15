@@ -18,6 +18,7 @@ export {
   getNoticeDetail,
   getAdjacentNotices,
   getPublishedAttachment,
+  listPublishedNoticesForSitemap,
   listNoticesForAdmin,
   getAdminNoticeDetail,
   getNoticePinBoard,
