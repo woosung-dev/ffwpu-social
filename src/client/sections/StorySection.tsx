@@ -181,14 +181,18 @@ export function StorySection({
               data-fid="story-go"
               className="pointer-events-none absolute z-10 h-auto -rotate-[3deg] w-[72px] left-[-29px] top-[183px] md:w-[88px] md:left-[-56px] md:top-[242px] lg:w-[101px] lg:left-[-67px] lg:top-[276px] wide:w-[119px] wide:left-[-82px] wide:top-[354px]"
             />
-            {/* Good: od — 우하단 오버행 */}
+            {/* Good: od — 우하단 오버행.
+                lg/wide left 는 Figma(154/237)보다 각각 51/38px 왼쪽. Figma 더미 통계("16개·23가정·2시설")보다
+                실데이터 통계("나눔 쌀 1340kg" 포함, 폭 326px)가 넓어 우측 정렬로 자라며 스티커 오버행과 겹침
+                (lg −35px · wide −22px 측정). 통계 좌측에 16px 여백 확보. base/md 는 통계가 이미지 아래로
+                스택돼 겹침 없음 → Figma 값 유지. */}
             {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
             <img
               src="/icons/story-od.svg"
               alt=""
               aria-hidden
               data-fid="story-od"
-              className="pointer-events-none absolute z-10 h-auto rotate-[5deg] w-[68px] left-[119px] top-[192px] md:w-[84px] md:left-[151px] md:top-[245px] lg:w-[97px] lg:left-[154px] lg:top-[287px] wide:w-[115px] wide:left-[237px] wide:top-[357px]"
+              className="pointer-events-none absolute z-10 h-auto rotate-[5deg] w-[68px] left-[119px] top-[192px] md:w-[84px] md:left-[151px] md:top-[245px] lg:w-[97px] lg:left-[103px] lg:top-[287px] wide:w-[115px] wide:left-[199px] wide:top-[357px]"
             />
           </div>
         </div>
