@@ -48,6 +48,8 @@ export default function NewsListPage({
 }) {
   return (
     <>
+      {/* 페이지 대표 제목 — 히어로가 조건부 비노출이라 h1 을 시각 숨김으로 상시 제공(문서 개요·SEO). 시각 변화 0 */}
+      <h1 className="sr-only">쌀 나눔 소식</h1>
       <SubBanner />
 
       {/* 소식 히어로 — '활동 스토리 관리 → 스토리 대표글' 탭에서 지정한 우선 글 (없으면 비노출) */}

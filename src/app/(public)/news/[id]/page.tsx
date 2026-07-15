@@ -7,6 +7,8 @@ import { getAdjacentNews, getNewsDetail, getRelatedNews } from "@/features/news"
 import { bodyToExcerpt } from "@/features/news/excerpt";
 import { NewsBodyRenderer } from "@/features/news/render/news-body-renderer";
 import { ArticleCard } from "@/features/news/components";
+import { JsonLd } from "@/client/components/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 import { SubBanner } from "../sub-banner";
 import { DetailHeader } from "./detail-header";
@@ -97,9 +99,38 @@ async function NewsDetailContent({
     ? await getAdjacentNews(id, item.publishedAt)
     : { prev: null, next: null };
 
+  // NewsArticle 구조화 데이터 — 이미 조회한 item 재사용(추가 쿼리 없음). JSON-LD 는 절대 URL 필수(SITE_URL 접두).
+  // description·image 는 generateMetadata 와 동일 로직, 카피는 site.ts 상수 재사용
+  const canonicalUrl = `${SITE_URL}/news/${item.id}`;
+  const jsonLdDescription =
+    bodyToExcerpt(item.body, 150) || `${item.categoryName} · ${SITE_NAME} 의 활동 소식.`;
+  const jsonLdImage =
+    item.coverImageUrl ?? `${SITE_URL}/api/og?title=${encodeURIComponent(item.title)}`;
+  const organization = {
+    "@type": "Organization",
+    name: SITE_NAME,
+    logo: { "@type": "ImageObject", url: `${SITE_URL}/icon.png` },
+  };
+  const newsJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: item.title,
+    description: jsonLdDescription,
+    image: jsonLdImage,
+    datePublished: item.publishedAt?.toISOString(),
+    dateModified: item.updatedAt.toISOString(),
+    author: organization,
+    publisher: organization,
+    mainEntityOfPage: canonicalUrl,
+    articleSection: item.categoryName,
+    keywords: item.tags.join(", "),
+    inLanguage: "ko",
+  };
+
   return (
     // 배경 밴드 기준 래퍼 — isolate 로 -z-10 밴드를 콘텐츠 뒤·페이지 배경 앞 stacking context 에 격리
     <div className="relative isolate">
+      <JsonLd data={newsJsonLd} />
       <NewsViewTracker newsId={item.id} />
       {/* 배경 밴드 — Figma 749:7979: 풀블리드 수직 그라데이션 white→rgba(249,244,255,0.8).
           1440 기준 h598, 하단(디바이더~관련글) 뒤에 깔리고 푸터 직전에서 끝남 — 컨테이너 하단 앵커.

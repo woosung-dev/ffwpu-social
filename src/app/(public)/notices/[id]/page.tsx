@@ -10,6 +10,8 @@ import { DownloadSection } from "@/features/notices/components";
 import { NoticeClipIcon } from "@/features/notices/components/notice-icons";
 import { bodyToExcerpt } from "@/features/news/excerpt";
 import { NewsBodyRenderer } from "@/features/news/render/news-body-renderer";
+import { JsonLd } from "@/client/components/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 import { SubBanner } from "../../news/sub-banner";
 import { ScrollTopButton } from "../../news/[id]/scroll-top";
@@ -44,6 +46,7 @@ export async function generateMetadata({
   const description =
     bodyToExcerpt(notice.body, 150) || "사회공헌단 Sow Good 의 공지사항.";
   const url = `/notices/${id}`;
+  const ogImage = `/api/og?title=${encodeURIComponent(notice.title)}`;
   return {
     title: `${notice.title} | 사회공헌단 Sow Good`,
     description,
@@ -55,14 +58,13 @@ export async function generateMetadata({
       locale: "ko_KR",
       url,
       publishedTime: notice.publishedAt?.toISOString(),
-      images: [
-        {
-          url: `/api/og?title=${encodeURIComponent(notice.title)}`,
-          width: 1200,
-          height: 630,
-          alt: notice.title,
-        },
-      ],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: notice.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: notice.title,
+      description,
+      images: [ogImage],
     },
   };
 }
@@ -104,9 +106,31 @@ async function NoticeDetailContent({
     ? await getAdjacentNotices(id, notice.publishedAt)
     : { prev: null, next: null };
 
+  // Article 구조화 데이터 — 이미 조회한 notice 재사용. 커버 없어 image 는 동적 OG(절대 URL). 카피는 site.ts 상수 재사용
+  const canonicalUrl = `${SITE_URL}/notices/${notice.id}`;
+  const organization = {
+    "@type": "Organization",
+    name: SITE_NAME,
+    logo: { "@type": "ImageObject", url: `${SITE_URL}/icon.png` },
+  };
+  const noticeJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: notice.title,
+    description: bodyToExcerpt(notice.body, 150) || `${SITE_NAME} 의 공지사항.`,
+    image: `${SITE_URL}/api/og?title=${encodeURIComponent(notice.title)}`,
+    datePublished: notice.publishedAt?.toISOString(),
+    dateModified: notice.updatedAt.toISOString(),
+    author: organization,
+    publisher: organization,
+    mainEntityOfPage: canonicalUrl,
+    inLanguage: "ko",
+  };
+
   return (
     // 본문폭 — Figma 4-BP: 343(px16)/648/905≈900/900. 배너→타이틀 65/85/154/154 (docs/design/notices-fidelity-2026-07-08.md)
     <div className="mx-auto w-full px-4 pt-[65px] pb-[100px] md:max-w-[648px] md:px-0 md:pt-[85px] lg:max-w-[900px] lg:pt-[154px] wide:pb-[180px]">
+      <JsonLd data={noticeJsonLd} />
       <NoticeVisitTracker noticeId={notice.id} />
 
       {/* 타이틀 블록 — Figma 1104:10952: News eyebrow(18) +4+ 제목(중앙 28→32, 첨부 시 클립 28) +20+ 날짜(16, 중앙) */}
