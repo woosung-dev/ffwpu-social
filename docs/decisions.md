@@ -1635,3 +1635,28 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 - **읽음(visited) 시각 = '보라 텍스트만'**(핀·배경·높이 강조 제거, 사용자 선택 2026-07-09). **[정정]** Figma 는 읽음 표시를 **고정(Variant1)-hover 재사용(핀+보라+`#f9f4ff` 배경)** 으로 실제 정의함(행 컴포넌트 **`1104-10001`** 주석 "글 읽음 표시 컴포넌트로 중복 사용" — 이전 "읽음 변형 없음" 서술은 오판). 단 **핀=고정 전용** 원칙상 사용자가 핀·배경을 덜어낸 '보라 텍스트만'으로 **의도적 override**. 코드상 `highlighted → purpleText`(텍스트 색 전용), 높이·보더·핀은 `row.pinned` 기준. 읽음 추적(visit-tracker/localStorage) 기능은 유지.
 - **일반 행 hover** = Figma 컴포넌트는 `#f9f9fc`/글자색 유지이나 기존 `#f9f4ff`+보라 전환을 유지(사용자 선택 2026-07-09) — 의도적 미정합 1건.
 - **하단 그라데이션 제거(목록·상세)** — Figma `1103:7941 "Background"`(`#F9F4FF/80→white` h590/h598)에 실재하나 하단 고정 밴드라 공지가 적은 짧은 페이지에서 배경 전체가 보라로 물든 것처럼 보임 → 사용자 요청으로 제거, 항상 흰 배경(의도적 deviation, 2026-07-09). 그라데이션 전용 `relative isolate` 래퍼도 정리. 스크롤탑(`1103:8079`)·고정 행 `#fcfaff`(행 배경)는 유지.
+
+## ADR-044: SEO 하드닝 — JSON-LD 구조화 데이터 + sitemap notices 편입 + 검색엔진 소유확인 체계
+
+- **Status**: Accepted
+- **Date**: 2026-07-15
+
+### Context
+
+구글 SEO 전수 점검(2026-07-15) 결과, 온페이지 메타(title/description/canonical/OG/twitter/동적 OG/robots/sitemap)는 PR #42 이래 완비 상태였으나 색인 파이프라인 쪽에 공백이 확인됨. ① Google Search Console 미등록(색인 요청·커버리지 모니터링 불가) ② 공지사항(notices, PR #82)이 SEO PR 이후 추가되어 sitemap 완전 누락 ③ JSON-LD 구조화 데이터 전무 ④ /news 목록 h1 부재 ⑤ admin 서브도메인이 meta noindex 에만 의존(HTTP 레벨 X-Robots-Tag 부재) ⑥ sitemap 목록 lastmod 가 매 요청 `new Date()` 로 변동(구글은 lastmod 만 신호로 쓰며 정확성을 검증 — 신뢰 하락 요인). 실측: 구글 색인 17 URL(sitemap 22 중, 최근 글 3~5일 내 색인 — 크롤링 자체는 건강), 브랜드 검색("사회공헌단 sow good") 1~3위, PSI 모바일 SEO 100·성능 70 / 데스크톱 성능 88, CrUX 필드 데이터 없음(트래픽 부족).
+
+### Decision
+
+- **JSON-LD 3종** — 랜딩 `Organization`+`WebSite`(`@graph`), 소식 상세 `NewsArticle`, 공지 상세 `Article`. 공용 `JsonLd` 컴포넌트(`src/client/components/seo/json-ld.tsx`, Next 공식 `<` 이스케이프 패턴). 값은 페이지가 이미 조회한 데이터 + `site.ts` 상수만 재사용 — 신규 카피 창작 금지(절대 제약: 포교·정치 중립).
+- **sitemap notices 편입** — `listPublishedNoticesForSitemap()`(news 컨벤션 동일: db→service→배럴) + `/notices` 목록·발행 상세. 목록 lastmod = 해당 목록 최신 콘텐츠 `updatedAt`(변동 없는 목록의 lastmod 고정).
+- **소유확인 2경로** — primary: `public/google7f8c005c70787329.html`(GSC HTML 파일 인증, 커밋이 표준 관행·삭제 금지). 예비: `metadata.verification` env(`GOOGLE_SITE_VERIFICATION`/`NAVER_SITE_VERIFICATION`, 미설정 시 메타 미출력). GA 인증은 `@next/third-parties` gtag 가 initial `<head>` HTML 에 없어 GSC 가 인식 못함(실측 실패) — 채택 안 함.
+- **admin 호스트 X-Robots-Tag** — proxy pass-through 응답에 `noindex, nofollow`(레이아웃 meta noindex 의 HTTP 레벨 보강). 사용자 도메인·bypass 호스트 미적용.
+- **/news sr-only h1** — 히어로가 조건부 비노출이라 상시 h1 을 시각 숨김으로 제공(Figma 시각 변화 0).
+- **RSS 2.0 `/feed.xml`** — 발행 소식 최신 20건. 순수 빌더(`features/news/rss.ts`, XML 이스케이프 + CDATA `]]>` 분할) + 단위테스트. 네이버 서치어드바이저 피드 제출용(구글은 RSS 색인 신호로 미사용, IndexNow 도 미지원).
+
+### Consequences
+
+- 배포 후 운영 절차 필요(1회): GSC 소유확인 '확인' 클릭 → sitemap 제출 → 주요 URL 색인 요청(일 ~10건 쿼터). 속성(`https://sowgood.kr/`, URL 접두어)은 2026-07-15 생성 완료·인증 대기.
+- 스키마 변경 0 · 마이그레이션 0 · 필수 env 추가 0. 시각 변화 0.
+- `public/google7f8c005c70787329.html` 삭제 시 GSC 소유확인이 풀림 — 파일 유지 필수.
+- 색인 커버리지(notices)와 리치 결과 자격(Article 계열), 모니터링 체계(GSC)가 확보됨. 성능 70(모바일)은 별도 과제로 이관.
