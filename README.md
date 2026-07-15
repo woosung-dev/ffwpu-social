@@ -28,19 +28,23 @@
 # 1. 의존성
 pnpm install
 
-# 2. 로컬 인프라 (Postgres 5433 + MinIO 9000/9001)
+# 2. 환경 변수 (.env.example 이 변수 목록의 SSOT)
+cp .env.example .env.local
+# → 값 채우는 법·배포 시 어디에 넣는지: docs/deploy-env-checklist.md
+
+# 3. 로컬 인프라 (Postgres 5433 + MinIO 9000/9001)
 docker compose --env-file .env.local up -d
 
-# 3. DB 마이그레이션 + 시드 (super admin + 9 news + 27 tags)
+# 4. DB 마이그레이션 + 시드 (super admin + 9 news + 27 tags)
 pnpm db:migrate
 ADMIN_PASSWORD='your-password' pnpm db:seed
 
-# 4. 개발 서버
+# 5. 개발 서버
 pnpm dev
-# → http://localhost:3000
+# → http://localhost:3100  (3000 은 다른 앱이 점유해 기본 포트가 3100)
 
-# 5. 어드민
-# → http://localhost:3000/admin/login
+# 6. 어드민
+# → http://localhost:3100/admin/login
 # email: admin@ffwpu-social.local
 # password: (위 ADMIN_PASSWORD로 설정한 값)
 ```
@@ -66,6 +70,14 @@ pnpm db:studio                 # DB 브라우저
 5. [`docs/design.md`](./docs/design.md) — Figma 정리본, 디자인 토큰, 반응형 매트릭스
 6. [`.ai/rules/domain.md`](./.ai/rules/domain.md) — 프로젝트 도메인 절대 제약·자주 하는 실수
 
+### 환경 변수 (배포·인수인계)
+
+**[`docs/deploy-env-checklist.md`](./docs/deploy-env-checklist.md)** 하나만 보면 된다. 변수 목록의 SSOT 는 [`.env.example`](./.env.example) 이고, 이 문서는 **각 값을 어디에 넣는지**를 다룬다.
+
+- 값이 사는 곳이 **두 군데**다 — 앱이 읽는 값은 **Vercel**, 워크플로가 읽는 값은 **GitHub Secrets**. 목록이 서로 다르다 (§1 "어디에 넣나" 열).
+- **Vercel 은 저장만으론 반영 안 된다** — Redeploy 필요.
+- KPI 시트 동기화는 비공개 시트를 **Apps Script 웹앱**으로 읽는다. 시트를 공개로 바꾸는 건 개인정보 제약상 선택지가 아니다 (§6).
+
 ## 디렉토리 구조 (요약)
 
 ```
@@ -84,6 +96,7 @@ pnpm db:studio                 # DB 브라우저
 │   ├── design.md                   Figma 인덱스·토큰
 │   ├── tech.md                     스택·F3 폴더·데이터 모델·API
 │   ├── decisions.md                ADR 모음 (시간순 누적)
+│   ├── deploy-env-checklist.md     환경변수 — 어디에 넣나(Vercel/GitHub)·배포 점검·KPI 런북
 │   ├── source/                     사회공헌국 원본 자료 (절대 수정 금지)
 │   └── plans/active/               Sprint 진행 계획서
 ├── src/                            (자세한 구조는 docs/tech.md)
