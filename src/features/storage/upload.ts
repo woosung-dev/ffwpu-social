@@ -1,18 +1,12 @@
 // 이미지 업로드 presigned PUT URL 발급 — R2 호환 (R2 는 presigned POST 미지원, GET/PUT 만 지원).
-// ADR-017 (이미지 5MB). POST policy 의 content-length-range 는 PUT 서명에 불가 → 서버측 size 사전검증으로 대체.
+// POST policy 의 content-length-range 는 PUT 서명에 불가 → 서버측 size 사전검증으로 대체.
+// 정책 상수·MIME 판정은 image-policy.ts (클라 리사이즈와 공유하는 순수 모듈, ADR-046).
 import { randomUUID } from "node:crypto";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { S3_BUCKET, getPublicUrl, s3 } from "@/lib/s3";
+import { MAX_IMAGE_BYTES, isAllowedImageMime } from "./image-policy";
 
-export const ALLOWED_IMAGE_MIME = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-] as const;
-export type AllowedImageMime = (typeof ALLOWED_IMAGE_MIME)[number];
-
-export const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // ADR-017
 const PRESIGN_EXPIRES_SECONDS = 60;
 
 export type UploadTarget = "cover" | "body";
@@ -35,10 +29,6 @@ type CreatePresignedUploadArgs = {
   mime: string;
   size: number;
 };
-
-export function isAllowedImageMime(mime: string): mime is AllowedImageMime {
-  return (ALLOWED_IMAGE_MIME as readonly string[]).includes(mime);
-}
 
 function extFromFilenameOrMime(filename: string, mime: string): string {
   const m = filename.match(/\.([a-zA-Z0-9]+)$/);
