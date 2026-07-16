@@ -1684,3 +1684,43 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 - **EC2 이전 시 Apps Script 무변경** — GitHub 은 사이트를 주소로만 부르므로 `KPI_SYNC_ENDPOINT` 만 교체.
 - 검증(2026-07-15): 웹앱 `200 text/csv` + 토큰 없이 `forbidden` · 로컬 `/api/cron/sync-kpi` `{"ok":true,"synced":[3],"missing":[]}` · 잘못된 시크릿 `403` · 어드민 버튼 클릭 시 폼 값 복구(391·5902·10879.9) · tsc0.
 - **남은 후속**: ⓐ `sync-kpi.yml` 의 `curl -fsS` 가 여전히 5xx 본문을 버려 다음 실패도 원인이 안 보임 ⓑ `KpiEditor.tsx:49` `toLocaleString` 이 SSR↔클라 시간대 불일치로 하이드레이션 미스매치(잠복 버그, sync 성공 후 표면화. `timeZone: "Asia/Seoul"` 명시로 해소 가능).
+
+---
+
+## ADR-046: 이미지 업로드 — 원본 상한 30MB + 클라이언트 자동 리사이즈 (ADR-017 사이즈 계약 개정)
+
+- **Status**: Accepted (Amends ADR-017 — 저장 상한 5MB 는 유지, 원본 수용 범위만 확대)
+- **Date**: 2026-07-16
+
+### Context
+
+운영자가 어드민 에디터에 봉사 현장 사진을 넣으면 **아무 일도 일어나지 않았다.** 콘솔에만 `File size exceeds maximum allowed (5MB)` 가 찍혔다.
+
+원인은 세 겹이었다.
+
+1. **직접 원인** — `image-upload-node.tsx:89` 의 클라 사전검증. presign 요청조차 안 나간다(서버·R2 무관).
+2. **침묵** — `simple-editor.tsx` 의 `onError` 가 `console.error` 뿐이었다. 게다가 크기 검증이 `setFileItems` 보다 **먼저** return 해 실패 파일이 목록에 오르지도 않아, 에러 상태 UI 조차 렌더되지 않았다. 운영자 화면엔 드롭존만 그대로 → "고장났나?"
+3. **리사이즈 부재** — 원본 `File` 을 그대로 R2 에 PUT. 스마트폰·카메라 원본은 5~15MB 가 흔해 이 에러는 우연이 아니라 상시였다.
+
+5MB 는 기술 제약이 아니라 ADR-017 의 **정책값**이다(문서에 *"보수적, 조정 가능"* 명시). 업로드는 브라우저 → R2 presigned PUT **직송**이라 Vercel 4.5MB body 제한과 무관하고, Server Action 은 메타데이터만 오간다. 같은 공지 화면에서 문서 첨부는 20MB(ADR-041)인데 본문 이미지만 5MB 인 비대칭도 있었다.
+
+### Decision
+
+1. **저장 상한 5MB 유지** (`MAX_IMAGE_BYTES`). 서버 presign 사전검증이 여전히 유일한 강제점 — 클라 리사이즈는 UX 이지 보안 경계가 아니다.
+2. **원본 상한 `MAX_SOURCE_IMAGE_BYTES` = 30MB 신설.** 벤더 게이트(`ImageUploadNode.maxSize`)를 5MB → 30MB 로 올린다. *왜:* 이 게이트가 리사이즈보다 **먼저** 돈다 — 5MB 로 두면 12MB 사진이 리사이즈 시도조차 못 하고 잘린다. 30MB 초과를 여전히 막는 이유는 decode(`createImageBitmap`) 가 원본 비례로 메모리를 먹어 브라우저가 멈추기 때문.
+3. **업로드 전 자동 리사이즈** (`image-resize.ts` `prepareImageForUpload`). 긴 변 `MAX_IMAGE_EDGE_PX`=2560 으로 축소 후 webp 품질 사다리(0.85 → 0.72 → 0.6)로 5MB 아래까지. **`size ≤ 5MB && 긴 변 ≤ 2560` 이면 원본 무손실 통과** — 불필요한 세대 손실 방지.
+   - 삽입 지점 = `makeBodyImageUploader`. 드롭존(ImageUploadNode)과 "2장 나란히"(ImageRowButton) **두 진입점의 공통 길목**이라 한 곳으로 둘 다 커버. 커버는 `CoverImageUploader` 에 별도 배선.
+   - presign 은 반드시 리사이즈 **결과**로 발급 — 서명된 Content-Type·검증된 size 가 실제 PUT 본문과 일치해야 한다.
+   - 재인코딩 시 **확장자도 함께 교체**. object key 가 filename 확장자에서 파생되므로(`extFromFilenameOrMime`) 안 그러면 `.jpg` 키에 `image/webp` 를 얹은 불일치가 생긴다.
+   - `canvas.toBlob` 은 요청 형식 미지원 시 spec 상 `image/png` 로 조용히 폴백 → 결과 `blob.type` 을 신뢰해 확장자를 파생.
+4. **실패는 토스트로 노출** — `onError` → `toast.error(toKoreanUploadError(e))`. 벤더가 던지는 영문 메시지는 경계에서 한국어로 번역한다. *왜 번역이냐:* `image-upload-node.tsx`/`tiptap-utils.ts` 는 커밋 이력상 **벤더링 1회 후 무수정**이 이 레포 관례라 원본을 안 건드린다. 매칭이 빗나가면 원문이 그대로 노출된다 — 침묵보다 낫다는 판단.
+5. **정책 상수는 순수 모듈 `image-policy.ts` 로 분리.** `upload.ts` 는 `@/lib/s3`(aws-sdk·node:crypto) 의존이라 클라가 못 읽어 5MB 가 `tiptap-utils.ts` 에 **중복 선언**돼 있었다(drift 원천). `attachment-policy.ts` 선례 그대로 — server-only 배럴(`index.ts`)에 안 태우고 클라가 직접 import.
+
+### Consequences
+
+- **스키마 변경 0 · 마이그레이션 0.** 전부 클라이언트 경로 — 문제 시 revert 로 즉시 원복.
+- **공개 페이지 전송량 감소.** 본문 이미지는 `/_next/image` 를 안 거치는 raw `<img>` 라 저장 크기 = 전송 크기. 2560px 상한이 곧 페이지 무게 상한.
+- **운영자 안내 문구 동반 수정** — 커버 업로더의 "최대 5MB" 는 자동 축소 도입 후 거짓이자 위축 문구(큰 사진을 아예 안 올리게 만듦) → "최대 30MB · 큰 사진은 자동으로 줄여서 올립니다".
+- **재인코딩은 손실**이다. 원본 보존이 필요해지면(예: 인쇄용 원본 아카이브) 별도 정책 필요 — 현재 범위 아님.
+- **HEIC 는 여전히 미지원.** `accept="image/*"` 라 아이폰 HEIC 선택은 되지만 허용 MIME 이 아니라 서버가 거부한다. 본 ADR 로 최소한 **한국어 토스트는 보인다**(과거엔 침묵). 자동 변환은 브라우저별 decode 편차(Chrome 불가)로 별도 판단.
+- 실측(2026-07-16, 로컬): 13.91MB/4000×3000 JPEG → **2.79MB/2560×1920 webp** (커버·드롭존·2장 나란히 3경로 전부) · 작은 이미지는 **SHA 동일**(무손실 통과) · `.gif` → 한국어 토스트 · 84MB → "원본 이미지가 너무 큽니다. 30MB 이하 파일로 올려주세요." · 발행 후 공개 상세 렌더 HTTP 200·콘솔 에러 0. tsc0·lint0·test115.

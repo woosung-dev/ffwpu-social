@@ -4,6 +4,10 @@
 
 > **목적:** AI ↔ 사용자 매개. 차단 상태가 아닌 질문·확인 항목은 여기에 누적 후 자연스러운 타이밍에 일괄 전달.
 
+## 진행 중 (2026-07-16)
+
+- **어드민 이미지 업로드 UX — 실패 노출 + 자동 리사이즈** — `docs/plans/active/TASK-20260716-admin-image-upload-ux.md` (branch `feat/admin-image-upload-ux`). 운영자가 현장 사진을 올리면 콘솔에만 `File size exceeds maximum allowed (5MB)` 가 찍히고 화면은 침묵하던 문제. ① `onError` → 한국어 토스트 ② 업로드 전 자동 리사이즈(본문 2경로 + 커버). **저장 상한 5MB 유지 · 원본 상한 30MB 신설.** ADR-046. **스키마 변경 0 · 마이그레이션 0.** 실측 13.91MB→2.79MB webp · tsc0·lint0·test115. **커밋 승인 대기.**
+
 ## 진행 중 (2026-07-08)
 
 - **공지사항(notices) 신설 — PR #82 (리뷰 대기)** — `docs/plans/active/TASK-20260708-notices.md` (branch `feat/notices`). 어드민 CRUD(에디터+첨부 문서형 20MB·5개) + 공개 목록(/notices, 읽음 하이라이트)·상세(download section) + 헤더 5번째 메뉴(케이스 A). ADR-041/042, **마이그레이션 0013**. S0~S8 전부 완료 — Figma 4노드 픽셀 정합 반영·E2E PASS. ground truth `docs/design/figma-export/notices/`. 카피 escalation 3건은 아래 §공지사항 Figma 정합 escalation.
@@ -145,6 +149,13 @@
 - [ ] Partners 섹션 py wide(48) < lg(76) 역전 — Figma 1440 프레임 재확인 [확인 필요]. 높이 역산값이라 콘텐츠 내부 오프셋이 패딩에 흡수됐을 가능성 — KPI 처럼 오토레이아웃 패딩 직접 측정으로 검증.
 - [ ] `GmarketSans-Medium.woff2` 서브셋 — 현재 512KB 풀 글리프(한글 11,172자 전체). SUIT 동일 정책(KS 급 ~2,900자) 서브셋 시 ~261KB(−49%). 헤드라인 글리프 한정이면 ~5KB — 단 카피 변경 시 재생성 필요(트레이드오프 결정 필요).
 - [ ] `FeaturedStoryCard` min-h(423/556) 콘텐츠 폭주 가드 — 제목·설명이 운영자 자유 입력이라 길어지면 airy 간격(`mt-auto`) 붕괴. 제목 `line-clamp-2`·설명 `line-clamp-3` 검토 (운영 자율성 제약: 어떤 길이를 넣어도 디자인 유지).
+
+### 이미지 업로드 후속 (2026-07-16 ADR-046 에서 파생)
+
+- [ ] **어드민 날짜 표시 하이드레이션 미스매치** — `/admin/news/new` 발행 일시 피커가 서버 `2026년 7월 16일 목 오전 9:40` vs 클라 `... AM 9:40` 로 갈려 콘솔 에러. **ADR-045 후속 ⓑ(`KpiEditor.tsx:49` `toLocaleString` 시간대)와 동일 계열** — 두 건을 함께 `timeZone: "Asia/Seoul"` + `hour12` 명시로 일괄 해소 권장. (ADR-046 실측 중 발견, 별건이라 미수정)
+- [ ] **HEIC 미지원** — `accept="image/*"` 라 아이폰 HEIC 선택은 되지만 허용 MIME 이 아니라 서버가 거부. ADR-046 으로 **한국어 토스트는 보이게 됨**(과거엔 침묵)이라 차단성은 해소. 자동 변환은 브라우저별 decode 편차(Chrome 불가·Safari 가능)로 별도 판단 필요 — 운영자가 아이폰에서 직접 올리는 빈도 확인 후 결정.
+- [ ] **`ImageRowButton` 의 `window.alert` → toast 통일** — "2장 나란히" 실패만 blocking alert 를 쓴다(동작은 함). ADR-046 에서 나머지 경로가 sonner 로 통일돼 UX 만 불일치. (§3 Surgical 로 이번 범위 제외)
+- [ ] **`tiptap-utils.ts:289` `handleImageUpload` dead code** — 어디서도 import 안 되는 tiptap 데모 잔재인데 `:301` 에서 `File size exceeds maximum allowed` 를 **동일 문구로** 던져 향후 디버깅 혼선 요인. 같은 파일 `MAX_FILE_SIZE`(5MB)도 이 잔재 전용. 벤더 원본이라 이번엔 미수정 — 재벤더링 정책과 함께 판단.
 
 ### v1.1+ 백로그
 

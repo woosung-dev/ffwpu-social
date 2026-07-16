@@ -1,6 +1,7 @@
 // 본문 이미지 업로드 — 공식 ImageUploadNode 의 upload 시그니처를 우리 R2 presigned PUT 에 배선
 import { uploadImageAction } from "@/features/news/actions";
 import { uploadNoticeImageAction } from "@/features/notices/actions";
+import { prepareImageForUpload } from "@/features/storage/image-resize";
 
 export type EditorScope =
   | { newsId: string }
@@ -30,7 +31,10 @@ export function makeBodyImageUploader(scope?: EditorScope) {
     abortSignal?: AbortSignal,
   ): Promise<string> => {
     if (!scope) throw new Error("이미지 업로드 scope 가 없습니다.");
-    const presign = await requestPresign(scope, file);
+    // 현장 사진 원본은 보통 5~15MB 라 그대로 보내면 서버가 항상 거부한다 → 저장 상한 아래로 먼저 줄인다 (ADR-046).
+    // presign 은 반드시 리사이즈 "결과" 로 발급할 것 — 서명된 Content-Type·검증된 size 가 실제 PUT 본문과 어긋난다.
+    const upload = await prepareImageForUpload(file);
+    const presign = await requestPresign(scope, upload);
     if (!presign.success) {
       const msg =
         typeof presign.error === "string" ? presign.error : "업로드 URL 발급 실패";
@@ -41,7 +45,7 @@ export function makeBodyImageUploader(scope?: EditorScope) {
     const resp = await fetch(uploadUrl, {
       method: "PUT",
       headers: { "Content-Type": contentType },
-      body: file,
+      body: upload,
       signal: abortSignal,
     });
     if (!resp.ok) {
