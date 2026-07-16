@@ -4,14 +4,6 @@
 
 > **목적:** AI ↔ 사용자 매개. 차단 상태가 아닌 질문·확인 항목은 여기에 누적 후 자연스러운 타이밍에 일괄 전달.
 
-## 진행 중 (2026-07-16)
-
-- **어드민 이미지 업로드 UX — 실패 노출 + 자동 리사이즈** — `docs/plans/active/TASK-20260716-admin-image-upload-ux.md` (branch `feat/admin-image-upload-ux`). 운영자가 현장 사진을 올리면 콘솔에만 `File size exceeds maximum allowed (5MB)` 가 찍히고 화면은 침묵하던 문제. ① `onError` → 한국어 토스트 ② 업로드 전 자동 리사이즈(본문 2경로 + 커버, **원본 형식 보존**). **저장 상한 5MB 유지 · 원본 상한 30MB 신설.** ADR-046. **스키마 변경 0 · 마이그레이션 0.** 실측 JPG 8.55→0.83MB·PNG 17.52→4.04MB·WEBP 5.37→0.56MB 전부 확장자 유지 · tsc0·lint0·test115. **PR #89 (OPEN).**
-
-## 진행 중 (2026-07-08)
-
-- **공지사항(notices) 신설 — PR #82 (리뷰 대기)** — `docs/plans/active/TASK-20260708-notices.md` (branch `feat/notices`). 어드민 CRUD(에디터+첨부 문서형 20MB·5개) + 공개 목록(/notices, 읽음 하이라이트)·상세(download section) + 헤더 5번째 메뉴(케이스 A). ADR-041/042, **마이그레이션 0013**. S0~S8 전부 완료 — Figma 4노드 픽셀 정합 반영·E2E PASS. ground truth `docs/design/figma-export/notices/`. 카피 escalation 3건은 아래 §공지사항 Figma 정합 escalation.
-
 ## 진행 중 (2026-06-03)
 
 - **랜딩 실데이터화 + 반응형 4-BP 정합** — `docs/plans/active/2026-06-03-landing-data-responsive.md` (branch `feat/client-foundation`). WS1 시드 실데이터화(사진 11장→MinIO) + WS2 슬롯 썸네일 + WS3 ArticleGrid 호이스트 + WS4 RQ /news 목록 캐시(useSuspenseQuery 안정 패턴) + WS5 7면 4-BP 정합. **스키마 변경 없음.**
@@ -26,8 +18,8 @@
 
 ## 배포 전 필수 (🔴 차단성)
 
-- [ ] **DB 마이그레이션 0007 적용** — 관리자 방문자 분석용 `analytics_events` 테이블 추가. 배포 DB에서 `pnpm db:migrate` 또는 배포 절차의 Drizzle migrate 적용 필요.
-- [ ] **DB 마이그레이션 0013 적용** — 공지사항 `notices` + `notice_attachments` 테이블 (feat/notices 머지 시, GHA migrate 파이프라인 자동 or 수동 1회).
+- [x] **DB 마이그레이션 0007 적용 (완료)** — `analytics_events` 테이블. PR #45 머지 시 GHA `Migrate (production)` 가 적용. 이후 모든 main push 의 migrate 실행이 success (drizzle migrate 는 대기분을 전부 적용) — 2026-07-16 확인.
+- [x] **DB 마이그레이션 0013·0014 적용 (완료)** — 공지사항 `notices` + `notice_attachments` + `pinned_rank`. PR #82 머지(2026-07-08T13:19:49Z) 시 GHA `Migrate (production)` **success** — 2026-07-16 확인.
 - [x] **`next build` 타입체크 블로커 해소 (2026-06-01)** — pre-existing `templates/` 스캐폴드(PR #9)가 tsconfig `**/*.ts` 에 포함돼 빌드 실패하던 것 → tsconfig `exclude` 에 `templates` 추가. `pnpm tsc`·`pnpm build` 모두 그린(exit 0). **후속(v1.1): templates monorepo 구조 재정비(PR #9) — 사용자 메모 "추후 구조 다시 잡아야".**
 - [x] **모노레포/폴더 구조 결정 (2026-06-02, ADR-033)** — velog 4부작(Nx·Turbo·pnpm) 교차검증 + 5옵션 점수화(AI-DevX 우선). 결론: 현행 **F3 단일앱 유지**가 v1.0/근미래 최적(OPT-2 8.34 > OPT-1 8.13, OPT-3/5 fails·OPT-4 weakened). velog와 **갈리지 않음**(직교+철학 수렴), template과도 거의 일치. **마이그레이션 부채(v1.1+, 보류)** — 복합 트리거(팀≥3 OR CI 빌드병목 실측 OR web/admin 독립배포 케이던스) 발화 시에만 F2(pnpm→측정후 Turbo, **Nx 금지**)로. 도메인수 7개 단독으로는 발화 금지. 상세 `docs/decisions.md` ADR-033.
 - [ ] **A7 — 로그인 rate limit** — Vercel Firewall rate-limit 룰을 `/api/auth/*` 에 적용(코드 0). 단일 super 브루트포스·credential stuffing 방어. 배포 대시보드 설정. (Vercel 배포 확정 — 2026-06-01)
@@ -35,8 +27,9 @@
 
 ## Completed (최근 4개)
 
-- [x] **어드민 분석·예약 발행·Tiptap 숫자 크기 (2026-06-10)** — 익명 세션 기반 `analytics_events` 추가(조회·공감·공유), 어드민 대시보드 최근 30일 분석 카드, `publishedAt <= now()` 공개 조건 기반 예약 발행, 어드민 예약 상태 표시, Tiptap `12px~40px` 숫자 입력 + sanitize 정합. `pnpm tsc --noEmit`·`pnpm lint`·`pnpm test`(52)·`pnpm build` 통과. **스키마 변경 1건.** plan: `docs/plans/active/TASK-20260610-admin-analytics-schedule-editor/`.
-- [x] **소식 검색 + 768 그리드 정정 (2026-06-07)** — `/news` "더 많은 소식" 탭+검색 인라인 툴바(제목+태그 ILIKE, q×category AND). 768 카드 3열→2열 수정(skeleton·Figma 정합). branch `feat/news-search`, ADR-036. Generator-Evaluator(2-pass 적대 + codex C1 반복q 500 수락). tsc0·lint0·test47. **스키마 0.** plan/검증: `docs/plans/active/2026-06-07-news-search.md` · `docs/design/review-news-search-2026-06-07.md`.
+- [x] **어드민 이미지 업로드 UX (2026-07-16, PR #89 머지·배포)** — 에디터 이미지 업로드가 콘솔에만 에러 찍고 침묵하던 문제. ① `onError` → 한국어 토스트 ② 업로드 전 자동 리사이즈(드롭존·2장나란히·커버 3경로). 저장 상한 5MB 유지 · 원본 상한 30MB 신설 · **원본 형식 보존**(커버가 OG 썸네일로 나가 webp 통일 시 크기에 따라 OG 형식이 조용히 갈림). ADR-046. 스키마 0. 실측 JPG 8.55→0.83MB · PNG 17.52→4.04MB · WEBP 5.37→0.56MB. tsc0·lint0·test115.
+- [x] **어드민 분석·예약 발행·Tiptap 숫자 크기 (2026-06-10)** — 익명 세션 기반 `analytics_events` 추가(조회·공감·공유), 어드민 대시보드 최근 30일 분석 카드, `publishedAt <= now()` 공개 조건 기반 예약 발행, 어드민 예약 상태 표시, Tiptap `12px~40px` 숫자 입력 + sanitize 정합. `pnpm tsc --noEmit`·`pnpm lint`·`pnpm test`(52)·`pnpm build` 통과. **스키마 변경 1건.**
+- [x] **소식 검색 + 768 그리드 정정 (2026-06-07)** — `/news` "더 많은 소식" 탭+검색 인라인 툴바(제목+태그 ILIKE, q×category AND). 768 카드 3열→2열 수정(skeleton·Figma 정합). branch `feat/news-search`, ADR-036. Generator-Evaluator(2-pass 적대 + codex C1 반복q 500 수락). tsc0·lint0·test47. **스키마 0.** 검증: `docs/design/review-news-search-2026-06-07.md`.
   - **v1.1 후속(Next Actions):** 본문(jsonb) 검색 · 검색어 하이라이트 · 자동완성/추천검색어 · 헤더 검색 모달(familyfed SearchPanel 패턴) · 사회공헌국 검색 디자인 최종 승인.
 - [x] **Figma SSOT 재동기화 (2026-05-30)** — 사용자 3 노드 ID 재공유 기반. 홈 1920/1024 자식 frame ID 갱신 (`331:7984`·`332:9254`) + 1439 폐기 + 소식 Banner 정식 등장 카피 갱신. `docs/design.md` / `docs/design/README.md` / `docs/current.md` / `docs/TODO.md` 4파일 일관화. 사용자 조달 대기 항목 ↓ "Next Actions" 등록.
 - [x] Sprint 1 D-4 — F3 폴더 + 디자인 토큰 + SUIT 폰트 + 공통 컴포넌트 11종 + Route Group (2026-05-27, 9 commits)
