@@ -76,7 +76,12 @@ import { useWindowSize } from "@/hooks/use-window-size"
 import { useCursorVisibility } from "@/hooks/use-cursor-visibility"
 
 // --- Lib ---
-import { MAX_FILE_SIZE } from "@/lib/tiptap-utils"
+import { toast } from "sonner"
+import {
+  MAX_IMAGES_PER_UPLOAD,
+  MAX_SOURCE_IMAGE_BYTES,
+  toKoreanUploadError,
+} from "@/features/storage/image-policy"
 import {
   makeBodyImageUploader,
   type EditorScope,
@@ -297,10 +302,13 @@ export function SimpleEditor({
       Selection,
       ImageUploadNode.configure({
         accept: "image/*",
-        maxSize: MAX_FILE_SIZE,
-        limit: 3,
+        // 원본 상한 — 저장 상한(5MB)이 아니다. 이 게이트는 업로더의 리사이즈보다 먼저 돌기 때문에
+        // 5MB 로 두면 12MB 현장 사진이 리사이즈 시도조차 못 하고 잘린다 (ADR-046).
+        maxSize: MAX_SOURCE_IMAGE_BYTES,
+        limit: MAX_IMAGES_PER_UPLOAD,
         upload: makeBodyImageUploader(scope),
-        onError: (error) => console.error("Upload failed:", error),
+        // 실패를 콘솔에만 남기면 운영자에겐 "아무 일도 안 일어남" 으로 보인다 — 토스트로 노출
+        onError: (error) => toast.error(toKoreanUploadError(error)),
       }),
     ],
     content: defaultValue,

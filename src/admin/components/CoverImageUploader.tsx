@@ -5,6 +5,8 @@ import { useRef, useState } from "react";
 import NextImage from "next/image";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { uploadImageAction } from "@/features/news/actions";
+import { MAX_SOURCE_IMAGE_BYTES } from "@/features/storage/image-policy";
+import { prepareImageForUpload } from "@/features/storage/image-resize";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -49,11 +51,14 @@ export function CoverImageUploader({
     }
     setIsUploading(true);
     try {
-      const dims = await readImageDimensions(file);
+      // 커버 원본도 5~15MB 가 흔하다 → presign 전에 저장 상한 아래로 줄인다 (ADR-046)
+      const prepared = await prepareImageForUpload(file);
+      // 치수는 리사이즈 "결과" 에서 캡처 — 마조네리 카드 비율의 근거라 실제 저장된 이미지와 일치해야 한다
+      const dims = await readImageDimensions(prepared);
       const presign = await uploadImageAction({
-        filename: file.name,
-        mime: file.type,
-        size: file.size,
+        filename: prepared.name,
+        mime: prepared.type,
+        size: prepared.size,
         target: "cover",
         ...scope,
       });
@@ -69,7 +74,7 @@ export function CoverImageUploader({
       const resp = await fetch(uploadUrl, {
         method: "PUT",
         headers: { "Content-Type": contentType },
-        body: file,
+        body: prepared,
       });
       if (!resp.ok) {
         throw new Error(`업로드 실패 (HTTP ${resp.status})`);
@@ -144,7 +149,11 @@ export function CoverImageUploader({
               <>
                 <ImagePlus className="h-8 w-8" />
                 <span className="text-sm">클릭 또는 드래그앤드롭</span>
-                <span className="text-xs">JPG / PNG / WEBP · 최대 5MB</span>
+                {/* 자동 축소가 생긴 뒤로 "최대 5MB" 는 거짓이자 위축 문구 — 큰 사진을 아예 안 올리게 만든다 */}
+                <span className="text-xs">
+                  JPG / PNG / WEBP · 최대 {MAX_SOURCE_IMAGE_BYTES / 1024 / 1024}MB
+                </span>
+                <span className="text-xs">큰 사진은 자동으로 줄여서 올립니다</span>
               </>
             )}
           </div>
