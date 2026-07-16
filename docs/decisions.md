@@ -1421,7 +1421,7 @@ velog 최종 처방은 "pnpm workspace 기준선 → 빌드성능 필요 시 Tur
 - ✅ 768 카드 그리드 열수 버그(`md:`3열→`lg:`3열, skeleton·Figma 2열 정합) 동반 수정.
 - ⚠️ 본문 검색·하이라이트·자동완성·헤더 모달은 v1.1 (`docs/TODO.md`).
 - ⚠️ ADR-016 "검색 ❌"는 본 ADR 로 부분 supersede — **목록 인라인 검색 한정**, 그 외 1차 범위 동결 유지.
-- 근거 산출물: `docs/plans/active/2026-06-07-news-search.md` · `docs/design/review-news-search-2026-06-07.md`.
+- 근거 산출물: `docs/design/review-news-search-2026-06-07.md` (plan 은 머지 후 삭제 — plans 라이프사이클, `git log --all -- docs/plans/active/2026-06-07-news-search.md`).
 
 ---
 

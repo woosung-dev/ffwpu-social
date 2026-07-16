@@ -1,6 +1,6 @@
 # /news 검색 추가 — 디자인 검증 + 코드 검토 리포트 (2026-06-07)
 
-> Generator-Evaluator 워크플로우 산출. plan: `docs/plans/active/2026-06-07-news-search.md` · 결정: ADR-036.
+> Generator-Evaluator 워크플로우 산출. 결정: ADR-036 (plan 은 머지 후 삭제 — plans 라이프사이클).
 > 방법: Figma ground-truth(`docs/design/screenshots/news-list-*.png`) ↔ Playwright 라이브 캡처(`live-news-search-*.png`) BP별 대조 + 적대적 2-pass + Codex 교차 검토.
 
 ## 종합 판정: **PASS** (회귀 0, P0 1건 동반 수정, 적대 P1 2·P2 2 + Codex 1 수락·수정 완료)
