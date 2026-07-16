@@ -1708,11 +1708,14 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 
 1. **저장 상한 5MB 유지** (`MAX_IMAGE_BYTES`). 서버 presign 사전검증이 여전히 유일한 강제점 — 클라 리사이즈는 UX 이지 보안 경계가 아니다.
 2. **원본 상한 `MAX_SOURCE_IMAGE_BYTES` = 30MB 신설.** 벤더 게이트(`ImageUploadNode.maxSize`)를 5MB → 30MB 로 올린다. *왜:* 이 게이트가 리사이즈보다 **먼저** 돈다 — 5MB 로 두면 12MB 사진이 리사이즈 시도조차 못 하고 잘린다. 30MB 초과를 여전히 막는 이유는 decode(`createImageBitmap`) 가 원본 비례로 메모리를 먹어 브라우저가 멈추기 때문.
-3. **업로드 전 자동 리사이즈** (`image-resize.ts` `prepareImageForUpload`). 긴 변 `MAX_IMAGE_EDGE_PX`=2560 으로 축소 후 webp 품질 사다리(0.85 → 0.72 → 0.6)로 5MB 아래까지. **`size ≤ 5MB && 긴 변 ≤ 2560` 이면 원본 무손실 통과** — 불필요한 세대 손실 방지.
+3. **업로드 전 자동 리사이즈** (`image-resize.ts` `prepareImageForUpload`). 긴 변 `MAX_IMAGE_EDGE_PX`=2560 으로 축소 후 5MB 아래까지 재인코딩. **`size ≤ 5MB && 긴 변 ≤ 2560` 이면 원본 무손실 통과** — 불필요한 세대 손실 방지.
    - 삽입 지점 = `makeBodyImageUploader`. 드롭존(ImageUploadNode)과 "2장 나란히"(ImageRowButton) **두 진입점의 공통 길목**이라 한 곳으로 둘 다 커버. 커버는 `CoverImageUploader` 에 별도 배선.
    - presign 은 반드시 리사이즈 **결과**로 발급 — 서명된 Content-Type·검증된 size 가 실제 PUT 본문과 일치해야 한다.
-   - 재인코딩 시 **확장자도 함께 교체**. object key 가 filename 확장자에서 파생되므로(`extFromFilenameOrMime`) 안 그러면 `.jpg` 키에 `image/webp` 를 얹은 불일치가 생긴다.
-   - `canvas.toBlob` 은 요청 형식 미지원 시 spec 상 `image/png` 로 조용히 폴백 → 결과 `blob.type` 을 신뢰해 확장자를 파생.
+   - `canvas.toBlob` 은 요청 형식 미지원 시 spec 상 `image/png` 로 조용히 폴백 → 결과 `blob.type` 을 신뢰해 확장자를 파생. 확장자와 Content-Type 은 항상 일치시켜야 한다 — object key 가 filename 확장자에서 파생되므로(`extFromFilenameOrMime`) 어긋나면 `.jpg` 키에 `image/webp` 를 얹은 불일치가 된다.
+6. **원본 형식을 유지한다** (JPG→JPG · PNG→PNG · WEBP→WEBP). webp 로 통일하면 더 작지만(실측 2560px 사진형 0.55 vs JPEG 0.81MB) **0.26MB 이득과 바꿀 값이 아니다.**
+   - *왜:* 커버는 소식 상세의 **OG 썸네일로 그대로 나간다** (`news/[id]/page.tsx` `ogImage = article.coverImageUrl`). webp 통일 시 **파일 크기에 따라 OG 이미지 형식이 조용히 바뀌는 결합**이 생긴다 — 5MB 넘는 커버만 webp 가 되고 작은 커버는 jpg 로 남는다. 카카오톡 등 스크래퍼의 webp 지원은 보장되지 않으며, 한국어 공개 사이트에서 카카오 공유는 핵심 채널이다. 형식을 보존하면 이 질문 자체가 사라진다.
+   - 부수 효과: 운영자가 올린 형식이 그대로 저장돼 "확장자가 왜 바뀌지?" 라는 놀람이 없다.
+   - **손실 포맷(JPEG/WEBP)은 품질 사다리**(0.85 → 0.72 → 0.6), **무손실 포맷(PNG)은 치수 사다리**(2560 → 2048 → 1600 → 1280). *왜 갈리나:* PNG 는 `toBlob` 의 quality 인자가 무시돼 줄일 수단이 치수뿐이다. 사진형 PNG 는 2560px 에서 **~12.6MB**(실측)라 축소가 불가피하고, 도형·스크린샷 PNG 는 첫 단계에서 통과한다.
 4. **실패는 토스트로 노출** — `onError` → `toast.error(toKoreanUploadError(e))`. 벤더가 던지는 영문 메시지는 경계에서 한국어로 번역한다. *왜 번역이냐:* `image-upload-node.tsx`/`tiptap-utils.ts` 는 커밋 이력상 **벤더링 1회 후 무수정**이 이 레포 관례라 원본을 안 건드린다. 매칭이 빗나가면 원문이 그대로 노출된다 — 침묵보다 낫다는 판단.
 5. **정책 상수는 순수 모듈 `image-policy.ts` 로 분리.** `upload.ts` 는 `@/lib/s3`(aws-sdk·node:crypto) 의존이라 클라가 못 읽어 5MB 가 `tiptap-utils.ts` 에 **중복 선언**돼 있었다(drift 원천). `attachment-policy.ts` 선례 그대로 — server-only 배럴(`index.ts`)에 안 태우고 클라가 직접 import.
 
@@ -1722,5 +1725,14 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 - **공개 페이지 전송량 감소.** 본문 이미지는 `/_next/image` 를 안 거치는 raw `<img>` 라 저장 크기 = 전송 크기. 2560px 상한이 곧 페이지 무게 상한.
 - **운영자 안내 문구 동반 수정** — 커버 업로더의 "최대 5MB" 는 자동 축소 도입 후 거짓이자 위축 문구(큰 사진을 아예 안 올리게 만듦) → "최대 30MB · 큰 사진은 자동으로 줄여서 올립니다".
 - **재인코딩은 손실**이다. 원본 보존이 필요해지면(예: 인쇄용 원본 아카이브) 별도 정책 필요 — 현재 범위 아님.
+- **사진형 PNG 는 치수를 잃는다** — 무손실 포맷을 보존하는 대가. 실측 17.52MB/3000×2250 PNG → 4.04MB/**1600×1200**(JPEG 였다면 2560 유지). 사진을 PNG 로 올리는 건 드물고(폰은 JPEG), 도형·스크린샷 PNG 는 2560 을 유지하므로 수용. 1280 에서도 5MB 를 못 맞추면 "JPG 로 저장해서 올려주세요" 로 안내한다.
 - **HEIC 는 여전히 미지원.** `accept="image/*"` 라 아이폰 HEIC 선택은 되지만 허용 MIME 이 아니라 서버가 거부한다. 본 ADR 로 최소한 **한국어 토스트는 보인다**(과거엔 침묵). 자동 변환은 브라우저별 decode 편차(Chrome 불가)로 별도 판단.
-- 실측(2026-07-16, 로컬): 13.91MB/4000×3000 JPEG → **2.79MB/2560×1920 webp** (커버·드롭존·2장 나란히 3경로 전부) · 작은 이미지는 **SHA 동일**(무손실 통과) · `.gif` → 한국어 토스트 · 84MB → "원본 이미지가 너무 큽니다. 30MB 이하 파일로 올려주세요." · 발행 후 공개 상세 렌더 HTTP 200·콘솔 에러 0. tsc0·lint0·test115.
+- 실측(2026-07-16, 로컬) — **형식 보존 확인**:
+
+  | 원본 | 저장 | Content-Type | 치수 |
+  |---|---|---|---|
+  | 8.55MB JPG | **0.83MB** | `image/jpeg` | 2560×1920 |
+  | 17.52MB PNG | **4.04MB** | `image/png` | 1600×1200 (치수 사다리) |
+  | 5.37MB WEBP | **0.56MB** | `image/webp` | 2560×1920 |
+
+  그 외: 13.91MB/4000×3000 → 2.79MB (커버·드롭존·2장 나란히 3경로) · 작은 이미지 **SHA256 동일**(무손실 통과) · `.gif` → 한국어 토스트 · 84MB → "원본 이미지가 너무 큽니다. 30MB 이하 파일로 올려주세요." · 발행 후 공개 상세 렌더 HTTP 200·콘솔 에러 0. tsc0·lint0·test115.

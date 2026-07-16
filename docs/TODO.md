@@ -6,7 +6,7 @@
 
 ## 진행 중 (2026-07-16)
 
-- **어드민 이미지 업로드 UX — 실패 노출 + 자동 리사이즈** — `docs/plans/active/TASK-20260716-admin-image-upload-ux.md` (branch `feat/admin-image-upload-ux`). 운영자가 현장 사진을 올리면 콘솔에만 `File size exceeds maximum allowed (5MB)` 가 찍히고 화면은 침묵하던 문제. ① `onError` → 한국어 토스트 ② 업로드 전 자동 리사이즈(본문 2경로 + 커버). **저장 상한 5MB 유지 · 원본 상한 30MB 신설.** ADR-046. **스키마 변경 0 · 마이그레이션 0.** 실측 13.91MB→2.79MB webp · tsc0·lint0·test115. **커밋 승인 대기.**
+- **어드민 이미지 업로드 UX — 실패 노출 + 자동 리사이즈** — `docs/plans/active/TASK-20260716-admin-image-upload-ux.md` (branch `feat/admin-image-upload-ux`). 운영자가 현장 사진을 올리면 콘솔에만 `File size exceeds maximum allowed (5MB)` 가 찍히고 화면은 침묵하던 문제. ① `onError` → 한국어 토스트 ② 업로드 전 자동 리사이즈(본문 2경로 + 커버, **원본 형식 보존**). **저장 상한 5MB 유지 · 원본 상한 30MB 신설.** ADR-046. **스키마 변경 0 · 마이그레이션 0.** 실측 JPG 8.55→0.83MB·PNG 17.52→4.04MB·WEBP 5.37→0.56MB 전부 확장자 유지 · tsc0·lint0·test115. **PR #89 (OPEN).**
 
 ## 진행 중 (2026-07-08)
 

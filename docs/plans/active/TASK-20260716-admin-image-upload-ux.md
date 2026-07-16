@@ -59,7 +59,7 @@ presign 요청조차 발생하지 않는다. 서버·R2 무관.
 | D1 | 리사이즈 삽입 지점 = **`makeBodyImageUploader`** | 드롭존(ImageUploadNode)과 "2장 나란히"(ImageRowButton) **두 진입점의 공통 길목**. 한 곳 수정으로 둘 다 커버 |
 | D2 | `maxSize` = **원본 허용 상한 30MB** (5MB 아님) | 벤더 게이트(`image-upload-node.tsx:89`)가 리사이즈보다 **먼저** 돈다. 5MB 로 두면 12MB 사진은 리사이즈 시도조차 못 함. 30MB 초과는 디코드 자체가 OOM/멈춤 위험이라 거부 유지 |
 | D3 | 정책 상수는 **순수 모듈** `src/features/storage/image-policy.ts` | `upload.ts` 는 `@/lib/s3`(aws-sdk·node:crypto) 의존이라 클라 import 불가 → 현재 `tiptap-utils.ts` 에 5MB 가 **중복 선언**돼 drift 위험. `attachment-policy.ts` 선례 그대로 (배럴 `index.ts` 는 `server-only` — 순수 모듈은 클라가 직접 import) |
-| D4 | 재인코딩 포맷 = **webp** (필요 시에만) | 허용 MIME + 알파 지원 + quality 노브 + jpeg 대비 압축 우위. **분기 없는 단일 경로**. `canvas.toBlob` 은 미지원 시 spec 상 png 로 조용히 폴백 → 결과 `blob.type` 을 신뢰하고 확장자를 거기서 파생 |
+| D4 | 재인코딩 시 **원본 형식 유지** (JPG→JPG·PNG→PNG·WEBP→WEBP) | **커버가 OG 썸네일로 그대로 나간다**(`news/[id]/page.tsx`) → webp 통일 시 *파일 크기에 따라 OG 형식이 조용히 바뀌는* 결합. 카카오 스크래퍼 webp 지원 미보장. 실측상 webp 이득은 0.26MB(0.55 vs 0.81) 뿐이라 바꿀 값이 아니다. 손실(JPEG/WEBP)=품질 사다리 · 무손실(PNG)=치수 사다리(quality 인자가 무시되므로) |
 | D5 | **이미 작으면 무손실 통과** | `size ≤ 5MB && 긴 변 ≤ 2560px` → 원본 그대로. 불필요한 세대 손실 방지 |
 | D6 | 긴 변 상한 **2560px** | 본문 이미지는 공개 페이지에서 next/image 를 안 거치고 raw `<img>` 로 나간다 → 저장 크기 = 전송 크기. 최대 표시폭(~800px)의 2배 + 여유 |
 | D7 | 영문 에러 → 한국어 매핑을 **`image-policy.ts`** 에 | 벤더 파일을 수정하지 않기 위한 경계. 순수 함수라 node 환경 vitest 로 단위 테스트 가능 |
@@ -72,8 +72,10 @@ presign 요청조차 발생하지 않는다. 서버·R2 무관.
   → [우리 uploader] prepareImageForUpload(file)                                    ← ②
        ├ 허용 MIME 아님 → 통과 → 서버가 한국어로 거부 → toast                      ← ①
        ├ size ≤ 5MB && 긴 변 ≤ 2560 → 원본 그대로 (무손실)
-       └ 그 외 → decode → 2560 맞춰 축소 → webp quality [0.85, 0.72, 0.6] 사다리
-                  └ 그래도 5MB 초과 → 한국어 throw → toast                        ← ①
+       └ 그 외 → decode → 원본 형식 그대로 재인코딩 (확장자 유지)
+                  ├ JPEG/WEBP → 2560 고정 + quality [0.85, 0.72, 0.6]
+                  ├ PNG → quality 무시됨 → 치수 [2560, 2048, 1600, 1280]
+                  └ 그래도 5MB 초과 → "JPG 로 저장해서 올려주세요" → toast        ← ①
   → presign(서버가 5MB·MIME 독립 재검증) → R2 PUT
 ```
 
@@ -112,16 +114,23 @@ presign 요청조차 발생하지 않는다. 서버·R2 무관.
 | 1 | `pnpm tsc --noEmit` | **0** |
 | 2 | `pnpm lint` | **0** |
 | 3 | `pnpm test` | **115 통과** (기존 103 + 신규 12) |
-| 4 | 커버 업로드 (13.91MB / 4000×3000 JPEG) | → **2.79MB / 2560×1920 webp** · `Content-Type: image/webp` (키 확장자 일치) |
-| 5 | 드롭존 본문 업로드 (동일 원본) | → **2.79MB / 2560×1920 webp** |
-| 6 | "2장 나란히" (13.91MB ×2) | → **둘 다 webp**, 한 문단 안에 정상 삽입 |
-| 7 | 작은 이미지(800×600) 무손실 통과 | → **SHA256 동일**, `.jpg` 유지 = 재인코딩 안 함 |
-| 8 | `.gif` | → 토스트 **"허용되지 않은 이미지 형식: image/gif (JPG/PNG/WEBP 만)"** (과거엔 침묵) |
-| 9 | 84MB JPEG (원본 상한 초과) | → 토스트 **"원본 이미지가 너무 큽니다. 30MB 이하 파일로 올려주세요."** ← 원래 증상과 동일 경로 |
-| 10 | 드롭존 안내 문구 | `Maximum 3 files, 30MB each.` (5MB → 30MB 반영 확인) |
-| 11 | 발행 → 공개 상세 렌더 | 본문 webp 2장 **HTTP 200 · naturalWidth 2560 · 콘솔 에러 0** |
+| 4 | **커버 — 형식 보존 3종** | 8.55MB JPG → **0.83MB `image/jpeg` 2560×1920** · 17.52MB PNG → **4.04MB `image/png` 1600×1200** · 5.37MB WEBP → **0.56MB `image/webp` 2560×1920**. 확장자·Content-Type 전부 원본 유지 |
+| 5 | **드롭존 본문 — 형식 보존** | 8.55MB/4000×3000 JPG → **0.84MB `image/jpeg` 2560×1920**, `.jpg` 유지 |
+| 6 | 작은 이미지(800×600, 3119B) 무손실 통과 | → **3119B · SHA256 동일**, `.jpg` 유지 = 재인코딩 안 함 |
+| 7 | 커버 안내 문구 | "JPG / PNG / WEBP · 최대 30MB · 큰 사진은 자동으로 줄여서 올립니다" 반영 확인 |
+| 8 | 드롭존 안내 문구 | `Maximum 3 files, 30MB each.` (5MB → 30MB 반영 확인) |
 
-> 검증용 임시글·객체는 로컬 DB/MinIO 에서 삭제 완료. 노이즈 이미지(압축 최악 조건)로 2.79MB 이므로 실제 사진은 더 작다.
+**webp 통일 시안(폐기)에서 검증했고 형식 보존 전환 후 재검증하지 않은 항목** — 변경면이 `image-resize.ts` 의 인코딩 포맷·사다리에 국한되고 호출 배선은 그대로라 동작은 유지되나, 출력 형식만 jpg/png/webp 로 바뀐다.
+
+| # | 항목 | 결과 (webp 시안 기준) |
+|---|---|---|
+| 9 | "2장 나란히" (13.91MB ×2) | 둘 다 업로드 성공, 한 문단 안에 정상 삽입 |
+| 10 | `.gif` | 토스트 **"허용되지 않은 이미지 형식: image/gif (JPG/PNG/WEBP 만)"** (과거엔 침묵) |
+| 11 | 84MB JPEG (원본 상한 초과) | 토스트 **"원본 이미지가 너무 큽니다. 30MB 이하 파일로 올려주세요."** ← 원래 증상과 동일 경로 |
+| 12 | 발행 → 공개 상세 렌더 | 본문 이미지 2장 **HTTP 200 · naturalWidth 2560 · 콘솔 에러 0** |
+
+> 검증용 임시글·객체는 로컬 DB/MinIO 에서 삭제 완료.
+> 로컬 DB 의 "s" 글(2026-07-16 00:52, webp 커버)은 **사용자가 직접 확인하며 만든 것**이라 미삭제 — 형식 보존 전환 전 코드로 올린 커버라 webp.
 
 ### 검증 중 발견한 별건 (본 작업 범위 밖)
 
@@ -142,7 +151,7 @@ presign 요청조차 발생하지 않는다. 서버·R2 무관.
 
 - **문제**: 어드민 에디터 이미지 업로드가 조용히 실패. 콘솔에만 `File size exceeds maximum allowed (5MB)`.
 - **원인**: (직접) 5MB 클라 사전검증 `image-upload-node.tsx:89`. (진짜) ⓐ `onError` 가 `console.error` 뿐 ⓑ 크기 검증이 `setFileItems` 보다 먼저 return 해 에러 UI 조차 없음 ⓒ 리사이즈 없이 원본 PUT. 5MB 는 ADR-017 **정책값**이지 기술 제약 아님(R2 직송이라 Vercel 4.5MB 무관).
-- **채택안**: ① `onError` → 한국어 `toast.error` ② `makeBodyImageUploader`(두 진입점 공통 길목) + `CoverImageUploader` 에 업로드 전 자동 리사이즈. `maxSize` 는 **원본 상한 30MB** 로 올려 벤더 게이트가 리사이즈보다 먼저 자르는 것을 방지. 5MB **저장 상한은 유지**.
+- **채택안**: ① `onError` → 한국어 `toast.error` ② `makeBodyImageUploader`(두 진입점 공통 길목) + `CoverImageUploader` 에 업로드 전 자동 리사이즈. `maxSize` 는 **원본 상한 30MB** 로 올려 벤더 게이트가 리사이즈보다 먼저 자르는 것을 방지. 5MB **저장 상한은 유지**. **원본 형식 보존**(JPG→JPG·PNG→PNG·WEBP→WEBP) — 커버가 OG 썸네일로 나가는데 webp 통일 시 파일 크기에 따라 OG 형식이 조용히 바뀐다.
 - **파일**: `image-policy.ts`(신규 순수 SSOT) · `image-resize.ts`(신규) · `editor-image-upload.ts` · `simple-editor.tsx` · `CoverImageUploader.tsx` · `upload.ts`/`index.ts`/`tiptap-utils.ts`(5MB 중복 선언 제거) · ADR-046.
 - **검증**: tsc0 · lint0 · test(103+신규) · 8MB 사진 3경로 실측 · 공개 렌더.
 - **폴백**: 전부 클라이언트 경로 변경 — 스키마·마이그레이션 0. 문제 시 커밋 revert 로 즉시 원복.
