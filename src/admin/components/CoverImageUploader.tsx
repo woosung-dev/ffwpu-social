@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import NextImage from "next/image";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { uploadImageAction } from "@/features/news/actions";
+import { uploadPopupImageAction } from "@/features/popups/actions";
 import { MAX_SOURCE_IMAGE_BYTES } from "@/features/storage/image-policy";
 import { prepareImageForUpload } from "@/features/storage/image-resize";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ type ImageDimensions = { width: number; height: number };
 type Props = {
   value: string | null;
   onChange: (url: string | null, dims: ImageDimensions | null) => void;
-  scope: { newsId: string } | { tempId: string };
+  scope: { newsId: string } | { tempId: string } | { popupId: string };
   onError?: (msg: string) => void;
   disabled?: boolean;
 };
@@ -55,13 +56,22 @@ export function CoverImageUploader({
       const prepared = await prepareImageForUpload(file);
       // 치수는 리사이즈 "결과" 에서 캡처 — 마조네리 카드 비율의 근거라 실제 저장된 이미지와 일치해야 한다
       const dims = await readImageDimensions(prepared);
-      const presign = await uploadImageAction({
-        filename: prepared.name,
-        mime: prepared.type,
-        size: prepared.size,
-        target: "cover",
-        ...scope,
-      });
+      // 기존 NewsEditor 호출부를 유지하려고 액션 주입 대신 업로드 범위만 여기서 분기한다.
+      const presign =
+        "popupId" in scope
+          ? await uploadPopupImageAction({
+              popupId: scope.popupId,
+              filename: prepared.name,
+              mime: prepared.type,
+              size: prepared.size,
+            })
+          : await uploadImageAction({
+              filename: prepared.name,
+              mime: prepared.type,
+              size: prepared.size,
+              target: "cover",
+              ...scope,
+            });
       if (!presign.success) {
         const msg =
           typeof presign.error === "string"
