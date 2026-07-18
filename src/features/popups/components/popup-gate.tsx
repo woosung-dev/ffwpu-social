@@ -10,13 +10,14 @@ export async function PopupGate() {
   return (
     <PopupDialog
       popups={popups.map(
-        ({ id, title, imageUrl, imageWidth, imageHeight, linkUrl }) => ({
+        ({ id, title, imageUrl, imageWidth, imageHeight, linkUrl, linkTarget }) => ({
           id,
           title,
           imageUrl,
           imageWidth,
           imageHeight,
           linkUrl,
+          linkTarget,
         }),
       )}
     />

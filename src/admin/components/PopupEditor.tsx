@@ -8,12 +8,24 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { createPopupAction, updatePopupAction } from "@/features/popups/actions";
-import { popupFormSchema, type PopupInput } from "@/features/popups/schemas";
+import {
+  LINK_TARGETS,
+  popupFormSchema,
+  type PopupInput,
+  type PopupLinkTarget,
+} from "@/features/popups/schemas";
 import { ADMIN_COPY } from "@/admin/copy";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { CoverImageUploader } from "./CoverImageUploader";
 import { DateTimePicker } from "./DateTimePicker";
@@ -26,6 +38,7 @@ export type PopupEditorInitial = {
   imageWidth: number | null;
   imageHeight: number | null;
   linkUrl: string | null;
+  linkTarget: PopupLinkTarget;
   startsAt: Date;
   endsAt: Date | null;
   isActive: boolean;
@@ -41,6 +54,12 @@ type Props = {
 const formSchema = popupFormSchema;
 type FormInput = z.input<typeof formSchema>;
 type FormValues = z.output<typeof formSchema>;
+
+const LINK_TARGET_LABELS: Record<PopupLinkTarget, string> = {
+  self: "현재 탭에서 이동",
+  new_tab: "새 탭으로 열기",
+  small_window: "작은 새 창으로 열기 (추천)",
+};
 
 function getActionError(error: unknown): string {
   if (typeof error === "string") return error;
@@ -62,6 +81,9 @@ export function PopupEditor({ mode, initial }: Props) {
   const [startsAt, setStartsAt] = useState(initial?.startsAt ?? new Date());
   const [endsAt, setEndsAt] = useState<Date | null>(initial?.endsAt ?? null);
   const [isActive, setIsActive] = useState(initial?.isActive ?? true);
+  const [linkTarget, setLinkTarget] = useState<PopupLinkTarget>(
+    initial?.linkTarget ?? "small_window",
+  );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const form = useForm<FormInput, unknown, FormValues>({
@@ -71,6 +93,7 @@ export function PopupEditor({ mode, initial }: Props) {
       linkUrl: initial?.linkUrl ?? "",
     },
   });
+  const linkUrl = form.watch("linkUrl");
 
   const onSubmit = form.handleSubmit((values) => {
     setError(null);
@@ -84,6 +107,7 @@ export function PopupEditor({ mode, initial }: Props) {
       imageWidth: image.width,
       imageHeight: image.height,
       linkUrl: values.linkUrl || null,
+      linkTarget,
       startsAt,
       endsAt,
       isActive,
@@ -103,6 +127,7 @@ export function PopupEditor({ mode, initial }: Props) {
         setStartsAt(new Date());
         setEndsAt(null);
         setIsActive(true);
+        setLinkTarget("small_window");
         setNewPopupNonce((nonce) => nonce + 1);
       }
       toast.success(isEdit ? "팝업을 수정했습니다." : "팝업을 등록했습니다.");
@@ -179,6 +204,31 @@ export function PopupEditor({ mode, initial }: Props) {
               {form.formState.errors.linkUrl && (
                 <p className="text-xs text-destructive">{form.formState.errors.linkUrl.message}</p>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="popup-link-target" className="text-sm font-semibold text-ink-strong">
+                  {ADMIN_COPY.popups.linkTargetLabel}
+                </Label>
+                <HelpTip>{ADMIN_COPY.popups.linkTargetHelp}</HelpTip>
+              </div>
+              <Select
+                value={linkTarget}
+                onValueChange={(value) => setLinkTarget(value as PopupLinkTarget)}
+                disabled={isPending || !linkUrl?.trim()}
+              >
+                <SelectTrigger id="popup-link-target" className="h-11 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LINK_TARGETS.map((target) => (
+                    <SelectItem key={target} value={target}>
+                      {LINK_TARGET_LABELS[target]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>

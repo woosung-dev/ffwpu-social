@@ -1,5 +1,5 @@
 {
-  "id": "34d99b95-a3c1-48ff-aa79-925a5602994f",
+  "id": "ca94e65c-e58a-4b92-a344-4482fe57b231",
   "prevId": "53791407-87f7-4259-830d-50521a2700d9",
   "version": "7",
   "dialect": "postgresql",
@@ -817,6 +817,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "link_target": {
+          "name": "link_target",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'small_window'"
+        },
         "starts_at": {
           "name": "starts_at",
           "type": "timestamp",
@@ -904,7 +911,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "popups_link_target_check": {
+          "name": "popups_link_target_check",
+          "value": "\"popups\".\"link_target\" in ('self', 'new_tab', 'small_window')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.notice_attachments": {

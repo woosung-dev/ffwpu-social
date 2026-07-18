@@ -84,6 +84,7 @@
 - [ ] **공유 버튼 데스크탑 동작 중복** — navigator.share 미지원 데스크탑에서 공유·링크복사가 같은 동작. v1.1 카카오/페북 SDK 전까지 첫 버튼 숨김 검토.
 - [ ] **본문 14px 4곳 (Featured 본문 375/768·Story 설명)** — 접근성 제약(본문 16px)으로 16px 유지. 디자이너와 최종 합의 권장.
 - [ ] **Partners 768 5로고 2행 배치** — Figma 미정의(더미 중복) → 중앙 정렬 채택. 시각 확인 요청.
+- [ ] **DateTimePicker hydration mismatch (선재 이슈, 2026-07-18 발견)** — 어드민 날짜 버튼 라벨이 서버 "PM 7:24" vs 클라 "오후 7:24" (Node ICU ↔ 브라우저 로케일 차). notices/popups 편집 화면 공통, 콘솔 에러만 있고 기능 정상(클라 재생성). 수정안: date-fns format + ko locale 고정 또는 suppressHydrationWarning. 팝업 PR 범위 외 — 별도 fix.
 
 ## Next Actions
 

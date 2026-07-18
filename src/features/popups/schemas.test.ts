@@ -30,6 +30,11 @@ describe("popupInputSchema", () => {
     expect(result.linkUrl).toBeNull();
   });
 
+  it("링크 열기 방식은 작은 새 창이 기본값이고 임의 문자열은 거부한다", () => {
+    expect(popupInputSchema.parse(input()).linkTarget).toBe("small_window");
+    expect(popupInputSchema.safeParse(input({ linkTarget: "iframe" })).success).toBe(false);
+  });
+
   it("종료일이 시작일보다 이르면 거부하고 null은 허용한다", () => {
     expect(
       popupInputSchema.safeParse(input({ endsAt: new Date("2026-07-18T08:59:59.000Z") })).success,

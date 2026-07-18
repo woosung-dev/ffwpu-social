@@ -2,7 +2,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import {
@@ -11,6 +10,7 @@ import {
   isPopupSuppressed,
 } from "@/client/lib/popup-dismiss";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import type { PopupLinkTarget } from "../schemas";
 
 export type PopupItem = {
   id: string;
@@ -19,6 +19,7 @@ export type PopupItem = {
   imageWidth: number | null;
   imageHeight: number | null;
   linkUrl: string | null;
+  linkTarget: PopupLinkTarget;
 };
 
 export function PopupDialog({ popups }: { popups: PopupItem[] }) {
@@ -38,8 +39,23 @@ export function PopupDialog({ popups }: { popups: PopupItem[] }) {
     setCurrent(null);
   };
 
-  const handleLinkClick = () => {
-    if (current) closePopupForSession(current.id);
+  // 작은 새 창은 클릭 핸들러 안에서 열어 팝업 차단에 걸리지 않는다.
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!current) return;
+    // 보조키 클릭(새 탭 의도)은 브라우저 기본 동작에 맡긴다.
+    if (current.linkTarget === "small_window" && !(e.metaKey || e.ctrlKey || e.shiftKey)) {
+      e.preventDefault();
+      const width = 480;
+      const height = Math.min(800, window.screen.availHeight - 80);
+      const left = Math.max(0, Math.round(window.screenX + (window.outerWidth - width) / 2));
+      const top = Math.max(0, Math.round(window.screenY + (window.outerHeight - height) / 2));
+      window.open(
+        current.linkUrl ?? "",
+        "sg_popup_link",
+        `popup=yes,width=${width},height=${height},left=${left},top=${top},noopener,noreferrer`,
+      );
+    }
+    closePopupForSession(current.id);
     setCurrent(null);
   };
 
@@ -56,17 +72,21 @@ export function PopupDialog({ popups }: { popups: PopupItem[] }) {
     />
   );
   const linkedImage = current.linkUrl ? (
-    current.linkUrl.startsWith("/") ? (
-      <Link href={current.linkUrl} onClick={handleLinkClick}>
-        {image}
-      </Link>
-    ) : (
+    current.linkTarget === "new_tab" ? (
       <a
         href={current.linkUrl}
         target="_blank"
         rel="noopener noreferrer"
         onClick={handleLinkClick}
       >
+        {image}
+      </a>
+    ) : current.linkTarget === "small_window" ? (
+      <a href={current.linkUrl} rel="noopener noreferrer" onClick={handleLinkClick}>
+        {image}
+      </a>
+    ) : (
+      <a href={current.linkUrl} onClick={handleLinkClick}>
         {image}
       </a>
     )

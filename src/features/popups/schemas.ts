@@ -1,6 +1,9 @@
 // 홈 팝업 입력을 클라이언트와 서버에서 공통 검증하는 순수 Zod 스키마다.
 import { z } from "zod";
 
+export const LINK_TARGETS = ["self", "new_tab", "small_window"] as const;
+export type PopupLinkTarget = (typeof LINK_TARGETS)[number];
+
 // refine 전 단계 객체 — Zod v4 는 refine 붙은 객체에 pick/omit 을 허용하지 않아(런타임 throw) 폼 파생용으로 분리
 const popupObjectSchema = z
   .object({
@@ -22,6 +25,7 @@ const popupObjectSchema = z
       .refine((value) => value === null || value.startsWith("/") || value.startsWith("https://"), {
         message: "링크 주소는 /로 시작하는 내부 경로 또는 https:// URL이어야 합니다.",
       }),
+    linkTarget: z.enum(LINK_TARGETS).default("small_window"),
     startsAt: z.date(),
     endsAt: z.date().nullable().optional().transform((value) => value ?? null),
     isActive: z.boolean().default(true),

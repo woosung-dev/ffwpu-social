@@ -53,6 +53,7 @@ async function EditPopupData({
         imageWidth: popup.imageWidth,
         imageHeight: popup.imageHeight,
         linkUrl: popup.linkUrl,
+        linkTarget: popup.linkTarget,
         startsAt: popup.startsAt,
         endsAt: popup.endsAt,
         isActive: popup.isActive,
