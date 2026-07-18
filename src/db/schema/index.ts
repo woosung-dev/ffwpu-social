@@ -4,6 +4,7 @@ export * from "./categories";
 export * from "./news";
 export * from "./news-tags";
 export * from "./notices";
+export * from "./popups";
 export * from "./notice-attachments";
 export * from "./heart-events";
 export * from "./analytics-events";
