@@ -15,6 +15,7 @@ import {
 import { SectionContainer } from "@/client/components/layout";
 import { RevealGroup } from "@/client/components/motion";
 import { landingDb } from "@/features/landing";
+import { PopupGate } from "@/features/popups/components/popup-gate";
 
 export const metadata: Metadata = {
   title: "Sow Good — 가치를 삶으로, 변화를 꽃피우는 동행",
@@ -52,6 +53,10 @@ export default function Home() {
       </Suspense>
       <Suspense fallback={<ArticleGridLoading />}>
         <ArticleGridSectionWithData />
+      </Suspense>
+      {/* 홈 팝업 — 랜딩 전용 노출 (사용자 결정). uncached DB 조회라 Suspense 격리 필수 */}
+      <Suspense fallback={null}>
+        <PopupGate />
       </Suspense>
       {/* 사회공헌국 요청 — 파트너 미확정으로 섹션 전체 임시 숨김. 파트너 확정 시
           PartnersSection·Reveal import 복원 + 아래 블록 주석 해제로 복구.
