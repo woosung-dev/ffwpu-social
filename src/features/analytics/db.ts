@@ -36,7 +36,8 @@ export async function getNewsAnalyticsSummary(days: number, limit = 5) {
       shareClicks: sql<number>`count(*) filter (where ${analyticsEvents.eventType} = 'share_click')::int`,
     })
     .from(analyticsEvents)
-    .where(recentAnalyticsWhere(days));
+    // 공지 등 news 외 이벤트 제외 — 소식 분석 시맨틱 유지.
+    .where(and(recentAnalyticsWhere(days), isNotNull(analyticsEvents.newsId)));
 
   const topNews = await db
     .select({

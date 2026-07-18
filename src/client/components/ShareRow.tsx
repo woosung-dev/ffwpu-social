@@ -1,4 +1,4 @@
-// 소식 상세 공유 — 네이티브 공유(navigator.share, 모바일서 카카오/페북 노출) + 링크 복사. 브랜드 전용 버튼은 SDK 도입 시 (v1.1)
+// 공개 상세(소식·공지) 공유 — 네이티브 공유 + 링크 복사. newsId 없으면(공지) path로만 기록
 "use client";
 
 import { Link2, Share2 } from "lucide-react";
@@ -7,7 +7,7 @@ import { useState } from "react";
 import { recordAnalyticsEventAction } from "@/features/analytics/actions";
 import { buildAnalyticsPayload } from "@/features/analytics/client";
 
-export function ShareRow({ title, newsId }: { title: string; newsId: string }) {
+export function ShareRow({ title, newsId }: { title: string; newsId?: string }) {
   const [copied, setCopied] = useState(false);
 
   const recordShare = () => {
