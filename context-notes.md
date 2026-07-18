@@ -832,3 +832,10 @@ Tiptap 은 기존 2.x 와 통일 (peer dep 충돌 회피 — 3.x 설치 시 star
 ### 잔여 (라이브 수동)
 
 - A1 5케이스·A2 동시저장·A3 세션무효화·C1 375px·R7 메인 반영을 `pnpm dev` UI 로 확인(tsx 단독은 `@/` alias 미해결). docker(postgres 5433 + minio) 가동 중.
+
+## 2026-07-18 — 홈 팝업 도메인 B1
+
+- **결정**: 팝업 공개 조건을 `is_active`, `starts_at <= now()`, `ends_at IS NULL OR ends_at > now()`로 DAL의 단일 함수에 고정함.
+- **왜**: 후속 공개 다이얼로그와 어드민 화면이 기간 경계를 다르게 해석하지 않도록 최소 공통 기준으로 유지하기 위함.
+- **결정**: 이미지 객체 키를 클라이언트 선생성 UUID와 같은 `popups/{id}/` prefix로 저장하고, DB 삭제 뒤 해당 prefix를 best-effort로 정리함.
+- **왜**: notices의 검증된 업로드·정리 흐름을 재사용해 별도 매핑 테이블이나 정리 로직 없이 객체 소유 범위를 명확히 하기 위함.

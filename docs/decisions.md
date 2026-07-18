@@ -1736,3 +1736,27 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
   | 5.37MB WEBP | **0.56MB** | `image/webp` | 2560×1920 |
 
   그 외: 13.91MB/4000×3000 → 2.79MB (커버·드롭존·2장 나란히 3경로) · 작은 이미지 **SHA256 동일**(무손실 통과) · `.gif` → 한국어 토스트 · 84MB → "원본 이미지가 너무 큽니다. 30MB 이하 파일로 올려주세요." · 발행 후 공개 상세 렌더 HTTP 200·콘솔 에러 0. tsc0·lint0·test115.
+
+## ADR-047: 홈 팝업 v1 — 어드민 이미지 업로드형 단일 노출 + localStorage 7일 억제
+
+- **Status**: Accepted
+- **Date**: 2026-07-18
+
+### Context
+
+사회공헌국 요청으로 홈 공지 팝업이 필요해졌다 (레퍼런스: POOQ/멜론 앱 팝업). 요구는 ① 정형화된 폼이 아니라 **운영자가 제작한 이미지를 그대로 올리는 방식** ② 클릭 시 특정 페이지 이동 ③ 닫기 + "일주일간 보지 않기" ④ 어드민에서 노출 관리. 운영 자율성 절대 제약(개발자 개입 없는 콘텐츠 갱신)과 개인정보 미수집 원칙(ADR-026) 아래에서 설계해야 한다.
+
+### Decision
+
+1. **이미지 1장 = 팝업 본문.** 텍스트·버튼을 코드로 만들지 않는다 — 디자인 변경이 곧 이미지 교체라 개발 개입이 0. `title` 은 관리 명칭 + `alt` 겸용. `linkUrl`(nullable) 은 `/` 내부 경로 또는 `https://` 만 허용 (`javascript:` 류 차단).
+2. **신규 `popups` 테이블 (마이그레이션 0015), 다중 레코드.** 노출 창은 `starts_at`(notNull) + `ends_at`(nullable=무기한) + `is_active`(기간 무관 즉시 내리기 스위치). notices 의 publishedAt 단일 시맨틱은 기각 — 팝업은 draft 개념이 불필요하고 "종료"가 1급 개념이다.
+3. **노출 규칙: 랜딩(/)에서만, 활성 팝업 중 시작일 최근 1개** (사용자 확정). 게이트는 `<Suspense fallback={null}><PopupGate /></Suspense>` — cacheComponents 의 uncached 쿼리 제약 준수, 랜딩 `*WithData` 와 동일 패턴. dismiss 된 1위는 건너뛰고 다음 활성 팝업이 자연 폴백.
+4. **억제 상태는 브라우저에만 저장** — `sg_popup_dismissed`(localStorage, `{[id]: 만료 epoch}`, 7일) + `sg_popup_closed`(sessionStorage, 같은 세션 재등장 방지). 서버 전송 없음 — 익명 하트(ADR-026)와 동일 계층. 그냥 닫기가 세션 억제인 이유: 매 페이지뷰 재노출은 해악, 영구 억제는 운영 의도 훼손.
+5. **UI 는 shadcn Dialog** (공개 측 첫 소비자) — 포커스 트랩·ESC·스크림·aria 를 재구현하지 않는다. 최대 폭 480px(국내 관례, Figma 시안 없음 — 검수 시 조정), 이미지는 업로드 원본 비율 그대로(`imageWidth/Height` 로 CLS 0), 하단 바 좌 "일주일간 보지 않기"(1탭)/우 "닫기", 터치 타깃 ≥44px.
+6. **업로드는 기존 파이프라인 재사용** — `UploadScope` 에 `{popupId}` 추가(prefix `popups/{id}/`, PK=클라 선생성 UUID, ADR-042 패턴), `CoverImageUploader` 는 scope 로 presign 액션만 내부 분기(기존 news 호출부 무수정). 저장 전 `isAllowedImagePublicUrl` 화이트리스트 검증. 삭제 시 prefix best-effort 정리.
+
+### Consequences
+
+- 팝업 사고 시 어드민 `is_active` 토글로 즉시 강제 종료 — 코드 배포 불요.
+- 다중 노출(캐러셀)·공지 연동 자동 팝업은 v1.1 확장 여지로 남김 (스키마는 이미 다중 레코드).
+- 구현 중 함정 2건 기록: Zod v4 refine 스키마 omit/pick 런타임 throw(LESSON-021) · Cache Components 페이지 레벨 await 프리렌더 실패(LESSON-022).
