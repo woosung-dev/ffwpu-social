@@ -10,6 +10,7 @@ import { DownloadSection } from "@/features/notices/components";
 import { NoticeClipIcon } from "@/features/notices/components/notice-icons";
 import { bodyToExcerpt } from "@/features/news/excerpt";
 import { NewsBodyRenderer } from "@/features/news/render/news-body-renderer";
+import { ShareRow } from "@/client/components/ShareRow";
 
 import { SubBanner } from "../../news/sub-banner";
 import { ScrollTopButton } from "../../news/[id]/scroll-top";
@@ -43,6 +44,7 @@ export async function generateMetadata({
   }
   const description =
     bodyToExcerpt(notice.body, 150) || "사회공헌단 Sow Good 의 공지사항.";
+  const ogImage = `/api/og?title=${encodeURIComponent(notice.title)}`;
   const url = `/notices/${id}`;
   return {
     title: `${notice.title} | 사회공헌단 Sow Good`,
@@ -57,12 +59,18 @@ export async function generateMetadata({
       publishedTime: notice.publishedAt?.toISOString(),
       images: [
         {
-          url: `/api/og?title=${encodeURIComponent(notice.title)}`,
+          url: ogImage,
           width: 1200,
           height: 630,
           alt: notice.title,
         },
       ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: notice.title,
+      description,
+      images: [ogImage],
     },
   };
 }
@@ -137,7 +145,12 @@ async function NoticeDetailContent({
         <NewsBodyRenderer body={notice.body} />
       </div>
 
-      {/* 첨부 다운로드 (본문 아래) — 사용자 피드백으로 상단→하단 이동. 본문 →60→ 다운로드 (Figma 하단 배치·gap-60). 첨부 0개면 미렌더 */}
+      {/* 공지 리듬 60 단위 정합 — Figma 시안이 없어 소식의 공유 시각 언어를 이식 */}
+      <div className="mt-[60px] flex justify-center">
+        <ShareRow title={notice.title} />
+      </div>
+
+      {/* 첨부 다운로드 — 사용자 피드백으로 공유 아래 배치 (본문 →60→ 공유 →60→ 다운로드). 첨부 0개면 미렌더 */}
       {notice.attachments.length > 0 && (
         <div className="mt-[60px]">
           <DownloadSection

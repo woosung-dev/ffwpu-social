@@ -7,13 +7,13 @@ import { getAdjacentNews, getNewsDetail, getRelatedNews } from "@/features/news"
 import { bodyToExcerpt } from "@/features/news/excerpt";
 import { NewsBodyRenderer } from "@/features/news/render/news-body-renderer";
 import { ArticleCard } from "@/features/news/components";
+import { ShareRow } from "@/client/components/ShareRow";
 
 import { SubBanner } from "../sub-banner";
 import { DetailHeader } from "./detail-header";
 import { DetailHeart } from "./detail-heart";
 import { NewsViewTracker } from "./news-view-tracker";
 import { PrevNextNav } from "./prev-next-nav";
-import { ShareRow } from "./share-row";
 import { ScrollTopButton } from "./scroll-top";
 
 // 글별 메타 — 공유 시 제목·요약·커버 썸네일이 뜨도록(이전엔 전 글 동일 일반 타이틀). 커버 없으면 동적 OG(/api/og)
