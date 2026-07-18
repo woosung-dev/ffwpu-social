@@ -4,11 +4,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-import {
-  closePopupForSession,
-  dismissPopupForWeek,
-  isPopupSuppressed,
-} from "@/client/lib/popup-dismiss";
+import { dismissPopupForWeek, isPopupSuppressed } from "@/client/lib/popup-dismiss";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -32,12 +28,10 @@ export function PopupDialog({ popups }: { popups: PopupItem[] }) {
     setCurrent(popups.find((popup) => !isPopupSuppressed(popup.id)) ?? null);
   }, [popups]);
 
-  // 닫기 경로(버튼·ESC·오버레이·링크 클릭) 공통 — 체크박스 상태에 따라 7일/세션 억제를 적용한다 (POOQ 벤치마크 시맨틱)
+  // 닫기 경로(버튼·ESC·오버레이·링크 클릭) 공통 — 체크 시에만 7일 억제 저장.
+  // 미체크 닫기는 저장 없음(사용자 결정 2026-07-18): 새로고침·재진입 시 다시 노출된다.
   const handleClose = () => {
-    if (current) {
-      if (hideForWeek) dismissPopupForWeek(current.id);
-      else closePopupForSession(current.id);
-    }
+    if (current && hideForWeek) dismissPopupForWeek(current.id);
     setCurrent(null);
   };
 
