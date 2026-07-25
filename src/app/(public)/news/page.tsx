@@ -17,15 +17,17 @@ import { SubBanner } from "./sub-banner";
 import { NewsHero } from "./news-hero";
 import { NewsListClient } from "./news-list-client";
 
+// 공유 카드 제목은 헤더 메뉴명(ADR-038 "활동 스토리")과 일치시킨다 — 카톡으로 /news 를 공유하면
+// 옛 명칭 "쌀 나눔 소식" 이 떠서 사이트 안팎 명칭이 어긋났음. 카드 이미지는 홈·공지와 동일한 브랜드 기본값 유지
 export const metadata: Metadata = {
-  title: "쌀 나눔 소식 | 사회공헌단 Sow Good",
+  title: "활동 스토리 | 사회공헌단 Sow Good",
   description:
-    "사회공헌단 Sow Good 의 쌀 나눔·가족 치유·지역 봉사·환경 캠페인 활동 소식.",
+    "사회공헌단 Sow Good 의 쌀 나눔·가족 치유·지역 봉사·환경 캠페인 활동 스토리.",
   alternates: { canonical: "/news" },
   openGraph: {
-    title: "쌀 나눔 소식 | 사회공헌단 Sow Good",
+    title: "활동 스토리 | 사회공헌단 Sow Good",
     description:
-      "사회공헌단 Sow Good 의 쌀 나눔·가족 치유·지역 봉사·환경 캠페인 활동 소식.",
+      "사회공헌단 Sow Good 의 쌀 나눔·가족 치유·지역 봉사·환경 캠페인 활동 스토리.",
     type: "website",
     locale: "ko_KR",
     url: "/news",
