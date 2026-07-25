@@ -367,22 +367,11 @@ export async function isNewsPublished(newsId: string): Promise<boolean> {
   return row != null;
 }
 
-// 인접 글 — 현재 공개 글만, publishedAt 기준. prev(이전글)=더 최신 / next(다음글)=더 과거 (목록 newest-first 정합).
+// 인접 글 — 현재 공개 글만, publishedAt 기준. **prev(이전글)=더 과거 / next(다음글)=더 최신** — 시간 순서를 따르는 게시판 관례
+// (2026-07-25 사회공헌국 제보로 방향 교정: 이전에는 목록 newest-first 순서를 따라 prev=더 최신이었고, "이전글인데 새 글이 뜬다"는 혼란을 낳았음).
 // 동일 publishedAt tie 는 v1 스킵 허용(초 단위 정밀도). 자기 자신 제외
 export async function findAdjacentNews(newsId: string, publishedAt: Date) {
   const [prev] = await db
-    .select({ id: news.id, title: news.title })
-    .from(news)
-    .where(
-      and(
-        publicPublishedWhere(),
-        sql`${news.publishedAt} > ${publishedAt}`,
-        sql`${news.id} <> ${newsId}`,
-      ),
-    )
-    .orderBy(asc(news.publishedAt))
-    .limit(1);
-  const [next] = await db
     .select({ id: news.id, title: news.title })
     .from(news)
     .where(
@@ -393,6 +382,18 @@ export async function findAdjacentNews(newsId: string, publishedAt: Date) {
       ),
     )
     .orderBy(desc(news.publishedAt))
+    .limit(1);
+  const [next] = await db
+    .select({ id: news.id, title: news.title })
+    .from(news)
+    .where(
+      and(
+        publicPublishedWhere(),
+        sql`${news.publishedAt} > ${publishedAt}`,
+        sql`${news.id} <> ${newsId}`,
+      ),
+    )
+    .orderBy(asc(news.publishedAt))
     .limit(1);
   return { prev: prev ?? null, next: next ?? null };
 }
