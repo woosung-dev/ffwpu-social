@@ -1,4 +1,4 @@
-// /news 상단 히어로 — 운영자가 '활동 스토리 관리 → 스토리 대표글' 탭(/admin/news?tab=featured)에서 지정한 우선 소식 최대 4개를 FeaturedStoryCard(탭 슬라이더)로 노출. 미지정 시 비노출
+// /news 상단 히어로 — 운영자가 '활동 스토리 관리 → 스토리 대표글' 탭(/admin/news?tab=featured)에서 지정한 우선 소식 최대 4개를 FeaturedStoryCard(캐러셀)로 노출. 미지정 시 비노출
 import { getHeroNews } from "@/features/news";
 import {
   FeaturedStoryCard,
