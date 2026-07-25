@@ -95,21 +95,9 @@ export async function getPublishedAttachmentById(attachmentId: string) {
   return row ?? null;
 }
 
-// 인접 공지 — 현재 공개만, publishedAt 기준. prev=더 최신 / next=더 과거 (news findAdjacentNews 동일)
+// 인접 공지 — 현재 공개만, publishedAt 기준. prev(이전글)=더 과거 / next(다음글)=더 최신 (news findAdjacentNews 동일)
 export async function findAdjacentNotices(noticeId: string, publishedAt: Date) {
   const [prev] = await db
-    .select({ id: notices.id, title: notices.title })
-    .from(notices)
-    .where(
-      and(
-        publicPublishedWhere(),
-        sql`${notices.publishedAt} > ${publishedAt}`,
-        sql`${notices.id} <> ${noticeId}`,
-      ),
-    )
-    .orderBy(asc(notices.publishedAt))
-    .limit(1);
-  const [next] = await db
     .select({ id: notices.id, title: notices.title })
     .from(notices)
     .where(
@@ -120,6 +108,18 @@ export async function findAdjacentNotices(noticeId: string, publishedAt: Date) {
       ),
     )
     .orderBy(desc(notices.publishedAt))
+    .limit(1);
+  const [next] = await db
+    .select({ id: notices.id, title: notices.title })
+    .from(notices)
+    .where(
+      and(
+        publicPublishedWhere(),
+        sql`${notices.publishedAt} > ${publishedAt}`,
+        sql`${notices.id} <> ${noticeId}`,
+      ),
+    )
+    .orderBy(asc(notices.publishedAt))
     .limit(1);
   return { prev: prev ?? null, next: next ?? null };
 }
