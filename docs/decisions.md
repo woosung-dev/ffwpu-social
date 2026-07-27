@@ -1789,3 +1789,45 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 - 배포 후 **카카오 공유 디버거로 캐시 초기화 1회 필요** (`developers.kakao.com/tool/debugger/sharing`). 안 하면 옛 카드가 계속 노출된다.
 - `/notices` 등 다른 목록 페이지도 같은 브랜드 기본 이미지를 쓰므로, 향후 페이지 구분이 필요해지면 `/api/og?title=` 로 헤드라인만 갈아끼우는 경로가 이미 열려 있다.
 - 구현 중 함정 1건 기록: `@layer base` 의 reduced-motion 가드가 utilities 레이어를 못 이겨 무력화 — 애니메이션 유틸은 `motion-safe:` variant 로 걸어야 한다 (LESSON-024).
+
+---
+
+## ADR-049: 이미지 변환 쿼터 — 31일 캐시 TTL + srcset 폭 7단 + 원격 호스트 고정
+
+- **Status**: Accepted
+- **Date**: 2026-07-27
+
+### Context
+
+Vercel Hobby 의 **Image Optimization - Transformations 사용량이 4,103 / 5,000 (82%)** 에 도달했다. 한도를 넘기면 신규 이미지가 402 를 반환하고 `alt` 텍스트만 노출된다 — 사이트 이미지가 사실상 전멸한다.
+
+원인을 트래픽 증가로 오인하기 쉬우나, 실측 결과 **캐시 만료가 동인**이었다.
+
+```
+[업스트림] R2 원본        → Cache-Control 헤더 없음 (R2 가 아무것도 안 보냄)
+[Vercel]   _next/image   → cache-control: public, max-age=14400  (4시간)
+```
+
+Vercel 은 transformation 을 **cache MISS 와 STALE 양쪽에서 과금**한다. 원격 이미지 TTL 은 `max(업스트림 max-age, images.minimumCacheTTL)` 인데, R2 가 헤더를 안 보내므로 Next 16 기본값 4시간이 그대로 적용됐다 → **같은 이미지가 월 최대 180회 재변환·재과금**. `4,103 ÷ 180 ≈ 23개 조합` 으로 역산이 맞는다. 즉 사용량의 거의 전부가 같은 이미지의 반복 재변환이었다.
+
+부수적으로, `remotePatterns` 의 `*.r2.dev` 와일드카드가 남용 경로를 열어두고 있었다. `*.r2.dev` 는 Cloudflare 전역 네임스페이스라 **누구나 무료 R2 버킷을 만들면 자기 `pub-<hash>.r2.dev` 를 갖는다.** `/_next/image` 는 인증 없는 공개 엔드포인트이므로 제3자가 자기 이미지를 우리 쿼터로 태울 수 있었다 (실측 — 제3자 r2.dev 502 / 제3자 s3 404 = 둘 다 화이트리스트 통과 후 업스트림 fetch 시도, 화이트리스트 밖 호스트만 400).
+
+### Decision
+
+`next.config.ts` 단일 파일에서 4가지를 바꾼다. **컴포넌트 코드는 손대지 않는다** — 변환을 소비하는 3개 컴포넌트(MediaCard / FeaturedStoryCard / ArticleCard) 모두 `sizes` 가 이미 명시돼 있어 설정만으로 해결된다.
+
+1. **`minimumCacheTTL: 2678400` (31일)** — Vercel CDN 이미지 캐시 상한이자 공식 권장값. 안전 근거는 `storage/upload.ts buildObjectKey()` 가 업로드마다 `randomUUID()` 를 쓴다는 점이다. **커버 교체 = 새 URL** 이라 같은 URL 의 바이트가 바뀌는 경로가 앱에 없다 → 긴 TTL 의 대표적 사고(stale 이미지)가 구조적으로 불가능하다. Next 공식 문서의 *"keep minimumCacheTTL low"* 권고는 "같은 URL 의 내용이 바뀔 수 있다"는 전제 위에 서 있고, 우리는 그 전제가 거짓이다.
+2. **`deviceSizes` 8→6 · `imageSizes` 7→1** (허용 폭 15→7). 원본은 클라 리사이즈로 **긴 변 2560px 상한**(`storage/image-resize.ts`)이라 `3840` 은 업스케일 금지(`withoutEnlargement`)로 2560 을 돌려준다 — 화질 이득 0, 변환만 소비. `2048` 은 어떤 실제 슬롯도 요구하지 않고, `256` 은 DPR1 태블릿 전용 구간이라 실사용이 없다. **`750`·`1080` 은 유지한다** — 국내 주력 폰(375@2=750, 360@3=1080)이 정확히 착지하는 폭이라 지우면 한 칸 위로 점프해 첫 방문 바이트가 늘어난다. TTL 이 이미 대부분을 해결하므로 추가 절감을 위해 화질·대역폭을 건드릴 이유가 없다.
+3. **`formats: ["image/webp"]` · `qualities: [75]` 명시** — Next 16.2.6 기본값과 동일해 **절감은 0이고, 회귀 펜스로만 둔다.** avif 추가는 Accept 캐시 버킷을 2→3 으로 늘려 변환을 +50% 시키고, quality 변경은 `q` 가 캐시 키의 일부라 전 이미지 1회성 전량 재변환을 일으킨다. 둘 다 "압축률 개선"이라는 선의로 유입되기 쉬운 변경이라 주석과 함께 고정한다.
+4. **`remotePatterns` 를 `NEXT_PUBLIC_S3_PUBLIC_URL` 파생 단일 패턴으로 교체.** 와일드카드 3종(`*.r2.dev` · `*.s3.amazonaws.com` · `*.r2.cloudflarestorage.com`)을 제거한다. 뒤의 둘은 애초에 미사용이었고(`*.r2.cloudflarestorage.com` 은 인증 API 엔드포인트라 렌더용이 아니라고 주석이 스스로 밝히고 있었다), 프로토콜·포트까지 URL 에서 파생하므로 **로컬 MinIO(`http://localhost:9000`)와 prod R2(`https://pub-*.r2.dev`)를 dev 분기 없이 같은 코드로 덮는다.** `src/lib/s3.ts getPublicUrl()` 과 같은 값에서 나오므로 드리프트가 불가능하다. 프로덕션 빌드에서 패턴 생성에 실패하면 **`throw` 로 빌드를 실패시킨다** — 조용한 이미지 전멸보다 빌드 실패가 낫다.
+
+### Consequences
+
+- **월 4,103 → 약 130건 (한도의 2.6%)** 추정. 헤드룸 25배. Cache Writes(43K/100K)도 MISS/STALE 마다 함께 과금되므로 같은 배수로 줄어든다.
+- **대역폭 회귀 0.** Next 의 `getImgProps` 실제 코드 경로로 검증한 결과, 3개 컴포넌트 모두 **추가된 폭이 0개**다(제거만 발생). 어떤 기기도 갑자기 더 큰 이미지를 받지 않는다. 커버 1장당 고유 변형은 10→7.
+- **긴급 내리기(takedown)가 최대 31일 지연된다 — 이 결정의 유일한 실질 비용이다.** ADR-004 의 개인정보 보호 절대 제약과 직결된다. 동의 철회 등으로 사진을 급히 내려야 할 때 **R2 객체 삭제만으로는 부족하고 Vercel 대시보드 purge 를 반드시 병행**해야 한다. 운영 절차를 `docs/TODO.md` 에 명문화했다. 브라우저가 이미 받아간 분은 purge 로도 회수되지 않는다.
+- **TTL 롤백은 소급되지 않는다.** TTL 은 캐시 키가 아니라 저장 시점에 항목에 찍힌다. `minimumCacheTTL` 을 다시 낮춰도 이미 31일로 저장된 항목은 31일을 채운다 — 완전 원복이 필요하면 purge 를 병행해야 한다. 한 방향으로만 쉬운 변경임을 인지하고 들어간다.
+- OG·SEO 영향 0 — `news/[id]/page.tsx` 의 `ogImage` 는 R2 원본 절대 URL 이라 옵티마이저를 경유하지 않고, `/_next/image` 는 크롤링 대상이 아니며 `proxy.ts` 매처에서도 제외돼 있다.
+- 배포 당일 새 캐시 키로 **1회성 재변환 ~150건** 이 발생한다. **TTL 과 폭 배열은 반드시 같은 배포에 넣는다** — 나눠 배포하면 이 비용이 두 번 든다.
+- EC2 이전(ADR-001a) 후에는 이 캐시가 CDN 이 아니라 컨테이너 디스크(`.next/cache/images`)로 옮겨간다. 과금은 사라지지만 재배포 시 캐시가 통째로 날아가 전량 재변환된다(Vercel 은 재배포해도 캐시가 유지되는 것과 반대). 현 규모는 ~10MB 라 무시 가능하며, 필요 시 `images.maximumDiskCacheSize` 로 상한을 건다.
+- **범위 밖으로 확인된 별건** — `cacheComponents: true` 가 켜져 있는데 `"use cache"` 사용처가 0이다(`docs/tech.md` §캐싱 전략에 설계만 존재). `revalidateTag` 도 0건이라 `revalidatePath` 가 데이터 신선도에 기여하는 바가 없다. 이미지 쿼터와는 무관하며 **Fluid Active CPU(37%) · Edge Requests(28%)** 를 밀어올리는 요인이다. 무효화 설계를 동반하는 별도 스프린트로 분리한다.
