@@ -4,6 +4,9 @@ const config: NextConfig = {
   // ADR-001a — Docker 이미지 ~150MB. AWS 이전 친화.
   output: "standalone",
   images: {
+    // ADR-049 — Vercel 은 이미지 캐시 MISS/STALE 마다 변환을 청구. Next 16 기본 TTL 4h 로는 같은 커버가 하루 6번 재변환됨.
+    // 31일(Vercel 권장 상한) 대신 7일인 이유: seed.ts 커버 키가 `news/seed/<파일명>` 고정이라 실사진 재시드 시 URL 은 그대로 내용만 바뀜 → stale 노출 상한을 1주로 제한.
+    minimumCacheTTL: 604800,
     remotePatterns: [
       // 로컬 MinIO (ADR-020)
       { protocol: "http", hostname: "localhost", port: "9000" },
