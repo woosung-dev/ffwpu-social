@@ -88,6 +88,11 @@
 
 ## Next Actions
 
+### 이미지 최적화 후속 (2026-08-06, ADR-049)
+
+- [ ] **배포 후 24~48시간 뒤 Vercel Observability → Image Optimization 확인** — 일일 변환이 100~400 → 한 자릿수로 떨어지는지. 배포 당일 1회 burst(기존 4h 캐시의 마지막 STALE 재변환 ≈150~250건)는 예상된 동작.
+- [ ] **`src/db/seed.ts:79` 커버 키에 파일 내용 해시 부여** (`news/seed/<hash8>-<파일명>`) — 현재는 실사진을 같은 파일명으로 재시드하면 URL 이 그대로라 최대 7일간 옛 이미지가 노출된다. 해결 시 `minimumCacheTTL` 을 31일(2678400)로 상향 가능.
+
 ### 즉시 (이 세션)
 
 - [x] D-4 Atomic Update — checklist / design.md 토큰 / context-notes / AGENTS.md 동기화

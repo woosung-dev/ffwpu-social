@@ -1791,3 +1791,46 @@ ADR-037의 ①(클릭 불가)·②(모바일 단일 pill)·④(4메뉴 매핑)�
 - 배포 후 **카카오 공유 디버거로 캐시 초기화 1회 필요** (`developers.kakao.com/tool/debugger/sharing`). 안 하면 옛 카드가 계속 노출된다.
 - `/notices` 등 다른 목록 페이지도 같은 브랜드 기본 이미지를 쓰므로, 향후 페이지 구분이 필요해지면 `/api/og?title=` 로 헤드라인만 갈아끼우는 경로가 이미 열려 있다.
 - 구현 중 함정 1건 기록: `@layer base` 의 reduced-motion 가드가 utilities 레이어를 못 이겨 무력화 — 애니메이션 유틸은 `motion-safe:` variant 로 걸어야 한다 (LESSON-024).
+
+---
+
+## ADR-049: 이미지 최적화 캐시 TTL 7일 — Vercel 변환 한도 대응
+
+- **Status**: Accepted
+- **Date**: 2026-08-06
+
+### Context
+
+Vercel Hobby 의 **Image Optimization - Transformations 가 30일 기준 4,862 / 5,000 (97%)** 에 도달했다. 초과하면 새 이미지가 402 로 최적화에 실패해 `alt` 텍스트만 노출된다 (기존 캐시 이미지는 정상, 과금은 없음).
+
+원인은 이미지 개수가 아니라 **캐시 만료 주기**였다. 확인된 사실:
+
+- Vercel 은 이미지 캐시 **MISS 와 STALE 마다 매번** 변환을 청구한다 (Vercel 공식 문서 image-optimization / limits-and-pricing).
+- 원격 이미지의 캐시 TTL 은 `max(업스트림 Cache-Control max-age, minimumCacheTTL)` 이다.
+- `next.config.ts` 에 `minimumCacheTTL` 을 명시한 적이 없어 **Next 16 기본값 14400초(4시간)** 가 적용되고 있었고, R2 업로드(`upload.ts`)도 `CacheControl` 을 설정하지 않아 4시간이 그대로 유효 TTL 이 되었다.
+
+즉 커버 1장이 srcset 폭 ~5개로 갈라지고 그 각각이 하루 6번 재변환·재청구되고 있었다. 검산: 핫한 커버 6장 × 폭 5 × 하루 6회 ≈ 180건/일 → 대시보드 관측치 100~400건/일과 일치. 캐시 쓰기 57K units(≈456MB)도 같은 사건의 부산물(4,862 × ~94KB).
+
+실제로 `next/image` 를 거치는 곳은 `ArticleCard` · `FeaturedStoryCard` · `MediaCard` 3개뿐이다 — 랜딩 섹션과 본문 렌더러는 raw `<img>`, 팝업·어드민 썸네일은 이미 `unoptimized`, SVG 는 포맷상 변환 대상이 아니다.
+
+### Decision
+
+1. **`next.config.ts` 에 `minimumCacheTTL: 604800` (7일) 을 명시한다.** 변환 파라미터(`deviceSizes`·`qualities`·`formats`)는 건드리지 않아 렌더 결과물은 변하지 않는다.
+2. **Vercel 권장 상한인 31일(2678400) 대신 7일을 고른 이유는 `src/db/seed.ts` 의 커버 키가 `news/seed/<파일명>` 으로 고정이기 때문이다.** 같은 파일명으로 실사진을 재시드하면 URL 은 그대로인 채 내용만 바뀌어 낡은 이미지가 TTL 만큼 남는다 (지금도 4시간짜리로 존재하는 문제이며 TTL 상향은 이를 증폭시킨다). 7일이면 변환량은 이미 한도의 2~3% 수준으로 떨어지므로 나머지 24일치 이득을 stale 리스크와 바꾸지 않는다.
+3. 어드민 업로드분(`upload.ts` `randomUUID()` 키)과 `/public` 로컬 이미지(Vercel 이 내용 해시로 캐시 키 생성)는 교체 시 URL·키가 자동으로 바뀌므로 이 제약과 무관하다.
+
+### 기각안
+
+- **`unoptimized: true` 전역** — 변환은 0 이 되지만 2560px 원본을 모바일에 그대로 전송해 전송량·LCP 가 악화된다.
+- **R2 오브젝트에 `Cache-Control` 부여** — TTL 이 `max()` 라 효과가 중복이고, presigned PUT 의 서명 헤더를 늘리면 과거 Content-Type 403 류 업로드 회귀 위험만 생긴다.
+- **커스텀 loader → Cloudflare Images** — R2 커스텀 도메인·CF 존이 필요하고 무료 변환 한도도 유사 수준이라 [확인 필요] 한도를 옮기는 데 그친다.
+- **업로드 시 다중 사이즈 프리생성** — 업로드·DB·렌더러 전면 개편으로 현 시점 과투자.
+- **`deviceSizes` 축소 / `sizes` 정밀화** — TTL 수정 후엔 조합당 주 1회만 청구되어 실익이 미미한 반면 4-BP 렌더 재검증 비용이 든다. 필요해지면 별도 작업.
+- **Pro 업그레이드** — 근본 낭비를 남긴 채 과금만 시작된다.
+
+### Consequences
+
+- 변환량 예상 4,862 → **~120건/월**, 캐시 쓰기 57K → ~2K units.
+- **배포 당일 1회 burst 가 예상된다** — 기존 캐시 항목은 4시간 TTL 로 기록돼 있어 마지막 STALE 재변환(≈150~250건)을 거친 뒤 평탄해진다.
+- 시드 커버 키에 내용 해시를 부여하면(후속) 이 제약이 사라져 31일로 상향 가능하다 — `docs/TODO.md` 에 등록.
+- `minimumCacheTTL` 은 Vercel 전용이 아닌 Next 자체 설정이라, EC2 이전(PR #78) 후에도 sharp CPU·디스크 절감 효과로 그대로 유효하다.
