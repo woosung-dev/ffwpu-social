@@ -1,4 +1,4 @@
-// KPI 지표 — 'impact' = 랜딩 KpiSection "숫자로 보는 우리의 변화" (4행) / 'story' = StorySection 통계 (후원기관·지원가정·지역시설, 3행) / 'story_text' = StorySection 카피(태그·제목·부제, displayValue 에 줄바꿈 \n 포함).
+// KPI 지표 — 'impact' = 랜딩 KpiSection "숫자로 보는 참사랑 실천" (4행) / 'story' = StorySection 통계 (후원기관·지원가정·지역시설, 3행) / 'story_text' = StorySection 카피(태그·제목·부제, displayValue 에 줄바꿈 \n 포함).
 // 누적·삭제 금지 (ADR-003) — isActive 토글. slug immutable. shape 동일하여 section 판별 컬럼으로 한 테이블 재사용 (anti-slop 중복 회피)
 import { sql } from "drizzle-orm";
 import {

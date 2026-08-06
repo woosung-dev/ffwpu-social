@@ -34,10 +34,10 @@ type MenuItem = {
   activeOnSubpage?: boolean;
 };
 
-// 매핑(ADR-038 개정): 숫자로 보는 우리의 변화→#kpi / 밥이 사랑이다→#story / 활동 스토리→/news(클릭) + #stories(카드 그리드) 스크롤 시 강조 / 공지사항→/notices.
+// 매핑(ADR-038 개정): 숫자로 보는 참사랑 실천→#kpi / 밥이 사랑이다→#story / 활동 스토리→/news(클릭) + #stories(카드 그리드) 스크롤 시 강조 / 공지사항→/notices.
 // "메인 스토리" 메뉴 제거 — 카드 그리드(#stories) 스크롤 강조를 "활동 스토리"로 흡수(section+href 병용). 공지사항 = Figma 공지 목록(1103:7882) 헤더 항목, ADR-042 케이스 A.
 const MENU: readonly MenuItem[] = [
-  { id: "kpi", label: "숫자로 보는 우리의 변화", section: "kpi" },
+  { id: "kpi", label: "숫자로 보는 참사랑 실천", section: "kpi" },
   { id: "story", label: "밥이 사랑이다", section: "story" },
   { id: "news", label: "활동 스토리", href: "/news", section: "stories", activeOnSubpage: true },
   { id: "notices", label: "공지사항", href: "/notices" },

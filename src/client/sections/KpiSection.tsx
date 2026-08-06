@@ -113,11 +113,12 @@ export function KpiSection({ metricsBySlug }: Props) {
             {/* <wide: 풀폭 자연 줄바꿈 · wide+: 좁은 251 컬럼 강제 2줄 */}
             숫자로 보는{" "}
             <br className="hidden wide:block" />
-            우리의 변화
+            참사랑 실천
           </h2>
           <p className="text-[14px] font-medium leading-[1.35] text-pretty md:text-[16px] md:leading-[1.5]">
-            가정연합은 도움이 필요한 사람들에게 오랜기간 손을 건네왔습니다.
-            앞으로도 변함없이 온기를 전하겠습니다.
+            가정연합은 대한민국 현대사와 동고동락하며 이웃과 지역사회를 위해
+            헌신하며 위하여 사는 삶을 실천했습니다. 오늘도 변함없이 봉사와
+            나눔으로 따뜻하고 선한 공동체로 함께 하고 있습니다.
           </p>
         </div>
 

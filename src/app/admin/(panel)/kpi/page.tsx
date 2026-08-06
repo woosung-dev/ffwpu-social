@@ -9,7 +9,7 @@ import { HelpTip } from "@/admin/components/HelpTip";
 import { ADMIN_COPY } from "@/admin/copy";
 
 export const metadata: Metadata = {
-  title: "숫자로 보는 우리의 변화 | 사회공헌단 어드민",
+  title: "숫자로 보는 참사랑 실천 | 사회공헌단 어드민",
   robots: { index: false, follow: false },
 };
 

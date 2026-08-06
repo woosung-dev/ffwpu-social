@@ -38,7 +38,7 @@ const config: NextConfig = {
   // ADR-001a — Docker 이미지 ~150MB. AWS 이전 친화.
   output: "standalone",
   images: {
-    // ── 원격 허용 호스트 (ADR-049) ──
+    // ── 원격 허용 호스트 (ADR-050) ──
     // ⚠️ 와일드카드 금지. `*.r2.dev` 는 Cloudflare 전역 네임스페이스라 누구나 무료 R2 버킷을 만들면
     //    자기 pub-<hash>.r2.dev 를 갖는다. /_next/image 는 인증 없는 공개 엔드포인트이므로
     //    제3자가 자기 이미지를 우리 변환 쿼터로 태울 수 있다.
@@ -46,17 +46,12 @@ const config: NextConfig = {
     //                      화이트리스트 밖 호스트 → 400 (fetch 전 차단, 과금 0).
     remotePatterns: remotePattern ? [remotePattern] : [],
 
-    // ── 변환 쿼터 절감 (ADR-049) ──
-    // 원격 TTL = max(업스트림 max-age, minimumCacheTTL). R2 가 Cache-Control 을 안 보내므로
-    // 기본 14400(4h)에서는 같은 이미지가 하루 6회까지 재변환·재과금됐다 (transformation 은
-    // cache MISS 와 STALE 양쪽에서 과금). 31일 = Vercel CDN 이미지 캐시 상한이자 공식 권장값.
-    // 안전 근거: storage/upload.ts buildObjectKey() 가 업로드마다 randomUUID() 를 쓴다 →
-    //   같은 URL 의 바이트가 바뀌는 경로가 앱에 없다 → stale 콘텐츠 위험 0.
-    // ⚠️ 대신 긴급 내리기(동의 철회 등, ADR-004)는 R2 객체 삭제만으로 부족하다 —
-    //   Vercel 대시보드 purge 를 반드시 병행할 것 (docs/TODO.md 운영 절차).
-    minimumCacheTTL: 2678400,
+    // ADR-049 — Vercel 은 이미지 캐시 MISS/STALE 마다 변환을 청구. Next 16 기본 TTL 4h 로는 같은 커버가 하루 6번 재변환됨.
+    // 31일(Vercel 권장 상한) 대신 7일인 이유: seed.ts 커버 키가 `news/seed/<파일명>` 고정이라 실사진 재시드 시 URL 은 그대로 내용만 바뀜 → stale 노출 상한을 1주로 제한.
+    // ⚠️ 긴급 내리기(동의 철회 등, ADR-004)는 R2 객체 삭제만으로 부족하다 — Vercel 대시보드 purge 병행 (docs/TODO.md 운영 절차).
+    minimumCacheTTL: 604800,
 
-    // srcset 후보 폭. 원본은 클라 리사이즈로 긴 변 2560px 상한(storage/image-resize.ts)이고,
+    // srcset 후보 폭 (ADR-050). 원본은 클라 리사이즈로 긴 변 2560px 상한(storage/image-resize.ts)이고,
     // 실제 렌더 슬롯의 최대 필요 물리폭은 ~1470px.
     //   3840 → 업스케일 금지(withoutEnlargement)라 2560 을 돌려준다. 화질 이득 0, 변환만 소비.
     //   2048 → 어떤 실제 슬롯도 요구하지 않음 (최대 소비처 ArticleCard 1024@2 의 실슬롯은 290 CSS).
@@ -68,7 +63,7 @@ const config: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [384],
 
-    // 아래 둘은 Next 16.2.6 기본값과 동일 = 절감 0. 회귀 펜스로만 명시한다.
+    // 아래 둘은 Next 16.2.6 기본값과 동일 = 절감 0. 회귀 펜스로만 명시한다 (ADR-050).
     // ⚠️ formats 에 'image/avif' 를 추가하지 말 것 — Accept 캐시 버킷이 2→3 이 되어 변환이 +50%.
     formats: ["image/webp"],
     // ⚠️ quality 값을 바꾸지 말 것 — q 는 캐시 키의 일부라 전 이미지가 1회성 전량 재변환된다.
