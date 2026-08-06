@@ -33,7 +33,7 @@
 
 ## 2. ⚠️ 코드 설정 동반 확인 (env 외)
 
-- **next/image 도메인 화이트리스트 (ADR-050 — 자동 파생, 수기 추가 불필요)** — `next.config.ts` `images.remotePatterns` 는 **`NEXT_PUBLIC_S3_PUBLIC_URL` 에서 프로토콜·호스트·포트를 파생**한다. 커스텀 도메인으로 바꿔도 이 변수만 정확하면 코드 수정이 필요 없다. **와일드카드(`*.r2.dev` 등)를 다시 넣지 말 것** — `*.r2.dev` 는 Cloudflare 전역 네임스페이스라 제3자가 우리 이미지 변환 쿼터를 태울 수 있다. 변수가 비었거나 URL 파싱에 실패하면 **프로덕션 빌드가 throw 로 실패**한다(이미지가 조용히 전멸하는 것보다 낫다).
+- **next/image 도메인 화이트리스트 (ADR-050)** — `next.config.ts` `images.remotePatterns` 에 **실제 쓰는 호스트만** 나열돼 있어야 커버가 렌더된다. **와일드카드(`*.r2.dev` 등) 금지** — `*.r2.dev` 는 Cloudflare 전역 네임스페이스라 제3자가 우리 이미지 변환 쿼터를 태울 수 있다. **R2 공개 도메인을 바꿀 때는 새 호스트를 목록에 *추가*하고 옛 줄은 남길 것** — 커버 URL 은 DB 에 절대 경로로 저장돼 있어, 옛 호스트를 지우면 그 이전 발행 글의 커버가 전부 400 이 된다.
 - **R2 버킷 공개 설정** — 버킷을 public access(r2.dev) 또는 커스텀 도메인 연결. presigned PUT 업로드는 토큰으로, 공개 GET 은 공개 도메인으로.
 - **Neon** — `sslmode=require` 포함. 풀링 필요 시 Neon pooled connection string 사용.
 
@@ -50,7 +50,7 @@
 - [ ] R2 버킷 생성 + 공개 도메인 + API 토큰
 - [ ] 위 변수 전부 플랫폼 환경변수 입력(시크릿은 대시보드만, 코드 금지)
 - [ ] `NEXT_PUBLIC_SITE_URL` = 실제 도메인
-- [ ] `NEXT_PUBLIC_S3_PUBLIC_URL` = R2 공개 도메인 (끝 슬래시 없이) — remotePatterns 는 여기서 자동 파생됨(ADR-050)
+- [ ] `NEXT_PUBLIC_S3_PUBLIC_URL` 의 호스트가 `next.config.ts` `images.remotePatterns` 에 있는지 확인 (ADR-050 — 없으면 커버 400)
 - [ ] 공유 미리보기 점검: `https://<도메인>/news/<id>` 를 카톡/페북 공유 디버거로 확인
 - [ ] `https://<도메인>/sitemap.xml` · `/robots.txt` 응답 확인
 - [ ] GA4 실시간 보고서에 트래픽 잡히는지 확인
