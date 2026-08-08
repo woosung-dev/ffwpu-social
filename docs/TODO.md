@@ -102,7 +102,9 @@
 
 ### 이미지 정규화 후속 (2026-08-08, ADR-051)
 
-- [ ] **본문 인라인 이미지 정규화** — 장당 **1.3~1.4 MB**로 `<img>` raw 서빙 중 (한 글에 약 6 MB). 커버와 달리 `og:image` 제약이 없어 규격이 다르고(본문 폭이 넓어 2560px 유지가 타당할 수 있음), 본문 HTML 안의 URL 치환이 필요해 별도 작업. `image-resize.ts` 의 `prepareImageForUpload` 5MB 게이트가 같은 루트 코즈다.
+- [x] **본문 인라인 이미지 정규화** (2026-08-08, ADR-052) — 151개 / 110.8 MB → 15.7 MB (-86%). 업로드 파이프라인(`prepareImageForUpload` 1810px JPEG + 투명도 스킵)과 백필 모두 적용.
+- [ ] **응답·디코드 실패 본문 이미지 11개** — ADR-052 백필 중 발견. `body` 가 가리키는 R2 객체가 없거나 이미지로 디코드되지 않는다. 백필 이전부터 있던 문제로 스킵 처리했다. 해당 글에서 실제로 깨져 보이는지 확인하고 재업로드 또는 노드 제거 필요.
+- [ ] **`backup/` 정리** — ADR-052 백필의 body 원본 백업(`backup/body-backup-*.json`). 본문 렌더 검증이 끝나면 삭제. 되돌리려면 `pnpm db:backfill-body-images --env .env.prod --rollback <file>`.
 - [ ] **`og:image` 치수 선언 교정** — `news/[id]/page.tsx:52` 가 `width: 1200, height: 630` 을 고정 선언하는데 실제 커버는 4:3·1:1 등 제각각이다. 스크래퍼가 선언값을 믿으면 잘못 렌더할 수 있다. `coverImageWidth/Height` 를 넣거나 선언을 제거한다.
 - [ ] **모바일 전송량 회수 검토 (선택)** — 정규화로 옵티마이저의 66 KB 대신 137 KB 를 보낸다. 업로드 시 2벌(800/1440)을 만들어 수동 `srcset` 을 붙이면 되찾을 수 있으나, `MediaCard`·`ArticleCard`·`FeaturedStoryCard` 3개가 `fill` 을 써 4-BP 재검증이 필요하다. Fast Data 가 10/100 GB 라 급하지 않다.
 - [ ] **v1.1 orphan cleanup 에서 `original/` 제외 규칙 추가** — ADR-051 백필이 원본을 `<dir>/original/` 에 보존한다. 참조 없는 객체를 지우는 정리 작업이 이걸 삭제하면 원본이 영구 소실된다.

@@ -94,7 +94,7 @@ editor-image-upload.ts:36  ← 유일한 호출처
   └ image-row-button.tsx     (나란히 2장 넣기)
 ```
 
-- `image-policy.ts`: `BODY_MAX_EDGE_PX = 1810` · `BODY_JPEG_QUALITY = 75` · `TRANSPARENT_PIXEL_SKIP_RATIO = 0.1`
+- `image-policy.ts`: `MAX_IMAGE_EDGE_PX` 2560 → **1810** (새 상수를 만들지 않고 기존 본문 상수를 하향) · `TRANSPARENT_SKIP_RATIO = 0.1` · `REENCODE_MIN_GAIN = 0.15` 신설 · `COVER_QUALITY_LADDER` → `JPEG_QUALITY_LADDER` rename
 - `image-resize.ts`: `prepareImageForUpload()` 를 크기 무관 항상 재인코딩으로 변경 + 투명도 스킵
 - 브라우저 투명도 판정 — sharp 를 못 쓰므로 canvas `getImageData` 샘플링
 
@@ -121,15 +121,30 @@ news.body + notices.body 재귀 순회 (Tiptap JSON)
 | **`--rollback <file>`** | 백업 파일로 `body` 를 그대로 복원 |
 | 새 키 write | 기존 객체 미삭제 |
 | `original/` 보존 | 원본 영구 보관 |
-| 글 단위 트랜잭션 | 한 글의 이미지 일부만 성공하는 상태 방지 |
+| 행별 단일 UPDATE | `body` 를 통째로 교체하는 UPDATE 1개라 그 자체가 원자적이다. 스크립트가 중간에 죽어도 각 행은 옛 상태 아니면 새 상태 둘 중 하나이고, 재실행은 멱등이라 이어서 진행된다 |
 
-### Phase 3 · 검증
+### Phase 3 · 검증 ✅ 완료
 
-- `pnpm tsc` / `lint` / `test`
-- 브라우저 하네스로 canvas 투명도 판정 + 인코딩 결과 확인
-- dry-run → `--limit 1` → 육안 → 전체
-- 본문 렌더 4-BP + 에디터 재편집 정상 동작
-- 나란히 2장 배치 유지 확인
+**프로덕션 적용 결과 (2026-08-08)**
+
+```
+글 43건 / 이미지 151개
+처리 122 / 투명 스킵 17 / 이득없음 스킵 1 / 실패 11
+110,786 KB → 16,396 KB (평균 908 KB → 134 KB, -85%)
+```
+
+| 검증 | 결과 |
+|---|---|
+| 멱등성 재실행 | 처리 0 / 이득없음 스킵 123 / 투명 17 ✅ |
+| 전체 본문 이미지 실측 | 110.8 MB → **15.7 MB** ✅ |
+| 가장 무거운 글 | 9,745 KB → **1,618 KB** (6배) ✅ |
+| **적용 → 롤백 → 복원** | 217KB/136KB → **1392KB/417KB 정확 복원** ✅ |
+| 투명도 판정 알고리즘 | 200px 축소 판정이 원본 전수 판정과 **140건 전부 동일 분류** ✅ |
+| `attrs.width` 보존 | 변경 없음 ✅ |
+
+브라우저 canvas 하네스는 이번에 실행하지 못했다(Playwright MCP 연결 끊김). 대신 `measureTransparentRatio` 와 동일 절차를 sharp 로 재현해 프로덕션 140건으로 검증했고, canvas JPEG 인코딩 품질은 ADR-051 커버 작업에서 이미 실측했다(sharp 대비 +18%, 상한 여유 충분).
+
+**미실시** — 본문 렌더 4-BP 육안 · 에디터 재편집 · "나란히 2장" 배치 유지 확인. Playwright MCP 연결이 끊겨 이번 세션에서 못 했다. `attrs.width`/문서 구조를 건드리지 않으므로 회귀 가능성은 낮지만 **PR 머지 전 수동 확인이 필요하다.**
 
 ## 범위 제외
 
@@ -143,7 +158,7 @@ news.body + notices.body 재귀 순회 (Tiptap JSON)
 
 | 리스크 | 대응 |
 |---|---|
-| **body JSONB 재작성 실패 → 본문 손상** | 백업 파일 + `--rollback` + 글 단위 트랜잭션 + dry-run |
+| **body JSONB 재작성 실패 → 본문 손상** | 백업 파일 + `--rollback` + 행별 원자적 UPDATE + dry-run. 프로덕션 1건으로 적용→롤백→복원 실측 검증 완료 |
 | 투명 로고가 흰 박스로 | 투명 10%+ 스킵 (17개 대상) |
 | 브라우저 canvas 인코딩 품질 | 커버에서 sharp 대비 +18% 확인됨. 상한 여유 있어 무영향 |
 | 에디터 재편집 충돌 | 없음 — `src` 만 바뀌고 `attrs.width`·문서 구조 그대로 |
