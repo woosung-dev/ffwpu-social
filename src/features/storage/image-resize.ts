@@ -1,6 +1,9 @@
 // 업로드 전 클라이언트 이미지 리사이즈 — 원본 사진을 저장 상한(5MB) 아래로 줄인다 (ADR-046)
 // 브라우저 전용(createImageBitmap·canvas·document) — Server Component / Server Action 에서 import 금지.
 import {
+  COVER_MAX_EDGE_PX,
+  COVER_QUALITY_LADDER,
+  COVER_TARGET_BYTES,
   MAX_IMAGE_BYTES,
   MAX_IMAGE_EDGE_PX,
   fitWithinMaxEdge,
@@ -32,9 +35,12 @@ function renameWithExt(filename: string, ext: string): string {
   return `${base}.${ext}`;
 }
 
+// background 를 주면 drawImage 전에 그 색으로 칠한다. JPEG 출력 시 필수 —
+// canvas 는 투명으로 초기화되는데 JPEG 는 알파가 없어 PNG 투명 영역이 검게 나온다.
 function drawToCanvas(
   bitmap: ImageBitmap,
   maxEdge: number,
+  background?: string,
 ): HTMLCanvasElement {
   const target = fitWithinMaxEdge(bitmap.width, bitmap.height, maxEdge);
   const canvas = document.createElement("canvas");
@@ -42,6 +48,10 @@ function drawToCanvas(
   canvas.height = target.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("이미지 변환에 실패했습니다.");
+  if (background) {
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, target.width, target.height);
+  }
   ctx.drawImage(bitmap, 0, 0, target.width, target.height);
   return canvas;
 }
@@ -109,6 +119,50 @@ export async function prepareImageForUpload(file: File): Promise<File> {
     throw new Error(
       `이미지를 ${MAX_IMAGE_BYTES / MB}MB 이하로 줄이지 못했습니다. JPG 로 저장해서 올려주세요.`,
     );
+  } finally {
+    bitmap.close();
+  }
+}
+
+/**
+ * 커버 업로드용 파일을 준비한다. 본문용 `prepareImageForUpload` 와 세 가지가 다르다.
+ *
+ * 1. **크기와 무관하게 항상 재인코딩한다.** 본문용은 5MB 이하면 원본을 그대로 통과시키는데,
+ *    그 게이트 때문에 1.8MB PNG 커버가 손대지 않은 채 올라가 라이브 평균이 1,161KB(최대 4,133KB)까지 갔다.
+ * 2. **긴 변 1440px** (본문은 2560px). featured 카드가 wide 에서 50vw ≈ 720px CSS 로 그려져
+ *    DPR 2 기준 필요 픽셀이 1440 이다. 그 이상은 표시 시 다시 축소돼 용량만 쓴다.
+ * 3. **JPEG 고정 + 흰 배경 합성.** 커버는 news/[id]/page.tsx 에서 og:image 로 직행하는데
+ *    카카오톡 스크래퍼의 WebP 지원이 보장되지 않는다(ADR-046). 카카오톡 og:image 500KB 상한도 있어
+ *    `COVER_TARGET_BYTES` 초과 시 품질을 낮춘다.
+ *
+ * 본문 이미지는 상세 본문 폭이 넓고 포맷도 다양해 2560px·원본 포맷 유지가 여전히 타당하므로
+ * `prepareImageForUpload` 는 그대로 둔다.
+ */
+export async function prepareCoverForUpload(file: File): Promise<File> {
+  // 허용 형식이 아니면 손대지 않는다 — 형식 거부는 서버가 한국어로 판정한다(판정 중복 회피)
+  if (!isAllowedImageMime(file.type)) return file;
+
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    throw new Error("이미지를 읽을 수 없습니다. 파일이 손상되었는지 확인해주세요.");
+  }
+
+  try {
+    const canvas = drawToCanvas(bitmap, COVER_MAX_EDGE_PX, "#ffffff");
+    const lastQuality = COVER_QUALITY_LADDER[COVER_QUALITY_LADDER.length - 1];
+    for (const quality of COVER_QUALITY_LADDER) {
+      const blob = await encode(canvas, "image/jpeg", quality / 100);
+      // 마지막 단계는 상한을 넘어도 반환한다 — 업로드를 막는 것보다 조금 큰 커버가 낫다.
+      // 저장 상한(MAX_IMAGE_BYTES 5MB)은 서버 presign 이 최종 판정한다.
+      if (blob.size <= COVER_TARGET_BYTES || quality === lastQuality) {
+        return new File([blob], renameWithExt(file.name, "jpg"), {
+          type: "image/jpeg",
+        });
+      }
+    }
+    throw new Error("이미지 변환에 실패했습니다. 다른 이미지를 사용해주세요.");
   } finally {
     bitmap.close();
   }

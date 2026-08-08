@@ -19,7 +19,8 @@
     "db:backfill-cover-dims": "tsx src/db/backfill-cover-dims.ts",
     "infra:up": "docker compose --env-file .env.local up -d",
     "infra:down": "docker compose --env-file .env.local down",
-    "dev:up": "pnpm infra:up && pnpm dev"
+    "dev:up": "pnpm infra:up && pnpm dev",
+    "db:backfill-cover-normalize": "tsx src/db/backfill-cover-normalize.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.7.4",
@@ -97,6 +98,7 @@
     "eslint-config-next": "^16.0.0",
     "postcss": "^8.4.49",
     "sass": "^1.100.0",
+    "sharp": "0.33.5",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",

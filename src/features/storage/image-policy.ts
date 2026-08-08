@@ -26,6 +26,43 @@ export const MAX_SOURCE_IMAGE_BYTES = 30 * 1024 * 1024;
  */
 export const MAX_IMAGE_EDGE_PX = 2560;
 
+/**
+ * 커버 전용 리사이즈 목표 긴 변(px). 본문(MAX_IMAGE_EDGE_PX 2560)과 별개다.
+ *
+ * 왜 1440: featured 카드가 wide(1440) 뷰포트에서 50vw ≈ 720px CSS 로 그려진다 → DPR 2 에서 필요한 실제 픽셀이 1440.
+ * 1920 이상으로 올리면 표시 시 다시 축소되므로 같은 용량을 화질이 아니라 낭비에 쓴다(실측 RMSE 5.37 → 6.30 악화).
+ */
+export const COVER_MAX_EDGE_PX = 1440;
+
+/**
+ * 커버 JPEG 품질(1~100). canvas `toBlob` 에 넘길 때는 /100 하여 0~1 로 변환한다.
+ *
+ * 왜 82 가 아니라 75 (36장 실측, 표시 1440 기준 RMSE):
+ *   1200px q82 → 138 KB / RMSE 9.97
+ *   1440px q75 → 136 KB / RMSE 5.37   ← 더 작은데 왜곡 46% 감소
+ * 표시 폭보다 작은 이미지는 업스케일 손실이 지배해 품질을 올려도 화질이 개선되지 않는다
+ * (1200 q82 와 1200 q75 의 RMSE 가 9.97 vs 10.20 으로 사실상 동일).
+ * 해상도를 사고 압축률을 내주는 쪽이 같은 예산에서 더 선명하다 — imgix·Next.js 기본값도 75.
+ */
+export const COVER_JPEG_QUALITY = 75;
+
+/**
+ * 커버 결과물 목표 상한. 초과하면 품질을 낮춰 재시도한다.
+ *
+ * 왜 필요: 커버는 news/[id]/page.tsx 에서 og:image 로 직행하는데 카카오톡은 og:image 500KB 초과 시
+ * 이미지 없는 카드로 렌더한다. 36장 실측 최대가 329KB 라 통상 도달하지 않지만, 앞으로 올라올
+ * 더 무거운 사진에 대한 가드다. 450KB 는 500 대비 10% 안전 마진.
+ */
+export const COVER_TARGET_BYTES = 450 * 1024;
+
+/**
+ * 커버 품질 하강 사다리. `COVER_TARGET_BYTES` 를 넘을 때만 다음 단계로 내려간다.
+ * 클라 리사이즈(canvas)와 백필 스크립트(sharp)가 같은 정책을 쓰도록 여기서 단일 정의한다 —
+ * canvas `toBlob` 은 0~1 이라 /100 해서 넘긴다.
+ * 36장 실측 최대가 329KB 라 통상 첫 단계에서 끝난다.
+ */
+export const COVER_QUALITY_LADDER = [COVER_JPEG_QUALITY, 68, 60] as const;
+
 /** 드롭존 1회 업로드 장수 — simple-editor 의 ImageUploadNode limit 과 에러 문구가 공유 */
 export const MAX_IMAGES_PER_UPLOAD = 3;
 

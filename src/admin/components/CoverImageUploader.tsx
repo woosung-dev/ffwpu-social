@@ -7,7 +7,7 @@ import { ImagePlus, Loader2, X } from "lucide-react";
 import { uploadImageAction } from "@/features/news/actions";
 import { uploadPopupImageAction } from "@/features/popups/actions";
 import { MAX_SOURCE_IMAGE_BYTES } from "@/features/storage/image-policy";
-import { prepareImageForUpload } from "@/features/storage/image-resize";
+import { prepareCoverForUpload } from "@/features/storage/image-resize";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -52,8 +52,9 @@ export function CoverImageUploader({
     }
     setIsUploading(true);
     try {
-      // 커버 원본도 5~15MB 가 흔하다 → presign 전에 저장 상한 아래로 줄인다 (ADR-046)
-      const prepared = await prepareImageForUpload(file);
+      // 커버는 크기와 무관하게 항상 1440px JPEG 로 정규화한다 — 저장본이 곧 전송본이고(next/image 이탈)
+      // og:image 로 직행해 카카오톡 500KB 상한을 받는다. 본문 이미지와 규격이 달라 전용 함수를 쓴다.
+      const prepared = await prepareCoverForUpload(file);
       // 치수는 리사이즈 "결과" 에서 캡처 — 마조네리 카드 비율의 근거라 실제 저장된 이미지와 일치해야 한다
       const dims = await readImageDimensions(prepared);
       // 기존 NewsEditor 호출부를 유지하려고 액션 주입 대신 업로드 범위만 여기서 분기한다.
