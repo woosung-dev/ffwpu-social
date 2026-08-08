@@ -161,12 +161,25 @@ news.cover_image_url + popups.image_url 전수 조회
 
 **루트 코즈**: `image-resize.ts:91` 이 `file.size <= 5MB && withinEdge` 면 **아무 처리도 하지 않는다.** 1.8MB PNG 가 그대로 올라간 이유.
 
-- `image-policy.ts`: `COVER_MAX_EDGE_PX = 1440` · `COVER_JPEG_QUALITY = 75` · `COVER_TARGET_BYTES = 450KB` 추가 ✅ 완료
-- `image-resize.ts`: `prepareCoverForUpload()` 신규 — 크기 무관 **항상 재인코딩**, JPEG 강제, 흰 배경 flatten
+✅ 완료
+
+- `image-policy.ts`: `COVER_MAX_EDGE_PX = 1440` · `COVER_JPEG_QUALITY = 75` · `COVER_TARGET_BYTES = 450KB` · `COVER_QUALITY_LADDER` 추가. 사다리는 클라(canvas, /100)와 백필(sharp, 1~100)이 공유한다
+- `image-resize.ts`: `prepareCoverForUpload()` 신규 — 크기 무관 **항상 재인코딩**, JPEG 강제, 흰 배경 flatten. `drawToCanvas` 에 `background` 선택 인자 추가(JPEG 는 알파가 없어 투명 영역이 검게 나온다)
 - `CoverImageUploader.tsx`: 호출 함수만 교체
 - 기존 `prepareImageForUpload()` 는 **본문 이미지용으로 무수정 유지** (본문은 2560px·원본 포맷이 여전히 타당)
 
-> `[확인 필요]` 브라우저 canvas JPEG 인코더는 sharp/mozjpeg 보다 품질이 낮다. 위 138 KB 는 sharp 기준이므로 실제 업로드 1장으로 재측정 후 quality 조정 필요.
+**브라우저 실측으로 `[확인 필요]` 해소** — Chromium 에서 동일 파이프라인을 돌려 비교했다:
+
+| 인코더 | 4080×3060 → 1440×1080 q75 |
+|---|---|
+| sharp (mozjpeg) | 221 KB |
+| **Chromium canvas** | **260 KB (+18%)** |
+
+canvas 가 18% 크지만 `COVER_TARGET_BYTES`(450KB)·카카오톡 상한(500KB) 대비 여유가 충분해 **quality 조정 불필요**. 환산하면 평균 약 160 KB / 최대 약 390 KB.
+
+투명 PNG 업로드 시 결과물 모서리 픽셀이 `rgb(255,255,255)` 로 확인돼 흰 배경 합성도 정상 동작한다(검정 배경 회귀 없음).
+
+> 단위 테스트는 두지 않았다 — `canvas.toBlob` 은 vitest jsdom 에 없어 재현이 불가능하고, 의미 없는 mock 어서션이 된다. 검증 앵커는 위 브라우저 하네스다.
 
 ### Phase 4 · 검증 + 문서
 

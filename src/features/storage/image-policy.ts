@@ -55,6 +55,14 @@ export const COVER_JPEG_QUALITY = 75;
  */
 export const COVER_TARGET_BYTES = 450 * 1024;
 
+/**
+ * 커버 품질 하강 사다리. `COVER_TARGET_BYTES` 를 넘을 때만 다음 단계로 내려간다.
+ * 클라 리사이즈(canvas)와 백필 스크립트(sharp)가 같은 정책을 쓰도록 여기서 단일 정의한다 —
+ * canvas `toBlob` 은 0~1 이라 /100 해서 넘긴다.
+ * 36장 실측 최대가 329KB 라 통상 첫 단계에서 끝난다.
+ */
+export const COVER_QUALITY_LADDER = [COVER_JPEG_QUALITY, 68, 60] as const;
+
 /** 드롭존 1회 업로드 장수 — simple-editor 의 ImageUploadNode limit 과 에러 문구가 공유 */
 export const MAX_IMAGES_PER_UPLOAD = 3;
 
