@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { EyeOff } from "lucide-react";
 import { z } from "zod";
 import type { JSONContent } from "@tiptap/react";
 import {
@@ -40,6 +41,7 @@ export type NewsEditorInitial = {
   coverImageWidth: number | null;
   coverImageHeight: number | null;
   publishedAt: Date | null;
+  isHidden: boolean;
   tags: string[];
 };
 
@@ -181,6 +183,18 @@ export function NewsEditor({ mode, categories, initial }: Props) {
           >
             닫기
           </button>
+        </div>
+      )}
+
+      {/* 비공개 안내 — 저장해도 사용자에게 안 보이는 상태임을 알림. 해제는 목록의 노출 토글 (ADR-053) */}
+      {initial?.isHidden && currentState === "published" && (
+        <div className="flex items-start gap-2 rounded-lg border border-border bg-surface-soft px-4 py-3 text-sm text-ink-subtle">
+          <EyeOff className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>
+            이 글은 <strong className="text-ink-strong">비공개</strong> 상태예요.
+            수정 내용은 저장되지만 사용자 사이트에는 아직 보이지 않습니다. 다시
+            공개하려면 글 목록에서 노출 아이콘을 눌러주세요.
+          </span>
         </div>
       )}
 

@@ -37,7 +37,12 @@ function pickTab(raw: string | string[] | undefined): "manage" | "featured" {
 
 function pickStatus(raw: string | string[] | undefined): NewsStatus {
   const value = Array.isArray(raw) ? raw[0] : raw;
-  if (value === "draft" || value === "scheduled" || value === "published") {
+  if (
+    value === "draft" ||
+    value === "scheduled" ||
+    value === "published" ||
+    value === "hidden"
+  ) {
     return value;
   }
   return "all";
@@ -120,6 +125,7 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
     categoryName: i.categoryName,
     categorySlug: i.categorySlug,
     publishedAt: i.publishedAt,
+    isHidden: i.isHidden,
     createdAt: i.createdAt,
     updatedAt: i.updatedAt,
   }));

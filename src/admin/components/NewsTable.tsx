@@ -1,13 +1,14 @@
-// 어드민 뉴스 목록 — 페이지네이션·상태 탭·발행 토글·수정·삭제. 페이지네이션은 queryString (결정 로그 [T10 URL])
+// 어드민 뉴스 목록 — 페이지네이션·상태 탭·발행 토글·공개 노출 토글·수정·삭제. 페이지네이션은 queryString (결정 로그 [T10 URL])
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, Heart, Search, Share2, Tag, X } from "lucide-react";
+import { Eye, EyeOff, Heart, Search, Share2, Tag, X } from "lucide-react";
 import {
   deleteNewsAction,
   publishNewsAction,
+  setNewsHiddenAction,
 } from "@/features/news/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +37,12 @@ import {
   type NewsSort,
   type NewsPageSize,
 } from "@/features/news/admin-sort";
+import {
+  canToggleVisibility,
+  getPublishState,
+  type NewsPublishState,
+  type NewsStatus,
+} from "@/features/news/publish-state";
 
 export type NewsRow = {
   id: string;
@@ -43,12 +50,12 @@ export type NewsRow = {
   categoryName: string;
   categorySlug: string;
   publishedAt: Date | null;
+  isHidden: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
 
-export type NewsStatus = "all" | "draft" | "scheduled" | "published";
-type NewsPublishState = Exclude<NewsStatus, "all">;
+export type { NewsStatus } from "@/features/news/publish-state";
 
 export type NewsStats = {
   views: number;
@@ -147,7 +154,8 @@ const STATUS_LABEL: Record<NewsStatus, string> = {
   all: "전체",
   draft: "임시 저장",
   scheduled: "예약",
-  published: "발행",
+  published: "공개",
+  hidden: "비공개",
 };
 
 const STATUS_BADGE_CLASS: Record<NewsPublishState, string> = {
@@ -156,6 +164,9 @@ const STATUS_BADGE_CLASS: Record<NewsPublishState, string> = {
     "rounded-full bg-kpi-lime/30 px-2 py-1 text-xs font-medium text-ink-strong",
   published:
     "rounded-full bg-brand-primary/10 px-2 py-1 text-xs font-medium text-brand-primary",
+  // 비공개는 회색 — 색만으로 구분하지 않도록 행 흐림 + 눈 아이콘이 함께 신호를 준다 (색 단독 의존 금지)
+  hidden:
+    "rounded-full bg-ink-subtle/15 px-2 py-1 text-xs font-medium text-ink-subtle",
 };
 
 function formatDate(d: Date): string {
@@ -171,10 +182,6 @@ function formatPublishDate(publishedAt: Date | null): string {
   return publishedAt ? formatDate(publishedAt) : "미발행";
 }
 
-function getPublishState(publishedAt: Date | null): NewsPublishState {
-  if (!publishedAt) return "draft";
-  return new Date(publishedAt).getTime() > Date.now() ? "scheduled" : "published";
-}
 
 // 글별 누적 반응 — 아이콘 + 숫자. 지표명은 hover(title)·스크린리더(aria-label)로 표시(영역 절약, 운영자 요청)
 function StatCell({ s }: { s: NewsStats | undefined }) {
@@ -298,6 +305,23 @@ export function NewsTable({
     });
   };
 
+  // 공개 노출 토글 — 서버 액션 완료 후 router.refresh() 로 목록 재조회.
+  // 액션의 revalidatePath 가 서버 캐시를 비우고, refresh 가 현재 화면의 RSC 페이로드를 다시 받아온다.
+  // 둘 중 하나만 하면 상태 배지·행 흐림이 이전 값으로 남는다
+  const toggleHidden = (id: string, currentlyHidden: boolean) => {
+    setError(null);
+    startTransition(async () => {
+      const result = await setNewsHiddenAction(id, !currentlyHidden);
+      if (!result.success) {
+        const msg =
+          typeof result.error === "string" ? result.error : "노출 변경 실패";
+        setError(msg);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
   const onConfirmDelete = () => {
     if (!confirmId) return;
     const targetId = confirmId;
@@ -315,17 +339,63 @@ export function NewsTable({
     });
   };
 
-  // 행 액션 — 데스크탑 테이블/모바일 카드 공용
-  const renderRowActions = (row: NewsRow, hasPublishAt: boolean) => (
-    <div className="flex justify-end gap-1">
+  // 공개 노출 토글 버튼 — 데스크탑 테이블/모바일 카드 공용.
+  // 이미 공개된 글(published·hidden)에만 노출. 예약·임시저장은 아직 공개 전이라 '발행 대기' 텍스트로 대체
+  const renderVisibilityToggle = (row: NewsRow, state: NewsPublishState) => {
+    if (!canToggleVisibility(state)) {
+      return (
+        <span className="text-xs text-ink-date">
+          {state === "scheduled" ? "발행 대기" : "—"}
+        </span>
+      );
+    }
+    const hidden = state === "hidden";
+    const label = hidden ? "공개로 전환" : "비공개로 전환";
+    return (
       <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => togglePublish(row.id, hasPublishAt)}
+        variant="outline"
+        size="icon"
+        onClick={() => toggleHidden(row.id, hidden)}
         disabled={isPending}
+        aria-label={`${row.title} ${label}`}
+        title={label}
+        // 모바일 44px 터치타겟(접근성 절대제약), 데스크탑은 테이블 행 높이 유지를 위해 36px
+        className={`size-11 md:size-9 ${hidden ? "bg-surface-soft text-ink-subtle" : ""}`}
       >
-        {hasPublishAt ? "해제" : "발행"}
+        {hidden ? (
+          <EyeOff className="size-4" aria-hidden />
+        ) : (
+          <Eye className="size-4" aria-hidden />
+        )}
       </Button>
+    );
+  };
+
+  // 행 액션 — 데스크탑 테이블/모바일 카드 공용.
+  // 공개된 글의 '해제'(= publishedAt null 화)는 제거 — 발행일과 랜딩 슬롯이 날아가던 파괴적 조작이라
+  // 노출 토글로 대체했다 (ADR-053). 임시저장으로 되돌리려면 에디터의 '임시 저장' 버튼을 쓴다
+  const renderRowActions = (row: NewsRow, state: NewsPublishState) => (
+    <div className="flex justify-end gap-1">
+      {state === "draft" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => togglePublish(row.id, false)}
+          disabled={isPending}
+        >
+          발행
+        </Button>
+      )}
+      {state === "scheduled" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => togglePublish(row.id, true)}
+          disabled={isPending}
+        >
+          예약 취소
+        </Button>
+      )}
       <Button asChild variant="ghost" size="sm">
         <Link href={`/admin/news/${row.id}/edit`}>수정</Link>
       </Button>
@@ -364,7 +434,7 @@ export function NewsTable({
       {/* 상태 탭 */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {(["all", "draft", "scheduled", "published"] as const).map((s) => (
+          {(["all", "draft", "scheduled", "published", "hidden"] as const).map((s) => (
             <Button
               key={s}
               variant={status === s ? "default" : "outline"}
@@ -469,7 +539,7 @@ export function NewsTable({
             <>
               {/* 데스크탑 — 테이블 (md 이상) */}
               <div className="hidden overflow-x-auto md:block">
-                <table className="w-full min-w-[860px] text-sm">
+                <table className="w-full min-w-[920px] text-sm">
                   <thead className="border-b text-ink-subtle">
                     <tr className="text-left">
                       <th className="py-3 pr-4 font-medium">제목</th>
@@ -482,17 +552,24 @@ export function NewsTable({
                           <HelpTip>{ADMIN_COPY.news.statsHelp}</HelpTip>
                         </span>
                       </th>
+                      <th className="py-3 pr-4 font-medium">
+                        <span className="inline-flex items-center gap-1">
+                          노출
+                          <HelpTip>{ADMIN_COPY.news.visibilityHelp}</HelpTip>
+                        </span>
+                      </th>
                       <th className="py-3 font-medium text-right">관리</th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map((row) => {
-                      const state = getPublishState(row.publishedAt);
-                      const hasPublishAt = row.publishedAt !== null;
+                      const state = getPublishState(row.publishedAt, row.isHidden);
                       return (
                         <tr
                           key={row.id}
-                          className="border-b last:border-b-0 transition-colors hover:bg-surface-soft/60"
+                          className={`border-b last:border-b-0 transition-colors hover:bg-surface-soft/60 ${
+                            state === "hidden" ? "opacity-55" : ""
+                          }`}
                         >
                           <td className="py-3 pr-4 font-medium text-ink-strong">
                             <Link
@@ -516,8 +593,11 @@ export function NewsTable({
                           <td className="py-3 pr-4">
                             <StatCell s={stats[row.id]} />
                           </td>
+                          <td className="py-3 pr-4">
+                            {renderVisibilityToggle(row, state)}
+                          </td>
                           <td className="py-3 text-right">
-                            {renderRowActions(row, hasPublishAt)}
+                            {renderRowActions(row, state)}
                           </td>
                         </tr>
                       );
@@ -529,12 +609,13 @@ export function NewsTable({
               {/* 모바일 — 카드 (md 미만, 가로 스크롤 없이 관리 버튼 도달) */}
               <ul className="space-y-3 md:hidden">
                 {rows.map((row) => {
-                  const state = getPublishState(row.publishedAt);
-                  const hasPublishAt = row.publishedAt !== null;
+                  const state = getPublishState(row.publishedAt, row.isHidden);
                   return (
                     <li
                       key={row.id}
-                      className="space-y-2 rounded-lg border border-border p-4"
+                      className={`space-y-2 rounded-lg border border-border p-4 ${
+                        state === "hidden" ? "opacity-55" : ""
+                      }`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <Link
@@ -553,7 +634,11 @@ export function NewsTable({
                         {row.categoryName} · {formatPublishDate(row.publishedAt)}
                       </p>
                       <StatCell s={stats[row.id]} />
-                      {renderRowActions(row, hasPublishAt)}
+                      {/* 모바일은 노출 토글을 관리 버튼과 한 줄에 — 세로 공간 절약, 44px 터치타겟 유지 */}
+                      <div className="flex items-center justify-between gap-2">
+                        {renderVisibilityToggle(row, state)}
+                        {renderRowActions(row, state)}
+                      </div>
                     </li>
                   );
                 })}

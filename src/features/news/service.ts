@@ -6,6 +6,7 @@ import { deleteByPrefix } from "@/features/storage";
 import * as newsDb from "./db";
 import { ANALYTICS_SORTS, DEFAULT_NEWS_SORT, type NewsSort } from "./admin-sort";
 import { slotsToClearOnTransition } from "./slot-rules";
+import type { NewsStatus } from "./publish-state";
 import type { ListNewsQuery, NewsInput } from "./schemas";
 
 export async function listNews(query: ListNewsQuery) {
@@ -50,7 +51,7 @@ export async function getAdminNewsDetail(id: string) {
 export async function listNewsForAdmin(opts: {
   page: number;
   limit: number;
-  status?: "all" | "draft" | "scheduled" | "published";
+  status?: NewsStatus;
   categorySlug?: string;
   sort?: NewsSort;
   q?: string;
@@ -185,6 +186,15 @@ export async function setPublishedAt(id: string, publish: boolean) {
     }
     return updated;
   });
+}
+
+// 공개 노출 토글 — setNewsHiddenAction 전용 (ADR-053).
+// setPublishedAt 과 달리 publishedAt·story/featured/hero 슬롯을 **건드리지 않는다** — 되돌리면 목록 순서와
+// 랜딩 자리가 그대로 복원되는 게 이 기능의 존재 이유. 숨김 상태에서는 공개 쿼리(publicPublishedWhere)가 알아서 제외
+export async function setNewsHidden(id: string, hidden: boolean) {
+  return db.transaction(async (tx) =>
+    newsDb.updateNews(tx, id, { isHidden: hidden }),
+  );
 }
 
 // 메인 랜딩 슬롯 설정 — /admin/landing 큐레이션. story (1~2) / featured (1~7). null = 해제.

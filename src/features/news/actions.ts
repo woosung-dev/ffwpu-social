@@ -173,6 +173,26 @@ export async function publishNewsAction(
   }
 }
 
+// 공개 노출 토글 — 발행된 글을 공개 사이트에서만 숨김/복원 (ADR-053).
+// revalidateNewsRoutes 로 랜딩·목록·상세·어드민 캐시를 함께 무효화 — 토글 직후 목록이 새 상태로 다시 그려진다
+export async function setNewsHiddenAction(
+  id: string,
+  hidden: boolean,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireSuperAdmin();
+    if (!z.uuid().safeParse(id).success) {
+      return { success: false, error: "잘못된 글 ID 형식입니다." };
+    }
+    const updated = await newsService.setNewsHidden(id, hidden);
+    if (!updated) return { success: false, error: "Not Found" };
+    revalidateNewsRoutes(id);
+    return { success: true, data: updated };
+  } catch (e) {
+    return toActionError(e, "newsAction");
+  }
+}
+
 // 태그 자동완성 — TagsInput(T8) 진입점. super 가드 (결정 로그 [T8 searchTags 인증])
 export async function searchTagsAction(
   prefix: string,

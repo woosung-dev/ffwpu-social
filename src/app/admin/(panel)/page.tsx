@@ -82,7 +82,7 @@ async function AnalyticsCard({
 async function StatusSection() {
   const { statusCounts } = await getAdminDashboard();
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <StatusCard
         label={C.statusPublished}
         value={statusCounts.published}
@@ -97,6 +97,12 @@ async function StatusSection() {
         label={C.statusScheduled}
         value={statusCounts.scheduled}
         tone="text-brand-mid"
+      />
+      {/* 비공개 — 숨겨둔 채 잊히는 걸 막는 자리 (ADR-053) */}
+      <StatusCard
+        label={C.statusHidden}
+        value={statusCounts.hidden}
+        tone="text-ink-subtle"
       />
     </div>
   );

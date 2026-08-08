@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { analyticsEvents, categories, heartEvents, news, newsTags } from "@/db/schema";
 import { ALL_CATEGORY_SLUG } from "./constants";
 import type { NewsSort } from "./admin-sort";
+import type { NewsStatus } from "./publish-state";
 import { likePattern } from "./search-query";
 import { RICE_SHARING_SLUG } from "./slot-rules";
 
@@ -29,8 +30,14 @@ function categoryWhere(categorySlug?: string) {
     : undefined;
 }
 
+// 공개 사이트 노출 조건 — 발행됨(published_at <= now) + 숨김 아님(is_hidden = false, ADR-053).
+// landing/db.ts · analytics/db.ts 의 동명 헬퍼와 동일 기준 — 한쪽만 고치면 숨긴 글이 새어나간다
 function publicPublishedWhere() {
-  return and(isNotNull(news.publishedAt), lte(news.publishedAt, sql`now()`));
+  return and(
+    isNotNull(news.publishedAt),
+    lte(news.publishedAt, sql`now()`),
+    eq(news.isHidden, false),
+  );
 }
 
 // 검색 필터 — 제목 OR 태그 부분일치(ILIKE, 대소문자 무관). q 없으면 undefined(필터 미적용).
@@ -147,7 +154,7 @@ export async function listPublishedForSitemap() {
 type AdminListOpts = {
   page: number;
   limit: number;
-  status?: "all" | "draft" | "scheduled" | "published";
+  status?: NewsStatus;
   categorySlug?: string;
   sort?: NewsSort;
   q?: string;
@@ -179,12 +186,21 @@ function adminOrderBy(sort: NewsSort = "published_desc") {
   }
 }
 
+// 어드민 상태 탭 — '발행'은 실제 공개중(숨김 제외), '비공개'는 발행됐지만 숨긴 글 (ADR-053).
+// 예약(미래 발행)은 is_hidden 과 무관 — 아직 공개된 적 없어 숨김 개념이 성립 안 함
 function adminStatusWhere(status?: AdminListOpts["status"]) {
   if (status === "draft") return isNull(news.publishedAt);
   if (status === "scheduled") {
     return and(isNotNull(news.publishedAt), gt(news.publishedAt, sql`now()`));
   }
   if (status === "published") return publicPublishedWhere();
+  if (status === "hidden") {
+    return and(
+      isNotNull(news.publishedAt),
+      lte(news.publishedAt, sql`now()`),
+      eq(news.isHidden, true),
+    );
+  }
   return undefined;
 }
 
@@ -199,6 +215,7 @@ export async function listForAdmin(opts: AdminListOpts) {
       categoryName: categories.name,
       categorySlug: categories.slug,
       publishedAt: news.publishedAt,
+      isHidden: news.isHidden,
       createdAt: news.createdAt,
       updatedAt: news.updatedAt,
     })
@@ -250,6 +267,7 @@ export async function getAdminNewsById(id: string) {
       coverImageWidth: news.coverImageWidth,
       coverImageHeight: news.coverImageHeight,
       publishedAt: news.publishedAt,
+      isHidden: news.isHidden,
       createdAt: news.createdAt,
       updatedAt: news.updatedAt,
     })
@@ -269,15 +287,17 @@ export async function getAdminNewsById(id: string) {
 export async function countNewsByStatus() {
   const [row] = await db
     .select({
-      published: sql<number>`count(*) filter (where ${news.publishedAt} is not null and ${news.publishedAt} <= now())::int`,
+      published: sql<number>`count(*) filter (where ${news.publishedAt} is not null and ${news.publishedAt} <= now() and ${news.isHidden} = false)::int`,
       scheduled: sql<number>`count(*) filter (where ${news.publishedAt} is not null and ${news.publishedAt} > now())::int`,
       draft: sql<number>`count(*) filter (where ${news.publishedAt} is null)::int`,
+      hidden: sql<number>`count(*) filter (where ${news.publishedAt} is not null and ${news.publishedAt} <= now() and ${news.isHidden} = true)::int`,
     })
     .from(news);
   return {
     published: row?.published ?? 0,
     scheduled: row?.scheduled ?? 0,
     draft: row?.draft ?? 0,
+    hidden: row?.hidden ?? 0,
   };
 }
 

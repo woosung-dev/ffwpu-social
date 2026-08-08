@@ -113,6 +113,13 @@
       "when": 1784370255332,
       "tag": "0015_windy_steel_serpent",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1786193934495,
+      "tag": "0016_huge_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }

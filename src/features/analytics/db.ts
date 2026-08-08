@@ -5,8 +5,13 @@ import { db } from "@/db";
 import { analyticsEvents, news } from "@/db/schema";
 import type { NewAnalyticsEvent } from "@/db/schema";
 
+// news/db.ts 의 동명 헬퍼와 동일 기준 — 발행됨 + 숨김 아님 (is_hidden, ADR-053)
 function publicPublishedWhere() {
-  return and(isNotNull(news.publishedAt), lte(news.publishedAt, sql`now()`));
+  return and(
+    isNotNull(news.publishedAt),
+    lte(news.publishedAt, sql`now()`),
+    eq(news.isHidden, false),
+  );
 }
 
 export async function insertAnalyticsEvent(data: NewAnalyticsEvent) {
