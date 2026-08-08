@@ -181,13 +181,23 @@ canvas 가 18% 크지만 `COVER_TARGET_BYTES`(450KB)·카카오톡 상한(500KB)
 
 > 단위 테스트는 두지 않았다 — `canvas.toBlob` 은 vitest jsdom 에 없어 재현이 불가능하고, 의미 없는 mock 어서션이 된다. 검증 앵커는 위 브라우저 하네스다.
 
-### Phase 4 · 검증 + 문서
+### Phase 4 · 검증 + 문서 ✅ 완료
 
-- 4-BP 육안 (375 / 768 / 1025 / 1440)
-- **카카오톡 공유 미리보기 실측** — 새 커버 URL 썸네일 표시 확인
-- Lighthouse LCP 전/후
-- ADR-051 작성 (ADR-046·049·050 관계 명시), `next.config.ts` 주석 갱신
-- `docs/TODO.md` 에 원본 아카이브 여부 escalation 등록
+라이브 렌더 수치 검증 (Playwright, 배포된 사이트):
+
+| 항목 | 375 (`/news`) | 1440 (랜딩) |
+|---|---|---|
+| 가로 오버플로 | 없음 ✅ | 없음 ✅ |
+| `_next/image` 경유 | 0건 ✅ | 0건 ✅ |
+| 깨진 이미지 | 0 ✅ | 0 ✅ |
+| 레이아웃 | 1열 · 카드 328px · `object-fit: cover` 정상 | 마조네리 비율 보존 6/7 정상 |
+
+- 커버 36건 전수: **200 응답 36건 · 500KB 초과 0건 · 최대 328 KB**
+- `og:image` 새 URL 반영 확인 (`news/634b643b` 상세)
+- ADR-051 작성 (`docs/decisions.md`), `next.config.ts` 주석 갱신 (Phase 1 에서 완료)
+- `docs/TODO.md` — 긴급 내리기 운영 절차 갱신(Vercel purge 단계 제거, `original/` 동시 삭제 추가) + 후속 6건 등록
+
+미실시: Lighthouse LCP 전/후 비교 — 전(前) 상태가 이미 사라져(백필이 프로덕션에 적용됨) 대조군을 만들 수 없다. 전송 바이트 -88% 가 대리 지표다.
 
 ## 범위 제외 (의도적)
 

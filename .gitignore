@@ -66,4 +66,3 @@ verify-*.png
 
 # agy/codex CLI 작업 캐시 (cwd 생성)
 cache/
-.vercel

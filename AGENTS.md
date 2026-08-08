@@ -97,6 +97,7 @@ pnpm drizzle-kit studio        # DB 브라우저
 
 > **머지된 작업은 여기 적지 않는다.** 결정은 `docs/decisions.md`(ADR), 경과는 `git log`, plan 은 merge 시 삭제 (`.ai/common/global.md` §2 plans 라이프사이클). 중복 저장은 drift 원천 — 실제로 이 섹션이 머지된 PR 5건을 "완료(미머지)"로 붙들고 있었다 (2026-07-16 정리).
 
+- 진행 중: **커버 이미지 정규화 + next/image 이탈** (branch `fix/image-normalize`, ADR-051) — 디테일 `docs/plans/active/TASK-20260808-image-normalize.md`. Phase 1 머지·배포 완료(#98), 백필 프로덕션 적용 완료(36장 -88%). 스키마 변경 없음.
 - 진행 중: **공지 공유 버튼 + 홈 팝업** — `docs/plans/active/TASK-20260718-notice-share.md` (branch `feat/notice-share`) · `docs/plans/active/TASK-20260718-home-popup.md` (branch `feat/home-popup`, 마이그레이션 0015).
 - 진행 중: **랜딩 실데이터화 + 반응형 4-BP 정합** (branch `feat/client-foundation`) — 디테일 `docs/plans/active/2026-06-03-landing-data-responsive.md`. 🔴 사진 11장 수령 대기(`src/db/seed-assets/`) · Gmarket Sans 라이선스 확인.
 - 진행 중: **어드민 v1.0 ship-전 하드닝** (branch `feat/admin-ship-hardening`) — 디테일 `docs/plans/active/2026-06-01-admin-ship-hardening.md`. 스키마 변경 없음.
