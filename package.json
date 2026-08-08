@@ -20,7 +20,8 @@
     "infra:up": "docker compose --env-file .env.local up -d",
     "infra:down": "docker compose --env-file .env.local down",
     "dev:up": "pnpm infra:up && pnpm dev",
-    "db:backfill-cover-normalize": "tsx src/db/backfill-cover-normalize.ts"
+    "db:backfill-cover-normalize": "tsx src/db/backfill-cover-normalize.ts",
+    "db:backfill-body-images": "tsx src/db/backfill-body-images.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.7.4",

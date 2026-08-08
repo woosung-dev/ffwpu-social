@@ -20,14 +20,42 @@ export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 export const MAX_SOURCE_IMAGE_BYTES = 30 * 1024 * 1024;
 
 /**
- * 리사이즈 목표 긴 변(px).
- * 왜: 본문 이미지는 공개 페이지에서 next/image 를 안 거치고 raw <img> 로 나가 저장 크기 = 전송 크기.
- * 최대 표시폭(~800px)의 2배 + 여유.
+ * 본문 인라인 이미지 리사이즈 목표 긴 변(px).
+ * 본문은 공개 페이지에서 next/image 를 안 거치고 raw <img> 로 나가 **저장 크기 = 전송 크기**다.
+ *
+ * 왜 1810 (2026-08-08 실측으로 2560 에서 하향): 본문 컨테이너가 lg+ 에서 905px 이고
+ * (news/[id]/page.tsx), 이미지 143개 중 105개(73%)가 width 속성 없이 `max-w-full` 로
+ * 컨테이너 폭까지 늘어난다 → DPR 2 기준 필요한 실제 픽셀이 905 × 2 = 1810.
+ * 그 이상은 표시 시 다시 축소돼 용량만 쓴다.
  */
-export const MAX_IMAGE_EDGE_PX = 2560;
+export const MAX_IMAGE_EDGE_PX = 1810;
 
 /**
- * 커버 전용 리사이즈 목표 긴 변(px). 본문(MAX_IMAGE_EDGE_PX 2560)과 별개다.
+ * 투명 픽셀 비율이 이 값 이상이면 JPEG 재인코딩을 건너뛰고 원본을 그대로 쓴다.
+ *
+ * 왜: JPEG 는 알파가 없어 투명 영역이 흰색으로 합성되는데, 상세 본문 배경에
+ * `bg-gradient-to-b from-white to-[#F9F4FF]/80` 라벤더 그라데이션이 깔려 있어(news/[id]/page.tsx)
+ * 그 구간에서 흰 박스로 드러난다.
+ *
+ * 왜 크기 기준으로는 못 거르나: 11KB 투명 PNG 를 JPEG 로 바꾸면 3KB(이득 78%)라
+ * `REENCODE_MIN_GAIN` 을 통과해 버린다 — 투명도 판정이 별도로 필요하다.
+ *
+ * 대상은 로고·아이콘류 17개(합계 229KB, 전체 본문 이미지 용량의 0.2%)라 방치해도 손실이 없다.
+ */
+export const TRANSPARENT_SKIP_RATIO = 0.1;
+
+/**
+ * 재인코딩 결과가 원본 대비 이 비율만큼 줄지 않으면 원본을 유지한다.
+ *
+ * 왜: (1) 이미 최적화된 파일에 세대 손실(generation loss)만 주는 것을 막고,
+ * (2) 백필 재실행 시 전건 skip 되어 멱등성이 성립한다.
+ * "치수·용량이 규격 안에 든다"로 판정하면 q85~90 으로 저장된 과품질 파일이 그대로 남는다 —
+ * 커버 백필에서 실제로 432KB 파일이 스킵돼 카카오톡 상한 코앞에 방치됐다.
+ */
+export const REENCODE_MIN_GAIN = 0.15;
+
+/**
+ * 커버 전용 리사이즈 목표 긴 변(px). 본문(MAX_IMAGE_EDGE_PX)과 별개다.
  *
  * 왜 1440: featured 카드가 wide(1440) 뷰포트에서 50vw ≈ 720px CSS 로 그려진다 → DPR 2 에서 필요한 실제 픽셀이 1440.
  * 1920 이상으로 올리면 표시 시 다시 축소되므로 같은 용량을 화질이 아니라 낭비에 쓴다(실측 RMSE 5.37 → 6.30 악화).
@@ -56,12 +84,13 @@ export const COVER_JPEG_QUALITY = 75;
 export const COVER_TARGET_BYTES = 450 * 1024;
 
 /**
- * 커버 품질 하강 사다리. `COVER_TARGET_BYTES` 를 넘을 때만 다음 단계로 내려간다.
+ * JPEG 품질 하강 사다리. 결과가 목표 상한을 넘을 때만 다음 단계로 내려간다.
+ * 커버(`COVER_TARGET_BYTES`)와 본문(`MAX_IMAGE_BYTES`)이 상한만 다르고 사다리는 공유한다.
  * 클라 리사이즈(canvas)와 백필 스크립트(sharp)가 같은 정책을 쓰도록 여기서 단일 정의한다 —
  * canvas `toBlob` 은 0~1 이라 /100 해서 넘긴다.
- * 36장 실측 최대가 329KB 라 통상 첫 단계에서 끝난다.
+ * 실측상 통상 첫 단계에서 끝난다 (커버 최대 329KB, 본문 1810px q75 최대 495KB).
  */
-export const COVER_QUALITY_LADDER = [COVER_JPEG_QUALITY, 68, 60] as const;
+export const JPEG_QUALITY_LADDER = [COVER_JPEG_QUALITY, 68, 60] as const;
 
 /** 드롭존 1회 업로드 장수 — simple-editor 의 ImageUploadNode limit 과 에러 문구가 공유 */
 export const MAX_IMAGES_PER_UPLOAD = 3;

@@ -1,35 +1,26 @@
-// 업로드 전 클라이언트 이미지 리사이즈 — 원본 사진을 저장 상한(5MB) 아래로 줄인다 (ADR-046)
+// 업로드 전 클라이언트 이미지 정규화 — 표시에 필요한 픽셀로 줄이고 JPEG 로 재인코딩한다 (ADR-046 → ADR-051)
+// 저장본이 곧 전송본이다(next/image 런타임 최적화 이탈, ADR-051) → 여기서 안 줄이면 그대로 사용자가 받는다.
 // 브라우저 전용(createImageBitmap·canvas·document) — Server Component / Server Action 에서 import 금지.
 import {
   COVER_MAX_EDGE_PX,
-  COVER_QUALITY_LADDER,
   COVER_TARGET_BYTES,
+  JPEG_QUALITY_LADDER,
   MAX_IMAGE_BYTES,
   MAX_IMAGE_EDGE_PX,
+  REENCODE_MIN_GAIN,
+  TRANSPARENT_SKIP_RATIO,
   fitWithinMaxEdge,
   isAllowedImageMime,
 } from "./image-policy";
 
-// 손실 포맷(JPEG/WEBP)용 — 치수는 최대로 두고 품질을 낮춰가며 5MB 아래를 노린다.
-const QUALITY_LADDER = [0.85, 0.72, 0.6] as const;
-
-// 무손실 포맷(PNG)용 — quality 인자가 무시되므로 줄일 수단이 치수뿐이다. 긴 변을 단계적으로 낮춘다.
-// 사진형 PNG 는 2560px 에서 ~12MB 라 축소가 불가피하다(실측). 도형·스크린샷 PNG 는 첫 단계에서 통과.
-const EDGE_LADDER = [MAX_IMAGE_EDGE_PX, 2048, 1600, 1280] as const;
-
 const MB = 1024 * 1024;
 
-function isLossy(mime: string): boolean {
-  return mime === "image/jpeg" || mime === "image/webp";
-}
+// 투명도 판정용 축소 canvas 한 변. 원본 그대로 getImageData 하면 4000×3000 에서 48MB 배열이 나온다.
+// 축소는 알파를 평균내므로 로고형(70%+ 투명)과 사진형(0%)의 구분에는 충분하다.
+const ALPHA_PROBE_EDGE = 200;
 
-function extFor(mime: string): string {
-  return mime === "image/png" ? "png" : mime === "image/jpeg" ? "jpg" : "webp";
-}
-
-// 재인코딩해도 확장자는 원본을 따른다. 다만 toBlob 이 형식을 갈아치우는 경우(아래)엔 결과 형식에 맞춰야 한다 —
-// object key 가 filename 확장자에서 파생되므로(upload.ts extFromFilenameOrMime) 안 그러면
-// .jpg 키에 image/webp 를 얹은 불일치가 생긴다.
+// object key 가 filename 확장자에서 파생되므로(upload.ts extFromFilenameOrMime)
+// 재인코딩으로 형식이 바뀌면 확장자도 맞춰야 한다 — 안 그러면 .png 키에 image/jpeg 를 얹은 불일치가 생긴다.
 function renameWithExt(filename: string, ext: string): string {
   const base = filename.replace(/\.[^/.]+$/, "") || "image";
   return `${base}.${ext}`;
@@ -76,12 +67,40 @@ function encode(
 }
 
 /**
- * 업로드용 파일을 준비한다. 이미 충분히 작으면 원본을 그대로 돌려주고, 크면 축소·재인코딩한다.
- * 목적은 운영자가 사진 용량을 신경 쓰지 않게 하는 것 — 현장 사진 원본은 보통 5~15MB 라 그대로는 항상 거부된다.
+ * 투명 픽셀 비율(0~1). 축소본으로 판정한다 — 원본 그대로 `getImageData` 하면 배열이 수십 MB 다.
+ * 알파 채널이 없는 형식(JPEG)은 0 을 반환한다.
+ */
+function measureTransparentRatio(bitmap: ImageBitmap): number {
+  const target = fitWithinMaxEdge(
+    bitmap.width,
+    bitmap.height,
+    ALPHA_PROBE_EDGE,
+  );
+  const canvas = document.createElement("canvas");
+  canvas.width = target.width;
+  canvas.height = target.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return 0;
+  // 배경을 칠하지 않는다 — canvas 는 투명으로 초기화되므로 원본 알파가 그대로 남는다
+  ctx.drawImage(bitmap, 0, 0, target.width, target.height);
+  const { data } = ctx.getImageData(0, 0, target.width, target.height);
+  let transparent = 0;
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] < 250) transparent++;
+  }
+  return transparent / (data.length / 4);
+}
+
+/**
+ * 본문 인라인 이미지 업로드용 파일을 준비한다.
  *
- * **원본 형식을 유지한다** (JPG→JPG, PNG→PNG, WEBP→WEBP). webp 로 통일하면 더 작아지지만(실측 0.55 vs 0.81MB),
- * 커버 이미지는 소식 상세의 OG 썸네일로 그대로 나가므로(news/[id]/page.tsx) 파일 크기에 따라 OG 형식이
- * 조용히 바뀌는 결합이 생긴다 — 카카오톡 등 스크래퍼의 webp 지원은 보장되지 않는다. 0.26MB 이득과 바꿀 값이 아니다.
+ * 본문은 공개 페이지에서 raw `<img>` 로 나가 **저장 크기 = 전송 크기**다. 그래서 커버와 마찬가지로
+ * 크기와 무관하게 항상 재인코딩한다 — 예전에는 `file.size <= 5MB` 면 손대지 않았고, 그 게이트 때문에
+ * 프로덕션 본문 이미지 151개가 평균 763KB(최대 3,442KB)까지 쌓였다(2026-08-08 실측, 합계 110.8MB).
+ *
+ * 두 가지 경우에는 원본을 그대로 쓴다:
+ * 1. **투명 픽셀 10% 이상** — JPEG 는 알파가 없어 흰 박스가 된다 (`TRANSPARENT_SKIP_RATIO` 주석 참조)
+ * 2. **재인코딩 이득 15% 미만** — 이미 최적인 파일에 세대 손실만 주지 않는다
  */
 export async function prepareImageForUpload(file: File): Promise<File> {
   // 허용 형식이 아니면 손대지 않는다 — 형식 거부는 서버가 한국어로 판정한다(판정 중복 회피)
@@ -95,24 +114,16 @@ export async function prepareImageForUpload(file: File): Promise<File> {
   }
 
   try {
-    const withinEdge =
-      Math.max(bitmap.width, bitmap.height) <= MAX_IMAGE_EDGE_PX;
-    // 용량·치수가 모두 상한 이하면 원본 그대로 — 불필요한 재인코딩은 화질만 깎는다
-    if (file.size <= MAX_IMAGE_BYTES && withinEdge) return file;
+    if (measureTransparentRatio(bitmap) >= TRANSPARENT_SKIP_RATIO) return file;
 
-    const mime = file.type;
-    // 손실 포맷은 품질을, 무손실 포맷은 치수를 낮춰간다 — 시도 목록으로 펼쳐 한 루프로 처리
-    const attempts = isLossy(mime)
-      ? QUALITY_LADDER.map((quality) => ({ edge: MAX_IMAGE_EDGE_PX, quality }))
-      : EDGE_LADDER.map((edge) => ({ edge, quality: undefined }));
-
-    for (const { edge, quality } of attempts) {
-      const blob = await encode(drawToCanvas(bitmap, edge), mime, quality);
-      if (blob.size <= MAX_IMAGE_BYTES) {
-        // toBlob 은 요청 형식 미지원 시 spec 상 image/png 로 조용히 폴백한다 → 결과 blob.type 을 신뢰
-        const outMime = isAllowedImageMime(blob.type) ? blob.type : mime;
-        return new File([blob], renameWithExt(file.name, extFor(outMime)), {
-          type: outMime,
+    const canvas = drawToCanvas(bitmap, MAX_IMAGE_EDGE_PX, "#ffffff");
+    const lastQuality = JPEG_QUALITY_LADDER[JPEG_QUALITY_LADDER.length - 1];
+    for (const quality of JPEG_QUALITY_LADDER) {
+      const blob = await encode(canvas, "image/jpeg", quality / 100);
+      if (blob.size <= MAX_IMAGE_BYTES || quality === lastQuality) {
+        if (blob.size > file.size * (1 - REENCODE_MIN_GAIN)) return file;
+        return new File([blob], renameWithExt(file.name, "jpg"), {
+          type: "image/jpeg",
         });
       }
     }
@@ -125,18 +136,14 @@ export async function prepareImageForUpload(file: File): Promise<File> {
 }
 
 /**
- * 커버 업로드용 파일을 준비한다. 본문용 `prepareImageForUpload` 와 세 가지가 다르다.
+ * 커버 업로드용 파일을 준비한다. 본문용 `prepareImageForUpload` 와 두 가지가 다르다.
  *
- * 1. **크기와 무관하게 항상 재인코딩한다.** 본문용은 5MB 이하면 원본을 그대로 통과시키는데,
- *    그 게이트 때문에 1.8MB PNG 커버가 손대지 않은 채 올라가 라이브 평균이 1,161KB(최대 4,133KB)까지 갔다.
- * 2. **긴 변 1440px** (본문은 2560px). featured 카드가 wide 에서 50vw ≈ 720px CSS 로 그려져
- *    DPR 2 기준 필요 픽셀이 1440 이다. 그 이상은 표시 시 다시 축소돼 용량만 쓴다.
- * 3. **JPEG 고정 + 흰 배경 합성.** 커버는 news/[id]/page.tsx 에서 og:image 로 직행하는데
- *    카카오톡 스크래퍼의 WebP 지원이 보장되지 않는다(ADR-046). 카카오톡 og:image 500KB 상한도 있어
- *    `COVER_TARGET_BYTES` 초과 시 품질을 낮춘다.
- *
- * 본문 이미지는 상세 본문 폭이 넓고 포맷도 다양해 2560px·원본 포맷 유지가 여전히 타당하므로
- * `prepareImageForUpload` 는 그대로 둔다.
+ * 1. **긴 변 1440px** (본문은 1810px). featured 카드가 wide 에서 50vw ≈ 720px CSS 로 그려져
+ *    DPR 2 기준 필요 픽셀이 1440 이다. 본문은 컨테이너가 905px 이라 1810 이 필요하다.
+ * 2. **투명도 스킵이 없고 상한이 `COVER_TARGET_BYTES`(450KB)다.** 커버는 news/[id]/page.tsx 에서
+ *    og:image 로 직행하는데 카카오톡이 500KB 초과 시 이미지 없는 카드로 렌더한다 —
+ *    투명 로고를 커버로 쓰는 경우가 없으므로 예외 없이 JPEG 로 통일한다.
+ *    WebP 를 안 쓰는 이유는 카카오톡 스크래퍼의 WebP 지원이 보장되지 않아서다(ADR-046).
  */
 export async function prepareCoverForUpload(file: File): Promise<File> {
   // 허용 형식이 아니면 손대지 않는다 — 형식 거부는 서버가 한국어로 판정한다(판정 중복 회피)
@@ -151,8 +158,8 @@ export async function prepareCoverForUpload(file: File): Promise<File> {
 
   try {
     const canvas = drawToCanvas(bitmap, COVER_MAX_EDGE_PX, "#ffffff");
-    const lastQuality = COVER_QUALITY_LADDER[COVER_QUALITY_LADDER.length - 1];
-    for (const quality of COVER_QUALITY_LADDER) {
+    const lastQuality = JPEG_QUALITY_LADDER[JPEG_QUALITY_LADDER.length - 1];
+    for (const quality of JPEG_QUALITY_LADDER) {
       const blob = await encode(canvas, "image/jpeg", quality / 100);
       // 마지막 단계는 상한을 넘어도 반환한다 — 업로드를 막는 것보다 조금 큰 커버가 낫다.
       // 저장 상한(MAX_IMAGE_BYTES 5MB)은 서버 presign 이 최종 판정한다.
