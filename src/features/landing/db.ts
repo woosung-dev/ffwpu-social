@@ -8,8 +8,14 @@ import { categories, kpiMetrics, news } from "@/db/schema";
 
 const RICE_SHARING_SLUG = "rice_sharing";
 
+// news/db.ts 의 동명 헬퍼와 동일 기준 — 발행됨 + 숨김 아님 (is_hidden, ADR-053).
+// 슬롯에 pin 된 글을 숨기면 랜딩에서도 자동으로 빠진다 (슬롯 자체는 유지)
 function publicPublishedWhere() {
-  return and(isNotNull(news.publishedAt), lte(news.publishedAt, sql`now()`));
+  return and(
+    isNotNull(news.publishedAt),
+    lte(news.publishedAt, sql`now()`),
+    eq(news.isHidden, false),
+  );
 }
 
 // 활성 impact KPI — KpiSection "숫자로 보는 참사랑 실천" (4행). section='impact' 필수 — 없으면 story 3행이 섞여 7개로 깨짐

@@ -36,9 +36,10 @@ export const ADMIN_COPY = {
   dashboard: {
     title: "대시보드",
     description: "사이트 현황을 한눈에 보고, 자주 쓰는 작업으로 바로 이동합니다.",
-    statusPublished: "발행된 글",
+    statusPublished: "공개 중인 글",
     statusDraft: "임시 저장",
     statusScheduled: "예약 발행 대기",
+    statusHidden: "비공개로 내린 글",
     quickTitle: "빠른 작업",
     quickNew: "새 글 작성",
     quickNewSub: "소식 글을 새로 씁니다",
@@ -187,9 +188,11 @@ export const ADMIN_COPY = {
     description:
       "소식 페이지 상단 대표 슬라이드와 글 목록·작성·수정·발행을 탭으로 관리합니다.",
     statusHelp:
-      "임시 저장은 나만 보는 초안, 예약은 정한 시각에 자동 발행, 발행은 지금 사용자에게 보이는 상태예요.",
+      "임시 저장은 나만 보는 초안, 예약은 정한 시각에 자동 발행, 공개는 지금 사용자에게 보이는 상태, 비공개는 발행했지만 잠시 내려둔 상태예요.",
     statsHelp:
       "각 글이 받은 조회·공감 클릭·공유 클릭 누적 수예요(분석 집계 시작 이후 기준). 아이콘 순서: 조회·공감·공유.",
+    visibilityHelp:
+      "눈 아이콘을 누르면 사용자 사이트에서 바로 숨기거나 다시 보이게 할 수 있어요. 발행일과 메인 노출 자리는 그대로 유지되니, 다시 공개하면 원래 순서로 돌아옵니다.",
     tagsHelp: "쉼표로 구분해 여러 개 넣을 수 있어요. 검색과 관련 글 추천에 쓰여요.",
   },
 } as const;

@@ -9,6 +9,7 @@ export {
   updateNewsAction,
   deleteNewsAction,
   publishNewsAction,
+  setNewsHiddenAction,
   searchTagsAction,
   uploadImageAction,
   setHeroOrderAction,

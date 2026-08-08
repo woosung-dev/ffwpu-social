@@ -72,6 +72,7 @@ async function EditNewsData({
         coverImageWidth: news.coverImageWidth,
         coverImageHeight: news.coverImageHeight,
         publishedAt: news.publishedAt,
+        isHidden: news.isHidden,
         tags: news.tags,
       }}
     />
