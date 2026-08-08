@@ -66,3 +66,6 @@ verify-*.png
 
 # agy/codex CLI 작업 캐시 (cwd 생성)
 cache/
+
+# 백필 body 백업 (되돌리기용, 로컬 보관)
+backup/
