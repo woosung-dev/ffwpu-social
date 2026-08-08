@@ -34,7 +34,7 @@ import sharp from "sharp";
 import {
   COVER_JPEG_QUALITY,
   COVER_MAX_EDGE_PX,
-  COVER_QUALITY_LADDER,
+  JPEG_QUALITY_LADDER,
   COVER_TARGET_BYTES,
 } from "../features/storage/image-policy";
 
@@ -103,8 +103,8 @@ async function normalize(input: Buffer): Promise<Normalized> {
         : { height: COVER_MAX_EDGE_PX }
       : {};
 
-  const lastQuality = COVER_QUALITY_LADDER[COVER_QUALITY_LADDER.length - 1];
-  for (const quality of COVER_QUALITY_LADDER) {
+  const lastQuality = JPEG_QUALITY_LADDER[JPEG_QUALITY_LADDER.length - 1];
+  for (const quality of JPEG_QUALITY_LADDER) {
     const pipeline = sharp(input)
       .resize({ ...resizeOpts, withoutEnlargement: true })
       .flatten({ background: "#ffffff" })
