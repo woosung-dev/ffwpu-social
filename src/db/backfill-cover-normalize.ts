@@ -17,7 +17,12 @@
 //   pnpm tsx src/db/backfill-cover-normalize.ts                    # dry-run (기본, 쓰기 없음)
 //   pnpm tsx src/db/backfill-cover-normalize.ts --apply --limit 1  # 1건만 실제 적용
 //   pnpm tsx src/db/backfill-cover-normalize.ts --apply
-//   pnpm tsx src/db/backfill-cover-normalize.ts --env .env.prod.local --apply   # 프로덕션 대상
+//   pnpm tsx src/db/backfill-cover-normalize.ts --env .env.prod --apply         # 프로덕션 대상
+//
+// ⚠️ 프로덕션 자격증명은 Vercel 에서 못 가져온다 — 환경변수가 전부 Sensitive 타입이라
+//    `vercel env pull` 이 키 이름만 주고 값은 빈 문자열로 내려온다(Vercel 설계).
+//    값은 원천에서 받는다: DATABASE_URL → Neon 대시보드 / S3_ENDPOINT·버킷 → Cloudflare R2 /
+//    R2 API 토큰은 생성 시 1회만 표시되므로 사본이 없으면 새로 발급(기존 토큰은 살아 있어 배포 무영향).
 //
 // dotenv 를 다른 모듈보다 먼저 실행해야 하므로 db/schema·lib/s3 는 dynamic import (seed.ts·backfill-cover-dims.ts 패턴)
 import { randomUUID } from "node:crypto";
