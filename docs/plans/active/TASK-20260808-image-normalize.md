@@ -48,22 +48,53 @@ Vercel 이미지 변환 한도(5,000/월) 초과로 **커버 36장 중 15장이 
 
 ## 채택안
 
-**업로드 시 JPEG q82 / 긴 변 1200px 정규화 + `images.unoptimized: true`**
+**업로드 시 JPEG q75 / 긴 변 1440px 정규화 + `images.unoptimized: true` + 원본 별도 보관**
 
 ### 왜 WebP 가 아닌 JPEG 인가
 
-ADR-046 이 WebP 통일을 의도적으로 거부했다 — 커버가 OG 썸네일로 직행하는데 카카오톡 스크래퍼의 WebP 지원이 보장되지 않는다. 이 결정은 유효하다.
+ADR-046 이 WebP 통일을 의도적으로 거부했다 — 커버가 OG 썸네일로 직행하는데 카카오톡 스크래퍼의 WebP 지원이 보장되지 않는다. 이 결정은 유효하다. 측정상 **포맷보다 치수·품질이 지배적**이라 JPEG 를 써도 손해가 없다.
 
-측정 결과 **포맷보다 치수가 지배적**이라 JPEG 를 써도 손해가 없다:
+### 왜 1440px q75 인가 — 업계 조사 + 자체 실측
 
-| 설정 | 평균 | 최대 | 500KB 초과 |
-|---|---|---|---|
-| 원본 그대로 (현재) | 1,161 KB | 4,133 KB | 🔴 24장 |
-| JPEG q82 1600px | 189 KB | 509 KB | 🔴 1장 |
-| **JPEG q82 1200px** | **138 KB** | **283 KB** | ✅ **0장** |
-| WebP q80 1600px | 168 KB | 589 KB | (OG 비호환) |
+업계 기본값은 82 가 아니라 **75 근방**이고, 이미지가 본업인 서비스는 더 낮다:
 
-1200px 확정 이유: 카카오톡 상한 안전 마진 44%, `og:image` 선언값(1200×630)과 정합, 표시 최대폭(featured ≈720px) 대비 충분.
+| 서비스 | 기본 quality | 출처 |
+|---|---|---|
+| imgix | **75** (`auto=compress` 시 **45**) | 공식 문서 |
+| Unsplash | **60** | 라이브 `srcset` 실측 |
+| Next.js | **75** | 프레임워크 기본값 |
+| WordPress | 82 | WP 4.5(2016), **고정 폭 파생본 전제** |
+
+WordPress 의 82 는 `표시 폭 = 파일 폭` 인 구조에서 나온 값이라 우리처럼 표시보다 크거나 작은 폭을 주는 구조에는 맞지 않는다.
+
+**Compressive Images 원리**(Daan Jobsis 2012 / Filament Group 검증) — *"JPEG 크기는 치수보다 압축률이 더 지배한다. 표시보다 크게 뽑고 강하게 압축한 쪽이 더 작으면서 더 선명할 수 있다."* 원문 실측: 400×300 q90 = 95KB vs 1024×768 q0 = 44KB.
+
+**커버 36장으로 검증** (표시 1440px 기준, RMSE 낮을수록 원본에 가까움):
+
+| 폭 | q | 평균 | 최대 | 500KB 초과 | RMSE |
+|---|---|---|---|---|---|
+| 원본 그대로 (현재) | — | 1,161 KB | 4,133 KB | 🔴 24장 | — |
+| 1200 | 82 | 138 KB | 283 KB | ✅ 0장 | 9.97 |
+| 1200 | 75 | 111 KB | 226 KB | ✅ 0장 | **10.20** |
+| **1440** | **75** | **136 KB** | **329 KB** | ✅ **0장** | **5.37** |
+| 1440 | 82 | 169 KB | 410 KB | ✅ 0장 | 4.56 |
+| 1600 | 60 | 111 KB | 294 KB | ✅ 0장 | 6.15 |
+| 1920 | 45 | 106 KB | 330 KB | ✅ 0장 | 6.30 |
+
+두 가지가 드러났다:
+
+1. **1200px 에는 품질의 벽이 있다** — q82(9.97)와 q75(10.20)의 왜곡이 사실상 같다. 1440 표시로 업스케일하는 손실이 지배적이라 품질을 올려도 개선되지 않는다. **1200px 에 q82 를 쓰는 것은 27KB(20%)를 버리는 것.**
+2. **1440 q75(136KB/RMSE 5.37)가 1200 q82(138KB/RMSE 9.97)를 이긴다** — 더 작으면서 왜곡 46% 감소. 1920 이상은 표시가 1440 이라 다시 나빠진다(6.30).
+
+→ **1440px q75 확정.** featured 카드가 wide(1440)에서 50vw ≈ 720px CSS → DPR 2 에서 정확히 1440px 이 필요하다.
+
+> `[확인 필요]` RMSE 는 거친 지각 근사치다. SSIM/Butteraugli 가 정확하지만 9.97 대 5.37 격차는 방향을 뒤집을 수준이 아니다.
+
+### 왜 원본을 보관하는가
+
+조사 결과 **주요 플랫폼에 예외가 없다** — Cloudinary·imgix·Shopify 는 원본 영구 보관 + 파생본 온디맨드, WordPress 는 원본 보관 + 파생본 사전 생성. 표시 스펙은 반드시 바뀌기 때문이다(디자인 개편·새 디바이스·AVIF·인쇄 요청).
+
+현재 파이프라인은 브라우저에서 2560px 로 깎아 **원본을 업로드 전에 버린다** — 업계 기준에서 이례적이다. R2 저장이 무료 10GB 의 1% 수준이라 보관하지 않을 이유가 없다.
 
 ### 왜 next/image 최적화를 버리는가
 
@@ -93,26 +124,44 @@ ADR-046 이 WebP 통일을 의도적으로 거부했다 — 커버가 OG 썸네�
 
 ### Phase 2 · 기존 36장 백필
 
-`src/db/backfill-cover-normalize.ts` (`db:backfill-cover-dims` 선례)
+`src/db/backfill-cover-normalize.ts` (`db:backfill-cover-dims` 선례) · `pnpm db:backfill-cover-normalize`
 
 ```
 news.cover_image_url + popups.image_url 전수 조회
 → R2 GET
-→ sharp: resize(1200, withoutEnlargement) → flatten(#fff) → jpeg(q82, mozjpeg) → EXIF strip
+→ 원본을 <dir>/original/<파일명> 으로 복사 (이미 있으면 보존)
+→ sharp: resize(1440, withoutEnlargement) → flatten(#fff) → jpeg(q75, mozjpeg) → 메타데이터 제거
 → 새 키 PUT: news/<id>/<새 uuid>.jpg
-→ DB URL 갱신 (트랜잭션)
+→ DB URL + 치수 갱신
 ```
 
 | 결정 | 이유 |
 |---|---|
-| 덮어쓰기 ❌, **새 키** | CDN·카카오톡 캐시 무효화 불필요. 롤백은 DB URL 만 되돌림. ADR-049 주석의 "키 고정 → stale" 회피 |
-| 기존 객체 **보존** | 롤백 안전망 + 아카이브. v1.1 orphan cleanup 대상에서 **제외** 필요 |
-| **EXIF strip** | 현장 사진에 GPS·촬영기기 잔존. ADR-004 개인정보 보호 |
-| `--dry-run` 기본 | 실제 쓰기는 `--apply` 명시. 멱등성(이미 jpg + ≤1200 + ≤400KB 면 skip) |
+| 덮어쓰기 ❌, **새 키** | CDN·카카오톡 스크래퍼 캐시 무효화 불필요. 롤백은 DB URL 만 되돌림. ADR-049 주석의 "키 고정 → stale" 회피 |
+| **원본 `original/` 보관** | 업계 예외 없는 관행. 표시 스펙은 반드시 바뀐다 |
+| 기존 객체 **미삭제** | 롤백 안전망. v1.1 orphan cleanup 대상에서 **제외** 필요 |
+| **메타데이터 제거** | 현장 사진에 GPS·촬영기기 EXIF 잔존. ADR-004 개인정보 보호 |
+| **치수도 갱신** | `cover_image_width/height` 를 안 바꾸면 마조네리·CLS 계산이 옛 비율로 어긋난다 |
+| `--dry-run` 기본 | 실제 쓰기는 `--apply` 명시. 멱등성(이미 jpeg + ≤1440px + ≤450KB 면 skip) |
+| 품질 사다리 75→68→60 | `COVER_TARGET_BYTES`(450KB) 초과 시에만 하강. 실측 최대 329KB 라 통상 1회 |
+
+**프로덕션 적용 완료 (2026-08-08)** — 36건 · **41,474 KB → 4,792 KB (-88%)**, 평균 1,185 → 137 KB, 최대 328 KB.
+
+검증:
+- 멱등성 재실행 → 처리 0 / 스킵 36 ✅
+- 라이브 커버 36건 전수 200 응답 ✅
+- 카카오톡 500KB 초과 **0건** (최대 328KB, 마진 34%) ✅
+- 원본 `original/` 보존 및 공개 접근 확인 ✅
+
+> 멱등성 판정을 "규격 안에 든다"에서 **"재인코딩해도 이득이 없다(≥85%)"** 로 바꿨다. 초기 판정으로는 `jpeg 1440×1081 432KB` 같은 과품질 파일(q85~90 저장)이 규격 통과로 스킵돼 카카오톡 상한 코앞에 방치됐다. 바꾼 뒤 36건 전부 처리됐고, 2회차는 전건 스킵된다.
+>
+> `.env.prod.local` 은 Vercel 환경변수가 전부 `Sensitive`(non-readable) 라 `vercel env pull` 로 채울 수 없어 원천 대시보드(Neon·Cloudflare) 값으로 수동 작성했다. 백필 종료 후 삭제 대상.
 
 ### Phase 3 · 업로드 파이프라인 (재발 방지)
 
-- `image-policy.ts`: `COVER_MAX_EDGE_PX = 1200`, `COVER_JPEG_QUALITY = 0.82` 추가
+**루트 코즈**: `image-resize.ts:91` 이 `file.size <= 5MB && withinEdge` 면 **아무 처리도 하지 않는다.** 1.8MB PNG 가 그대로 올라간 이유.
+
+- `image-policy.ts`: `COVER_MAX_EDGE_PX = 1440` · `COVER_JPEG_QUALITY = 75` · `COVER_TARGET_BYTES = 450KB` 추가 ✅ 완료
 - `image-resize.ts`: `prepareCoverForUpload()` 신규 — 크기 무관 **항상 재인코딩**, JPEG 강제, 흰 배경 flatten
 - `CoverImageUploader.tsx`: 호출 함수만 교체
 - 기존 `prepareImageForUpload()` 는 **본문 이미지용으로 무수정 유지** (본문은 2560px·원본 포맷이 여전히 타당)
@@ -145,14 +194,11 @@ news.cover_image_url + popups.image_url 전수 조회
 | Fast Data Transfer 증가 | 6.2 → 약 10 GB / 100 GB |
 | 되돌리고 싶어짐 | `unoptimized: false` 1줄. 정규화본은 next/image 입력으로도 더 좋음 (변환 입력 1.16MB → 138KB) |
 
-## 미결 — 사회공헌국 확인 필요
+## 미결
 
-**활동 사진 원본을 따로 보관하고 있는가?**
+**프로덕션 백필 실행에 필요한 자격증명** — Neon `DATABASE_URL` + R2 `S3_*` + `NEXT_PUBLIC_S3_PUBLIC_URL`. `.vercel` 링크가 없어 `vercel env pull` 이 바로 되지 않는다. `vercel link` 후 pull 하거나 `.env.prod.local` 을 수동 작성한다(gitignore `.env*` 로 커밋 위험 없음).
 
-- 보관 중 → A안: 신규 업로드는 정규화본 1벌만
-- 미보관 → B안: `news/<id>/original/<uuid>.jpg` 로 2560px 보관본 병행 (R2 무료 10GB 의 1.2% 수준이라 저장 비용은 사실상 0. 실제 비용은 업로드 +2~3초 · 부분 실패 처리)
-
-Phase 1·2 는 이 결정과 무관하게 진행 가능. Phase 3 전까지 확정 필요.
+**신규 업로드도 원본을 보관할 것인가** — 백필(Phase 2)은 기존 원본을 `original/` 로 보관하도록 확정했다. Phase 3 에서 신규 업로드도 같게 하려면 브라우저가 2벌(원본 2560px + 표시본 1440px)을 올려야 해 업로드 +2~3초 · presign 2회 · 부분 실패 처리가 붙는다. 업계 관행은 보관이지만, 사회공헌국이 촬영 원본을 자체 보관 중이면 불필요하다.
 
 ---
 
@@ -160,7 +206,7 @@ Phase 1·2 는 이 결정과 무관하게 진행 가능. Phase 3 전까지 확�
 
 - **문제**: Vercel 이미지 변환 5,000/월 초과 → 커버 36장 중 **15장(42%) 402**. 추가로 24장(67%)이 카카오톡 og:image 500KB 상한 초과.
 - **원인**: `minimumCacheTTL` 4시간 기본값(기여도 95%) + 업로드 정규화 부재(`image-resize.ts:91` 이 5MB 이하를 무처리 통과) + 원본 초과 width srcset 발행.
-- **채택안**: 업로드 시 **JPEG q82 / 긴 변 1200px** 정규화 + `images.unoptimized: true`. WebP 는 ADR-046(카카오톡 스크래퍼 호환)에 따라 제외 — 측정상 1200px JPEG(138KB)가 1600px WebP(168KB)보다 작아 손해 없음.
+- **채택안**: 업로드 시 **JPEG q75 / 긴 변 1440px** 정규화 + `images.unoptimized: true` + 원본 `original/` 보관. WebP 는 ADR-046(카카오톡 스크래퍼 호환)에 따라 제외. 1440 q75(136KB/RMSE 5.37)가 1200 q82(138KB/RMSE 9.97)보다 **작으면서 46% 선명** — 표시보다 작은 폭은 업스케일 손실이 지배해 품질을 올려도 개선되지 않는다(compressive images). imgix·Next.js 기본값도 75.
 - **파일**: `next.config.ts` · `src/db/backfill-cover-normalize.ts`(신규) · `src/features/storage/image-policy.ts` · `src/features/storage/image-resize.ts` · `src/admin/components/CoverImageUploader.tsx`
 - **검증**: `pnpm tsc && pnpm lint && pnpm test` · 빌드 HTML 에 `_next/image` 0건 · 배포 후 커버 36장 전수 200 · 카카오톡 공유 썸네일 실측 · 4-BP 육안
 - **폴백**: `unoptimized: false` 1줄 복귀. 백필은 새 키에 쓰고 기존 객체를 보존하므로 DB URL 롤백만으로 원복.
