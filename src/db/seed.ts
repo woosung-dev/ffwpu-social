@@ -414,7 +414,7 @@ const noticeSamples: SeedNotice[] = [
 async function seed() {
   console.log("[seed] truncating existing rows...");
   await db.execute(
-    sql`TRUNCATE TABLE news_tags, heart_events, audit_logs, news, notice_attachments, notices, categories, users, kpi_metrics RESTART IDENTITY CASCADE`,
+    sql`TRUNCATE TABLE news_tags, heart_events, audit_logs, news, notice_attachments, notices, categories, users, kpi_metrics, site_settings RESTART IDENTITY CASCADE`,
   );
 
   console.log("[seed] inserting KPI metrics (디자이너 더미 — 사회공헌국 정확값 수령 후 어드민에서 교체)...");
@@ -491,9 +491,16 @@ async function seed() {
       { name: "지역 봉사", slug: "local_volunteer", sortOrder: 2 },
       { name: "환경 캠페인", slug: "environment", sortOrder: 3 },
       { name: "쌀 나눔", slug: "rice_sharing", sortOrder: 4 },
+      // 언론 속 사회공헌 (ADR-056) — 별도 게시판. slug unique 가 (board, slug) 복합이라
+      // 활동 스토리와 같은 slug 를 각자 쓸 수 있다(여기서도 rice_sharing 을 중복 사용해 제약을 실증)
+      { name: "쌀 나눔", slug: "rice_sharing", board: "press" as const, sortOrder: 1 },
+      { name: "지역 봉사", slug: "local_volunteer", board: "press" as const, sortOrder: 2 },
     ])
     .returning();
-  const categoryIdBySlug = new Map(categoryRows.map((c) => [c.slug, c.id]));
+  // 활동 스토리 카테고리만 매핑 — 아래 샘플 글은 전부 story 게시판이라 press 행이 섞이면 안 된다
+  const categoryIdBySlug = new Map(
+    categoryRows.filter((c) => c.board === "story").map((c) => [c.slug, c.id]),
+  );
 
   console.log("[seed] inserting super admin...");
   const passwordHash = await bcrypt.hash(adminPassword!, 10);

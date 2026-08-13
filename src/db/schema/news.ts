@@ -3,6 +3,8 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -20,6 +22,9 @@ export const news = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     title: text("title").notNull(),
     body: jsonb("body").notNull(), // Tiptap JSON document
+    // 소속 게시판 (ADR-056) — 'story' = 활동 스토리(/news) / 'press' = 언론 속 사회공헌(/press).
+    // 기존 글은 전부 story. 조회는 newsRepo(board) 스코프를 거쳐 필터 누락을 구조적으로 막는다
+    board: text("board", { enum: ["story", "press"] }).notNull().default("story"),
     categoryId: uuid("category_id")
       .references(() => categories.id, { onDelete: "restrict" })
       .notNull(),
@@ -53,6 +58,14 @@ export const news = pgTable(
     uniqueIndex("news_hero_rank_uniq")
       .on(table.heroRank)
       .where(sql`${table.heroRank} IS NOT NULL`),
+    check("news_board_check", sql`${table.board} in ('story', 'press')`),
+    // 랜딩·소식 큐레이션 슬롯은 활동 스토리 전용 (ADR-056). 애플리케이션 버그가 있어도 DB 가 거부한다
+    // — 덕분에 위 partial unique 3개에 board 술어를 넣어 재작성할 필요가 없다
+    check(
+      "news_press_no_slots",
+      sql`${table.board} = 'story' OR (${table.storySlot} IS NULL AND ${table.featuredRank} IS NULL AND ${table.heroRank} IS NULL)`,
+    ),
+    index("news_board_published_idx").on(table.board, table.publishedAt),
   ],
 );
 

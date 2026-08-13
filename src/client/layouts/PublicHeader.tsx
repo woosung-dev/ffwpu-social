@@ -40,6 +40,8 @@ const MENU: readonly MenuItem[] = [
   { id: "kpi", label: "숫자로 보는 참사랑 실천", section: "kpi" },
   { id: "story", label: "밥이 사랑이다", section: "story" },
   { id: "news", label: "활동 스토리", href: "/news", section: "stories", activeOnSubpage: true },
+  // 언론 게시판 (ADR-056) — section 을 주지 않는다. SCROLL_SECTIONS 에 섞이면 랜딩 스크롤스파이가 깨진다
+  { id: "press", label: "언론 속 사회공헌", href: "/press" },
   { id: "notices", label: "공지사항", href: "/notices" },
 ] as const;
 
@@ -86,11 +88,13 @@ export function PublicHeader() {
           />
         </Link>
 
-        {/* 데스크탑(md↑, 768~): 4항목 클릭 가능 알약 — active 자동 강조(스크롤스파이).
-            item 박스고정 h33/40 — Figma Menu M/L, Tailwind 기본 lh 의 +4~7px 방지. 모바일 트리거와 BP 상호배타 */}
+        {/* 데스크탑(lg↑, 1024~): 5항목 클릭 가능 알약 — active 자동 강조(스크롤스파이).
+            item 박스고정 h33/40 — Figma Menu M/L, Tailwind 기본 lh 의 +4~7px 방지. 모바일 트리거와 BP 상호배타.
+            ADR-056 으로 메뉴가 5개가 되면서 768~1023 구간(밴드 648px)에 5항목이 안 들어간다 →
+            풀내비 진입을 md(768)→lg(1024) 로 올리고, lg 구간은 간격·타이포를 줄여 담는다(wide 에서 Figma 원형 복원) */}
         <nav
           aria-label="주요 섹션 바로가기"
-          className="hidden items-center gap-1 md:flex lg:gap-6"
+          className="hidden items-center gap-2 lg:flex wide:gap-6"
         >
           {MENU.map((m) => {
             const isActive = m.id === activeMenuId;
@@ -100,7 +104,7 @@ export function PublicHeader() {
                 href={hrefFor(m)}
                 aria-current={isActive ? "true" : undefined}
                 className={cn(
-                  "inline-flex h-[33px] items-center rounded-full px-4 text-sm transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-white/80 lg:h-10 lg:px-5 lg:text-base",
+                  "inline-flex h-[33px] items-center rounded-full px-4 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-white/80 lg:h-10 lg:px-3 wide:px-5 wide:text-base",
                   isActive
                     ? ACTIVE_PILL_CLASS
                     : "font-bold text-white hover:bg-white/10",
@@ -112,12 +116,12 @@ export function PublicHeader() {
           })}
         </nav>
 
-        {/* 모바일(<768): 현재 위치 알약(▾) → 드롭다운 항목 선택. Radix 가 Esc/바깥탭/포커스/aria-expanded 처리 */}
+        {/* 모바일·태블릿(<1024): 현재 위치 알약(▾) → 드롭다운 항목 선택. Radix 가 Esc/바깥탭/포커스/aria-expanded 처리 */}
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label={`섹션 메뉴 열기 — 현재 위치 ${activeItem.label}`}
             className={cn(
-              "flex h-[33px] items-center gap-1 rounded-full pr-3 pl-4 text-sm outline-none select-none focus-visible:ring-2 focus-visible:ring-white/80 md:hidden",
+              "flex h-[33px] items-center gap-1 rounded-full pr-3 pl-4 text-sm whitespace-nowrap outline-none select-none focus-visible:ring-2 focus-visible:ring-white/80 lg:hidden",
               ACTIVE_PILL_CLASS,
             )}
           >

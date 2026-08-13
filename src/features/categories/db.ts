@@ -1,13 +1,15 @@
 // 카테고리 Drizzle 쿼리 전담 — DAL (fullstack.md §3). slug immutable: update 시 set 객체에 slug 제외 강제 (codex P2#1 + ADR-025)
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { categories, news } from "@/db/schema";
+import type { NewsBoard } from "@/features/news/board";
 
 // 트랜잭션 핸들 타입 — reorder 등 다중 update 를 단일 트랜잭션으로 묶을 때 사용 (news/db.ts 동일 패턴)
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// 어드민 — 모든 카테고리 (비활성 포함, sortOrder 우선·이름 보조)
-export async function listAllCategoriesForAdmin() {
+// 게시판 스코프 (ADR-056) — 아래 조회·생성 함수는 board 를 첫 인자로 강제 받는다.
+// 기본값을 주지 않아 넘기지 않으면 컴파일 에러 → 언론 카테고리가 활동 스토리 화면에 새지 않는다
+export async function listAllCategoriesForAdmin(board: NewsBoard) {
   return db
     .select({
       id: categories.id,
@@ -19,39 +21,43 @@ export async function listAllCategoriesForAdmin() {
       updatedAt: categories.updatedAt,
     })
     .from(categories)
+    .where(eq(categories.board, board))
     .orderBy(asc(categories.sortOrder), asc(categories.name));
 }
 
 // 카테고리별 글 수 (운영 통계 — Dashboard·CategoryManager row 보조)
-export async function countNewsPerCategory() {
+export async function countNewsPerCategory(board: NewsBoard) {
   return db
     .select({
       categoryId: news.categoryId,
       count: sql<number>`count(*)::int`,
     })
     .from(news)
+    .where(eq(news.board, board))
     .groupBy(news.categoryId);
 }
 
-// slug 중복 체크 (create 시 사전 검증)
-export async function getCategoryBySlug(slug: string) {
+// slug 중복 체크 (create 시 사전 검증) — unique 가 (board, slug) 복합이라 board 조건 필수
+export async function getCategoryBySlug(board: NewsBoard, slug: string) {
   const [row] = await db
     .select()
     .from(categories)
-    .where(eq(categories.slug, slug))
+    .where(and(eq(categories.board, board), eq(categories.slug, slug)))
     .limit(1);
   return row ?? null;
 }
 
 // 현재 최대 sortOrder — 신규 카테고리를 맨 끝에 배치하기 위한 기준값 (없으면 0)
-export async function getMaxSortOrder() {
+export async function getMaxSortOrder(board: NewsBoard) {
   const [row] = await db
     .select({ max: sql<number>`coalesce(max(${categories.sortOrder}), 0)::int` })
-    .from(categories);
+    .from(categories)
+    .where(eq(categories.board, board));
   return row?.max ?? 0;
 }
 
 export async function insertCategory(data: {
+  board: NewsBoard;
   name: string;
   slug: string;
   sortOrder: number;

@@ -4,62 +4,66 @@ import { cache } from "react";
 import { db } from "@/db";
 import { deleteByPrefix } from "@/features/storage";
 import * as newsDb from "./db";
+import type { NewsBoard } from "./board";
 import { ANALYTICS_SORTS, DEFAULT_NEWS_SORT, type NewsSort } from "./admin-sort";
 import { slotsToClearOnTransition } from "./slot-rules";
 import type { NewsStatus } from "./publish-state";
 import type { ListNewsQuery, NewsInput } from "./schemas";
 
-export async function listNews(query: ListNewsQuery) {
+export async function listNews(board: NewsBoard, query: ListNewsQuery) {
   const [items, total] = await Promise.all([
-    newsDb.listPublicNews(query),
-    newsDb.countPublicNews({ categorySlug: query.categorySlug, q: query.q }),
+    newsDb.listPublicNews(board, query),
+    newsDb.countPublicNews(board, { categorySlug: query.categorySlug, q: query.q }),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / query.limit));
   // page 가 범위 초과(공유·북마크된 ?page=N, 검색으로 결과가 줄어든 경우)면 마지막 페이지로 재조회 —
   // 막다른 빈 화면(결과 없음 + 페이지네이션 미렌더로 탈출 불가) 방지. 결과 0건(genuine empty)은 page=1 이라 재조회 안 함
   if (items.length === 0 && query.page > totalPages) {
-    const clamped = await newsDb.listPublicNews({ ...query, page: totalPages });
+    const clamped = await newsDb.listPublicNews(board, { ...query, page: totalPages });
     return { items: clamped, total, totalPages, page: totalPages, limit: query.limit };
   }
   return { items, total, totalPages, page: query.page, limit: query.limit };
 }
 
 // cache() — 같은 요청 내 generateMetadata + 페이지 렌더가 각각 호출해도 DB 1회만 (요청 단위 dedupe)
-export const getNewsDetail = cache(async (id: string) => {
-  const item = await newsDb.getPublicNewsById(id);
+export const getNewsDetail = cache(async (board: NewsBoard, id: string) => {
+  const item = await newsDb.getPublicNewsById(board, id);
   if (!item) return null;
   const heartCount = await newsDb.countActiveHearts(id);
   return { ...item, heartCount };
 });
 
 // sitemap 용 — 발행글 전체 (id + updatedAt)
-export async function listPublishedNewsForSitemap() {
-  return newsDb.listPublishedForSitemap();
+export async function listPublishedNewsForSitemap(board: NewsBoard) {
+  return newsDb.listPublishedForSitemap(board);
 }
 
 // 활성 카테고리 목록 — CategoryTabs·어드민 폼 데이터 소스
-export async function listCategories() {
-  return newsDb.findActiveCategories();
+export async function listCategories(board: NewsBoard) {
+  return newsDb.findActiveCategories(board);
 }
 
 // 어드민 상세 — draft 포함, 수정 페이지(T10) 진입점
-export async function getAdminNewsDetail(id: string) {
-  return newsDb.getAdminNewsById(id);
+export async function getAdminNewsDetail(board: NewsBoard, id: string) {
+  return newsDb.getAdminNewsById(board, id);
 }
 
 // 어드민 목록 (T10) — 페이지네이션 + status·categorySlug 필터 + 제목·태그 검색 + 정렬(기본 발행일 최신순)
-export async function listNewsForAdmin(opts: {
-  page: number;
-  limit: number;
-  status?: NewsStatus;
-  categorySlug?: string;
-  sort?: NewsSort;
-  q?: string;
-  tag?: string;
-}) {
+export async function listNewsForAdmin(
+  board: NewsBoard,
+  opts: {
+    page: number;
+    limit: number;
+    status?: NewsStatus;
+    categorySlug?: string;
+    sort?: NewsSort;
+    q?: string;
+    tag?: string;
+  },
+) {
   const [items, total] = await Promise.all([
-    listForAdminResilient(opts),
-    newsDb.countForAdmin({
+    listForAdminResilient(board, opts),
+    newsDb.countForAdmin(board, {
       status: opts.status,
       categorySlug: opts.categorySlug,
       q: opts.q,
@@ -72,27 +76,28 @@ export async function listNewsForAdmin(opts: {
 
 // 조회·공감 정렬은 analytics_events 집계 의존 — 미마이그레이션 등으로 쿼리 실패 시 기본 정렬로 폴백(목록은 항상 렌더, 어드민 page.tsx stats degrade 와 동일 철학)
 async function listForAdminResilient(
-  opts: Parameters<typeof newsDb.listForAdmin>[0],
+  board: NewsBoard,
+  opts: Parameters<typeof newsDb.listForAdmin>[1],
 ) {
   try {
-    return await newsDb.listForAdmin(opts);
+    return await newsDb.listForAdmin(board, opts);
   } catch (error) {
     if (opts.sort && ANALYTICS_SORTS.has(opts.sort)) {
-      return newsDb.listForAdmin({ ...opts, sort: DEFAULT_NEWS_SORT });
+      return newsDb.listForAdmin(board, { ...opts, sort: DEFAULT_NEWS_SORT });
     }
     throw error;
   }
 }
 
 // 대시보드 — 글 현황 건수(발행·예약·임시저장). 글 목록은 /admin/news 로 분리 (운영자 피드백 [대시보드/글 분리])
-export async function getAdminDashboard() {
-  const statusCounts = await newsDb.countNewsByStatus();
+export async function getAdminDashboard(board: NewsBoard) {
+  const statusCounts = await newsDb.countNewsByStatus(board);
   return { statusCounts };
 }
 
 // 태그 자동완성 — TagsInput(T8) 진입점. 빈도순
-export async function searchTags(prefix: string, limit = 10) {
-  return newsDb.searchTags(prefix, limit);
+export async function searchTags(board: NewsBoard, prefix: string, limit = 10) {
+  return newsDb.searchTags(board, prefix, limit);
 }
 
 // 태그 정규화 — # 제거 + trim + lowercase + 중복 제거 + 빈 문자열 제외. service 단일 진입 (결정 로그 [T7 정규화 위치])
@@ -105,6 +110,7 @@ function normalizeTags(tags: string[]): string[] {
 
 // 글 신규 — news + news_tags 트랜잭션. id 는 client 생성 UUID (업로드 prefix 정합). actorUserId null 이면 createdBy null
 export async function createNews(
+  board: NewsBoard,
   id: string,
   input: NewsInput,
   actorUserId: string | null,
@@ -113,6 +119,7 @@ export async function createNews(
   return db.transaction(async (tx) => {
     const created = await newsDb.insertNews(tx, {
       id,
+      board,
       title: input.title,
       body: input.body,
       categoryId: input.categoryId,
@@ -264,13 +271,15 @@ export async function getHeartState(newsId: string, sessionId: string) {
 
 // 관련 글 — 같은 카테고리 우선, 부족하면 최신 글로 보충 (self 제외)
 export async function getRelatedNews(
+  board: NewsBoard,
   newsId: string,
   categoryId: string,
   limit = 3,
 ) {
-  const sameCat = await newsDb.listRelatedNews(newsId, categoryId, limit);
+  const sameCat = await newsDb.listRelatedNews(board, newsId, categoryId, limit);
   if (sameCat.length >= limit) return sameCat;
-  const recent = await newsDb.listPublicNews({
+  // 보충도 같은 게시판 안에서만 — 언론 상세에 활동 스토리가 섞이면 안 된다
+  const recent = await newsDb.listPublicNews(board, {
     page: 1,
     limit: limit + sameCat.length + 3,
   });
@@ -289,6 +298,10 @@ export async function getRelatedNews(
 }
 
 // 상세 페이지 이전/다음 글 — publishedAt 인접 (prev=더 최신 / next=더 과거)
-export async function getAdjacentNews(newsId: string, publishedAt: Date) {
-  return newsDb.findAdjacentNews(newsId, publishedAt);
+export async function getAdjacentNews(
+  board: NewsBoard,
+  newsId: string,
+  publishedAt: Date,
+) {
+  return newsDb.findAdjacentNews(board, newsId, publishedAt);
 }

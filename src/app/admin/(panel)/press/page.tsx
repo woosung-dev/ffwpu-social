@@ -1,11 +1,9 @@
-// 어드민 활동 스토리 관리 — 탭[스토리 대표글(소식 상단 슬라이드) / 스토리 관리(글 목록·CRUD)]. Server Component + Suspense (Cache Components). searchParams 는 Suspense 자식에서 await
+// 어드민 언론 보도 관리 — 글 목록·CRUD (ADR-056). 활동 스토리와 달리 대표글(hero) 탭이 없어 탭 UI 자체를 두지 않는다.
+// Server Component + Suspense (Cache Components). searchParams 는 Suspense 자식에서 await
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import {
-  listNewsForAdmin,
-  getHeroNews,
-  getHeroCandidates,
-} from "@/features/news";
+
+import { listNewsForAdmin } from "@/features/news";
 import { getNewsStatsForAdmin } from "@/features/analytics";
 import {
   NewsTable,
@@ -13,8 +11,6 @@ import {
   type NewsStatus,
   type NewsStatsMap,
 } from "@/admin/components/NewsTable";
-import { HeroOrderManager } from "@/admin/components/HeroOrderManager";
-import { StoryTabs } from "@/admin/components/StoryTabs";
 import { AdminPageHeader } from "@/admin/components/AdminPageHeader";
 import { ADMIN_COPY } from "@/admin/copy";
 import {
@@ -24,16 +20,11 @@ import {
 } from "@/features/news/admin-sort";
 
 export const metadata: Metadata = {
-  title: "활동 스토리 관리 | 사회공헌단 어드민",
+  title: "언론 보도 관리 | 사회공헌단 어드민",
   robots: { index: false, follow: false },
 };
 
 type SearchParams = Record<string, string | string[] | undefined>;
-
-function pickTab(raw: string | string[] | undefined): "manage" | "featured" {
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  return value === "featured" ? "featured" : "manage";
-}
 
 function pickStatus(raw: string | string[] | undefined): NewsStatus {
   const value = Array.isArray(raw) ? raw[0] : raw;
@@ -53,55 +44,33 @@ function pickPage(raw: string | string[] | undefined): number {
   return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 1;
 }
 
-function pickCategorySlug(
-  raw: string | string[] | undefined,
-): string | undefined {
+function pickCategorySlug(raw: string | string[] | undefined): string | undefined {
   if (typeof raw === "string" && raw.length > 0) return raw;
   return undefined;
 }
 
-export default function AdminStoryPage(props: {
+export default function AdminPressPage(props: {
   searchParams: Promise<SearchParams>;
 }) {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title={ADMIN_COPY.news.title}
-        description={ADMIN_COPY.news.description}
+        title={ADMIN_COPY.press.title}
+        description={ADMIN_COPY.press.description}
       />
-      <Suspense fallback={<div className="h-11 border-b border-border" />}>
-        <StoryTabs />
-      </Suspense>
       <Suspense fallback={<ListLoading />}>
-        <StoryTabContent searchParamsPromise={props.searchParams} />
+        <PressList searchParamsPromise={props.searchParams} />
       </Suspense>
     </div>
   );
 }
 
-async function StoryTabContent({
+async function PressList({
   searchParamsPromise,
 }: {
   searchParamsPromise: Promise<SearchParams>;
 }) {
   const searchParams = await searchParamsPromise;
-  if (pickTab(searchParams.tab) === "featured") {
-    return <FeaturedTab />;
-  }
-  return <ManageTab searchParams={searchParams} />;
-}
-
-// 스토리 대표글 탭 — /news 상단 우선 노출 글 최대 4개 드래그 정렬
-async function FeaturedTab() {
-  const [current, candidates] = await Promise.all([
-    getHeroNews(),
-    getHeroCandidates(),
-  ]);
-  return <HeroOrderManager initialItems={current} candidates={candidates} />;
-}
-
-// 스토리 관리 탭 — 글 목록·작성·수정·발행
-async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
   const page = pickPage(searchParams.page);
   const status = pickStatus(searchParams.status);
   const categorySlug = pickCategorySlug(searchParams.categorySlug);
@@ -110,7 +79,7 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
   const q = normalizeNewsSearch(searchParams.q);
   const tag = normalizeNewsSearch(searchParams.tag);
 
-  const result = await listNewsForAdmin("story", {
+  const result = await listNewsForAdmin("press", {
     page,
     limit: pageSize,
     status,
@@ -130,7 +99,7 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
     updatedAt: i.updatedAt,
   }));
 
-  // 글별 누적 통계 — analytics 미가용(예: analytics_events 미마이그레이션)이어도 목록은 정상 렌더되도록 degrade
+  // 글별 누적 통계 — analytics 미가용이어도 목록은 정상 렌더되도록 degrade (활동 스토리와 동일)
   let stats: NewsStatsMap = {};
   try {
     stats = await getNewsStatsForAdmin(rows.map((r) => r.id));
@@ -140,7 +109,7 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
 
   return (
     <NewsTable
-      board="story"
+      board="press"
       rows={rows}
       page={result.page}
       totalPages={result.totalPages}
@@ -158,7 +127,7 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
 function ListLoading() {
   return (
     <div className="space-y-4" aria-busy>
-      <div className="h-10 w-64 animate-pulse rounded-md bg-muted/60" />
+      <div className="h-11 animate-pulse rounded-md bg-muted/60" />
       <div className="h-96 animate-pulse rounded-md bg-muted/60" />
     </div>
   );

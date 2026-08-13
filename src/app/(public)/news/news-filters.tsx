@@ -13,9 +13,11 @@ import { ALL_CATEGORY_SLUG } from "@/features/news/constants";
 type Props = {
   categories: readonly CategoryTabItem[];
   selected: string;
+  /** 목록 경로 — /news 또는 /press (ADR-056) */
+  basePath: string;
 };
 
-export function NewsCategoryTabs({ categories, selected }: Props) {
+export function NewsCategoryTabs({ categories, selected, basePath }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -27,7 +29,7 @@ export function NewsCategoryTabs({ categories, selected }: Props) {
     params.delete("page"); // 카테고리 변경 시 1페이지로 리셋
     const query = params.toString();
     startTransition(() => {
-      router.push(query ? `/news?${query}` : "/news", { scroll: false });
+      router.push(query ? `${basePath}?${query}` : basePath, { scroll: false });
     });
   };
 

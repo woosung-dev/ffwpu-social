@@ -120,6 +120,27 @@
       "when": 1786193934495,
       "tag": "0016_huge_kitty_pryde",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1786603578793,
+      "tag": "0017_easy_nomad",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1786603978502,
+      "tag": "0018_peaceful_rockslide",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1786605134781,
+      "tag": "0019_flawless_starjammers",
+      "breakpoints": true
     }
   ]
 }

@@ -10,6 +10,7 @@ import {
   publishNewsAction,
   setNewsHiddenAction,
 } from "@/features/news/actions";
+import { BOARD_PATHS, type NewsBoard } from "@/features/news/board";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -65,6 +66,8 @@ export type NewsStats = {
 export type NewsStatsMap = Record<string, NewsStats>;
 
 type Props = {
+  /** 어느 게시판 목록인가 (ADR-056) — 링크 경로·액션 대상·통계 노출 여부를 결정 */
+  board: NewsBoard;
   rows: NewsRow[];
   page: number;
   totalPages: number;
@@ -215,6 +218,7 @@ function StatCell({ s }: { s: NewsStats | undefined }) {
 }
 
 export function NewsTable({
+  board,
   rows,
   page,
   totalPages,
@@ -228,6 +232,7 @@ export function NewsTable({
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const basePath = BOARD_PATHS[board].admin;
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -239,7 +244,7 @@ export function NewsTable({
       if (value) params.set(key, value);
       else params.delete(key);
       params.delete("page");
-      startTransition(() => router.push(`/admin/news?${params}`));
+      startTransition(() => router.push(`${basePath}?${params}`));
     },
     [router, searchParams],
   );
@@ -256,7 +261,7 @@ export function NewsTable({
     params.delete("q");
     params.delete("tag");
     params.delete("page");
-    startTransition(() => router.push(`/admin/news?${params}`));
+    startTransition(() => router.push(`${basePath}?${params}`));
   };
 
   const setStatus = (newStatus: NewsStatus) => {
@@ -264,13 +269,13 @@ export function NewsTable({
     if (newStatus === "all") params.delete("status");
     else params.set("status", newStatus);
     params.delete("page");
-    router.push(`/admin/news?${params}`);
+    router.push(`${basePath}?${params}`);
   };
 
   const setPage = (p: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(p));
-    router.push(`/admin/news?${params}`);
+    router.push(`${basePath}?${params}`);
   };
 
   // 정렬 변경 — 기본값(발행일 최신순)이면 쿼리 비움, 페이지는 1로 리셋. tab=manage 등 다른 파라미터는 보존
@@ -279,7 +284,7 @@ export function NewsTable({
     if (newSort === "published_desc") params.delete("sort");
     else params.set("sort", newSort);
     params.delete("page");
-    router.push(`/admin/news?${params}`);
+    router.push(`${basePath}?${params}`);
   };
 
   // 페이지당 개수 변경 — 기본값(10)이면 쿼리 비움, 페이지는 1로 리셋(개수 변경 시 현재 page 가 범위 밖일 수 있음)
@@ -288,13 +293,13 @@ export function NewsTable({
     if (newSize === DEFAULT_NEWS_PAGE_SIZE) params.delete("pageSize");
     else params.set("pageSize", String(newSize));
     params.delete("page");
-    router.push(`/admin/news?${params}`);
+    router.push(`${basePath}?${params}`);
   };
 
   const togglePublish = (id: string, currentlyPublished: boolean) => {
     setError(null);
     startTransition(async () => {
-      const result = await publishNewsAction(id, !currentlyPublished);
+      const result = await publishNewsAction(board, id, !currentlyPublished);
       if (!result.success) {
         const msg =
           typeof result.error === "string" ? result.error : "변경 실패";
@@ -311,7 +316,7 @@ export function NewsTable({
   const toggleHidden = (id: string, currentlyHidden: boolean) => {
     setError(null);
     startTransition(async () => {
-      const result = await setNewsHiddenAction(id, !currentlyHidden);
+      const result = await setNewsHiddenAction(board, id, !currentlyHidden);
       if (!result.success) {
         const msg =
           typeof result.error === "string" ? result.error : "노출 변경 실패";
@@ -327,7 +332,7 @@ export function NewsTable({
     const targetId = confirmId;
     setError(null);
     startTransition(async () => {
-      const result = await deleteNewsAction(targetId);
+      const result = await deleteNewsAction(board, targetId);
       if (!result.success) {
         const msg =
           typeof result.error === "string" ? result.error : "삭제 실패";
@@ -397,7 +402,7 @@ export function NewsTable({
         </Button>
       )}
       <Button asChild variant="ghost" size="sm">
-        <Link href={`/admin/news/${row.id}/edit`}>수정</Link>
+        <Link href={`${basePath}/${row.id}/edit`}>수정</Link>
       </Button>
       <Button
         variant="ghost"
@@ -484,7 +489,7 @@ export function NewsTable({
             </SelectContent>
           </Select>
           <Button asChild>
-            <Link href="/admin/news/new">+ 새 글</Link>
+            <Link href={`${basePath}/new`}>+ 새 글</Link>
           </Button>
         </div>
       </div>
@@ -573,7 +578,7 @@ export function NewsTable({
                         >
                           <td className="py-3 pr-4 font-medium text-ink-strong">
                             <Link
-                              href={`/admin/news/${row.id}/edit`}
+                              href={`${basePath}/${row.id}/edit`}
                               className="rounded transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2"
                             >
                               {row.title}
@@ -619,7 +624,7 @@ export function NewsTable({
                     >
                       <div className="flex items-start justify-between gap-2">
                         <Link
-                          href={`/admin/news/${row.id}/edit`}
+                          href={`${basePath}/${row.id}/edit`}
                           className="rounded font-medium text-ink-strong transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40 focus-visible:ring-offset-2"
                         >
                           {row.title}

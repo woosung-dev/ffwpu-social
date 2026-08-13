@@ -64,6 +64,7 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { HelpTip } from "@/admin/components/HelpTip";
 import { CategoryTabsPreview } from "@/admin/components/CategoryTabsPreview";
+import type { NewsBoard } from "@/features/news/board";
 import { ADMIN_COPY } from "@/admin/copy";
 
 const CAT = ADMIN_COPY.categories;
@@ -77,9 +78,13 @@ export type CategoryRow = {
   newsCount: number;
 };
 
-type Props = { rows: CategoryRow[] };
+type Props = {
+  /** 어느 게시판 카테고리인가 (ADR-056) — 생성·수정·정렬 대상 게시판을 결정 */
+  board: NewsBoard;
+  rows: CategoryRow[];
+};
 
-export function CategoryManager({ rows }: Props) {
+export function CategoryManager({ board, rows }: Props) {
   const [editing, setEditing] = useState<CategoryRow | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -94,16 +99,18 @@ export function CategoryManager({ rows }: Props) {
       <CategoryTabsPreview
         names={rows.filter((r) => r.isActive).map((r) => r.name)}
       />
-      <CreateForm onError={setError} />
+      <CreateForm board={board} onError={setError} />
       <ErrorBanner message={error} onClose={() => setError(null)} />
       <CategoryOrderList
         key={rowsKey}
+        board={board}
         rows={rows}
         onEdit={setEditing}
         onError={setError}
       />
       {editing && (
         <EditDialog
+          board={board}
           row={editing}
           onClose={() => setEditing(null)}
           onError={setError}
@@ -115,7 +122,13 @@ export function CategoryManager({ rows }: Props) {
 
 // ─── 상단 추가 폼 (sortOrder 입력 없음 — 새 카테고리는 맨 끝 자동 배치) ──────
 
-function CreateForm({ onError }: { onError: (msg: string | null) => void }) {
+function CreateForm({
+  board,
+  onError,
+}: {
+  board: NewsBoard;
+  onError: (msg: string | null) => void;
+}) {
   const [isPending, startTransition] = useTransition();
   const form = useForm<CreateCategoryInput>({
     resolver: zodResolver(createCategorySchema),
@@ -125,7 +138,7 @@ function CreateForm({ onError }: { onError: (msg: string | null) => void }) {
   const onSubmit = (values: CreateCategoryInput) => {
     onError(null);
     startTransition(async () => {
-      const result = await createCategoryAction(values);
+      const result = await createCategoryAction(board, values);
       if (!result.success) {
         const msg =
           typeof result.error === "string"
@@ -287,10 +300,12 @@ function SortableCategoryRow({
 }
 
 function CategoryOrderList({
+  board,
   rows,
   onEdit,
   onError,
 }: {
+  board: NewsBoard;
   rows: CategoryRow[];
   onEdit: (row: CategoryRow) => void;
   onError: (msg: string | null) => void;
@@ -335,7 +350,7 @@ function CategoryOrderList({
   const onSave = () => {
     onError(null);
     startTransition(async () => {
-      const result = await reorderCategoriesAction({
+      const result = await reorderCategoriesAction(board, {
         orderedIds: items.map((i) => i.id),
       });
       if (!result.success) {
@@ -435,10 +450,12 @@ function CategoryOrderList({
 // ─── 수정 Dialog (이름 + 활성 — 정렬은 드래그 전용) ──────────────────────────
 
 function EditDialog({
+  board,
   row,
   onClose,
   onError,
 }: {
+  board: NewsBoard;
   row: CategoryRow;
   onClose: () => void;
   onError: (msg: string | null) => void;
@@ -455,7 +472,7 @@ function EditDialog({
   const onSubmit = (values: UpdateCategoryInput) => {
     onError(null);
     startTransition(async () => {
-      const result = await updateCategoryAction(row.id, values);
+      const result = await updateCategoryAction(board, row.id, values);
       if (!result.success) {
         const msg =
           typeof result.error === "string"

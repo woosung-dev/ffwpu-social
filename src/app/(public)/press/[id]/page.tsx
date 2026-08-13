@@ -1,4 +1,5 @@
-// 소식 상세 페이지 — Figma 749:7920(B 시안) 정합. 900px 본문(헤더·태그·본문·공유+공감·이전다음·관련글) + 스크롤탑. (public)/layout 의 헤더·푸터 사용. Next 16 params Promise + Suspense 격리
+// 언론 보도 상세 (ADR-056) — 활동 스토리 상세와 동일한 레이아웃·기능(공감·공유·이전다음·관련글)을 board="press" 스코프로 재사용.
+// 하위 컴포넌트는 복제하지 않고 ../news/[id] 것을 basePath prop 으로 공유한다.
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
@@ -9,34 +10,33 @@ import { NewsBodyRenderer } from "@/features/news/render/news-body-renderer";
 import { ArticleCard } from "@/features/news/components";
 import { ShareRow } from "@/client/components/ShareRow";
 
-import { SubBanner } from "../sub-banner";
-import { DetailHeader } from "./detail-header";
-import { DetailHeart } from "./detail-heart";
-import { NewsViewTracker } from "./news-view-tracker";
-import { PrevNextNav } from "./prev-next-nav";
-import { ScrollTopButton } from "./scroll-top";
+import { SubBanner } from "../../news/sub-banner";
+import { DetailHeader } from "../../news/[id]/detail-header";
+import { DetailHeart } from "../../news/[id]/detail-heart";
+import { NewsViewTracker } from "../../news/[id]/news-view-tracker";
+import { PrevNextNav } from "../../news/[id]/prev-next-nav";
+import { ScrollTopButton } from "../../news/[id]/scroll-top";
 
-// 글별 메타 — 공유 시 제목·요약·커버 썸네일이 뜨도록(이전엔 전 글 동일 일반 타이틀). 커버 없으면 동적 OG(/api/og)
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const article = await getNewsDetail("story", id);
+  const article = await getNewsDetail("press", id);
   if (!article) {
     return {
-      title: "찾을 수 없는 소식 | 사회공헌단 Sow Good",
+      title: "찾을 수 없는 보도 | 사회공헌단 Sow Good",
       robots: { index: false, follow: false },
     };
   }
   const description =
     bodyToExcerpt(article.body, 150) ||
-    `${article.categoryName} · 사회공헌단 Sow Good 의 활동 소식.`;
+    `${article.categoryName} · 언론 속 사회공헌단 Sow Good.`;
   const ogImage =
-    article.coverImageUrl ??
-    `/api/og?title=${encodeURIComponent(article.title)}`;
-  const url = `/news/${id}`;
+    article.coverImageUrl ?? `/api/og?title=${encodeURIComponent(article.title)}`;
+  // canonical 은 우리 페이지 유지 — 원문 언론사 URL 을 canonical 로 두면 이 페이지가 색인에서 빠진다
+  const url = `/press/${id}`;
   return {
     title: `${article.title} | 사회공헌단 Sow Good`,
     description,
@@ -60,69 +60,52 @@ export async function generateMetadata({
   };
 }
 
-export default function NewsDetailPage(props: {
+export default function PressDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {
   return (
     <>
       <SubBanner />
       <Suspense fallback={<DetailLoading />}>
-        <NewsDetailContent paramsPromise={props.params} />
+        <PressDetailContent paramsPromise={props.params} />
       </Suspense>
       <ScrollTopButton />
     </>
   );
 }
 
-function DetailLoading() {
-  return (
-    <div className="mx-auto w-full max-w-[900px] px-4 py-12 lg:py-20" aria-busy>
-      <div className="h-8 w-2/3 animate-pulse rounded bg-surface-soft" />
-      <div className="mt-6 h-[420px] animate-pulse rounded-2xl bg-surface-soft" />
-    </div>
-  );
-}
-
-async function NewsDetailContent({
+async function PressDetailContent({
   paramsPromise,
 }: {
   paramsPromise: Promise<{ id: string }>;
 }) {
   const { id } = await paramsPromise;
-  const item = await getNewsDetail("story", id);
+  // board="press" 스코프 — 활동 스토리 글 id 로 /press/{id} 에 접근하면 404 (게시판 간 교차 노출 차단)
+  const item = await getNewsDetail("press", id);
   if (!item) notFound();
-  const related = await getRelatedNews("story", id, item.categoryId, 3);
-  // 이전/다음 글 — publishedAt 인접 (발행 상세는 publishedAt non-null)
+  const related = await getRelatedNews("press", id, item.categoryId, 3);
   const adjacent = item.publishedAt
-    ? await getAdjacentNews("story", id, item.publishedAt)
+    ? await getAdjacentNews("press", id, item.publishedAt)
     : { prev: null, next: null };
 
   return (
-    // 배경 밴드 기준 래퍼 — isolate 로 -z-10 밴드를 콘텐츠 뒤·페이지 배경 앞 stacking context 에 격리
     <div className="relative isolate">
       <NewsViewTracker newsId={item.id} />
-      {/* 배경 밴드 — Figma 749:7979: 풀블리드 수직 그라데이션 white→rgba(249,244,255,0.8).
-          1440 기준 h598, 하단(디바이더~관련글) 뒤에 깔리고 푸터 직전에서 끝남 — 컨테이너 하단 앵커.
-          모바일 h360 은 비례 축소 [추론 — Figma 모바일 상세 프레임 없음] */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[360px] bg-gradient-to-b from-white to-[#F9F4FF]/80 lg:h-[598px]"
       />
       <div className="mx-auto w-full px-4 md:max-w-[648px] md:px-0 lg:max-w-[905px] py-12 lg:py-20">
-        {/* 본문폭: 리스트 밴드 정합 md648/lg905, wide는 가독 cap(1200 미적용) */}
         <DetailHeader
           categoryName={item.categoryName}
           title={item.title}
           publishedAt={item.publishedAt}
         />
 
-        {/* 본문 — 1440 리듬: 제목 블록 →60→ 본문 */}
         <div className="mt-10 lg:mt-[60px]">
           <NewsBodyRenderer body={item.body} />
         </div>
 
-        {/* 하단 — Figma 1024:7940/7930: 공감(중앙) → 공유(중앙·30) → 태그(좌·50). 본문 →120→ 공감.
-            모바일 값은 wide 리듬 비례 축소 [추론 — 모바일 상세 프레임 없음] */}
         <div className="mt-16 lg:mt-[120px]">
           <div className="flex flex-col items-center gap-7 lg:gap-[30px]">
             <DetailHeart newsId={item.id} count={item.heartCount} />
@@ -141,17 +124,14 @@ async function NewsDetailContent({
           )}
         </div>
 
-        {/* 1440 리듬: 태그 →70→ 디바이더 */}
         <hr className="mt-12 border-border lg:mt-[70px]" />
 
-        <PrevNextNav prev={adjacent.prev} next={adjacent.next} basePath="/news" />
+        <PrevNextNav prev={adjacent.prev} next={adjacent.next} basePath="/press" />
 
-        {/* 더 많은 소식 — Figma 93:8865 관련글 ArticleCard(인스턴스 93:8868) size=3.
-            1440 리듬: 이전/다음 행 →40→ 제목 — 행 터치타깃 하단 여유 10px 보정해 mt 30px [추론 — 텍스트 기준 정합] */}
         {related.length > 0 && (
           <section className="mt-12 lg:mt-[30px]">
             <h2 className="text-xl font-bold text-ink-strong">
-              더 많은 소식 살펴보기
+              다른 언론 보도 살펴보기
             </h2>
             <ul className="mt-4 grid [grid-template-columns:repeat(auto-fill,minmax(max(200px,calc(50%-14px)),1fr))] gap-7 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
               {related.map((r) => (
@@ -159,6 +139,7 @@ async function NewsDetailContent({
                   <ArticleCard
                     size={3}
                     className="w-full max-w-none"
+                    href={`/press/${r.id}`}
                     article={{
                       id: r.id,
                       title: r.title,
@@ -173,6 +154,15 @@ async function NewsDetailContent({
           </section>
         )}
       </div>
+    </div>
+  );
+}
+
+function DetailLoading() {
+  return (
+    <div className="mx-auto w-full max-w-[900px] px-4 py-12 lg:py-20" aria-busy>
+      <div className="h-8 w-2/3 animate-pulse rounded bg-surface-soft" />
+      <div className="mt-6 h-[420px] animate-pulse rounded-2xl bg-surface-soft" />
     </div>
   );
 }

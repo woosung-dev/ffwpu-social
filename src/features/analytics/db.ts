@@ -48,6 +48,9 @@ export async function getNewsAnalyticsSummary(days: number, limit = 5) {
     .select({
       newsId: news.id,
       title: news.title,
+      // 조회·공감 집계는 게시판 공유(사용자 결정 2026-08-13)라 언론 글도 인기글에 올라온다.
+      // board 를 함께 실어야 어드민 링크를 각 게시판 편집 화면으로 보낼 수 있다 — 없으면 /admin/news/{pressId} 로 가서 404 (ADR-056)
+      board: news.board,
       publishedAt: news.publishedAt,
       views: sql<number>`count(${analyticsEvents.id}) filter (where ${analyticsEvents.eventType} = 'news_view')::int`,
       uniqueViewers: sql<number>`count(distinct ${analyticsEvents.sessionId}) filter (where ${analyticsEvents.eventType} = 'news_view')::int`,

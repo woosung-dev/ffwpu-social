@@ -23,6 +23,8 @@ type Props = {
   size?: Size;
   article: ArticleLite;
   className?: string;
+  /** 카드 링크 — 게시판별 경로 (ADR-056). 생략 시 활동 스토리(/news) 기본 */
+  href?: string;
 };
 
 // Figma ArticleCard Size 1~4 — 컨테이너 max-w + 이미지 aspect
@@ -39,12 +41,12 @@ const GRADIENT_STYLE: React.CSSProperties = {
     "linear-gradient(135deg, var(--color-gradient-from), var(--color-gradient-to))",
 };
 
-export function ArticleCard({ size = 1, article, className }: Props) {
+export function ArticleCard({ size = 1, article, className, href }: Props) {
   const config = SIZE_CONFIG[size];
 
   return (
     <Link
-      href={`/news/${article.id}`}
+      href={href ?? `/news/${article.id}`}
       className={cn(
         "group flex flex-col overflow-hidden rounded-[14px]",
         config.container,

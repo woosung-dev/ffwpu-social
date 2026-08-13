@@ -3,6 +3,7 @@ import { and, asc, desc, eq, gt, ilike, inArray, isNotNull, isNull, like, lte, o
 import { db } from "@/db";
 import { analyticsEvents, categories, heartEvents, news, newsTags } from "@/db/schema";
 import { ALL_CATEGORY_SLUG } from "./constants";
+import type { NewsBoard } from "./board";
 import type { NewsSort } from "./admin-sort";
 import type { NewsStatus } from "./publish-state";
 import { likePattern } from "./search-query";
@@ -40,6 +41,12 @@ function publicPublishedWhere() {
   );
 }
 
+// 게시판 스코프 (ADR-056) — 아래 조회 함수는 전부 board 를 첫 인자로 강제 받는다.
+// 기본값을 주지 않는 게 핵심: 넘기지 않으면 컴파일 에러라 "필터 깜빡함"이 배포까지 못 간다
+function boardWhere(board: NewsBoard) {
+  return eq(news.board, board);
+}
+
 // 검색 필터 — 제목 OR 태그 부분일치(ILIKE, 대소문자 무관). q 없으면 undefined(필터 미적용).
 // 태그는 normalizeTags 로 lowercase 저장되나 ILIKE 라 입력 케이스 무관. 본문(jsonb)은 v1.1
 function searchWhere(q?: string) {
@@ -69,7 +76,7 @@ function tagWhere(tag?: string) {
 // ─── 사용자 사이트 — 현재 공개 글만 (codex P1#7 + 예약 발행) ─────────────────
 
 // 공개 목록 — published_at <= now 강제 (draft·예약글 노출 차단)
-export async function listPublicNews(opts: ListOpts) {
+export async function listPublicNews(board: NewsBoard, opts: ListOpts) {
   const offset = (opts.page - 1) * opts.limit;
   return db
     .select({
@@ -87,6 +94,7 @@ export async function listPublicNews(opts: ListOpts) {
     .innerJoin(categories, eq(news.categoryId, categories.id))
     .where(
       and(
+        boardWhere(board),
         publicPublishedWhere(),
         categoryWhere(opts.categorySlug),
         searchWhere(opts.q),
@@ -98,13 +106,17 @@ export async function listPublicNews(opts: ListOpts) {
 }
 
 // 공개 카운트 — listPublicNews 페이지네이션 용. 동일 조건(카테고리 + 검색)
-export async function countPublicNews(opts: Pick<ListOpts, "categorySlug" | "q">) {
+export async function countPublicNews(
+  board: NewsBoard,
+  opts: Pick<ListOpts, "categorySlug" | "q">,
+) {
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
     .where(
       and(
+        boardWhere(board),
         publicPublishedWhere(),
         categoryWhere(opts.categorySlug),
         searchWhere(opts.q),
@@ -114,7 +126,7 @@ export async function countPublicNews(opts: Pick<ListOpts, "categorySlug" | "q">
 }
 
 // 공개 상세 — draft·예약글 접근 시 null. 본문(body) + 태그 join
-export async function getPublicNewsById(id: string) {
+export async function getPublicNewsById(board: NewsBoard, id: string) {
   const [row] = await db
     .select({
       id: news.id,
@@ -130,7 +142,7 @@ export async function getPublicNewsById(id: string) {
     })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
-    .where(and(eq(news.id, id), publicPublishedWhere()))
+    .where(and(boardWhere(board), eq(news.id, id), publicPublishedWhere()))
     .limit(1);
   if (!row) return null;
   const tags = await db
@@ -141,11 +153,11 @@ export async function getPublicNewsById(id: string) {
 }
 
 // sitemap 용 — 발행글 전체 id + 최종수정일. 경량 select(본문·태그 제외)
-export async function listPublishedForSitemap() {
+export async function listPublishedForSitemap(board: NewsBoard) {
   return db
     .select({ id: news.id, updatedAt: news.updatedAt })
     .from(news)
-    .where(publicPublishedWhere())
+    .where(and(boardWhere(board), publicPublishedWhere()))
     .orderBy(desc(news.publishedAt));
 }
 
@@ -205,7 +217,7 @@ function adminStatusWhere(status?: AdminListOpts["status"]) {
 }
 
 // 어드민 목록 — 모든 글 + 상태/카테고리 필터 + 정렬(기본 발행일 최신순, 운영자 요청)
-export async function listForAdmin(opts: AdminListOpts) {
+export async function listForAdmin(board: NewsBoard, opts: AdminListOpts) {
   const offset = (opts.page - 1) * opts.limit;
   return db
     .select({
@@ -223,6 +235,7 @@ export async function listForAdmin(opts: AdminListOpts) {
     .innerJoin(categories, eq(news.categoryId, categories.id))
     .where(
       and(
+        boardWhere(board),
         adminStatusWhere(opts.status),
         categoryWhere(opts.categorySlug),
         titleWhere(opts.q),
@@ -236,6 +249,7 @@ export async function listForAdmin(opts: AdminListOpts) {
 
 // 어드민 카운트 — listForAdmin 페이지네이션용. 동일 필터(제목·태그 검색 포함)
 export async function countForAdmin(
+  board: NewsBoard,
   opts: Pick<AdminListOpts, "status" | "categorySlug" | "q" | "tag">,
 ) {
   const [row] = await db
@@ -244,6 +258,7 @@ export async function countForAdmin(
     .innerJoin(categories, eq(news.categoryId, categories.id))
     .where(
       and(
+        boardWhere(board),
         adminStatusWhere(opts.status),
         categoryWhere(opts.categorySlug),
         titleWhere(opts.q),
@@ -254,7 +269,7 @@ export async function countForAdmin(
 }
 
 // 어드민 상세 — draft 포함. 수정 페이지 진입점 (T10)
-export async function getAdminNewsById(id: string) {
+export async function getAdminNewsById(board: NewsBoard, id: string) {
   const [row] = await db
     .select({
       id: news.id,
@@ -273,7 +288,7 @@ export async function getAdminNewsById(id: string) {
     })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
-    .where(eq(news.id, id))
+    .where(and(boardWhere(board), eq(news.id, id)))
     .limit(1);
   if (!row) return null;
   const tags = await db
@@ -284,7 +299,7 @@ export async function getAdminNewsById(id: string) {
 }
 
 // 대시보드 글 현황 — 발행·예약·임시저장 건수 (한 쿼리). adminStatusWhere 와 동일 기준
-export async function countNewsByStatus() {
+export async function countNewsByStatus(board: NewsBoard) {
   const [row] = await db
     .select({
       published: sql<number>`count(*) filter (where ${news.publishedAt} is not null and ${news.publishedAt} <= now() and ${news.isHidden} = false)::int`,
@@ -292,7 +307,8 @@ export async function countNewsByStatus() {
       draft: sql<number>`count(*) filter (where ${news.publishedAt} is null)::int`,
       hidden: sql<number>`count(*) filter (where ${news.publishedAt} is not null and ${news.publishedAt} <= now() and ${news.isHidden} = true)::int`,
     })
-    .from(news);
+    .from(news)
+    .where(boardWhere(board));
   return {
     published: row?.published ?? 0,
     scheduled: row?.scheduled ?? 0,
@@ -302,7 +318,8 @@ export async function countNewsByStatus() {
 }
 
 // 태그 자동완성 — prefix 매칭 + 빈도순 (결정 로그 [T6 빈도순])
-export async function searchTags(prefix: string, limit = 10) {
+// 게시판별 태그 풀만 제안 — news 조인 필수. 안 하면 언론 글 작성 중에 활동 스토리 태그가 뜬다
+export async function searchTags(board: NewsBoard, prefix: string, limit = 10) {
   const trimmed = prefix.trim().toLowerCase();
   if (!trimmed) return [];
   return db
@@ -311,19 +328,20 @@ export async function searchTags(prefix: string, limit = 10) {
       count: sql<number>`count(*)::int`,
     })
     .from(newsTags)
-    .where(like(newsTags.tag, `${trimmed}%`))
+    .innerJoin(news, eq(news.id, newsTags.newsId))
+    .where(and(boardWhere(board), like(newsTags.tag, `${trimmed}%`)))
     .groupBy(newsTags.tag)
     .orderBy(desc(sql`count(*)`), newsTags.tag)
     .limit(limit);
 }
 
-// ─── 활성 카테고리 (사용자 사이트 CategoryTabs, 변경 X) ────────────────────
+// ─── 활성 카테고리 (사용자 사이트 CategoryTabs) ────────────────────────────
 
-export async function findActiveCategories() {
+export async function findActiveCategories(board: NewsBoard) {
   return db
     .select()
     .from(categories)
-    .where(eq(categories.isActive, true))
+    .where(and(eq(categories.board, board), eq(categories.isActive, true)))
     .orderBy(categories.sortOrder);
 }
 
@@ -390,12 +408,17 @@ export async function isNewsPublished(newsId: string): Promise<boolean> {
 // 인접 글 — 현재 공개 글만, publishedAt 기준. **prev(이전글)=더 과거 / next(다음글)=더 최신** — 시간 순서를 따르는 게시판 관례
 // (2026-07-25 사회공헌국 제보로 방향 교정: 이전에는 목록 newest-first 순서를 따라 prev=더 최신이었고, "이전글인데 새 글이 뜬다"는 혼란을 낳았음).
 // 동일 publishedAt tie 는 v1 스킵 허용(초 단위 정밀도). 자기 자신 제외
-export async function findAdjacentNews(newsId: string, publishedAt: Date) {
+export async function findAdjacentNews(
+  board: NewsBoard,
+  newsId: string,
+  publishedAt: Date,
+) {
   const [prev] = await db
     .select({ id: news.id, title: news.title })
     .from(news)
     .where(
       and(
+        boardWhere(board),
         publicPublishedWhere(),
         sql`${news.publishedAt} < ${publishedAt}`,
         sql`${news.id} <> ${newsId}`,
@@ -408,6 +431,7 @@ export async function findAdjacentNews(newsId: string, publishedAt: Date) {
     .from(news)
     .where(
       and(
+        boardWhere(board),
         publicPublishedWhere(),
         sql`${news.publishedAt} > ${publishedAt}`,
         sql`${news.id} <> ${newsId}`,
@@ -427,6 +451,7 @@ export async function setHeartDeleted(id: string, deleted: boolean) {
 
 // 관련 글 — 같은 카테고리 최신순(self 제외, 현재 공개). ADR-013 가중치 스코어는 v1.1
 export async function listRelatedNews(
+  board: NewsBoard,
   newsId: string,
   categoryId: string,
   limit: number,
@@ -443,6 +468,7 @@ export async function listRelatedNews(
     .innerJoin(categories, eq(news.categoryId, categories.id))
     .where(
       and(
+        boardWhere(board),
         publicPublishedWhere(),
         eq(news.categoryId, categoryId),
         sql`${news.id} <> ${newsId}`,
@@ -498,12 +524,14 @@ export async function replaceNewsTags(
   await tx.insert(newsTags).values(deduped.map((tag) => ({ newsId, tag })));
 }
 
-// 쌀 나눔 카테고리 id — 슬롯 eligibility 검증용. slug 는 immutable(ADR-025)이라 캐시 불필요
+// 쌀 나눔 카테고리 id — 슬롯 eligibility 검증용. slug 는 immutable(ADR-025)이라 캐시 불필요.
+// board='story' 고정 — 랜딩 슬롯은 활동 스토리 전용이고, slug unique 가 (board, slug) 복합이라
+// 이 조건이 없으면 언론 게시판의 동명 카테고리를 집어올 수 있다 (ADR-056)
 export async function getRiceSharingCategoryId(tx: Tx) {
   const [row] = await tx
     .select({ id: categories.id })
     .from(categories)
-    .where(eq(categories.slug, RICE_SHARING_SLUG))
+    .where(and(eq(categories.board, "story"), eq(categories.slug, RICE_SHARING_SLUG)))
     .limit(1);
   return row?.id ?? null;
 }
@@ -656,7 +684,8 @@ export async function listHeroNews() {
     })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
-    .where(and(publicPublishedWhere(), isNotNull(news.heroRank)))
+    // hero 는 활동 스토리 전용 (ADR-056) — news_press_no_slots CHECK 가 DB 에서도 막지만 쿼리에도 명시
+    .where(and(boardWhere("story"), publicPublishedWhere(), isNotNull(news.heroRank)))
     .orderBy(asc(news.heroRank));
 }
 
@@ -674,7 +703,8 @@ export async function listHeroCandidates(limit = 50) {
     })
     .from(news)
     .innerJoin(categories, eq(news.categoryId, categories.id))
-    .where(and(publicPublishedWhere(), isNull(news.heroRank)))
+    // 활동 스토리만 후보 — hero_rank IS NULL 조건만으로는 언론 글이 전부 후보로 뜬다
+    .where(and(boardWhere("story"), publicPublishedWhere(), isNull(news.heroRank)))
     .orderBy(desc(news.publishedAt))
     .limit(limit);
 }
