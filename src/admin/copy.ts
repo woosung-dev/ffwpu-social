@@ -79,8 +79,8 @@ export const ADMIN_COPY = {
     nameHelp: "사용자 탭과 글 목록에 그대로 보이는 이름이에요. 예: 환경 캠페인",
     slugLabel: "URL 주소 (영문)",
     slugHelp:
-      "사용자 사이트 주소에 쓰이는 영문 이름이에요. 예: 쌀 나눔 → rice-sharing. 영문 소문자·숫자·하이픈(-)만 쓸 수 있고, 한 번 정하면 바꿀 수 없어요.",
-    slugPlaceholder: "rice-sharing",
+      "사용자 사이트 주소에 쓰이는 영문 이름이에요. 예: 쌀 나눔 → rice_sharing. 영문 소문자·숫자와 하이픈(-)·언더바(_)를 쓸 수 있고, 한 번 정하면 바꿀 수 없어요.",
+    slugPlaceholder: "rice_sharing",
     activeLabel: "사용자 사이트에 표시",
     activeHelp:
       "끄면 소식 페이지 탭과 글쓰기 카테고리 목록에서 사라져요. 이미 쓴 글은 삭제되지 않아요.",

@@ -1,8 +1,10 @@
 // 카테고리 Zod 스키마. slug 는 immutable (ADR-025) — update 스키마에서 제외
 import { z } from "zod";
 
-// slug — 영문 소문자 + 숫자 + 하이픈 (연속 하이픈 금지, 양끝 하이픈 금지)
-export const CATEGORY_SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+// slug — 영문 소문자 + 숫자 + 하이픈·언더바 (연속 구분자 금지, 양끝 구분자 금지)
+// 언더바 허용은 선택이 아니라 필수: 기존 카테고리가 전부 rice_sharing·family_healing 형태라
+// 하이픈만 허용하면 "이미 쓰고 있는 형식을 새로 만들 수는 없는" 모순이 된다 (2026-08-13 사용자 제보)
+export const CATEGORY_SLUG_REGEX = /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/;
 
 // 추가 — sortOrder 입력받지 않음. 새 카테고리는 service 에서 맨 끝(max+1)에 자동 배치 후 드래그로 정렬
 export const createCategorySchema = z.object({
@@ -14,7 +16,7 @@ export const createCategorySchema = z.object({
     .max(60)
     .regex(
       CATEGORY_SLUG_REGEX,
-      "영문 소문자·숫자·하이픈만 가능합니다 (예: rice-sharing)",
+      "영문 소문자·숫자와 하이픈(-)·언더바(_)만 가능합니다 (예: rice_sharing)",
     ),
 });
 
