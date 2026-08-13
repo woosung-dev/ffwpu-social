@@ -35,6 +35,12 @@ describe("popupInputSchema", () => {
     expect(popupInputSchema.safeParse(input({ linkTarget: "iframe" })).success).toBe(false);
   });
 
+  it("다시 보지 않기 기간은 일주일이 기본값이고 임의 문자열은 거부한다", () => {
+    expect(popupInputSchema.parse(input()).dismissDuration).toBe("week");
+    expect(popupInputSchema.parse(input({ dismissDuration: "day" })).dismissDuration).toBe("day");
+    expect(popupInputSchema.safeParse(input({ dismissDuration: "month" })).success).toBe(false);
+  });
+
   it("종료일이 시작일보다 이르면 거부하고 null은 허용한다", () => {
     expect(
       popupInputSchema.safeParse(input({ endsAt: new Date("2026-07-18T08:59:59.000Z") })).success,

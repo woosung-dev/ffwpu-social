@@ -15,6 +15,10 @@ export const popups = pgTable(
     linkTarget: text("link_target", { enum: ["self", "new_tab", "small_window"] })
       .notNull()
       .default("small_window"),
+    // 방문자가 "보지 않기"를 체크하고 닫았을 때 그 브라우저에서 숨길 기간 — 팝업별 운영자 선택 (ADR-055)
+    dismissDuration: text("dismiss_duration", { enum: ["day", "week"] })
+      .notNull()
+      .default("week"),
     startsAt: timestamp("starts_at").notNull(),
     endsAt: timestamp("ends_at"),
     isActive: boolean("is_active").notNull().default(true),
@@ -30,6 +34,7 @@ export const popups = pgTable(
       "popups_link_target_check",
       sql`${table.linkTarget} in ('self', 'new_tab', 'small_window')`,
     ),
+    check("popups_dismiss_duration_check", sql`${table.dismissDuration} in ('day', 'week')`),
     // 공개 조회: is_active = true AND starts_at <= now() AND (ends_at IS NULL OR ends_at > now()).
     index("popups_window_idx").on(table.isActive, table.startsAt, table.endsAt),
   ],

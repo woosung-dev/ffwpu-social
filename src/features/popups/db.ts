@@ -25,6 +25,7 @@ export async function listActivePopups() {
       imageHeight: popups.imageHeight,
       linkUrl: popups.linkUrl,
       linkTarget: popups.linkTarget,
+      dismissDuration: popups.dismissDuration,
       startsAt: popups.startsAt,
       endsAt: popups.endsAt,
     })

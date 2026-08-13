@@ -4,11 +4,11 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-import { dismissPopupForWeek, isPopupSuppressed } from "@/client/lib/popup-dismiss";
+import { dismissPopup, isPopupSuppressed } from "@/client/lib/popup-dismiss";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import type { PopupLinkTarget } from "../schemas";
+import type { PopupDismissDuration, PopupLinkTarget } from "../schemas";
 
 export type PopupItem = {
   id: string;
@@ -18,20 +18,27 @@ export type PopupItem = {
   imageHeight: number | null;
   linkUrl: string | null;
   linkTarget: PopupLinkTarget;
+  dismissDuration: PopupDismissDuration;
+};
+
+// 체크박스 문구 — 운영자가 팝업별로 고른 기간을 그대로 방문자에게 보여준다
+const DISMISS_LABELS: Record<PopupDismissDuration, string> = {
+  day: "하루 동안 보지 않기",
+  week: "일주일간 보지 않기",
 };
 
 export function PopupDialog({ popups }: { popups: PopupItem[] }) {
   const [current, setCurrent] = useState<PopupItem | null>(null);
-  const [hideForWeek, setHideForWeek] = useState(false);
+  const [hideForPeriod, setHideForPeriod] = useState(false);
 
   useEffect(() => {
     setCurrent(popups.find((popup) => !isPopupSuppressed(popup.id)) ?? null);
   }, [popups]);
 
-  // 닫기 경로(버튼·ESC·오버레이·링크 클릭) 공통 — 체크 시에만 7일 억제 저장.
+  // 닫기 경로(버튼·ESC·오버레이·링크 클릭) 공통 — 체크 시에만 팝업별 기간만큼 억제 저장.
   // 미체크 닫기는 저장 없음(사용자 결정 2026-07-18): 새로고침·재진입 시 다시 노출된다.
   const handleClose = () => {
-    if (current && hideForWeek) dismissPopupForWeek(current.id);
+    if (current && hideForPeriod) dismissPopup(current.id, current.dismissDuration);
     setCurrent(null);
   };
 
@@ -112,11 +119,11 @@ export function PopupDialog({ popups }: { popups: PopupItem[] }) {
           {/* label 로 감싸 텍스트 탭도 체크 토글 — 터치 타깃 44px 확보 */}
           <label className="flex min-h-11 cursor-pointer select-none items-center gap-2 text-sm text-ink-subtle">
             <Checkbox
-              checked={hideForWeek}
-              onCheckedChange={(checked) => setHideForWeek(checked === true)}
-              aria-label="일주일간 보지 않기"
+              checked={hideForPeriod}
+              onCheckedChange={(checked) => setHideForPeriod(checked === true)}
+              aria-label={DISMISS_LABELS[current.dismissDuration]}
             />
-            일주일간 보지 않기
+            {DISMISS_LABELS[current.dismissDuration]}
           </label>
           <Button
             type="button"
