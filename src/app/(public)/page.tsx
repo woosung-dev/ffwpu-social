@@ -85,11 +85,11 @@ async function KpiSectionWithData() {
 }
 
 async function ArticleGridSectionWithData() {
-  // featured_rank 운영자 pin + 전 카테고리 최신순 자동 fallback (ADR-038). 7 슬롯 중 시안 6 슬롯만 마조네리 노출 (1~6번)
-  const slots = await landingDb.listFeaturedGrid(7);
-  const items = slots
-    .slice(0, 6)
-    .filter((s): s is NonNullable<typeof s> => s != null);
+  // featured_rank 운영자 pin + 전 카테고리 최신순 자동 fallback (ADR-038).
+  // 노출 개수는 어드민 설정값 (ADR-054) — 지정 자리는 12까지지만 화면에는 이 수만큼만 나온다
+  const visibleCount = await landingDb.getFeaturedVisibleCount();
+  const slots = await landingDb.listFeaturedGrid(visibleCount);
+  const items = slots.filter((s): s is NonNullable<typeof s> => s != null);
   return <ArticleGridSection items={items} />;
 }
 

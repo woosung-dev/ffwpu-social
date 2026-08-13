@@ -1,13 +1,16 @@
-// 어드민 '메인 스토리 관리' — 랜딩 ArticleGrid 하단 7 슬롯(전 카테고리, 수동 pin + 최신순 자동 fallback, ADR-038). 사이드바 재구성으로 '밥이 사랑이다'(story)와 분리
+// 어드민 '메인 스토리 관리' — 랜딩 ArticleGrid 하단 슬롯(전 카테고리, 수동 pin + 최신순 자동 fallback, ADR-038).
+// 지정 가능 자리는 FEATURED_SLOT_MAX(12), 실제 화면 노출 수는 운영자가 정한 값 (ADR-054). 사이드바 재구성으로 '밥이 사랑이다'(story)와 분리
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { landingDb } from "@/features/landing";
+import { FEATURED_SLOT_MAX } from "@/features/landing/constants/slots";
 import {
   LandingSlotManager,
   type CurationNews,
   type FeaturedPreviewItem,
 } from "@/admin/components/LandingSlotManager";
+import { FeaturedVisibleCountForm } from "@/admin/components/FeaturedVisibleCountForm";
 import { AdminPageHeader } from "@/admin/components/AdminPageHeader";
 import { ADMIN_COPY } from "@/admin/copy";
 
@@ -31,20 +34,21 @@ export default function AdminMainStoryPage() {
 }
 
 async function FeaturedData() {
+  const visibleCount = await landingDb.getFeaturedVisibleCount();
   const [featuredCandidates, featuredGrid] = await Promise.all([
     // 하단 슬롯 후보 — 발행된 전 카테고리 글(최신순, ADR-038)
     landingDb.listAllPublishedCandidates(),
-    // 메인 스토리 미리보기 — 공개 페이지와 동일 해석(pin + 자동 fallback, ADR-038)
-    landingDb.listFeaturedGrid(7),
+    // 메인 스토리 미리보기 — 공개 페이지와 동일 해석(pin + 자동 fallback, 노출 개수만큼)
+    landingDb.listFeaturedGrid(visibleCount),
   ]);
 
   // 슬롯 배열 매핑 — 점유 글만(pinned-only). 자동 fallback 은 공개 페이지 전용 (codex D2)
   const featuredSlots: Array<CurationNews | null> = Array.from(
-    { length: 7 },
+    { length: FEATURED_SLOT_MAX },
     () => null,
   );
   for (const c of featuredCandidates) {
-    if (c.featuredRank != null && c.featuredRank >= 1 && c.featuredRank <= 7) {
+    if (c.featuredRank != null && c.featuredRank >= 1 && c.featuredRank <= FEATURED_SLOT_MAX) {
       featuredSlots[c.featuredRank - 1] = c;
     }
   }
@@ -63,12 +67,16 @@ async function FeaturedData() {
   );
 
   return (
-    <LandingSlotManager
-      show="featured"
-      featuredCandidates={featuredCandidates}
-      featuredSlots={featuredSlots}
-      featuredPreview={featuredPreview}
-    />
+    <div className="space-y-6">
+      <FeaturedVisibleCountForm value={visibleCount} />
+      <LandingSlotManager
+        show="featured"
+        featuredCandidates={featuredCandidates}
+        featuredSlots={featuredSlots}
+        featuredPreview={featuredPreview}
+        featuredVisibleCount={visibleCount}
+      />
+    </div>
   );
 }
 
