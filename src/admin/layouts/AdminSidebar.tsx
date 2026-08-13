@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { AppWindow, BarChart3, FolderTree, Heart, LayoutDashboard, LogOut, Megaphone, Menu, Newspaper, Star, Users, X } from "lucide-react";
+import { AppWindow, BarChart3, FolderTree, Heart, LayoutDashboard, LogOut, Megaphone, Menu, Newspaper, Radio, Star, Users, X } from "lucide-react";
 
 import { logoutAction } from "@/features/auth/actions";
 import { ADMIN_COPY } from "@/admin/copy";
@@ -48,6 +48,17 @@ const NAV_GROUPS: readonly NavGroup[] = [
       { href: "/admin/main-story", label: ADMIN_COPY.nav.mainStory, icon: Star },
       { href: "/admin/news", label: ADMIN_COPY.nav.story, icon: Newspaper },
       { href: "/admin/categories", label: ADMIN_COPY.nav.categories, icon: FolderTree },
+    ],
+  },
+  {
+    label: ADMIN_COPY.nav.groupPress,
+    items: [
+      { href: "/admin/press", label: ADMIN_COPY.nav.press, icon: Radio },
+      {
+        href: "/admin/press-categories",
+        label: ADMIN_COPY.nav.pressCategories,
+        icon: FolderTree,
+      },
     ],
   },
   {

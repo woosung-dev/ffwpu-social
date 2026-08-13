@@ -1,12 +1,15 @@
 // 메인 랜딩 DB 쿼리 — KPI 지표 + StorySection 상단 슬롯 (news.story_slot) + ArticleGrid 하단 슬롯 (news.featured_rank) 큐레이션 + 자동 fallback
 import "server-only";
 
-import { and, asc, desc, eq, isNotNull, isNull, lte, notInArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, lte, notInArray, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { categories, kpiMetrics, news } from "@/db/schema";
+import { categories, kpiMetrics, news, siteSettings } from "@/db/schema";
+
+import { clampFeaturedVisibleCount, FEATURED_VISIBLE_DEFAULT } from "./constants/slots";
 
 const RICE_SHARING_SLUG = "rice_sharing";
+const SETTINGS_ROW_ID = 1;
 
 // news/db.ts 의 동명 헬퍼와 동일 기준 — 발행됨 + 숨김 아님 (is_hidden, ADR-053).
 // 슬롯에 pin 된 글을 숨기면 랜딩에서도 자동으로 빠진다 (슬롯 자체는 유지)
@@ -93,8 +96,8 @@ export async function listStorySlots() {
 }
 
 // ArticleGrid 하단 슬롯 — 운영자 pin (featured_rank) + 자동 fallback (전 카테고리 최신순, ADR-038)
-// 결과: 1~7 자리 채워진 배열 (null 가능)
-export async function listFeaturedGrid(slotCount = 7) {
+// 결과: 1~slotCount 자리 채워진 배열 (null 가능). slotCount 는 운영자가 정한 노출 개수 (ADR-054)
+export async function listFeaturedGrid(slotCount = FEATURED_VISIBLE_DEFAULT) {
   // 1. 운영자 pin
   const pinned = await db
     .select({
@@ -114,16 +117,18 @@ export async function listFeaturedGrid(slotCount = 7) {
     .where(and(publicPublishedWhere(), isNotNull(news.featuredRank)))
     .orderBy(asc(news.featuredRank));
 
-  const pinnedIds = new Set(pinned.map((p) => p.id));
   const filledSlots = new Map<number, (typeof pinned)[number]>();
   for (const p of pinned) {
     if (p.featuredRank != null && p.featuredRank >= 1 && p.featuredRank <= slotCount) {
       filledSlots.set(p.featuredRank, p);
     }
   }
+  // 노출 범위 밖 rank(노출 6인데 9번 지정 등)는 '미지정'과 동일 취급 — 아래 fallback 후보로 되돌린다.
+  // pin 됐다는 이유로 후보에서까지 빼면 랜딩 어디에도 안 나오는 사각지대가 생긴다 (ADR-054)
+  const shownIds = Array.from(filledSlots.values(), (p) => p.id);
   const emptySlots = slotCount - filledSlots.size;
 
-  // 2. 자동 fallback — 전 카테고리 최신순, pin 된 글 제외 (ADR-038)
+  // 2. 자동 fallback — 전 카테고리 최신순, 이미 자리를 차지한 글만 제외 (ADR-038)
   const autoCandidates = emptySlots > 0
     ? await db
         .select({
@@ -143,9 +148,8 @@ export async function listFeaturedGrid(slotCount = 7) {
         .where(
           and(
             publicPublishedWhere(),
-            isNull(news.featuredRank),
             // notInArray(col, []) === TRUE 라 pin 없을 때도 안전 (codex: raw NOT IN 은 tuple 생성 실패 위험)
-            notInArray(news.id, Array.from(pinnedIds)),
+            notInArray(news.id, shownIds),
           ),
         )
         .orderBy(desc(news.publishedAt))
@@ -206,4 +210,27 @@ export async function listAllPublishedCandidates() {
     .innerJoin(categories, eq(news.categoryId, categories.id))
     .where(publicPublishedWhere())
     .orderBy(desc(news.publishedAt));
+}
+
+// 전역 설정 — 행이 없으면(최초 배포 직후) 기본값. 마이그레이션에서 데이터를 만들지 않는다 (ADR-039)
+export async function getFeaturedVisibleCount(): Promise<number> {
+  const [row] = await db
+    .select({ featuredVisibleCount: siteSettings.featuredVisibleCount })
+    .from(siteSettings)
+    .where(eq(siteSettings.id, SETTINGS_ROW_ID))
+    .limit(1);
+  return clampFeaturedVisibleCount(row?.featuredVisibleCount ?? FEATURED_VISIBLE_DEFAULT);
+}
+
+// 단일 행 upsert — 최초 저장이 곧 행 생성
+export async function setFeaturedVisibleCount(count: number) {
+  const value = clampFeaturedVisibleCount(count);
+  await db
+    .insert(siteSettings)
+    .values({ id: SETTINGS_ROW_ID, featuredVisibleCount: value })
+    .onConflictDoUpdate({
+      target: siteSettings.id,
+      set: { featuredVisibleCount: value, updatedAt: new Date() },
+    });
+  return value;
 }

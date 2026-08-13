@@ -32,7 +32,7 @@ export default function AdminNewsNewPage() {
 }
 
 async function NewEditorData() {
-  const all = await listAllCategoriesForAdmin();
+  const all = await listAllCategoriesForAdmin("story");
   const categories: NewsCategoryOption[] = all
     .filter((c) => c.isActive)
     .map((c) => ({ id: c.id, name: c.name }));
@@ -47,7 +47,7 @@ async function NewEditorData() {
   // 새 key 를 주어 깨끗한 폼으로 리마운트한다(미제출 이탈 후 재진입 시 이전 입력 잔존 차단). back/forward 는
   // 세그먼트 복원이라 서버 재렌더가 없어 같은 key → 입력 보존(정상 UX). key 는 await 이후 동적 스코프에서 생성.
   const draftKey = crypto.randomUUID();
-  return <NewsEditor key={draftKey} mode="new" categories={categories} />;
+  return <NewsEditor key={draftKey} board="story" mode="new" categories={categories} />;
 }
 
 function EditorLoading() {

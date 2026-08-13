@@ -4,6 +4,10 @@ import { z } from "zod";
 export const LINK_TARGETS = ["self", "new_tab", "small_window"] as const;
 export type PopupLinkTarget = (typeof LINK_TARGETS)[number];
 
+// "보지 않기" 체크 후 닫았을 때 숨길 기간 — 둘 다 닫은 시점 기준 경과 시간(자정 기준 아님)
+export const DISMISS_DURATIONS = ["day", "week"] as const;
+export type PopupDismissDuration = (typeof DISMISS_DURATIONS)[number];
+
 // refine 전 단계 객체 — Zod v4 는 refine 붙은 객체에 pick/omit 을 허용하지 않아(런타임 throw) 폼 파생용으로 분리
 const popupObjectSchema = z
   .object({
@@ -26,6 +30,7 @@ const popupObjectSchema = z
         message: "링크 주소는 /로 시작하는 내부 경로 또는 https:// URL이어야 합니다.",
       }),
     linkTarget: z.enum(LINK_TARGETS).default("small_window"),
+    dismissDuration: z.enum(DISMISS_DURATIONS).default("week"),
     startsAt: z.date(),
     endsAt: z.date().nullable().optional().transform((value) => value ?? null),
     isActive: z.boolean().default(true),

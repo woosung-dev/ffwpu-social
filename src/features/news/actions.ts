@@ -12,6 +12,11 @@ import {
   isAllowedImageMime,
   MAX_IMAGE_BYTES,
 } from "@/features/storage";
+import {
+  FEATURED_SLOT_MAX,
+  STORY_SLOT_COUNT,
+} from "@/features/landing/constants/slots";
+import { BOARD_PATHS, type NewsBoard } from "./board";
 import * as newsService from "./service";
 import { newsInputSchema, type NewsInput } from "./schemas";
 
@@ -21,25 +26,30 @@ function isInvalidCover(url: string | null | undefined): boolean {
 }
 
 // 어드민 CRUD revalidate 묶음 — 글 변경 시 사용자 사이트 + 어드민 캐시 무효화.
-// 발행 해제·카테고리 변경 시 hero·landing 슬롯이 동반 정리되므로(A1b) 큐레이션 페이지도 함께 무효화
-function revalidateNewsRoutes(id?: string) {
-  revalidatePath("/news");
-  revalidatePath("/admin/news");
+// 발행 해제·카테고리 변경 시 hero·landing 슬롯이 동반 정리되므로(A1b) 큐레이션 페이지도 함께 무효화.
+// 언론 게시판은 랜딩·슬롯과 무관하므로 자기 경로만 무효화한다 (ADR-056)
+function revalidateNewsRoutes(board: NewsBoard, id?: string) {
+  const paths = BOARD_PATHS[board];
+  revalidatePath(paths.public);
+  revalidatePath(paths.admin);
   revalidatePath("/admin");
-  revalidatePath("/admin/news-hero");
-  revalidatePath("/admin/landing");
-  revalidatePath("/");
+  if (board === "story") {
+    revalidatePath("/admin/news-hero");
+    revalidatePath("/admin/landing");
+    revalidatePath("/admin/main-story");
+    revalidatePath("/");
+  }
   if (id) {
-    revalidatePath(`/news/${id}`);
-    revalidatePath(`/admin/news/${id}/edit`);
+    revalidatePath(`${paths.public}/${id}`);
+    revalidatePath(`${paths.admin}/${id}/edit`);
   }
 }
 
 // ─── 사용자 사이트 (인증 불필요, 읽기 전용) ─────────────────────────────────
 // 목록 조회는 Server Action 대신 GET /api/news (route handler) — 클라 useSuspenseQuery 렌더 중 Router setState 경고 방지
 
-export async function getNewsDetailAction(id: string) {
-  const data = await newsService.getNewsDetail(id);
+export async function getNewsDetailAction(board: NewsBoard, id: string) {
+  const data = await newsService.getNewsDetail(board, id);
   if (!data) return { success: false as const, error: "Not Found" };
   return { success: true as const, data };
 }
@@ -78,6 +88,7 @@ export async function heartStateAction(newsId: string, sessionId: string) {
 // ─── 어드민 CRUD (super 가드) — RHF handleSubmit 의 values 객체 직접 수신 (결정 로그 [T7 시그니처]) ──
 
 export async function createNewsAction(
+  board: NewsBoard,
   id: string,
   input: NewsInput,
 ): Promise<ActionResult<{ id: string }, NewsInput>> {
@@ -98,11 +109,12 @@ export async function createNewsAction(
       };
     }
     const created = await newsService.createNews(
+      board,
       id,
       parsed.data,
       session.user.id,
     );
-    revalidateNewsRoutes(created.id);
+    revalidateNewsRoutes(board, created.id);
     return { success: true, data: created };
   } catch (e) {
     return toActionError(e, "newsAction");
@@ -110,6 +122,7 @@ export async function createNewsAction(
 }
 
 export async function updateNewsAction(
+  board: NewsBoard,
   id: string,
   input: NewsInput,
 ): Promise<ActionResult<{ id: string }, NewsInput>> {
@@ -130,7 +143,7 @@ export async function updateNewsAction(
     }
     const updated = await newsService.updateNews(id, parsed.data);
     if (!updated) return { success: false, error: "Not Found" };
-    revalidateNewsRoutes(id);
+    revalidateNewsRoutes(board, id);
     return { success: true, data: updated };
   } catch (e) {
     return toActionError(e, "newsAction");
@@ -138,6 +151,7 @@ export async function updateNewsAction(
 }
 
 export async function deleteNewsAction(
+  board: NewsBoard,
   id: string,
 ): Promise<ActionResult<{ id: string }>> {
   try {
@@ -147,7 +161,7 @@ export async function deleteNewsAction(
     }
     const deleted = await newsService.deleteNews(id);
     if (!deleted) return { success: false, error: "Not Found" };
-    revalidateNewsRoutes(id);
+    revalidateNewsRoutes(board, id);
     return { success: true, data: deleted };
   } catch (e) {
     return toActionError(e, "newsAction");
@@ -156,6 +170,7 @@ export async function deleteNewsAction(
 
 // 발행/해제 — UI 의 row 토글 버튼용 (편집 페이지 저장과 별도 — 결정 로그 [T7 publish 분리])
 export async function publishNewsAction(
+  board: NewsBoard,
   id: string,
   publish: boolean,
 ): Promise<ActionResult<{ id: string }>> {
@@ -166,7 +181,7 @@ export async function publishNewsAction(
     }
     const updated = await newsService.setPublishedAt(id, publish);
     if (!updated) return { success: false, error: "Not Found" };
-    revalidateNewsRoutes(id);
+    revalidateNewsRoutes(board, id);
     return { success: true, data: updated };
   } catch (e) {
     return toActionError(e, "newsAction");
@@ -176,6 +191,7 @@ export async function publishNewsAction(
 // 공개 노출 토글 — 발행된 글을 공개 사이트에서만 숨김/복원 (ADR-053).
 // revalidateNewsRoutes 로 랜딩·목록·상세·어드민 캐시를 함께 무효화 — 토글 직후 목록이 새 상태로 다시 그려진다
 export async function setNewsHiddenAction(
+  board: NewsBoard,
   id: string,
   hidden: boolean,
 ): Promise<ActionResult<{ id: string }>> {
@@ -186,7 +202,7 @@ export async function setNewsHiddenAction(
     }
     const updated = await newsService.setNewsHidden(id, hidden);
     if (!updated) return { success: false, error: "Not Found" };
-    revalidateNewsRoutes(id);
+    revalidateNewsRoutes(board, id);
     return { success: true, data: updated };
   } catch (e) {
     return toActionError(e, "newsAction");
@@ -195,22 +211,23 @@ export async function setNewsHiddenAction(
 
 // 태그 자동완성 — TagsInput(T8) 진입점. super 가드 (결정 로그 [T8 searchTags 인증])
 export async function searchTagsAction(
+  board: NewsBoard,
   prefix: string,
 ): Promise<ActionResult<Array<{ tag: string; count: number }>>> {
   try {
     await requireSuperAdmin();
-    const tags = await newsService.searchTags(prefix);
+    const tags = await newsService.searchTags(board, prefix);
     return { success: true, data: tags };
   } catch (e) {
     return toActionError(e, "newsAction");
   }
 }
 
-// 메인 랜딩 슬롯 설정 — /admin/landing 큐레이션. story (1~2) / featured (1~7). null = 해제. revalidate / 메인 + 어드민 landing
+// 메인 랜딩 슬롯 설정 — 큐레이션. story (1~2, /admin/landing) / featured (1~12, /admin/main-story). null = 해제
 const setLandingSlotInputSchema = z.object({
   newsId: z.uuid(),
   kind: z.enum(["story", "featured"]),
-  slot: z.number().int().min(1).max(7).nullable(),
+  slot: z.number().int().min(1).max(FEATURED_SLOT_MAX).nullable(),
 });
 type SetLandingSlotInput = z.infer<typeof setLandingSlotInputSchema>;
 
@@ -224,7 +241,11 @@ export async function setLandingSlotAction(
       return { success: false, error: parsed.error };
     }
     // story 슬롯은 1~2 만 허용 (UI 강제 보강 — DB 컬럼 제약 외 비즈니스 룰)
-    if (parsed.data.kind === "story" && parsed.data.slot != null && parsed.data.slot > 2) {
+    if (
+      parsed.data.kind === "story" &&
+      parsed.data.slot != null &&
+      parsed.data.slot > STORY_SLOT_COUNT
+    ) {
       return { success: false, error: "StorySection 슬롯은 1 또는 2 만 가능합니다." };
     }
     const result = await newsService.setLandingSlot(
@@ -247,6 +268,7 @@ export async function setLandingSlotAction(
     // 메인 / 사용자 사이트 + 어드민 큐레이션 페이지 동시 revalidate
     revalidatePath("/");
     revalidatePath("/admin/landing");
+    revalidatePath("/admin/main-story");
     return { success: true, data: { id: result.id } };
   } catch (e) {
     return toActionError(e, "newsAction");

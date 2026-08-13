@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { ExternalLink, Newspaper, Plus, Sparkles } from "lucide-react";
 import { getAdminAnalyticsDashboard } from "@/features/analytics";
-import { getAdminDashboard } from "@/features/news";
+import { BOARD_PATHS, getAdminDashboard } from "@/features/news";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AdminPageHeader } from "@/admin/components/AdminPageHeader";
@@ -80,7 +80,7 @@ async function AnalyticsCard({
 
 // ─── 글 현황 (발행·임시저장·예약) — 관리형 목록 대신 한눈 요약 ───
 async function StatusSection() {
-  const { statusCounts } = await getAdminDashboard();
+  const { statusCounts } = await getAdminDashboard("story");
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <StatusCard
@@ -265,7 +265,7 @@ async function AnalyticsBody({ days }: { days: number }) {
                   className="flex flex-col items-start gap-1 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                 >
                   <Link
-                    href={`/admin/news/${item.newsId}/edit`}
+                    href={`${BOARD_PATHS[item.board].admin}/${item.newsId}/edit`}
                     className="w-full truncate text-sm font-medium text-ink-strong hover:text-brand-primary sm:w-auto sm:min-w-0"
                   >
                     {item.title}

@@ -82,9 +82,9 @@ async function NewsListPrefetch({
   searchParams: Promise<SearchParams>;
 }) {
   const { category, page, q, sort } = await searchParams;
-  const filters = normalizeNewsListFilters({ category, page, q, sort });
+  const filters = normalizeNewsListFilters("story", { category, page, q, sort });
 
-  const categoriesAll = await listCategories();
+  const categoriesAll = await listCategories("story");
   const categoriesForTabs = categoriesAll
     .filter((c) => c.isActive)
     .map((c) => ({ slug: c.slug, name: c.name }));
@@ -94,7 +94,7 @@ async function NewsListPrefetch({
   void queryClient.prefetchQuery({
     queryKey: newsKeys.list(filters),
     queryFn: () =>
-      listNews({
+      listNews("story", {
         categorySlug:
           filters.categorySlug === ALL_CATEGORY_SLUG
             ? undefined
@@ -108,7 +108,7 @@ async function NewsListPrefetch({
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <NewsListClient categories={categoriesForTabs} />
+      <NewsListClient board="story" categories={categoriesForTabs} />
     </HydrationBoundary>
   );
 }

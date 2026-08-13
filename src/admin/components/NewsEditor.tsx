@@ -16,6 +16,7 @@ import {
 import { newsInputSchema, type NewsInput } from "@/features/news/schemas";
 import { CoverImageUploader } from "./CoverImageUploader";
 import { DateTimePicker } from "./DateTimePicker";
+import { BOARD_PATHS, type NewsBoard } from "@/features/news/board";
 import { TagsInput } from "./TagsInput";
 import { HelpTip } from "./HelpTip";
 import { ADMIN_COPY } from "@/admin/copy";
@@ -46,6 +47,8 @@ export type NewsEditorInitial = {
 };
 
 type Props = {
+  /** 어느 게시판 글인가 (ADR-056) — 저장 대상·목록 복귀 경로·태그 제안 범위를 결정 */
+  board: NewsBoard;
   mode: "new" | "edit";
   categories: NewsCategoryOption[];
   initial?: NewsEditorInitial;
@@ -76,7 +79,7 @@ const PUBLISH_STATE_CLASS: Record<PublishState, string> = {
   published: "bg-brand-primary/10 text-brand-primary",
 };
 
-export function NewsEditor({ mode, categories, initial }: Props) {
+export function NewsEditor({ board, mode, categories, initial }: Props) {
   const router = useRouter();
   const isEdit = mode === "edit";
 
@@ -125,8 +128,8 @@ export function NewsEditor({ mode, categories, initial }: Props) {
       };
       startTransition(async () => {
         const result = isEdit
-          ? await updateNewsAction(initial!.id, payload)
-          : await createNewsAction(newsId, payload);
+          ? await updateNewsAction(board, initial!.id, payload)
+          : await createNewsAction(board, newsId, payload);
         if (!result.success) {
           const msg =
             typeof result.error === "string"
@@ -159,7 +162,7 @@ export function NewsEditor({ mode, categories, initial }: Props) {
               ? "발행되었습니다."
               : "임시 저장되었습니다.",
         );
-        router.push("/admin/news");
+        router.push(BOARD_PATHS[board].admin);
       });
     })();
 
@@ -398,6 +401,7 @@ export function NewsEditor({ mode, categories, initial }: Props) {
                   name="tags"
                   render={({ field }) => (
                     <TagsInput
+                      board={board}
                       value={field.value ?? []}
                       onChange={field.onChange}
                       disabled={isPending}

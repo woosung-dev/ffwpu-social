@@ -33,6 +33,7 @@ import { GripVertical } from "lucide-react";
 import {
   createCategoryAction,
   updateCategoryAction,
+  deleteCategoryAction,
   reorderCategoriesAction,
 } from "@/features/categories/actions";
 import {
@@ -64,6 +65,7 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { HelpTip } from "@/admin/components/HelpTip";
 import { CategoryTabsPreview } from "@/admin/components/CategoryTabsPreview";
+import type { NewsBoard } from "@/features/news/board";
 import { ADMIN_COPY } from "@/admin/copy";
 
 const CAT = ADMIN_COPY.categories;
@@ -77,9 +79,13 @@ export type CategoryRow = {
   newsCount: number;
 };
 
-type Props = { rows: CategoryRow[] };
+type Props = {
+  /** 어느 게시판 카테고리인가 (ADR-056) — 생성·수정·정렬 대상 게시판을 결정 */
+  board: NewsBoard;
+  rows: CategoryRow[];
+};
 
-export function CategoryManager({ rows }: Props) {
+export function CategoryManager({ board, rows }: Props) {
   const [editing, setEditing] = useState<CategoryRow | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -94,16 +100,18 @@ export function CategoryManager({ rows }: Props) {
       <CategoryTabsPreview
         names={rows.filter((r) => r.isActive).map((r) => r.name)}
       />
-      <CreateForm onError={setError} />
+      <CreateForm board={board} onError={setError} />
       <ErrorBanner message={error} onClose={() => setError(null)} />
       <CategoryOrderList
         key={rowsKey}
+        board={board}
         rows={rows}
         onEdit={setEditing}
         onError={setError}
       />
       {editing && (
         <EditDialog
+          board={board}
           row={editing}
           onClose={() => setEditing(null)}
           onError={setError}
@@ -115,7 +123,13 @@ export function CategoryManager({ rows }: Props) {
 
 // ─── 상단 추가 폼 (sortOrder 입력 없음 — 새 카테고리는 맨 끝 자동 배치) ──────
 
-function CreateForm({ onError }: { onError: (msg: string | null) => void }) {
+function CreateForm({
+  board,
+  onError,
+}: {
+  board: NewsBoard;
+  onError: (msg: string | null) => void;
+}) {
   const [isPending, startTransition] = useTransition();
   const form = useForm<CreateCategoryInput>({
     resolver: zodResolver(createCategorySchema),
@@ -125,7 +139,7 @@ function CreateForm({ onError }: { onError: (msg: string | null) => void }) {
   const onSubmit = (values: CreateCategoryInput) => {
     onError(null);
     startTransition(async () => {
-      const result = await createCategoryAction(values);
+      const result = await createCategoryAction(board, values);
       if (!result.success) {
         const msg =
           typeof result.error === "string"
@@ -287,10 +301,12 @@ function SortableCategoryRow({
 }
 
 function CategoryOrderList({
+  board,
   rows,
   onEdit,
   onError,
 }: {
+  board: NewsBoard;
   rows: CategoryRow[];
   onEdit: (row: CategoryRow) => void;
   onError: (msg: string | null) => void;
@@ -335,7 +351,7 @@ function CategoryOrderList({
   const onSave = () => {
     onError(null);
     startTransition(async () => {
-      const result = await reorderCategoriesAction({
+      const result = await reorderCategoriesAction(board, {
         orderedIds: items.map((i) => i.id),
       });
       if (!result.success) {
@@ -435,15 +451,20 @@ function CategoryOrderList({
 // ─── 수정 Dialog (이름 + 활성 — 정렬은 드래그 전용) ──────────────────────────
 
 function EditDialog({
+  board,
   row,
   onClose,
   onError,
 }: {
+  board: NewsBoard;
   row: CategoryRow;
   onClose: () => void;
   onError: (msg: string | null) => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  // 삭제는 글 0건일 때만 — 서버(service)가 최종 판정하고, 여기서는 버튼 자체를 감춰 오조작을 줄인다
+  const canDelete = row.newsCount === 0;
+  const [confirming, setConfirming] = useState(false);
   const form = useForm<UpdateCategoryInput>({
     resolver: zodResolver(updateCategorySchema),
     defaultValues: {
@@ -452,10 +473,27 @@ function EditDialog({
     },
   });
 
+  const onDelete = () => {
+    onError(null);
+    startTransition(async () => {
+      const result = await deleteCategoryAction(board, row.id);
+      if (!result.success) {
+        onError(
+          typeof result.error === "string"
+            ? result.error
+            : "삭제하지 못했습니다.",
+        );
+        setConfirming(false);
+        return;
+      }
+      onClose();
+    });
+  };
+
   const onSubmit = (values: UpdateCategoryInput) => {
     onError(null);
     startTransition(async () => {
-      const result = await updateCategoryAction(row.id, values);
+      const result = await updateCategoryAction(board, row.id, values);
       if (!result.success) {
         const msg =
           typeof result.error === "string"
@@ -519,6 +557,62 @@ function EditDialog({
                 </FormItem>
               )}
             />
+            {/* 삭제 — 글이 하나도 없을 때만. 운영 중인 분류를 없애는 수단이 아니라
+                잘못 만든 카테고리를 정리하는 용도라, 막을 때는 이유와 해결책을 함께 보여준다 */}
+            <div className="rounded-md border border-destructive/25 bg-destructive/5 px-4 py-3">
+              {canDelete ? (
+                <>
+                  <p className="text-xs text-ink-subtle">
+                    글이 없는 카테고리라 삭제할 수 있어요. 삭제하면 되돌릴 수 없습니다.
+                  </p>
+                  {confirming ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-medium text-ink-strong">
+                        ‘{row.name}’ 을(를) 삭제할까요?
+                      </span>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={onDelete}
+                        disabled={isPending}
+                      >
+                        {isPending ? "삭제 중..." : "삭제"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setConfirming(false)}
+                        disabled={isPending}
+                      >
+                        취소
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setConfirming(true)}
+                      disabled={isPending}
+                    >
+                      카테고리 삭제
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <p className="text-xs text-ink-subtle">
+                  <strong className="font-semibold text-ink-strong">
+                    글 {row.newsCount}건
+                  </strong>
+                  이 이 카테고리에 있어 삭제할 수 없어요. 글을 다른 카테고리로 옮긴 뒤
+                  다시 시도하거나, 위의 ‘{CAT.activeLabel}’ 를 꺼서 숨겨주세요.
+                </p>
+              )}
+            </div>
+
             <DialogFooter>
               <Button
                 type="button"

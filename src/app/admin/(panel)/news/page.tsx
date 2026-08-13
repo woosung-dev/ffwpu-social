@@ -110,7 +110,7 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
   const q = normalizeNewsSearch(searchParams.q);
   const tag = normalizeNewsSearch(searchParams.tag);
 
-  const result = await listNewsForAdmin({
+  const result = await listNewsForAdmin("story", {
     page,
     limit: pageSize,
     status,
@@ -140,6 +140,7 @@ async function ManageTab({ searchParams }: { searchParams: SearchParams }) {
 
   return (
     <NewsTable
+      board="story"
       rows={rows}
       page={result.page}
       totalPages={result.totalPages}

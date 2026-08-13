@@ -29,7 +29,8 @@ type Props = {
 
 export function ArticleGridSection({ items }: Props) {
   // 마조네리 카드 stagger 지연 — 읽기 순서(원본 index) 기준 60ms 씩, 최대 300ms 캡(잔잔한 결)
-  const revealOrder = new Map(items.slice(0, 6).map((it, i) => [it.id, i]));
+  // 노출 개수는 page.tsx 가 이미 어드민 설정값으로 잘라 넘긴다 (ADR-054) — 여기서 다시 자르지 않는다
+  const revealOrder = new Map(items.map((it, i) => [it.id, i]));
   // 섹션 상하 패딩 — Figma: 375 24.5 / 768 62.5 / 1025 96.5 / 1440 100
   return (
     <section className="w-full bg-white py-6 md:py-16 lg:py-24 wide:py-[100px]">
@@ -78,7 +79,7 @@ export function ArticleGridSection({ items }: Props) {
             gap — Figma: 375 6/6 · 768 10/10 · 1025+ 열16/행20 (기본 gap-4 는 유지, 여기서만 주입) */}
         <div className="flex-1">
           <MasonryGrid
-            items={items.slice(0, 6)}
+            items={items}
             getKey={(item) => item.id}
             tiers={GRID_TIERS}
             columnGapClassName="gap-1.5 md:gap-2.5 lg:gap-4"

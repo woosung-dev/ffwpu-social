@@ -40,8 +40,8 @@ async function EditNewsData({
 }) {
   const { id } = await paramsPromise;
   const [news, allCategories] = await Promise.all([
-    getAdminNewsDetail(id),
-    listAllCategoriesForAdmin(),
+    getAdminNewsDetail("story", id),
+    listAllCategoriesForAdmin("story"),
   ]);
   if (!news) notFound();
 
@@ -61,6 +61,7 @@ async function EditNewsData({
   return (
     <NewsEditor
       key={draftKey}
+      board="story"
       mode="edit"
       categories={categories}
       initial={{

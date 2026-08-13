@@ -9,8 +9,10 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { createPopupAction, updatePopupAction } from "@/features/popups/actions";
 import {
+  DISMISS_DURATIONS,
   LINK_TARGETS,
   popupFormSchema,
+  type PopupDismissDuration,
   type PopupInput,
   type PopupLinkTarget,
 } from "@/features/popups/schemas";
@@ -39,6 +41,7 @@ export type PopupEditorInitial = {
   imageHeight: number | null;
   linkUrl: string | null;
   linkTarget: PopupLinkTarget;
+  dismissDuration: PopupDismissDuration;
   startsAt: Date;
   endsAt: Date | null;
   isActive: boolean;
@@ -59,6 +62,11 @@ const LINK_TARGET_LABELS: Record<PopupLinkTarget, string> = {
   self: "현재 탭에서 이동",
   new_tab: "새 탭으로 열기",
   small_window: "작은 새 창으로 열기 (추천)",
+};
+
+const DISMISS_DURATION_LABELS: Record<PopupDismissDuration, string> = {
+  day: "하루 (24시간)",
+  week: "일주일 (7일)",
 };
 
 function getActionError(error: unknown): string {
@@ -84,6 +92,9 @@ export function PopupEditor({ mode, initial }: Props) {
   const [linkTarget, setLinkTarget] = useState<PopupLinkTarget>(
     initial?.linkTarget ?? "small_window",
   );
+  const [dismissDuration, setDismissDuration] = useState<PopupDismissDuration>(
+    initial?.dismissDuration ?? "week",
+  );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const form = useForm<FormInput, unknown, FormValues>({
@@ -108,6 +119,7 @@ export function PopupEditor({ mode, initial }: Props) {
       imageHeight: image.height,
       linkUrl: values.linkUrl || null,
       linkTarget,
+      dismissDuration,
       startsAt,
       endsAt,
       isActive,
@@ -128,6 +140,7 @@ export function PopupEditor({ mode, initial }: Props) {
         setEndsAt(null);
         setIsActive(true);
         setLinkTarget("small_window");
+        setDismissDuration("week");
         setNewPopupNonce((nonce) => nonce + 1);
       }
       toast.success(isEdit ? "팝업을 수정했습니다." : "팝업을 등록했습니다.");
@@ -229,6 +242,38 @@ export function PopupEditor({ mode, initial }: Props) {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2 border-t border-border pt-6">
+              <div className="flex items-center gap-1.5">
+                <Label
+                  htmlFor="popup-dismiss-duration"
+                  className="text-sm font-semibold text-ink-strong"
+                >
+                  {ADMIN_COPY.popups.dismissDurationLabel}
+                </Label>
+                <HelpTip>{ADMIN_COPY.popups.dismissHelp}</HelpTip>
+              </div>
+              <Select
+                value={dismissDuration}
+                onValueChange={(value) => setDismissDuration(value as PopupDismissDuration)}
+                disabled={isPending}
+              >
+                <SelectTrigger id="popup-dismiss-duration" className="h-11 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DISMISS_DURATIONS.map((duration) => (
+                    <SelectItem key={duration} value={duration}>
+                      {DISMISS_DURATION_LABELS[duration]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-ink-subtle">
+                방문자가 팝업 하단 체크박스를 켜고 닫으면 이 기간 동안 같은 브라우저에서 다시 뜨지
+                않습니다. 체크하지 않고 닫으면 다음 방문에 다시 보입니다.
+              </p>
             </div>
           </CardContent>
         </Card>

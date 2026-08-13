@@ -9,9 +9,11 @@ import { SearchInput } from "@/features/news/components";
 type Props = {
   defaultValue: string;
   className?: string;
+  /** 목록 경로 — /news 또는 /press (ADR-056) */
+  basePath: string;
 };
 
-export function NewsSearch({ defaultValue, className }: Props) {
+export function NewsSearch({ defaultValue, className, basePath }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -23,7 +25,7 @@ export function NewsSearch({ defaultValue, className }: Props) {
     params.delete("page"); // 검색 변경 시 1페이지로 리셋
     const query = params.toString();
     startTransition(() => {
-      router.push(query ? `/news?${query}` : "/news", { scroll: false });
+      router.push(query ? `${basePath}?${query}` : basePath, { scroll: false });
     });
   };
 

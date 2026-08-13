@@ -1,0 +1,2 @@
+ALTER TABLE "popups" ADD COLUMN "dismiss_duration" text DEFAULT 'week' NOT NULL;--> statement-breakpoint
+ALTER TABLE "popups" ADD CONSTRAINT "popups_dismiss_duration_check" CHECK ("popups"."dismiss_duration" in ('day', 'week'));

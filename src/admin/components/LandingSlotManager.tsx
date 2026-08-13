@@ -1,4 +1,5 @@
-// 메인 랜딩 큐레이션 — StorySection 상단 2 슬롯(쌀 나눔만, 직접 지정) + ArticleGrid 하단 7 슬롯(전 카테고리, 지정 + 최신순 자동 fallback, ADR-038)
+// 메인 랜딩 큐레이션 — StorySection 상단 2 슬롯(쌀 나눔만, 직접 지정) + ArticleGrid 하단 12 슬롯(전 카테고리, 지정 + 최신순 자동 fallback, ADR-038)
+// 하단은 지정 자리(12)와 실제 노출 개수(운영자 설정)가 분리된다 — 노출 수를 넘는 자리는 '대기' 표시 (ADR-054)
 "use client";
 
 import { useState, useTransition } from "react";
@@ -15,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { FEATURED_SLOT_MAX, STORY_SLOT_COUNT } from "@/features/landing/constants/slots";
 import { HelpTip } from "@/admin/components/HelpTip";
 import { ADMIN_COPY } from "@/admin/copy";
 
@@ -50,10 +52,9 @@ type Props =
       featuredCandidates: CurationNews[]; // 하단 슬롯 후보 — 발행된 전 카테고리 글 (ADR-038)
       featuredSlots: Array<CurationNews | null>;
       featuredPreview: Array<FeaturedPreviewItem | null>; // 메인 스토리 실제 노출(공개 동일 해석)
+      featuredVisibleCount: number; // 운영자가 정한 노출 개수 — 이 수를 넘는 자리는 '대기' (ADR-054)
     };
 
-const STORY_SLOT_COUNT = 2;
-const FEATURED_SLOT_COUNT = 7;
 const UNSET = "__unset__";
 
 export function LandingSlotManager(props: Props) {
@@ -66,6 +67,8 @@ export function LandingSlotManager(props: Props) {
   const featuredSlots = props.show === "featured" ? props.featuredSlots : [];
   const featuredPreview =
     props.show === "featured" ? props.featuredPreview : [];
+  const featuredVisibleCount =
+    props.show === "featured" ? props.featuredVisibleCount : 0;
 
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -129,6 +132,8 @@ export function LandingSlotManager(props: Props) {
     const key = `${kind}-${slot}`;
     const isBusy = busySlot === key;
     const slotLabel = kind === "story" ? `${slot}번 사진` : `${slot}번 자리`;
+    // 노출 개수를 넘는 자리 — 지정은 되지만 지금은 화면에 안 나온다. 조용히 사라지지 않게 명시 (ADR-054)
+    const isWaiting = kind === "featured" && slot > featuredVisibleCount;
     // 상단=쌀 나눔 후보 / 하단=전 카테고리 후보 (ADR-038)
     const candidates = kind === "story" ? storyCandidates : featuredCandidates;
     return (
@@ -137,10 +142,16 @@ export function LandingSlotManager(props: Props) {
         className={cn(
           "flex flex-col gap-2 rounded-lg border border-border bg-white p-3 sm:flex-row sm:items-center sm:gap-3",
           isBusy && "opacity-60",
+          isWaiting && "border-dashed bg-surface-soft/50",
         )}
       >
-        <span className="w-20 shrink-0 text-sm font-medium text-ink-strong">
+        <span className="flex w-20 shrink-0 flex-col items-start gap-1 text-sm font-medium text-ink-strong">
           {slotLabel}
+          {isWaiting && (
+            <span className="rounded-full bg-surface-soft px-2 py-0.5 text-[11px] font-medium text-ink-subtle">
+              대기
+            </span>
+          )}
         </span>
         {/* 커버 썸네일 — 점유 글의 메인 노출 이미지 즉시 확인. 커버 없으면 기본 사진 폴백 안내 */}
         {current &&
@@ -277,18 +288,33 @@ export function LandingSlotManager(props: Props) {
           <Card className="min-w-0">
             <CardHeader>
               <CardTitle className="flex items-center gap-1.5 text-xl">
-                {LAND.featuredTitle} (7개)
+                {LAND.featuredTitle} ({FEATURED_SLOT_MAX}개)
                 <HelpTip>{LAND.featuredHelp}</HelpTip>
               </CardTitle>
               <p className="text-sm text-ink-subtle">
                 ※ 전 카테고리 발행 글 지정 가능. 지정한 자리만 점유, 미지정 자리는
-                최신 글이 자동 채움
+                최신 글이 자동 채움. 위에서 정한 <strong className="font-semibold">
+                  {featuredVisibleCount}개
+                </strong>
+                까지만 화면에 나오고, 그 아래 ‘대기’ 자리는 개수를 늘리면 노출됩니다.
               </p>
             </CardHeader>
             <CardContent className="space-y-3">
-              {Array.from({ length: FEATURED_SLOT_COUNT }).map((_, i) =>
-                renderSlotRow("featured", i + 1, featuredSlots[i] ?? null),
-              )}
+              {Array.from({ length: FEATURED_SLOT_MAX }).map((_, i) => (
+                <div key={`featured-slot-${i + 1}`} className="space-y-3">
+                  {renderSlotRow("featured", i + 1, featuredSlots[i] ?? null)}
+                  {/* 노출 경계선 — 여기까지가 사용자 화면에 실제로 보이는 자리 */}
+                  {i + 1 === featuredVisibleCount && i + 1 < FEATURED_SLOT_MAX && (
+                    <div className="flex items-center gap-3 py-1" aria-hidden>
+                      <span className="h-px flex-1 bg-border" />
+                      <span className="text-xs font-medium text-ink-subtle">
+                        여기까지 화면에 노출
+                      </span>
+                      <span className="h-px flex-1 bg-border" />
+                    </div>
+                  )}
+                </div>
+              ))}
             </CardContent>
           </Card>
 
@@ -297,8 +323,8 @@ export function LandingSlotManager(props: Props) {
               <CardTitle className="flex items-center gap-1.5 text-xl">
                 메인 스토리 미리보기
             <HelpTip>
-              지금 사용자 메인 페이지 ‘메인 스토리’에 실제로 보이는 7개 글이에요.
-              ‘지정’은 직접 고른 글, ‘자동’은 빈 자리에 최신 글이 채워진 거예요.
+              지금 사용자 메인 페이지 ‘메인 스토리’에 실제로 보이는 {featuredVisibleCount}개
+              글이에요. ‘지정’은 직접 고른 글, ‘자동’은 빈 자리에 최신 글이 채워진 거예요.
             </HelpTip>
           </CardTitle>
           <p className="text-sm text-ink-subtle">

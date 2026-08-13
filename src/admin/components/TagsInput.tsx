@@ -4,9 +4,12 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { searchTagsAction } from "@/features/news/actions";
+import type { NewsBoard } from "@/features/news/board";
 import { cn } from "@/lib/utils";
 
 type Props = {
+  /** 태그 제안을 같은 게시판 글에서만 가져온다 (ADR-056) */
+  board: NewsBoard;
   value: string[];
   onChange: (tags: string[]) => void;
   maxTags?: number;
@@ -21,6 +24,7 @@ function normalize(raw: string): string {
 }
 
 export function TagsInput({
+  board,
   value,
   onChange,
   maxTags = 20,
@@ -42,7 +46,7 @@ export function TagsInput({
       return;
     }
     const handle = setTimeout(async () => {
-      const result = await searchTagsAction(trimmed);
+      const result = await searchTagsAction(board, trimmed);
       if (!result.success) {
         setSuggestions([]);
         return;
@@ -53,7 +57,7 @@ export function TagsInput({
       setSuggestions(filtered);
     }, DEBOUNCE_MS);
     return () => clearTimeout(handle);
-  }, [input, value]);
+  }, [board, input, value]);
 
   const addTag = (raw: string) => {
     const tag = normalize(raw);

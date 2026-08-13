@@ -5,7 +5,15 @@ import { ArrowLeft, ArrowRight, List } from "lucide-react";
 type Adjacent = { id: string; title: string } | null;
 
 // 이전/다음 단일 항목 — 글 있으면 Link, 없으면 비활성 span. dir 로 아이콘 위치·라벨 결정 (4중 중복 제거)
-function AdjacentLink({ dir, item }: { dir: "prev" | "next"; item: Adjacent }) {
+function AdjacentLink({
+  dir,
+  item,
+  basePath,
+}: {
+  dir: "prev" | "next";
+  item: Adjacent;
+  basePath: string;
+}) {
   const label = dir === "prev" ? "이전글" : "다음글";
   const Icon = dir === "prev" ? ArrowLeft : ArrowRight;
   const inner =
@@ -33,7 +41,7 @@ function AdjacentLink({ dir, item }: { dir: "prev" | "next"; item: Adjacent }) {
   }
   return (
     <Link
-      href={`/news/${item.id}`}
+      href={`${basePath}/${item.id}`}
       aria-label={`${label}: ${item.title}`}
       className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 py-2 hover:opacity-80"
     >
@@ -45,15 +53,18 @@ function AdjacentLink({ dir, item }: { dir: "prev" | "next"; item: Adjacent }) {
 export function PrevNextNav({
   prev,
   next,
+  basePath,
 }: {
   prev: Adjacent;
   next: Adjacent;
+  /** 목록 경로 — /news 또는 /press (ADR-056) */
+  basePath: string;
 }) {
   // 1440 리듬: 디바이더 →16→ 행 — 터치타깃(min-h-11) 상단 여유 10px 보정해 lg mt 6px [추론 — 텍스트 기준 정합]
   return (
     <nav className="mt-6 flex items-center justify-between gap-2 text-base font-semibold text-ink-strong lg:mt-1.5">
       <Link
-        href="/news"
+        href={basePath}
         className="-mx-2 inline-flex min-h-11 items-center gap-2 rounded-lg px-2 py-2 hover:opacity-80"
       >
         {/* 목록 아이콘 — Figma 749:8099 menu 24×24 */}
@@ -62,9 +73,9 @@ export function PrevNextNav({
       </Link>
       {/* 이전/다음 그룹 — Figma 749:8103 gap 16: gap-2(8) + 항목 px-2(8) = 텍스트 시각 간격 16px */}
       <div className="flex items-center gap-2">
-        <AdjacentLink dir="prev" item={prev} />
+        <AdjacentLink dir="prev" item={prev} basePath={basePath} />
         <span aria-hidden className="h-4 w-px bg-border" />
-        <AdjacentLink dir="next" item={next} />
+        <AdjacentLink dir="next" item={next} basePath={basePath} />
       </div>
     </nav>
   );

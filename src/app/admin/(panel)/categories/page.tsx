@@ -28,8 +28,8 @@ export default function AdminCategoriesPage() {
 }
 
 async function CategoriesData() {
-  const rows = await listAllForAdmin();
-  return <CategoryManager rows={rows} />;
+  const rows = await listAllForAdmin("story");
+  return <CategoryManager board="story" rows={rows} />;
 }
 
 function CategoriesLoading() {

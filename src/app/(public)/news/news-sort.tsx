@@ -21,9 +21,11 @@ const LABELS: Record<NewsSort, string> = {
 
 type Props = {
   value: NewsSort;
+  /** 목록 경로 — /news 또는 /press (ADR-056) */
+  basePath: string;
 };
 
-export function NewsSort({ value }: Props) {
+export function NewsSort({ value, basePath }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -35,7 +37,7 @@ export function NewsSort({ value }: Props) {
     params.delete("page"); // 정렬 변경 시 1페이지로 리셋
     const query = params.toString();
     startTransition(() => {
-      router.push(query ? `/news?${query}` : "/news", { scroll: false });
+      router.push(query ? `${basePath}?${query}` : basePath, { scroll: false });
     });
   };
 

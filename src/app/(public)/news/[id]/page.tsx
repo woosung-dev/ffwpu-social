@@ -23,7 +23,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const article = await getNewsDetail(id);
+  const article = await getNewsDetail("story", id);
   if (!article) {
     return {
       title: "찾을 수 없는 소식 | 사회공헌단 Sow Good",
@@ -89,12 +89,12 @@ async function NewsDetailContent({
   paramsPromise: Promise<{ id: string }>;
 }) {
   const { id } = await paramsPromise;
-  const item = await getNewsDetail(id);
+  const item = await getNewsDetail("story", id);
   if (!item) notFound();
-  const related = await getRelatedNews(id, item.categoryId, 3);
+  const related = await getRelatedNews("story", id, item.categoryId, 3);
   // 이전/다음 글 — publishedAt 인접 (발행 상세는 publishedAt non-null)
   const adjacent = item.publishedAt
-    ? await getAdjacentNews(id, item.publishedAt)
+    ? await getAdjacentNews("story", id, item.publishedAt)
     : { prev: null, next: null };
 
   return (
@@ -144,7 +144,7 @@ async function NewsDetailContent({
         {/* 1440 리듬: 태그 →70→ 디바이더 */}
         <hr className="mt-12 border-border lg:mt-[70px]" />
 
-        <PrevNextNav prev={adjacent.prev} next={adjacent.next} />
+        <PrevNextNav prev={adjacent.prev} next={adjacent.next} basePath="/news" />
 
         {/* 더 많은 소식 — Figma 93:8865 관련글 ArticleCard(인스턴스 93:8868) size=3.
             1440 리듬: 이전/다음 행 →40→ 제목 — 행 터치타깃 하단 여유 10px 보정해 mt 30px [추론 — 텍스트 기준 정합] */}

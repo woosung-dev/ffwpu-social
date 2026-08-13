@@ -17,17 +17,20 @@ import {
 } from "@/features/news/components";
 
 import { NewsCategoryTabs } from "./news-filters";
+import { BOARD_PATHS, type NewsBoard } from "@/features/news/board";
 import { NewsSearch } from "./news-search";
 import { NewsSort } from "./news-sort";
 
 type Props = {
+  /** 게시판 (ADR-056) — 서버 prefetch 와 같은 값이어야 RQ 캐시 키가 맞는다 */
+  board: NewsBoard;
   categories: readonly CategoryTabItem[];
 };
 
-export function NewsListClient({ categories }: Props) {
+export function NewsListClient({ board, categories }: Props) {
   const searchParams = useSearchParams();
   // 서버 prefetch 와 동일 정규화 — 키 drift 방지 (api.ts SSoT)
-  const filters = normalizeNewsListFilters({
+  const filters = normalizeNewsListFilters(board, {
     category: searchParams.get("category"),
     q: searchParams.get("q"),
     sort: searchParams.get("sort"),
@@ -39,6 +42,11 @@ export function NewsListClient({ categories }: Props) {
     queryFn: () => fetchNewsList(filters),
   });
 
+  const basePath = BOARD_PATHS[board].public;
+  const emptyMessage =
+    board === "press"
+      ? "아직 등록된 언론 보도가 없습니다."
+      : "아직 등록된 소식이 없습니다.";
   // 페이지 변경 href — 카테고리·검색어·정렬 유지, 1페이지는 쿼리 생략
   const buildPageHref = (nextPage: number) => {
     const params = new URLSearchParams();
@@ -49,7 +57,7 @@ export function NewsListClient({ categories }: Props) {
     if (filters.sort !== "latest") params.set("sort", filters.sort);
     if (nextPage !== 1) params.set("page", String(nextPage));
     const query = params.toString();
-    return query ? `/news?${query}` : "/news";
+    return query ? `${basePath}?${query}` : basePath;
   };
 
   return (
@@ -59,6 +67,7 @@ export function NewsListClient({ categories }: Props) {
         <NewsCategoryTabs
           categories={categories}
           selected={filters.categorySlug}
+          basePath={basePath}
         />
       </div>
 
@@ -69,8 +78,9 @@ export function NewsListClient({ categories }: Props) {
           key={filters.q}
           defaultValue={filters.q}
           className="min-w-0 flex-1 max-w-[440px]"
+          basePath={basePath}
         />
-        <NewsSort value={filters.sort} />
+        <NewsSort value={filters.sort} basePath={basePath} />
       </div>
 
       {/* 그리드 colGap — Figma 18(767/768/1025)·24(1440). minmax 의 calc(50%-9px) 는 gap 18 의 절반과 동기 (2열 유지) */}
@@ -81,7 +91,7 @@ export function NewsListClient({ categories }: Props) {
         >
           {filters.q
             ? `'${filters.q}' 에 대한 검색 결과가 없습니다.`
-            : "아직 등록된 소식이 없습니다."}
+            : emptyMessage}
         </p>
       ) : (
         <ul className="mt-[30px] grid [grid-template-columns:repeat(auto-fill,minmax(max(200px,calc(50%-9px)),1fr))] gap-x-4.5 gap-y-12 md:mt-8 md:grid-cols-2 lg:grid-cols-3 wide:gap-x-6">
@@ -89,6 +99,7 @@ export function NewsListClient({ categories }: Props) {
             <li key={item.id} className="flex justify-center">
               <ArticleCard
                 size={1}
+                href={`${basePath}/${item.id}`}
                 article={{
                   id: item.id,
                   title: item.title,

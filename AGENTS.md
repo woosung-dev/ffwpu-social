@@ -100,7 +100,7 @@ pnpm drizzle-kit studio        # DB 브라우저
 - 진행 중: **홈 팝업 후속** (branch `feat/home-popup`) — 디테일 `docs/plans/active/TASK-20260718-home-popup.md`. PR #92 머지(마이그레이션 0015 prod 적용 완료) 후에도 브랜치에 미반영 커밋이 남아 있다.
 - 진행 중: **랜딩 실데이터화 + 반응형 4-BP 정합** (branch `feat/client-foundation`) — 디테일 `docs/plans/active/2026-06-03-landing-data-responsive.md`. 🔴 사진 11장 수령 대기(`src/db/seed-assets/`) · Gmarket Sans 라이선스 확인.
 - 종료된 PR (2026-08-08, 사용자 판단 — 브랜치는 남아 있어 reopen 가능): **#87** SEO 하드닝(ADR-044) · **#78** EC2 배포 Phase 1 · **#55** GHA Node 24.
-- 어드민 surface (9): /admin · /admin/news · /admin/news-hero · /admin/main-story · /admin/categories · /admin/kpi · /admin/landing · /admin/accounts · /admin/notices
+- 어드민 surface (12): /admin · /admin/news · /admin/news-hero · /admin/main-story · /admin/categories · /admin/press · /admin/press-categories · /admin/kpi · /admin/landing · /admin/accounts · /admin/notices · /admin/popups
 - 임시 어드민: `admin@ffwpu-social.local` / `bRhHR2CWkqrMnj0L` (배포 전 변경 필수)
 - 후속·미해결·사회공헌국 escalation: `docs/TODO.md`
 
