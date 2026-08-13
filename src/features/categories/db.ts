@@ -85,6 +85,26 @@ export async function updateCategoryById(id: string, data: UpdateCategoryData) {
   return row ?? null;
 }
 
+// 특정 카테고리에 속한 글 수 — 삭제 가능 여부 판정용. board 무관(category_id 가 이미 게시판을 함의).
+// tx 필수: 확인과 삭제가 같은 트랜잭션이어야 그 사이에 글이 끼어드는 것을 막는다
+export async function countNewsInCategory(categoryId: string, tx: Tx) {
+  const [row] = await tx
+    .select({ count: sql<number>`count(*)::int` })
+    .from(news)
+    .where(eq(news.categoryId, categoryId));
+  return row?.count ?? 0;
+}
+
+// 카테고리 hard delete — service 가 글 0건을 확인한 뒤에만 호출한다.
+// news.category_id 는 onDelete restrict 라 글이 남아 있으면 DB 가 한 번 더 거부한다(이중 안전장치)
+export async function deleteCategoryById(id: string, tx: Tx) {
+  const [row] = await tx
+    .delete(categories)
+    .where(eq(categories.id, id))
+    .returning({ id: categories.id });
+  return row ?? null;
+}
+
 // 일괄 정렬 — 드래그 순서대로 1..N sortOrder 재부여. 단일 트랜잭션(전부 성공/전부 롤백).
 // 히어로와 달리 advisory lock 불필요: sortOrder 에 unique 제약이 없어 동시 저장도 last-write-wins 로 안전(데이터 손상 없음) + 단일 super 계정
 export async function reorderCategories(tx: Tx, orderedIds: string[]) {

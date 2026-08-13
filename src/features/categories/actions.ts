@@ -64,6 +64,27 @@ export async function updateCategoryAction(
   }
 }
 
+// 카테고리 삭제 — 글 0건일 때만. 잘못 만든 카테고리를 정리하는 용도이며,
+// 운영 중인 분류를 없애는 수단이 아니다(그건 '표시' 토글). 글이 있으면 service 가 DomainError 로 막는다
+export async function deleteCategoryAction(
+  board: NewsBoard,
+  id: string,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireSuperAdmin();
+    if (!z.uuid().safeParse(id).success) {
+      return { success: false, error: "잘못된 카테고리 ID 형식입니다." };
+    }
+    const row = await service.deleteCategory(id);
+    if (!row) return { success: false, error: "Not Found" };
+    revalidateAffected(board);
+    return { success: true, data: { id: row.id } };
+  } catch (e) {
+    // 글이 남아 있으면 DomainError 의 안내 메시지가 그대로 운영자에게 전달된다
+    return toActionError(e, "categoryAction");
+  }
+}
+
 // 드래그 정렬 일괄 저장 — 명시 Save. 노출 순서가 사용자 사이트 탭·필터에 즉시 반영
 export async function reorderCategoriesAction(
   board: NewsBoard,

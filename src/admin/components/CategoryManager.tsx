@@ -33,6 +33,7 @@ import { GripVertical } from "lucide-react";
 import {
   createCategoryAction,
   updateCategoryAction,
+  deleteCategoryAction,
   reorderCategoriesAction,
 } from "@/features/categories/actions";
 import {
@@ -461,6 +462,9 @@ function EditDialog({
   onError: (msg: string | null) => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  // 삭제는 글 0건일 때만 — 서버(service)가 최종 판정하고, 여기서는 버튼 자체를 감춰 오조작을 줄인다
+  const canDelete = row.newsCount === 0;
+  const [confirming, setConfirming] = useState(false);
   const form = useForm<UpdateCategoryInput>({
     resolver: zodResolver(updateCategorySchema),
     defaultValues: {
@@ -468,6 +472,23 @@ function EditDialog({
       isActive: row.isActive,
     },
   });
+
+  const onDelete = () => {
+    onError(null);
+    startTransition(async () => {
+      const result = await deleteCategoryAction(board, row.id);
+      if (!result.success) {
+        onError(
+          typeof result.error === "string"
+            ? result.error
+            : "삭제하지 못했습니다.",
+        );
+        setConfirming(false);
+        return;
+      }
+      onClose();
+    });
+  };
 
   const onSubmit = (values: UpdateCategoryInput) => {
     onError(null);
@@ -536,6 +557,62 @@ function EditDialog({
                 </FormItem>
               )}
             />
+            {/* 삭제 — 글이 하나도 없을 때만. 운영 중인 분류를 없애는 수단이 아니라
+                잘못 만든 카테고리를 정리하는 용도라, 막을 때는 이유와 해결책을 함께 보여준다 */}
+            <div className="rounded-md border border-destructive/25 bg-destructive/5 px-4 py-3">
+              {canDelete ? (
+                <>
+                  <p className="text-xs text-ink-subtle">
+                    글이 없는 카테고리라 삭제할 수 있어요. 삭제하면 되돌릴 수 없습니다.
+                  </p>
+                  {confirming ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-medium text-ink-strong">
+                        ‘{row.name}’ 을(를) 삭제할까요?
+                      </span>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={onDelete}
+                        disabled={isPending}
+                      >
+                        {isPending ? "삭제 중..." : "삭제"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setConfirming(false)}
+                        disabled={isPending}
+                      >
+                        취소
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setConfirming(true)}
+                      disabled={isPending}
+                    >
+                      카테고리 삭제
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <p className="text-xs text-ink-subtle">
+                  <strong className="font-semibold text-ink-strong">
+                    글 {row.newsCount}건
+                  </strong>
+                  이 이 카테고리에 있어 삭제할 수 없어요. 글을 다른 카테고리로 옮긴 뒤
+                  다시 시도하거나, 위의 ‘{CAT.activeLabel}’ 를 꺼서 숨겨주세요.
+                </p>
+              )}
+            </div>
+
             <DialogFooter>
               <Button
                 type="button"
