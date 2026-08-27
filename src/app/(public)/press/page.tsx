@@ -12,6 +12,7 @@ import {
 } from "@/features/news/api";
 import { getQueryClient } from "@/lib/query/get-query-client";
 import { SectionContainer } from "@/client/components/layout";
+import { SITE_NAME } from "@/lib/site";
 
 // 게시판이 달라도 상단 배너·목록 UI 는 같은 컴포넌트를 쓴다 — board/basePath prop 으로만 분기 (복제 금지)
 import { SubBanner } from "../news/sub-banner";
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
     "언론에 소개된 사회공헌단 Sow Good 의 나눔·봉사 활동 보도 모음.",
   alternates: { canonical: "/press" },
   openGraph: {
+    siteName: SITE_NAME,
     title: "언론 속 사회공헌 | 사회공헌단 Sow Good",
     description:
       "언론에 소개된 사회공헌단 Sow Good 의 나눔·봉사 활동 보도 모음.",

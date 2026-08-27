@@ -14,15 +14,21 @@ import {
 } from "@/client/sections";
 import { SectionContainer } from "@/client/components/layout";
 import { RevealGroup } from "@/client/components/motion";
+import { JsonLd } from "@/client/components/seo";
+import { SITE_ALT_NAME, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { landingDb } from "@/features/landing";
 import { PopupGate } from "@/features/popups/components/popup-gate";
 
+// 홈 title 은 하위 페이지 접미사("… | 사회공헌단 Sow Good")와 같은 이름으로 시작한다 —
+// 구글은 사이트당 이름 1개만 채택하는데, 홈만 "Sow Good" 이면 신호가 갈려 도메인으로 폴백한다 (ADR-057)
 export const metadata: Metadata = {
-  title: "Sow Good — 가치를 삶으로, 변화를 꽃피우는 동행",
+  title: `${SITE_NAME} — 가치를 삶으로, 변화를 꽃피우는 동행`,
   description:
     "세계평화통일가정연합 신한국협회 사회공헌국 Sow Good. 쌀 나눔으로 따뜻한 변화를 이어갑니다.",
   alternates: { canonical: "/" },
   openGraph: {
+    // siteName 은 레이아웃에 있어도 페이지가 openGraph 를 재정의하면 통째로 덮인다(Next 얕은 병합) — 페이지마다 명시 필수
+    siteName: SITE_NAME,
     title: "Sow Good — 가치를 삶으로, 변화를 꽃피우는 동행",
     description:
       "세계평화통일가정연합 신한국협회 사회공헌국. 쌀 나눔으로 따뜻한 변화를.",
@@ -33,9 +39,33 @@ export const metadata: Metadata = {
   },
 };
 
+// 조직·사이트 구조화 데이터 — 구글 사이트명 인식의 1순위 신호(og:site_name·title 보다 우선).
+// 도메인 루트에만 둔다 (서브디렉토리는 자체 사이트명을 가질 수 없음). @graph 로 한 script 에 결합.
+const landingJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      name: SITE_NAME,
+      alternateName: SITE_ALT_NAME,
+      url: SITE_URL,
+      logo: `${SITE_URL}/icon.png`,
+      description: SITE_DESCRIPTION,
+    },
+    {
+      "@type": "WebSite",
+      name: SITE_NAME,
+      alternateName: SITE_ALT_NAME,
+      url: SITE_URL,
+      inLanguage: "ko",
+    },
+  ],
+};
+
 export default function Home() {
   return (
     <>
+      <JsonLd data={landingJsonLd} />
       {/* Hero 는 어보브폴드 — 리빌 제외. 이하 "요소 단위" 페이드업(섹션 통째 X, 사용자 선택 "핵심만 포인트").
           KPI: 헤딩 즉시(스티키) + 벤토 6카드 stagger / Story: 사진2·헤딩만 + 나머지·스티커 즉시
           → 각 섹션을 RevealGroup 으로 감싸 내부 data-reveal 요소만 발동(벤토 정밀 레이아웃 보존, Suspense 내부 배치로 콘텐츠 도착 후 관찰).
