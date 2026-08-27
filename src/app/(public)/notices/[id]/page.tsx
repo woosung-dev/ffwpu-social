@@ -11,6 +11,7 @@ import { NoticeClipIcon } from "@/features/notices/components/notice-icons";
 import { bodyToExcerpt } from "@/features/news/excerpt";
 import { NewsBodyRenderer } from "@/features/news/render/news-body-renderer";
 import { ShareRow } from "@/client/components/ShareRow";
+import { SITE_NAME } from "@/lib/site";
 
 import { SubBanner } from "../../news/sub-banner";
 import { ScrollTopButton } from "../../news/[id]/scroll-top";
@@ -51,6 +52,7 @@ export async function generateMetadata({
     description,
     alternates: { canonical: url },
     openGraph: {
+      siteName: SITE_NAME,
       title: notice.title,
       description,
       type: "article",

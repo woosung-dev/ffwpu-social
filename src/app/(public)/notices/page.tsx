@@ -5,6 +5,7 @@ import { Suspense } from "react";
 
 import { listNotices, listNoticesQuerySchema } from "@/features/notices";
 import { SectionContainer } from "@/client/components/layout";
+import { SITE_NAME } from "@/lib/site";
 
 import { SubBanner } from "../news/sub-banner";
 import { ScrollTopButton } from "../news/[id]/scroll-top";
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
   description: "사회공헌단 Sow Good 의 공지사항.",
   alternates: { canonical: "/notices" },
   openGraph: {
+    siteName: SITE_NAME,
     title: "공지사항 | 사회공헌단 Sow Good",
     description: "사회공헌단 Sow Good 의 공지사항.",
     type: "website",

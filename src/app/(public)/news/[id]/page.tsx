@@ -8,6 +8,7 @@ import { bodyToExcerpt } from "@/features/news/excerpt";
 import { NewsBodyRenderer } from "@/features/news/render/news-body-renderer";
 import { ArticleCard } from "@/features/news/components";
 import { ShareRow } from "@/client/components/ShareRow";
+import { SITE_NAME } from "@/lib/site";
 
 import { SubBanner } from "../sub-banner";
 import { DetailHeader } from "./detail-header";
@@ -42,6 +43,7 @@ export async function generateMetadata({
     description,
     alternates: { canonical: url },
     openGraph: {
+      siteName: SITE_NAME,
       title: article.title,
       description,
       type: "article",

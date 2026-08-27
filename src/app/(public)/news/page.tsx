@@ -12,6 +12,7 @@ import {
 } from "@/features/news/api";
 import { getQueryClient } from "@/lib/query/get-query-client";
 import { SectionContainer } from "@/client/components/layout";
+import { SITE_NAME } from "@/lib/site";
 
 import { SubBanner } from "./sub-banner";
 import { NewsHero } from "./news-hero";
@@ -25,6 +26,7 @@ export const metadata: Metadata = {
     "사회공헌단 Sow Good 의 쌀 나눔·가족 치유·지역 봉사·환경 캠페인 활동 스토리.",
   alternates: { canonical: "/news" },
   openGraph: {
+    siteName: SITE_NAME,
     title: "활동 스토리 | 사회공헌단 Sow Good",
     description:
       "사회공헌단 Sow Good 의 쌀 나눔·가족 치유·지역 봉사·환경 캠페인 활동 스토리.",

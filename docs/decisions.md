@@ -2250,3 +2250,44 @@ CHECK (board = 'story' OR (story_slot IS NULL AND featured_rank IS NULL AND hero
 - 어드민 surface 9 → 11 (`/admin/press`, `/admin/press-categories`).
 - `NewsTable`·`CategoryManager`·`NewsEditor`·`ArticleCard`·`PrevNextNav`·목록 클라이언트를 `board`/`basePath`/`href` prop 으로 공용화했다. 복제본이 없으므로 한쪽만 고쳐지는 drift 가 발생하지 않는다.
 - 새 공개 쿼리를 추가할 때 `board` 를 받지 않으면 컴파일이 안 된다. 이 보장을 깨는 유일한 방법은 기본값을 붙이는 것이므로, `board` 인자에 기본값을 주지 말 것.
+
+---
+
+## ADR-057: 구글 검색 사이트명 — `WebSite` JSON-LD + 페이지별 `og:site_name` 명시
+
+- **Status**: Accepted
+- **Date**: 2026-08-27
+- **관련**: ADR-044 (SEO 하드닝 — PR #87 종료로 미머지, 이번에 사이트명 부분만 분리 반영)
+
+### Context
+
+`sow good 사회공헌` 구글 검색 결과에서 사이트명이 브랜드명이 아니라 도메인 `sowgood.kr` 로 표시됐다. 라이브 HTML 을 Googlebot UA 로 받아 확인한 결과:
+
+| 구글이 쓰는 신호 (우선순위) | 배포 상태 |
+|---|---|
+| ① `WebSite` 구조화 데이터 | 없음 — `application/ld+json` 0건 |
+| ② `og:site_name` | 없음 — `/`·`/news`·`/press` 전부 |
+| ③ `<title>` | 불일치 — 홈 `Sow Good — …` vs 하위 `… \| 사회공헌단 Sow Good` |
+| ④ heading | 홈 `<h1>` 이 브랜드명이 아님 |
+
+구글 공식 문서: 사이트명을 판정할 수 없으면 **도메인명으로 폴백**하고, 사이트당 이름은 **1개만** 지원한다.
+
+원인은 두 가지였다.
+
+1. **`og:site_name` 이 코드에는 있는데 출력에는 없었다.** `src/app/layout.tsx` 에 `openGraph.siteName` 이 있지만, Next.js 는 `openGraph` 같은 중첩 키를 **깊게 병합하지 않고 통째로 교체**한다. 공개 페이지 7곳이 전부 자기 `openGraph` 를 재정의하므로 레이아웃 값이 매번 사라졌다. 코드 리뷰로는 "설정했다"로 보이고 라이브 HTML 로만 드러나는 종류의 결함이다.
+2. **`WebSite` JSON-LD 는 만들어졌지만 머지되지 않았다.** ADR-044 / PR #87 에 포함돼 있었고 PR 이 2026-08-08 CLOSED 되면서 함께 빠졌다.
+
+### Decision
+
+1. `WebSite` + `Organization` JSON-LD 를 **홈(도메인 루트)에만** 넣는다. 서브디렉토리는 자체 사이트명을 가질 수 없으므로 목록·상세에 복제하지 않는다.
+2. `siteName: SITE_NAME` 을 공개 페이지 7곳의 `openGraph` 에 **각각 명시**한다. 레이아웃 상속에 기대지 않는다.
+3. 홈 `<title>` 을 `사회공헌단 Sow Good — …` 로 바꿔 하위 페이지 접미사와 이름을 일치시킨다.
+4. 짧은 브랜드명은 `SITE_ALT_NAME` 상수로 두고 `alternateName` 에만 실어 보조 신호로 제시한다. 정본은 `SITE_NAME` 하나다.
+
+`og:title` 은 건드리지 않았다 — 카카오톡 공유 카드 문구이고 사이트명 신호가 아니다.
+
+### Consequences
+
+- 새 공개 페이지를 추가할 때 `openGraph` 를 쓰면 `siteName` 을 같이 적어야 한다. 빠뜨려도 컴파일은 통과하므로, 검증은 타입이 아니라 **라이브 HTML 확인**이다 (`curl <url> | grep og:site_name`).
+- 반영은 즉시가 아니다. 구글 재크롤에 **수일~수주** 걸린다. GSC 에서 홈 URL 색인 재요청 시 단축된다.
+- ADR-044 의 나머지(사이트맵 공지 편입·RSS·GSC 소유확인)는 여전히 미반영이다. 이번 변경은 사이트명 표시 문제만 분리해 처리했다.
