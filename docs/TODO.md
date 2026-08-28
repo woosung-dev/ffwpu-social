@@ -115,6 +115,13 @@
 
 ## Next Actions
 
+### 에디터 글꼴 — 보류 항목 (2026-08-28, ADR-061)
+
+- [ ] **Pretendard 도입 검토** — SIL OFL 1.1(`orioncactus/pretendard`, star 3.5k)이고 국내 웹 표준급 고딕이지만 **구글 폰트 미수록**. jsDelivr(`cdn.jsdelivr.net/gh/orioncactus/pretendard@vX/dist/web/variable/...`) 또는 자체 호스팅 경로를 추가해야 한다 — 현재 `googleFontsHref()` 는 구글 family 파라미터만 조립한다.
+- [ ] **굴림·돋움 자체 호스팅** — OFL 이고 한글 전역이 단일 파일 122 KB / 128 KB 라 `public/fonts` 로 옮기면 250 KB 로 끝난다. 지금은 `fonts.google.com` 공개 카탈로그 미등재라 제외했는데, 카탈로그에 정식 등재되거나 "워드·한글에서 보던 그 글꼴" 수요가 생기면 재검토.
+- [ ] **바탕·궁서** — OFL 이지만 CSS2 API 미배포(HTTP 400). 저장소에 `Batang-Regular.ttf` 6.7 MB 원본만 있어 직접 서브셋 제작이 필요하다.
+
+
 ### 노출 토글 후속 (2026-08-08, ADR-053)
 
 - [ ] **prod 마이그레이션 0016 적용** — `drizzle/0016_huge_kitty_pryde.sql` (`news.is_hidden` additive 1컬럼). 기존 글은 전부 공개 상태 유지.

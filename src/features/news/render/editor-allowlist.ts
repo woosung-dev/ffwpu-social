@@ -21,6 +21,16 @@ export const ALLOWED_FONT_SIZES = [
 ] as const;
 
 // 글꼴 — 툴바 드롭다운 · sanitize · 공개 렌더 · 웹폰트 로딩의 단일 출처.
+//
+// 목록 선정 근거 (ADR-061, 2026-08-28): 구글 폰트 전체 1,946 종 중 한국어(korean subset) 지원은 38 종뿐이고,
+// 전세계 인기 상위(Roboto·Open Sans·Inter·Montserrat 등)는 **전부 한글 미지원**이다. 라틴 전용 글꼴을
+// 넣으면 운영자가 고른 뒤에도 한글 본문이 사이트 기본 글꼴로 폴백해 "아무 일도 안 일어난" 것처럼 보인다.
+// 그래서 후보는 korean subset 38 종으로 한정하고, 인기순과 웹 전송량 실측으로 골랐다.
+//
+// 제외한 것:
+// - 본명조(Noto Serif KR): 청크당 49KB / 전체 12.2MB 로 나머지의 4~6 배. 명조 수요는 나눔명조·고운바탕이 덮는다.
+// - 굴림·돋움: OFL 이고 CSS2 API 로 서빙되지만 fonts.google.com **공개 카탈로그 미등재** → 가용성 불확실.
+//   필요해지면 122KB/128KB 라 자체 호스팅이 현실적이다 (docs/TODO.md).
 // 저장값(value)은 구글 폰트의 **대표 패밀리명 하나**다. 스택(stack)은 렌더 시점에 붙인다 —
 // 나중에 폴백을 손봐도 이미 발행된 글이 글꼴을 잃지 않는다.
 // 전부 SIL Open Font License 1.1 (google/fonts METADATA.pb `license: "OFL"` 확인, 2026-08-28) — 상업 이용·웹폰트 임베딩 무료.
@@ -45,12 +55,27 @@ export const EDITOR_FONTS: readonly EditorFont[] = [
     stack: "",
     googleFamily: null,
   },
+  // 고딕 — 본문 기본 계열. 인기순(구글 폰트 metadata popularity): 나눔고딕 100위 · Gothic A1 246위 · 고운돋음 818위
   {
-    value: "Noto Serif KR",
-    label: "본명조",
-    stack: "'Noto Serif KR', serif",
-    googleFamily: "Noto+Serif+KR:wght@400;700",
+    value: "Nanum Gothic",
+    label: "나눔고딕",
+    stack: "'Nanum Gothic', sans-serif",
+    googleFamily: "Nanum+Gothic:wght@400;700",
   },
+  {
+    value: "Gothic A1",
+    label: "고딕 A1",
+    stack: "'Gothic A1', sans-serif",
+    googleFamily: "Gothic+A1:wght@400;700",
+  },
+  {
+    value: "Gowun Dodum",
+    label: "고운돋음",
+    stack: "'Gowun Dodum', sans-serif",
+    // 400 단일 웨이트 — 굵게는 브라우저 합성(faux bold)이다. 700 을 요청해도 구글이 400 만 준다.
+    googleFamily: "Gowun+Dodum",
+  },
+  // 명조 — 사회공헌국이 요청한 계열
   {
     value: "Nanum Myeongjo",
     label: "나눔명조",
@@ -63,12 +88,7 @@ export const EDITOR_FONTS: readonly EditorFont[] = [
     stack: "'Gowun Batang', serif",
     googleFamily: "Gowun+Batang:wght@400;700",
   },
-  {
-    value: "Nanum Gothic",
-    label: "나눔고딕",
-    stack: "'Nanum Gothic', sans-serif",
-    googleFamily: "Nanum+Gothic:wght@400;700",
-  },
+  // 손글씨
   {
     value: "Gaegu",
     label: "개구",
