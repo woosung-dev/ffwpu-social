@@ -2386,3 +2386,17 @@ CHECK (board = 'story' OR (story_slot IS NULL AND featured_rank IS NULL AND hero
 - 어드민에서 운영자가 직접 소수를 넣으면 그대로 표시된다(그리고 카드를 넘칠 수 있다).
   의도된 자유도이며, 넘치는 경우 `화면에 보이는 값` 칸으로 표기를 직접 쓰면 된다.
 - 시트에 소수 컬럼이 더 늘어도 코드 변경이 필요 없다 — 정수화가 라벨별이 아니라 ingest 전체에 걸린다.
+
+### 후속 (2026-08-28, 같은 보고에서 파생)
+
+정수화만으로는 부족했다. `formatKpiDisplay` 는 `value.toLocaleString("ko-KR") + (unit ?? "")` 인데
+`volunteer_period` 는 원래 비숫자 표기 카드("38년 5개월")여서 seed 가 `value: null, unit: null` 이었다.
+ADR-058 매핑이 시트 `연인원봉사시간 누계` 를 **이 slug 에** 넣기 시작했으므로, 단위가 빈 상태에서
+첫 동기화가 돌면 랜딩에 `16,078` 이 **단위 없이** 노출된다.
+
+- seed 의 `volunteer_period.unit` 을 `"시간"` 으로 채운다.
+- 마이그레이션 **0022** 로 기존 행도 backfill — `unit IS NULL OR unit=''` 가드(운영자 입력 우선, 0020 동일 패턴).
+
+천단위 콤마는 `toLocaleString("ko-KR")` 이 이미 처리하고 있었다 — `8127` → `8,127`.
+단위는 `kpi_metrics.unit` 이 원본이고 운영자가 `/admin/kpi` 단위 칸에서 소유한다.
+어떤 카드가 맨숫자로 보이면 그 행의 단위 칸이 비어 있다는 뜻이다.

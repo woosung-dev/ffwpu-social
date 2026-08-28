@@ -97,7 +97,7 @@ pnpm drizzle-kit studio        # DB 브라우저
 
 > **머지된 작업은 여기 적지 않는다.** 결정은 `docs/decisions.md`(ADR), 경과는 `git log`, plan 은 merge 시 삭제 (`.ai/common/global.md` §2 plans 라이프사이클). 중복 저장은 drift 원천 — 실제로 이 섹션이 머지된 PR 5건을 "완료(미머지)"로 붙들고 있었다 (2026-07-16 정리).
 
-- 진행 중: **쌀나눔 시트 → StorySection 통계 자동 반영** (branch `feat/rice-sheet-sync`) — 디테일 `docs/plans/active/TASK-20260828-rice-sheet-sync.md`. ADR-058/060. 배포 시 마이그레이션 0020·0021 + `RICE_SHEET_CSV_URL` + GHA 수동 1회 필요.
+- 진행 중: **쌀나눔 시트 → StorySection 통계 자동 반영** (branch `feat/rice-sheet-sync`) — 디테일 `docs/plans/active/TASK-20260828-rice-sheet-sync.md`. ADR-058/060. 배포 시 마이그레이션 0020·0021·0022 + `RICE_SHEET_CSV_URL` + GHA 수동 1회 필요.
 - 진행 중: **홈 팝업 후속** (branch `feat/home-popup`) — 디테일 `docs/plans/active/TASK-20260718-home-popup.md`. PR #92 머지(마이그레이션 0015 prod 적용 완료) 후에도 브랜치에 미반영 커밋이 남아 있다.
 - 진행 중: **랜딩 실데이터화 + 반응형 4-BP 정합** (branch `feat/client-foundation`) — 디테일 `docs/plans/active/2026-06-03-landing-data-responsive.md`. 🔴 사진 11장 수령 대기(`src/db/seed-assets/`) · Gmarket Sans 라이선스 확인.
 - 종료된 PR (2026-08-08, 사용자 판단 — 브랜치는 남아 있어 reopen 가능): **#87** SEO 하드닝(ADR-044) · **#78** EC2 배포 Phase 1 · **#55** GHA Node 24.

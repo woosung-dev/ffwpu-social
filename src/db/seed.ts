@@ -430,9 +430,11 @@ async function seed() {
     {
       slug: "volunteer_period",
       label: "누적 봉사 기간",
-      value: null, // 기간 비숫자 (38년 5개월)
+      // 시트 '연인원봉사시간 누계' 가 이 slug 에 시간 숫자를 넣는다 (ADR-058 매핑) → 단위 필수.
+      // unit 이 비면 동기화 직후 "16,078" 처럼 단위 없는 맨숫자가 노출된다 (ADR-060).
+      value: null, // 첫 동기화 전까지는 displayValue 사용
       displayValue: "38년 5개월",
-      unit: null,
+      unit: "시간",
       sortOrder: 2,
     },
     {

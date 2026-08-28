@@ -155,6 +155,13 @@
       "when": 1787922664923,
       "tag": "0021_truncate_synced_kpi_decimals",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1787923185004,
+      "tag": "0022_volunteer_period_unit",
+      "breakpoints": true
     }
   ]
 }
