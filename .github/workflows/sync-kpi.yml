@@ -1,6 +1,7 @@
-# KPI 시트 주간 자동 동기화 — 매주 월요일, 배포 플랫폼과 무관(GitHub 이 사이트의 /api/cron/sync-kpi 를 호출만 함).
+# 시트 주간 자동 동기화 — 매주 월요일, 배포 플랫폼과 무관(GitHub 이 사이트의 /api/cron/sync-kpi 를 호출만 함).
+# 한 번의 호출로 시트 2개(협회 누적 지표 → KpiSection / 쌀 나눔 대장 → StorySection)를 각각 동기화한다.
 # Vercel→AWS 이전 시 KPI_SYNC_ENDPOINT secret 의 URL 만 교체하면 됨. 수동 실행도 가능(workflow_dispatch).
-name: Sync KPI from Sheet (weekly)
+name: Sync KPI + 쌀나눔 from Sheets (weekly)
 
 on:
   schedule:
@@ -16,7 +17,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger KPI sync endpoint
+      - name: Trigger sheet sync endpoint
         run: |
           curl -fsS -X GET "$KPI_SYNC_ENDPOINT" \
             -H "Authorization: Bearer $CRON_SECRET" \

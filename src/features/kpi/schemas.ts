@@ -22,8 +22,8 @@ export const kpiUpdateInputSchema = z.object({
 
 export type KpiUpdateInput = z.infer<typeof kpiUpdateInputSchema>;
 
-// StorySection 통계 — 라벨·표시값 자유 텍스트(impact 와 달리 displayValue 빈값 허용 → 빈값이면 메인 숨김).
-// value/unit 은 미사용(렌더는 label+displayValue 만). value 는 호환 위해 선택.
+// StorySection 통계 — impact 와 같은 숫자 우선 모델(ADR-058). 숫자(value)+단위로 자동 표시하고,
+// displayValue 는 숫자로 못 쓰는 특수 표기용 폴백. 셋 다 비면 메인에서 숨김(impact 와 달리 빈값 허용).
 export const storyStatUpdateRowSchema = z.object({
   slug: z.string().min(1).max(50),
   label: z.string().min(1, "라벨을 입력해주세요").max(50),

@@ -2291,3 +2291,112 @@ CHECK (board = 'story' OR (story_slot IS NULL AND featured_rank IS NULL AND hero
 - 새 공개 페이지를 추가할 때 `openGraph` 를 쓰면 `siteName` 을 같이 적어야 한다. 빠뜨려도 컴파일은 통과하므로, 검증은 타입이 아니라 **라이브 HTML 확인**이다 (`curl <url> | grep og:site_name`).
 - 반영은 즉시가 아니다. 구글 재크롤에 **수일~수주** 걸린다. GSC 에서 홈 URL 색인 재요청 시 단축된다.
 - ADR-044 의 나머지(사이트맵 공지 편입·RSS·GSC 소유확인)는 여전히 미반영이다. 이번 변경은 사이트명 표시 문제만 분리해 처리했다.
+
+---
+
+## ADR-058: 쌀나눔 시트 → StorySection 통계 자동 반영 + story 통계 숫자 우선 전환
+
+- **Status**: Accepted
+- **Date**: 2026-08-28
+
+### Context
+
+랜딩 StorySection 통계가 운영자 수기 입력이라 낡아 있었다. 화면은 `나눔 쌀 2,370kg`,
+사회공헌국이 관리하는 쌀나눔 대장 시트의 총계는 `3,210kg`. 사회공헌국이 이 시트를 사이트에
+묶어 달라고 요청했다 (2026-08-28).
+
+시트는 CSV export 가 그대로 열린다(HTTP 200, '링크가 있는 모든 사용자'). 구조는
+행 0 = 라벨 / 행 1 = 행사별 총계 / 행 2+ = 행사별 상세로, ADR-039 에서 만든 기존 파서
+("라벨 셀을 찾고 같은 열의 다음 행 값을 읽는다")가 **수정 없이 맞는다**. 다른 건 라벨 맵뿐이다.
+
+막고 있던 것은 시트가 아니라 데이터 모델이었다. impact KPI 는 "숫자 우선" 모델
+(`value` + `unit` → `formatKpiDisplay` 가 `3,210kg` 로 조립)이라 동기화가 `value` 만 갱신해도
+라벨·단위라는 운영자 소유물이 보존된다. 반면 story 통계는 `displayValue` 자유 텍스트 전용이었고
+어드민 폼이 `value`/`unit` 을 **null 로 강제 저장**하고 있었다. 이 구조에서는 동기화가 쓸 칸이 없다.
+
+### Decision
+
+1. **story 통계를 impact 와 같은 숫자 우선 모델로 통일한다.** `StorySection` 은
+   `formatKpiDisplay(value, unit, displayValue)` 로 렌더하고, `StoryStatsEditor` 에 숫자·단위 칸을 연다.
+   `displayValue` 는 "숫자로 표현 못 하는 특수 표기" 용 폴백으로 남긴다.
+2. **파서에 라벨 맵을 주입한다.** `SHEET_CONFIG` 에 시트 종류(`impact` / `story`)별로
+   라벨 맵·env 키·표시명을 모아 두고, `extractCumulativeMetrics(grid, kind)` 가 그중 하나를 쓴다.
+   시트를 하나 더 붙일 때 늘어나는 곳은 `SHEET_CONFIG` 한 군데다.
+3. **동기화 실패를 시트 단위로 격리한다.** `/api/cron/sync-kpi` 는 두 시트를 각각 돌리고
+   시트별 리포트를 돌려준다. 한쪽이 401·구조 변경으로 실패해도 다른 쪽은 갱신되고,
+   전부 실패했을 때만 500 을 낸다.
+4. **단위는 마이그레이션(0020)으로 backfill 한다** — `kg` / `가정` / `개 시설`.
+   단, 이미 단위가 있는 행은 덮어쓰지 않는다(운영자 입력 우선).
+
+시트의 `쌀화환 참여기관 수`(175)·`쌀 나눔 포대 수`(323)는 매핑하지 않았다. Figma 가 3열이고,
+'참여기관'은 기부처라 나머지 3개(수혜 측)와 의미 축이 다르다 — 사용자 결정.
+
+### Consequences
+
+- **마이그레이션만 적용된 상태의 화면 변화는 0 이다.** `formatKpiDisplay` 는 `value` 가 null 이면
+  기존 `displayValue` 를 그대로 반환한다. 배포 후 첫 동기화(GHA `workflow_dispatch` 수동 1회 또는
+  어드민 '시트에서 불러오기')가 돌아야 숫자가 바뀐다.
+- prod 의 `unit` 이 비어 있다는 전제로 backfill 했다. 첫 동기화 뒤 세 통계의 표기를 눈으로 확인하고,
+  어긋나면 `/admin/landing` 에서 단위만 고치면 된다 — 코드 변경 없이 끝난다.
+- 시트가 '제한됨' 으로 바뀌면 CSV export 는 401 이 된다. 이때 코드는 그대로 두고
+  `RICE_SHEET_CSV_URL` 을 Apps Script 웹앱 URL 로 교체한다 (KPI 시트가 이미 그렇게 돌고 있다).
+- 🔴 **개인정보(ADR-004)**: 이 시트는 현재 링크만 있으면 누구나 열람할 수 있는데 실명
+  (`오인철 서울남부 부교구장 부친 및 오충완 경기북부 교구장 조부`)과 수혜 기관명이 들어 있다.
+  사이트로 나가는 값은 숫자 3개뿐이라 노출 경로는 없지만, 시트 공유 범위 자체는 사회공헌국이
+  '제한됨' 으로 되돌리는 편이 맞다. `docs/TODO.md` 에 escalation 등록.
+
+---
+
+## ADR-060: 시트에서 들여오는 KPI 값은 정수로 버림
+
+- **Status**: Accepted
+- **Date**: 2026-08-28
+
+### Context
+
+사회공헌국이 랜딩 KPI 카드 `누적 봉사 기간` 이 깨진다고 보고했다 (2026-08-28).
+
+원인은 시트의 `연인원봉사시간 누계` 셀이 소수를 갖는 것이다. `kpi_metrics.value` 는
+`double precision` 이고 `formatKpiDisplay` 는 `value.toLocaleString("ko-KR") + unit` 이라
+`16078.5` 가 **`16,078.5시간`** 으로 렌더된다. KPI 숫자 셀은 전부 `whitespace-nowrap` 이라
+줄바꿈이 아니라 **카드를 넘쳐 마지막 글자가 잘린다**(재현 스크린샷:
+`docs/reports/rice-sheet-sync-2026-08-28/06-kpi-card-decimal-before.png`).
+
+들여오는 경로는 둘인데 둘 다 같은 함수를 지난다 — 주간 cron(`/api/cron/sync-kpi`)과
+어드민 `시트에서 불러오기`(`fetchSheetKpiValuesAction`) 모두 `fetchSheetMetrics` →
+`extractCumulativeMetrics` → `parseSheetNumber` 를 쓴다.
+
+### Decision
+
+1. **`extractCumulativeMetrics` 가 `Math.trunc` 로 정수화한다.** 두 경로가 이 함수를 공유하므로
+   한 지점만 고치면 cron·불러오기가 동시에 정수만 들여온다.
+2. **`parseSheetNumber` 는 그대로 둔다.** 셀에서 숫자를 뽑는 순수 파서라 정확한 값을 반환해야 한다.
+   정수화는 "우리가 무엇을 저장하느냐"의 결정이므로 ingest 경계에 둔다.
+3. **올림·사사오입이 아니라 버림.** 누적 실적 수치를 실제보다 크게 표시하지 않는다
+   (ADR-004 재정 투명성). `8,127.9 → 8127`(8128 아님) · `16,078.5 → 16078`(16079 아님).
+4. **운영자 수동 입력은 대상이 아니다.** `kpiUpdateRowSchema` 는 계속 소수를 허용한다 —
+   `529.4시간` 같은 특수 표기가 필요할 때의 자유도를 남긴다.
+5. **마이그레이션 0021 로 이미 저장된 값도 버림한다.** 대상은 `sync_source = 'google_sheets'`
+   인 행만. 코드만 고치면 다음 동기화(매주 월)까지 깨진 화면이 유지되므로 그 공백을 없앤다.
+
+### Consequences
+
+- 시트가 소수를 계속 갖고 있어도 사이트에는 정수만 나간다. 시트 쪽 수정을 요구하지 않는다.
+- 손실은 최대 1 미만이다 — 16,078.5 시간에서 0.5 시간. 누적 지표의 표시 정확도에 영향이 없다.
+- 어드민에서 운영자가 직접 소수를 넣으면 그대로 표시된다(그리고 카드를 넘칠 수 있다).
+  의도된 자유도이며, 넘치는 경우 `화면에 보이는 값` 칸으로 표기를 직접 쓰면 된다.
+- 시트에 소수 컬럼이 더 늘어도 코드 변경이 필요 없다 — 정수화가 라벨별이 아니라 ingest 전체에 걸린다.
+
+### 후속 (2026-08-28, 같은 보고에서 파생)
+
+정수화만으로는 부족했다. `formatKpiDisplay` 는 `value.toLocaleString("ko-KR") + (unit ?? "")` 인데
+`volunteer_period` 는 원래 비숫자 표기 카드("38년 5개월")여서 seed 가 `value: null, unit: null` 이었다.
+ADR-058 매핑이 시트 `연인원봉사시간 누계` 를 **이 slug 에** 넣기 시작했으므로, 단위가 빈 상태에서
+첫 동기화가 돌면 랜딩에 `16,078` 이 **단위 없이** 노출된다.
+
+- seed 의 `volunteer_period.unit` 을 `"시간"` 으로 채운다.
+- 마이그레이션 **0022** 로 기존 행도 backfill — `unit IS NULL OR unit=''` 가드(운영자 입력 우선, 0020 동일 패턴).
+
+천단위 콤마는 `toLocaleString("ko-KR")` 이 이미 처리하고 있었다 — `8127` → `8,127`.
+단위는 `kpi_metrics.unit` 이 원본이고 운영자가 `/admin/kpi` 단위 칸에서 소유한다.
+어떤 카드가 맨숫자로 보이면 그 행의 단위 칸이 비어 있다는 뜻이다.

@@ -430,9 +430,11 @@ async function seed() {
     {
       slug: "volunteer_period",
       label: "누적 봉사 기간",
-      value: null, // 기간 비숫자 (38년 5개월)
+      // 시트 '연인원봉사시간 누계' 가 이 slug 에 시간 숫자를 넣는다 (ADR-058 매핑) → 단위 필수.
+      // unit 이 비면 동기화 직후 "16,078" 처럼 단위 없는 맨숫자가 노출된다 (ADR-060).
+      value: null, // 첫 동기화 전까지는 displayValue 사용
       displayValue: "38년 5개월",
-      unit: null,
+      unit: "시간",
       sortOrder: 2,
     },
     {
@@ -452,7 +454,8 @@ async function seed() {
       unit: "회",
       sortOrder: 4,
     },
-    // StorySection 통계 (section: story) — 라벨·표시값 자유 텍스트(운영자 편집). hide-when-empty: displayValue 비면 메인 비노출
+    // StorySection 통계 (section: story) — 숫자 우선 모델(impact 와 동일). 숫자는 쌀나눔 시트 동기화가 채우고 라벨·단위는 운영자 소유.
+    // hide-when-empty: 숫자도 표시값도 없으면 메인 비노출
     // slug story_supported_orgs 는 '후원 기관' → '나눈 사랑(쌀)의 무게' 로 전환(사용자 요청). 표시값 빈값 = kg 입력 전까지 숨김
     {
       slug: "story_supported_orgs",
@@ -460,7 +463,8 @@ async function seed() {
       label: "나눈 사랑(쌀)의 무게",
       value: null,
       displayValue: "",
-      unit: null,
+      // 단위는 운영자 소유 — 시트 동기화가 value 만 채워도 "3,210kg" 으로 표시되게 미리 둔다 (0020)
+      unit: "kg",
       sortOrder: 1,
     },
     {
@@ -468,7 +472,7 @@ async function seed() {
       section: "story" as const,
       label: "지원 가정",
       value: 23,
-      displayValue: "23가정",
+      displayValue: "",
       unit: "가정",
       sortOrder: 2,
     },
@@ -477,8 +481,8 @@ async function seed() {
       section: "story" as const,
       label: "지역 시설",
       value: 2,
-      displayValue: "2시설",
-      unit: "시설",
+      displayValue: "",
+      unit: "개 시설",
       sortOrder: 3,
     },
   ]);

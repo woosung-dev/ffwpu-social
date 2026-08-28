@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { requireSuperAdmin } from "@/lib/auth-guards";
 import { type ActionResult, toActionError } from "@/lib/action-result";
 import { updateKpis, updateStoryStats, updateStorySectionText } from "./service";
+import type { SheetKind } from "./sync/mapping";
 import { fetchSheetMetrics } from "./sync/service";
 import {
   kpiUpdateInputSchema,
@@ -36,17 +37,22 @@ export async function updateKpisAction(
 }
 
 // 어드민 "시트에서 불러오기" — 시트 숫자를 폼의 '숫자' 칸에 채우기용으로 반환만 함(DB 미기록). 단위는 운영자 소유라 미포함. 확인 후 "저장 + 발행" 으로 적용.
+// kind: 'impact' = 협회 누적 지표 시트(/admin/kpi) · 'story' = 쌀나눔 대장 시트(/admin/landing).
 export type SheetKpiValue = {
   slug: string;
   value: number;
 };
 
-export async function fetchSheetKpiValuesAction(): Promise<
-  ActionResult<{ metrics: SheetKpiValue[] }>
-> {
+export async function fetchSheetKpiValuesAction(
+  kind: SheetKind = "impact",
+): Promise<ActionResult<{ metrics: SheetKpiValue[] }>> {
   try {
     await requireSuperAdmin();
-    const metrics = await fetchSheetMetrics();
+    // 클라이언트가 넘긴 값이라 화이트리스트 확인 — SHEET_CONFIG 인덱싱 전에 좁힌다
+    if (kind !== "impact" && kind !== "story") {
+      return { success: false, error: "알 수 없는 시트 종류입니다." };
+    }
+    const metrics = await fetchSheetMetrics(kind);
     return {
       success: true,
       data: {
