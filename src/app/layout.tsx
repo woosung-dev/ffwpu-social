@@ -9,6 +9,12 @@ import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, DEFAULT_OG_IMAGE } from "@/lib/s
 // GA4 측정 ID — 환경변수 설정 시(프로덕션)에만 로드. 미설정(로컬·미발급) 시 미주입.
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
+// 서치콘솔 소유확인 토큰 — HTML tag 방식. 미설정 시 태그 미출력(로컬·미발급).
+// 파일 업로드 방식 대신 태그를 쓰는 이유: 구글은 리다이렉트가 있는 사이트에 태그 방식을 권고하고
+// (www·http 변형이 전부 apex 로 308/307), 정적 파일과 달리 배포 산출물에 항상 포함된다.
+const GOOGLE_VERIFICATION = process.env.GOOGLE_SITE_VERIFICATION;
+const NAVER_VERIFICATION = process.env.NAVER_SITE_VERIFICATION;
+
 const suit = localFont({
   src: [
     { path: "../../public/fonts/SUIT-Regular.woff2", weight: "400", style: "normal" },
@@ -49,6 +55,13 @@ export const metadata: Metadata = {
     images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: SITE_NAME }],
   },
   twitter: { card: "summary_large_image" },
+  // 소유확인 — 값이 없으면 Next 가 해당 태그를 생략한다. 네이버는 other 로 직접 name 지정.
+  verification: {
+    ...(GOOGLE_VERIFICATION ? { google: GOOGLE_VERIFICATION } : {}),
+    ...(NAVER_VERIFICATION
+      ? { other: { "naver-site-verification": NAVER_VERIFICATION } }
+      : {}),
+  },
 };
 
 export default function RootLayout({

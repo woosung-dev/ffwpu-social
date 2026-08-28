@@ -2294,6 +2294,87 @@ CHECK (board = 'story' OR (story_slot IS NULL AND featured_rank IS NULL AND hero
 
 ---
 
+## ADR-059: 소유확인을 HTML tag + 환경변수로 전환 + 사이트명 보조 신호 보강 (ADR-057 개정)
+
+- **Status**: Accepted
+- **Date**: 2026-08-28
+- **관련**: ADR-057 (사이트명 1차 조치 — 본 ADR 이 3항 보완·2항 개정), ADR-044 / PR #87 (CLOSED — 소유확인 파일이 여기 묶여 있었다)
+
+### Context
+
+ADR-057 을 2026-08-27 배포한 뒤에도 `sow good 사회공헌` 검색 결과에 사이트명이 도메인으로 표시됐다. Googlebot UA 로 라이브 HTML 을 다시 받아 확인한 결과 **세 신호 모두 정상 출력**이었다.
+
+```
+<title>사회공헌단 Sow Good — 가치를 삶으로, 변화를 꽃피우는 동행</title>
+<meta property="og:site_name" content="사회공헌단 Sow Good">
+ld+json: Organization + WebSite (@graph 1 script, 홈 전용)
+```
+
+즉 코드 결함이 아니라 **재크롤 대기**다. 구글 공식 site-names 문서: *"Crawling can take anywhere from several days to several weeks."* 커밋 시각 기준 경과 시간은 약 17시간이었다.
+
+문서가 제시하는 단축 수단은 하나뿐이다 — *"request a recrawl of that page"* (GSC URL 검사). 그런데 **GSC 소유확인이 안 돼 있어 그 요청 자체가 불가능했다.** 소유확인 파일 `public/google7f8c005c70787329.html` 이 PR #87 에 묶여 있었고 PR 종료와 함께 빠져 라이브 404 였다.
+
+즉 병목은 사이트명 코드가 아니라 **소유확인이 종료된 PR 에 인질로 잡혀 있는 구조**였다.
+
+### Decision
+
+**1. 소유확인을 HTML tag 방식 + 환경변수로 전환한다.** 파일 업로드 방식을 쓰지 않는다.
+
+```ts
+// src/app/layout.tsx
+const GOOGLE_VERIFICATION = process.env.GOOGLE_SITE_VERIFICATION;
+const NAVER_VERIFICATION = process.env.NAVER_SITE_VERIFICATION;
+
+verification: {
+  ...(GOOGLE_VERIFICATION ? { google: GOOGLE_VERIFICATION } : {}),
+  ...(NAVER_VERIFICATION ? { other: { "naver-site-verification": NAVER_VERIFICATION } } : {}),
+}
+```
+
+- 구글 공식은 **리다이렉트가 있는 사이트에 태그 방식을 권고**한다. 우리는 `www`·`http` 변형이 전부 apex 로 307/308 이다.
+- 정적 파일은 특정 PR 에 묶여 유실된 **전례가 실제로 있다**(#87). 환경변수는 배포 산출물에 항상 포함된다.
+- 과거 GA 방식 인증 실패는 gtag 가 initial head HTML 에 없어서였다. Next Metadata API 의 `verification` 은 서버 렌더 head 에 직접 박히므로 이 함정을 피한다.
+- 조건부 스프레드라 값이 없으면 키 자체가 없어 빈 태그가 나가지 않는다 (dev 런타임 0건 확인).
+
+**2. `SITE_ALT_NAME` 을 배열로 확장한다.** ADR-057 §Decision 4 의 단일 문자열 방침을 개정.
+
+```ts
+export const SITE_ALT_NAME = ["Sow Good", "사회공헌단", "쏘굿"];
+```
+
+구글 공식 예시 자체가 배열(`"alternateName": ["BT", "B-T", "Burnt Toast Shop"]`)이고, *"list more than one alternative name... specify them in order of your preference"* 라고 명시한다. 한글 표기는 사회공헌국 미확정 사항인데, 구글 AI Overview 가 자체적으로 "쏘굿" 을 쓰고 있어 우선 그 표기를 실었다.
+
+**3. 홈 `og:title` 을 `<title>` 과 같은 브랜드 표기로 통일한다.** ADR-057 의 *"`og:title` 은 건드리지 않았다"* 를 **개정**.
+
+ADR-057 의 판단(og:title 은 카톡 공유 카드 문구이고 사이트명 신호가 아니다)은 신호 목록만 보면 맞다. 그러나 구글 site-names 문서는 별도로 두 가지를 요구한다.
+
+- 가이드라인: *"Use your site name consistently across your home page"*
+- 자체 진단 절차: 사이트명이 *"aligns with other home page sources"* 인지 확인하라
+
+카톡 카드 문구가 5글자 길어지는 비용보다 홈페이지 내 브랜드 표기 일관성이 크다고 판단했다.
+
+### Consequences
+
+- **Vercel 에 `GOOGLE_SITE_VERIFICATION` 등록 + 재배포**가 있어야 태그가 나간다. 홈은 정적 프리렌더 구간이라 메타데이터가 빌드 시점에 굳으므로, 값 변경 시 환경변수 저장만으로는 반영되지 않는다.
+- **인증 후에도 태그를 지우면 인증이 해제된다.** env 를 상시 유지한다 (`.env.example` 에 주석으로 명기).
+- 태그가 루트 레이아웃이라 `/admin` 에도 나간다. 공개 토큰이고 admin 은 인증 + `X-Robots-Tag` 뒤에 있어 무해하다.
+- 반영은 여전히 즉시가 아니다. 소유확인 → 색인 재요청까지 해도 구글 재처리에 수일이 걸린다.
+- ADR-044 잔여 미반영: **사이트맵 공지 편입 · RSS `/feed.xml`**. RSS 는 네이버 서치어드바이저 제출에 필요하다 (현재 네이버 색인 0건 — 브랜드명 검색에도 미노출, 대조군 `세계평화통일가정연합` → ffwp.org 정상으로 측정 신뢰성 확인).
+
+### 배포 후 1회 절차
+
+1. Vercel env `GOOGLE_SITE_VERIFICATION` 등록 → Redeploy
+2. `curl -s https://sowgood.kr/ | grep google-site-verification` 로 태그 확인
+3. GSC 속성 `https://sowgood.kr/` → 소유권 확인 > HTML 태그 > **확인** 클릭
+4. sitemap.xml 제출 → URL 검사에서 홈 색인 재요청
+5. (RSS 반영 후) 네이버 서치어드바이저 등록 + `NAVER_SITE_VERIFICATION` 등록
+
+### 검증
+
+`tsc 0` / `lint 0` / `test 176` / `build 통과`. dev 런타임에서 env 설정 시 두 태그 출력 · 미설정 시 0건 · `og:title`·`<title>` 일치 · `alternateName` 배열 3개 렌더 확인.
+
+---
+
 ## ADR-058: 쌀나눔 시트 → StorySection 통계 자동 반영 + story 통계 숫자 우선 전환
 
 - **Status**: Accepted
