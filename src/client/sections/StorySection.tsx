@@ -1,12 +1,14 @@
 // 사용자 랜딩 Story 섹션 — Figma 96:7834 (1440×573). 배경 #FAF4FF, 좌측 이미지 2장 + 우측 TagChip+헤딩+설명+Result 통계. ADR-009 #story 앵커 (쌀나눔 프로젝트 메뉴 매핑). 4 BP: lg+ 좌-우 / 1024↓ 세로 스택. 데코 스티커 BP별 고정 px(이전 % 비율, 비단조 image1 폭 버그 수정)
 // 상단 이미지 2장 = 운영자가 /admin/landing 상단 슬롯(story_slot 1~2)에 지정한 글의 대표 이미지(미지정 시 기본 디자인 사진). 클릭 시 해당 소식으로 이동. (R7 — 어드민 큐레이션 공개 반영)
-// 통계는 kpi_metrics(section='story') DB 연결 — 운영자가 /admin/landing 에서 입력. value 0/null 인 항목은 hide-when-empty 로 숨김
+// 통계는 kpi_metrics(section='story') DB 연결 — 운영자가 /admin/landing 에서 입력하거나 쌀나눔 시트에서 자동 동기화(주간).
+// 표시는 impact KPI 와 같은 숫자 우선 모델(formatKpiDisplay): 숫자 있으면 "3,210"+단위, 없으면 운영자가 쓴 표시값. 둘 다 비면 hide-when-empty.
 import { Fragment } from "react";
 
 import Link from "next/link";
 
 import { SectionContainer } from "@/client/components/layout";
 import { STORY_SECTION_CONTENT } from "@/features/landing/constants/story";
+import { formatKpiDisplay } from "@/features/kpi/format";
 import { cn } from "@/lib/utils";
 
 export type StoryStat = {
@@ -14,6 +16,8 @@ export type StoryStat = {
   label: string;
   displayValue: string;
   value: number | null;
+  // 숫자 뒤에 붙는 운영자 소유 단위("kg" · "가정" · "개 시설"). 시트 동기화는 value 만 갱신하므로 여기는 안 건드린다.
+  unit: string | null;
 };
 
 // 상단 슬롯 글 — coverImageUrl 있으면 대표 이미지+소식 링크, 없으면 기본 사진
@@ -109,8 +113,13 @@ export function StorySection({
         ? subtitleLines
         : STORY_SECTION_CONTENT.subtitleLines,
   };
-  // hide-when-empty — 표시값(displayValue) 비면 제외(운영자 자유 텍스트). 전부 숨으면 통계 블록 자체 비노출
-  const visibleStats = stats.filter((s) => s.displayValue.trim() !== "");
+  // hide-when-empty — 숫자도 표시값도 없으면 제외. 전부 숨으면 통계 블록 자체 비노출
+  const visibleStats = stats
+    .map((s) => ({
+      ...s,
+      text: formatKpiDisplay(s.value, s.unit, s.displayValue, ""),
+    }))
+    .filter((s) => s.text !== "");
   return (
     <section className={`${STORY_SECTION_SHELL} overflow-x-clip`}>
       {/* 헤더 클릭 착지(ADR-038): 좌측 이미지 그룹(섹션 hook) 기준. 데코 스티커가 위로 ~30-41px 오버행 →
@@ -248,13 +257,13 @@ export function StorySection({
                   )}
                   <li
                     className="flex flex-1 flex-col gap-1.5 text-left md:flex-initial lg:text-right"
-                    aria-label={`${stat.label} ${stat.displayValue}`}
+                    aria-label={`${stat.label} ${stat.text}`}
                   >
                     <p className="text-brand-mid text-[17px] font-medium leading-[1.3]">
                       {stat.label}
                     </p>
                     <p className="text-brand-mid text-[26px] font-bold leading-[1.3] tabular-nums">
-                      {stat.displayValue}
+                      {stat.text}
                     </p>
                   </li>
                 </Fragment>

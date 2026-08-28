@@ -141,6 +141,27 @@
       "when": 1786605134781,
       "tag": "0019_flawless_starjammers",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1787899259905,
+      "tag": "0020_story_stats_unit_backfill",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1787922664923,
+      "tag": "0021_truncate_synced_kpi_decimals",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1787923185004,
+      "tag": "0022_volunteer_period_unit",
+      "breakpoints": true
     }
   ]
 }
