@@ -29,7 +29,8 @@ export const metadata: Metadata = {
   openGraph: {
     // siteName 은 레이아웃에 있어도 페이지가 openGraph 를 재정의하면 통째로 덮인다(Next 얕은 병합) — 페이지마다 명시 필수
     siteName: SITE_NAME,
-    title: "Sow Good — 가치를 삶으로, 변화를 꽃피우는 동행",
+    // <title> 과 같은 브랜드 표기를 쓴다 — 구글은 홈페이지 전반의 사이트명 일관성을 본다 (ADR-059, ADR-057 개정)
+    title: `${SITE_NAME} — 가치를 삶으로, 변화를 꽃피우는 동행`,
     description:
       "세계평화통일가정연합 신한국협회 사회공헌국. 쌀 나눔으로 따뜻한 변화를.",
     type: "website",

@@ -22,6 +22,8 @@
 - [x] **DB 마이그레이션 0013·0014 적용 (완료)** — 공지사항 `notices` + `notice_attachments` + `pinned_rank`. PR #82 머지(2026-07-08T13:19:49Z) 시 GHA `Migrate (production)` **success** — 2026-07-16 확인.
 - [x] **`next build` 타입체크 블로커 해소 (2026-06-01)** — pre-existing `templates/` 스캐폴드(PR #9)가 tsconfig `**/*.ts` 에 포함돼 빌드 실패하던 것 → tsconfig `exclude` 에 `templates` 추가. `pnpm tsc`·`pnpm build` 모두 그린(exit 0). **후속(v1.1): templates monorepo 구조 재정비(PR #9) — 사용자 메모 "추후 구조 다시 잡아야".**
 - [x] **모노레포/폴더 구조 결정 (2026-06-02, ADR-033)** — velog 4부작(Nx·Turbo·pnpm) 교차검증 + 5옵션 점수화(AI-DevX 우선). 결론: 현행 **F3 단일앱 유지**가 v1.0/근미래 최적(OPT-2 8.34 > OPT-1 8.13, OPT-3/5 fails·OPT-4 weakened). velog와 **갈리지 않음**(직교+철학 수렴), template과도 거의 일치. **마이그레이션 부채(v1.1+, 보류)** — 복합 트리거(팀≥3 OR CI 빌드병목 실측 OR web/admin 독립배포 케이던스) 발화 시에만 F2(pnpm→측정후 Turbo, **Nx 금지**)로. 도메인수 7개 단독으로는 발화 금지. 상세 `docs/decisions.md` ADR-033.
+- [ ] **🔴 Vercel env `GOOGLE_SITE_VERIFICATION` 등록 + Redeploy (ADR-059)** — 등록·재배포 없이는 소유확인 태그가 안 나가고, 그러면 GSC 색인 재요청이 계속 불가해 사이트명 반영이 구글 자체 재크롤(수일~수주)에만 의존한다. 토큰은 GSC 속성 `https://sowgood.kr/` > 소유권 확인 > HTML 태그의 `content` 값. 홈이 정적 프리렌더라 **값 저장만으로는 미반영 — 반드시 Redeploy.** 이후: 태그 확인 → GSC '확인' 클릭 → sitemap 제출 → 홈 URL 색인 요청.
+- [ ] **RSS `/feed.xml` 반영 (ADR-044 잔여)** — 현재 404. 네이버 서치어드바이저 RSS 제출에 필요. 네이버는 색인 0건 상태(브랜드명 검색에도 미노출).
 - [ ] **A7 — 로그인 rate limit** — Vercel Firewall rate-limit 룰을 `/api/auth/*` 에 적용(코드 0). 단일 super 브루트포스·credential stuffing 방어. 배포 대시보드 설정. (Vercel 배포 확정 — 2026-06-01)
 - [ ] **AUTH_SECRET 강도** — 32바이트+ 시크릿 강제·회전(rank20). 임시 어드민 비번 변경(`admin@ffwpu-social.local`).
 
@@ -39,6 +41,7 @@
 
 ## Completed (최근 4개)
 
+- [x] **소유확인 HTML tag 전환 + 사이트명 보조 신호 보강 (2026-08-28, ADR-059 — ADR-057 개정)** — ADR-057 배포 후에도 도메인 표시가 유지된 원인은 코드가 아니라 **재크롤 대기**(경과 17시간, 구글 공식 "several days to several weeks"). 단축 수단인 GSC 색인 재요청이 **소유확인 미완료로 불가**했고, 확인 파일이 PR #87(CLOSED)에 묶여 라이브 404 였다. 조치: ① 소유확인을 `GOOGLE_SITE_VERIFICATION`/`NAVER_SITE_VERIFICATION` env + Next `metadata.verification` 태그 방식으로 전환(파일 방식 폐기 — 리다이렉트 사이트에 구글이 태그를 권고, 정적 파일은 PR 유실 전례) ② `SITE_ALT_NAME` 배열화(구글 공식 "in order of your preference") ③ 홈 `og:title` 을 `<title>` 과 동일 브랜드 표기로 통일(ADR-057 의 "og:title 미변경" 개정 — 구글이 "consistently across your home page" 요구). **스키마 0.** tsc0·lint0·test176·build 통과 + dev 런타임 env 유/무 양쪽 확인.
 - [x] **구글 검색 사이트명 — 도메인(`sowgood.kr`) 표시 수정 (2026-08-27, ADR-057)** — 검색결과 사이트명 자리에 브랜드명 대신 도메인이 나오던 문제. 원인 ① 레이아웃의 `openGraph.siteName` 이 페이지별 `openGraph` 재정의에 통째로 덮여 **`og:site_name` 이 라이브 HTML 에 0건**(Next 얕은 병합) ② `WebSite` JSON-LD 가 PR #87(ADR-044) 종료와 함께 미머지. 조치: 홈에 `Organization`+`WebSite` JSON-LD, 공개 7면 `openGraph.siteName` 명시, 홈 `<title>` 을 하위 접미사와 동일 이름으로 통일, `SITE_ALT_NAME` 추가. **스키마 0.** tsc0·lint0·build 통과 + dev 런타임에서 `/`·`/news`·`/press`·`/notices` og:site_name·JSON-LD 렌더 확인.
   - **후속(배포 후)**: GSC 에서 홈 URL 색인 재요청. 구글 재크롤에 수일~수주 소요. 리치결과 테스트로 `WebSite` 파싱 확인.
 - [x] **어드민 이미지 업로드 UX (2026-07-16, PR #89 머지·배포)** — 에디터 이미지 업로드가 콘솔에만 에러 찍고 침묵하던 문제. ① `onError` → 한국어 토스트 ② 업로드 전 자동 리사이즈(드롭존·2장나란히·커버 3경로). 저장 상한 5MB 유지 · 원본 상한 30MB 신설 · **원본 형식 보존**(커버가 OG 썸네일로 나가 webp 통일 시 크기에 따라 OG 형식이 조용히 갈림). ADR-046. 스키마 0. 실측 JPG 8.55→0.83MB · PNG 17.52→4.04MB · WEBP 5.37→0.56MB. tsc0·lint0·test115.
