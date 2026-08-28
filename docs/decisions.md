@@ -2344,3 +2344,45 @@ CHECK (board = 'story' OR (story_slot IS NULL AND featured_rank IS NULL AND hero
   (`오인철 서울남부 부교구장 부친 및 오충완 경기북부 교구장 조부`)과 수혜 기관명이 들어 있다.
   사이트로 나가는 값은 숫자 3개뿐이라 노출 경로는 없지만, 시트 공유 범위 자체는 사회공헌국이
   '제한됨' 으로 되돌리는 편이 맞다. `docs/TODO.md` 에 escalation 등록.
+
+---
+
+## ADR-060: 시트에서 들여오는 KPI 값은 정수로 버림
+
+- **Status**: Accepted
+- **Date**: 2026-08-28
+
+### Context
+
+사회공헌국이 랜딩 KPI 카드 `누적 봉사 기간` 이 깨진다고 보고했다 (2026-08-28).
+
+원인은 시트의 `연인원봉사시간 누계` 셀이 소수를 갖는 것이다. `kpi_metrics.value` 는
+`double precision` 이고 `formatKpiDisplay` 는 `value.toLocaleString("ko-KR") + unit` 이라
+`16078.5` 가 **`16,078.5시간`** 으로 렌더된다. KPI 숫자 셀은 전부 `whitespace-nowrap` 이라
+줄바꿈이 아니라 **카드를 넘쳐 마지막 글자가 잘린다**(재현 스크린샷:
+`docs/reports/rice-sheet-sync-2026-08-28/06-kpi-card-decimal-before.png`).
+
+들여오는 경로는 둘인데 둘 다 같은 함수를 지난다 — 주간 cron(`/api/cron/sync-kpi`)과
+어드민 `시트에서 불러오기`(`fetchSheetKpiValuesAction`) 모두 `fetchSheetMetrics` →
+`extractCumulativeMetrics` → `parseSheetNumber` 를 쓴다.
+
+### Decision
+
+1. **`extractCumulativeMetrics` 가 `Math.trunc` 로 정수화한다.** 두 경로가 이 함수를 공유하므로
+   한 지점만 고치면 cron·불러오기가 동시에 정수만 들여온다.
+2. **`parseSheetNumber` 는 그대로 둔다.** 셀에서 숫자를 뽑는 순수 파서라 정확한 값을 반환해야 한다.
+   정수화는 "우리가 무엇을 저장하느냐"의 결정이므로 ingest 경계에 둔다.
+3. **올림·사사오입이 아니라 버림.** 누적 실적 수치를 실제보다 크게 표시하지 않는다
+   (ADR-004 재정 투명성). `8,127.9 → 8127`(8128 아님) · `16,078.5 → 16078`(16079 아님).
+4. **운영자 수동 입력은 대상이 아니다.** `kpiUpdateRowSchema` 는 계속 소수를 허용한다 —
+   `529.4시간` 같은 특수 표기가 필요할 때의 자유도를 남긴다.
+5. **마이그레이션 0021 로 이미 저장된 값도 버림한다.** 대상은 `sync_source = 'google_sheets'`
+   인 행만. 코드만 고치면 다음 동기화(매주 월)까지 깨진 화면이 유지되므로 그 공백을 없앤다.
+
+### Consequences
+
+- 시트가 소수를 계속 갖고 있어도 사이트에는 정수만 나간다. 시트 쪽 수정을 요구하지 않는다.
+- 손실은 최대 1 미만이다 — 16,078.5 시간에서 0.5 시간. 누적 지표의 표시 정확도에 영향이 없다.
+- 어드민에서 운영자가 직접 소수를 넣으면 그대로 표시된다(그리고 카드를 넘칠 수 있다).
+  의도된 자유도이며, 넘치는 경우 `화면에 보이는 값` 칸으로 표기를 직접 쓰면 된다.
+- 시트에 소수 컬럼이 더 늘어도 코드 변경이 필요 없다 — 정수화가 라벨별이 아니라 ingest 전체에 걸린다.

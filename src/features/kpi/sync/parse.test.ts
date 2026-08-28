@@ -76,11 +76,24 @@ describe("extractCumulativeMetrics", () => {
     });
   });
 
-  it("연인원봉사시간 누계 → volunteer_period (총 누적 봉사시간 아님, 소수 보존)", () => {
+  it("연인원봉사시간 누계 → volunteer_period (총 누적 봉사시간 아님)", () => {
     expect(bySlug.get("volunteer_period")).toMatchObject({
-      value: 7873.5,
       externalId: "연인원봉사시간 누계",
     });
+  });
+
+  it("소수는 버림 — 7,873.5 → 7873 (KPI 카드 숫자가 카드를 넘치지 않게)", () => {
+    // 시트 원본은 "7,873.5 시간". parseSheetNumber 는 7873.5 를 그대로 주지만,
+    // 들여오는 지표는 정수로 내린다. 올림이 아니라 버림 — 실적을 실제보다 크게 표시하지 않는다.
+    expect(parseSheetNumber('"7,873.5 시간"')).toBe(7873.5);
+    expect(bySlug.get("volunteer_period")?.value).toBe(7873);
+    expect(Number.isInteger(bySlug.get("volunteer_period")!.value)).toBe(true);
+  });
+
+  it("추출된 모든 지표가 정수다", () => {
+    for (const m of metrics) {
+      expect(Number.isInteger(m.value)).toBe(true);
+    }
   });
 
   it("활동건수 → event_count", () => {

@@ -163,6 +163,80 @@ aria-label: "지역 시설 6개 시설"
 마지막 항목이 중요하다 — 두 시트가 같은 파서를 쓰는데 라벨 맵을 잘못 넘기면 엉뚱한 시트의
 숫자가 반대편 섹션에 들어갈 수 있다. `kind` 기본값이 impact 라 그 사고를 테스트가 막는다.
 
+## S10. 시트 소수값이 KPI 카드를 넘치는 문제 (ADR-060)
+
+사회공헌국 보고 — 자동으로 받아온 `누적 봉사 기간` 이 깨진다.
+
+**원인**: 시트 `연인원봉사시간 누계` 셀이 소수를 갖고, `kpi_metrics.value` 가 `double precision` 이라
+`formatKpiDisplay` 가 `16,078.5시간` 을 만든다. KPI 숫자 셀은 전부 `whitespace-nowrap` 이라
+줄바꿈이 아니라 **카드를 넘쳐 마지막 글자가 잘린다**.
+
+`value=16078.5` 를 주입해 재현 → `extractCumulativeMetrics` 의 `Math.trunc` 적용 후 재동기화:
+
+| 소수 그대로 (재현) | 정수 버림 (수정 후) |
+|---|---|
+| ![before](06-kpi-card-decimal-before.png) | ![after](07-kpi-card-int-after.png) |
+| `16,078.5시간` — "간" 이 카드 밖으로 잘림 | `16,078시간` — 여유 있게 들어옴 |
+
+## S11. 두 ingest 경로가 모두 정수를 들여오는가
+
+소수를 담은 CSV 를 로컬 HTTP 서버로 세우고 `KPI_SHEET_CSV_URL` 을 그쪽으로 돌렸다.
+
+```
+총 누적 활동건수,총 누적 봉사참여자수,연인원봉사시간 누계
+"614.0","8,127.9","16,078.5"
+```
+
+### ① 주간 cron (`/api/cron/sync-kpi`)
+
+DB 값을 `1` 로 초기화한 뒤 동기화 → 쓰기가 실제로 일어났음을 확인:
+
+```
+       slug       | value
+------------------+-------
+ event_count      |   614
+ volunteer_count  |  8127     ← 8,127.9 (8128 아님)
+ volunteer_period | 16078     ← 16,078.5 (16079 아님)
+```
+
+**결과 PASS** — 버림이다. 사사오입이면 8128 · 16079 가 됐을 것이다.
+
+### ② 어드민 `시트에서 불러오기`
+
+![admin kpi](05-admin-kpi-fetched-int.png)
+
+**결과 PASS** — 숫자 칸이 `8127` / `16078` / `614`, 미리보기가 `8,127명` / `16,078시간` / `614회`.
+두 경로가 `fetchSheetMetrics` → `extractCumulativeMetrics` 를 공유하므로 한 지점 수정으로 둘 다 덮인다.
+
+## S12. 마이그레이션 0021 이 기존 값만 정확히 손대는가
+
+코드 수정만으로는 이미 저장된 소수가 다음 동기화(매주 월)까지 노출된다. 0021 이 그 공백을 없앤다.
+대상을 `sync_source='google_sheets'` 로 한정해 **운영자 수동 입력 소수는 보존**한다.
+
+```
+-- 적용 전 (양쪽에 소수 주입)
+          slug          |  value  |  sync_source
+------------------------+---------+---------------
+ volunteer_period       | 16078.5 | google_sheets
+ helped_household_count |   529.4 | manual
+
+-- 적용 후
+ volunteer_period       |   16078 | google_sheets   ← 버림됨
+ helped_household_count |   529.4 | manual          ← 보존됨
+```
+
+**결과 PASS** — 시트 소유 값만 버림하고 수동 입력은 건드리지 않는다.
+
+## S13. 파서 테스트 (ADR-060 추가분)
+
+| 검증 | 기대 |
+|---|---|
+| 순수 파서는 정확한 값 유지 | `parseSheetNumber("7,873.5 시간")` → `7873.5` |
+| ingest 는 버림 | `extractCumulativeMetrics` → `7873` |
+| 추출된 전 지표가 정수 | 모든 `ParsedMetric.value` 에 `Number.isInteger` |
+
+첫 줄이 중요하다 — 파서는 정확하게 두고 정수화는 ingest 경계에만 둔다는 경계선을 테스트가 고정한다.
+
 ---
 
 ## 자동 검증
@@ -170,14 +244,14 @@ aria-label: "지역 시설 6개 시설"
 ```
 pnpm tsc --noEmit   ✓
 pnpm lint           ✓
-pnpm vitest run     ✓  18 files / 158 tests
+pnpm vitest run     ✓  18 files / 160 tests
 pnpm build          ✓
 ```
 
 ## 머지 후 배포 절차 (`docs/deploy-env-checklist.md` §6.1)
 
 1. Vercel 에 `RICE_SHEET_CSV_URL` 입력 → **Redeploy**
-2. 마이그레이션 `0020` 적용 (migrate 워크플로)
+2. 마이그레이션 `0020`·`0021` 적용 (migrate 워크플로)
 3. GHA `Sync KPI + 쌀나눔 from Sheets (weekly)` → **Run workflow 수동 1회**
    — 안 돌리면 다음 월요일까지 `2,370kg` 이 그대로 노출된다 (S2 가 보여준 폴백 동작)
 4. 랜딩 세 통계 육안 확인. 단위가 어긋나면 `/admin/landing` 에서 **단위 칸만** 수정
