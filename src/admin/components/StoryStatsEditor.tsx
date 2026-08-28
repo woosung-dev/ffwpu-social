@@ -1,4 +1,5 @@
-// 쌀나눔 통계 입력 — StorySection 3 통계 라벨·표시값 자유 편집. 표시값 비면 메인 비노출. updateStoryStatsAction (slug 키)
+// 쌀나눔 통계 입력 — StorySection 3 통계. 숫자 우선 모델(impact KPI 와 동일): 숫자+단위로 자동 표시하고,
+// 특수 표기가 필요할 때만 '화면에 보이는 값' 을 직접 쓴다. 숫자는 쌀나눔 시트에서 불러올 수 있다. updateStoryStatsAction (slug 키)
 "use client";
 
 import { useState, useTransition } from "react";
@@ -8,7 +9,11 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { updateStoryStatsAction } from "@/features/kpi/actions";
+import {
+  fetchSheetKpiValuesAction,
+  updateStoryStatsAction,
+} from "@/features/kpi/actions";
+import { formatKpiDisplay } from "@/features/kpi/format";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,11 +36,13 @@ type Props = {
   initialStats: StoryStatRow[];
 };
 
-// 라벨·표시값 자유 텍스트. 표시값 비면 메인 숨김. 라벨은 필수(빈 행 방지)
+// 라벨 필수(빈 행 방지). 숫자는 빈칸 허용 — 비우면 '화면에 보이는 값' 이 쓰인다.
 const storyStatsFormSchema = z.object({
   rows: z.array(
     z.object({
-      label: z.string().min(1, "라벨을 입력해주세요").max(50),
+      label: z.string().min(1, "제목을 입력해주세요").max(50),
+      value: z.number().min(0).max(99_999_999).nullable(),
+      unit: z.string().max(10),
       displayValue: z.string().max(60),
     }),
   ),
@@ -47,27 +54,61 @@ export function StoryStatsEditor({ initialStats }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isFetching, startFetch] = useTransition();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(storyStatsFormSchema),
     defaultValues: {
       rows: initialStats.map((s) => ({
         label: s.label,
+        value: s.value,
+        unit: s.unit ?? "",
         displayValue: s.displayValue,
       })),
     },
   });
 
+  // slug → 폼 row 인덱스 (시트 불러오기 시 해당 칸에 채우기)
+  const slugToIndex = new Map(initialStats.map((r, i) => [r.slug, i]));
+
+  const onLoadFromSheet = () => {
+    startFetch(async () => {
+      const result = await fetchSheetKpiValuesAction("story");
+      if (!result.success) {
+        toast.error(
+          typeof result.error === "string"
+            ? result.error
+            : "시트를 불러오지 못했습니다.",
+        );
+        return;
+      }
+      let filled = 0;
+      for (const m of result.data.metrics) {
+        const idx = slugToIndex.get(m.slug);
+        if (idx === undefined) continue;
+        // 숫자만 채움 — 단위·화면 표기는 운영자 설정 유지
+        form.setValue(`rows.${idx}.value`, m.value, { shouldDirty: true });
+        filled++;
+      }
+      toast.success(
+        `시트에서 ${filled}개 숫자를 불러왔습니다. 확인 후 '통계 저장'을 눌러주세요.`,
+      );
+    });
+  };
+
   const onSubmit = (values: FormValues) => {
     setError(null);
     startTransition(async () => {
-      const rows = initialStats.map((stat, idx) => ({
-        slug: stat.slug,
-        label: values.rows[idx]?.label ?? stat.label,
-        displayValue: values.rows[idx]?.displayValue ?? "",
-        value: null,
-        unit: null,
-      }));
+      const rows = initialStats.map((stat, idx) => {
+        const row = values.rows[idx];
+        return {
+          slug: stat.slug,
+          label: row?.label ?? stat.label,
+          value: row?.value ?? null,
+          unit: row?.unit?.trim() ? row.unit.trim() : null,
+          displayValue: row?.displayValue ?? "",
+        };
+      });
       const result = await updateStoryStatsAction({ rows });
       if (!result.success) {
         setError(
@@ -84,7 +125,6 @@ export function StoryStatsEditor({ initialStats }: Props) {
     });
   };
 
-  // 입력 중 hide 여부 미리보기 — 표시값 비면 메인에서 숨김
   const watched = form.watch("rows");
 
   return (
@@ -95,8 +135,10 @@ export function StoryStatsEditor({ initialStats }: Props) {
           <HelpTip>{LAND.statsHelp}</HelpTip>
         </CardTitle>
         <p className="text-sm text-ink-subtle">
-          메인 페이지 &ldquo;밥이 사랑이다&rdquo; 영역의 통계입니다. 제목·값을 자유롭게
-          입력할 수 있고, 화면에 보이는 값을 비우면 해당 항목은 메인에 노출되지 않습니다.
+          메인 페이지 &ldquo;밥이 사랑이다&rdquo; 영역의 통계입니다. 숫자와 단위를 넣으면
+          <strong className="font-semibold"> 3,210kg</strong> 처럼 자동으로 표시됩니다.
+          숫자를 비우면 아래 &lsquo;직접 쓰는 표기&rsquo; 가 쓰이고, 둘 다 비우면 메인에
+          노출되지 않습니다.
         </p>
       </CardHeader>
       <CardContent>
@@ -110,10 +152,35 @@ export function StoryStatsEditor({ initialStats }: Props) {
             </div>
           )}
 
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-ink-strong">
+                쌀 나눔 시트에서 숫자 불러오기
+              </p>
+              <p className="text-xs text-ink-date">
+                매주 월요일 자동 갱신 · 단위와 제목은 그대로 둡니다
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onLoadFromSheet}
+              disabled={isFetching || isPending}
+            >
+              {isFetching ? "불러오는 중..." : "시트에서 불러오기"}
+            </Button>
+          </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {initialStats.map((stat, idx) => {
-              const display = watched?.[idx]?.displayValue ?? "";
-              const hidden = display.trim() === "";
+              const w = watched?.[idx];
+              const preview = formatKpiDisplay(
+                w?.value ?? null,
+                w?.unit ?? null,
+                w?.displayValue ?? "",
+                "",
+              );
               const labelErr = form.formState.errors.rows?.[idx]?.label;
               return (
                 <div
@@ -135,17 +202,50 @@ export function StoryStatsEditor({ initialStats }: Props) {
                       <p className="text-xs text-destructive">{labelErr.message}</p>
                     )}
                   </div>
+                  <div className="flex gap-2">
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <Label htmlFor={`story-value-${idx}`}>숫자</Label>
+                      <Controller
+                        control={form.control}
+                        name={`rows.${idx}.value` as const}
+                        render={({ field }) => (
+                          <Input
+                            id={`story-value-${idx}`}
+                            inputMode="decimal"
+                            placeholder="예: 3210"
+                            disabled={isPending}
+                            className="font-semibold"
+                            value={field.value ?? ""}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/,/g, "").trim();
+                              field.onChange(raw === "" ? null : Number(raw));
+                            }}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="w-24 shrink-0 space-y-1.5">
+                      <Label htmlFor={`story-unit-${idx}`}>단위</Label>
+                      <Input
+                        id={`story-unit-${idx}`}
+                        placeholder="kg"
+                        disabled={isPending}
+                        {...form.register(`rows.${idx}.unit` as const)}
+                      />
+                    </div>
+                  </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor={`story-display-${idx}`}>화면에 보이는 값</Label>
+                    <Label htmlFor={`story-display-${idx}`}>
+                      직접 쓰는 표기 (선택)
+                    </Label>
                     <Controller
                       control={form.control}
                       name={`rows.${idx}.displayValue` as const}
                       render={({ field }) => (
                         <Input
                           id={`story-display-${idx}`}
-                          placeholder="예: 12,345kg (비우면 숨김)"
+                          placeholder="숫자를 비웠을 때만 사용"
                           disabled={isPending}
-                          className="font-semibold"
                           value={field.value ?? ""}
                           onChange={(e) => field.onChange(e.target.value)}
                         />
@@ -153,9 +253,9 @@ export function StoryStatsEditor({ initialStats }: Props) {
                     />
                   </div>
                   <p className="text-xs text-ink-subtle">
-                    {hidden
-                      ? "메인에서 숨김 (표시값 없음)"
-                      : `메인 노출: ${display}`}
+                    {preview === ""
+                      ? "메인에서 숨김 (숫자·표기 모두 없음)"
+                      : `메인 노출: ${preview}`}
                   </p>
                 </div>
               );

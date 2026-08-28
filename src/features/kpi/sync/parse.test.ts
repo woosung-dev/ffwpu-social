@@ -92,3 +92,50 @@ describe("extractCumulativeMetrics", () => {
     expect(bySlug.get("volunteer_count")?.value).toBe(4973);
   });
 });
+
+// 쌀 나눔 대장 시트 — 실제 CSV export 구조(2026-08-28 실측). 행 0 라벨 / 행 1 총계 / 행 2+ 행사별.
+const RICE_CSV = [
+  "순번,행사명,행사일,쌀화환 참여기관 수,쌀 나눔 포대 수,쌀 나눔 포대 무게(kg),나눔가정 수,나눔 단체 수,나눔 기관명,비고",
+  ',,,175,323,"3,210",106,6,,',
+  "1,천일국 14년 한식 파주원전 참배식,2026. 4. 6,16,32,300,22,2,흑석종합사회복지관 6포,",
+  '3,창립 72주년 기념식,2026. 6. 15,52,102,"1,020",X,4,철원 푸드뱅크 30포,',
+].join("\n");
+
+describe("extractCumulativeMetrics — 쌀 나눔 대장(kind: story)", () => {
+  const metrics = extractCumulativeMetrics(parseCsv(RICE_CSV), "story");
+  const bySlug = new Map(metrics.map((m) => [m.slug, m]));
+
+  it("총계 행에서 story 통계 3개만 추출한다", () => {
+    expect([...bySlug.keys()].sort()).toEqual([
+      "story_local_facilities",
+      "story_supported_households",
+      "story_supported_orgs",
+    ]);
+  });
+
+  it("쌀 나눔 포대 무게(kg) → 그룹 숫자 콤마 제거", () => {
+    expect(bySlug.get("story_supported_orgs")).toMatchObject({
+      value: 3210,
+      externalId: "쌀 나눔 포대 무게(kg)",
+    });
+  });
+
+  it("나눔가정 수 / 나눔 단체 수", () => {
+    expect(bySlug.get("story_supported_households")?.value).toBe(106);
+    expect(bySlug.get("story_local_facilities")?.value).toBe(6);
+  });
+
+  it("행사별 행(2행 이하)의 숫자를 총계로 오인하지 않는다", () => {
+    // 첫 행사 행의 22가정/2단체가 아니라 총계 106/6
+    expect(bySlug.get("story_supported_households")?.value).not.toBe(22);
+  });
+
+  it("미매핑 컬럼(쌀화환 참여기관 수·쌀 나눔 포대 수)은 무시한다", () => {
+    expect(metrics.map((m) => m.value)).not.toContain(175);
+    expect(metrics.map((m) => m.value)).not.toContain(323);
+  });
+
+  it("kind 를 안 넘기면 impact 맵이라 story 라벨은 안 잡힌다 (시트 교차 오염 방지)", () => {
+    expect(extractCumulativeMetrics(parseCsv(RICE_CSV))).toHaveLength(0);
+  });
+});

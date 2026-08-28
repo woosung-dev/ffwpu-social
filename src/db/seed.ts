@@ -452,7 +452,8 @@ async function seed() {
       unit: "회",
       sortOrder: 4,
     },
-    // StorySection 통계 (section: story) — 라벨·표시값 자유 텍스트(운영자 편집). hide-when-empty: displayValue 비면 메인 비노출
+    // StorySection 통계 (section: story) — 숫자 우선 모델(impact 와 동일). 숫자는 쌀나눔 시트 동기화가 채우고 라벨·단위는 운영자 소유.
+    // hide-when-empty: 숫자도 표시값도 없으면 메인 비노출
     // slug story_supported_orgs 는 '후원 기관' → '나눈 사랑(쌀)의 무게' 로 전환(사용자 요청). 표시값 빈값 = kg 입력 전까지 숨김
     {
       slug: "story_supported_orgs",
@@ -460,7 +461,8 @@ async function seed() {
       label: "나눈 사랑(쌀)의 무게",
       value: null,
       displayValue: "",
-      unit: null,
+      // 단위는 운영자 소유 — 시트 동기화가 value 만 채워도 "3,210kg" 으로 표시되게 미리 둔다 (0020)
+      unit: "kg",
       sortOrder: 1,
     },
     {
@@ -468,7 +470,7 @@ async function seed() {
       section: "story" as const,
       label: "지원 가정",
       value: 23,
-      displayValue: "23가정",
+      displayValue: "",
       unit: "가정",
       sortOrder: 2,
     },
@@ -477,8 +479,8 @@ async function seed() {
       section: "story" as const,
       label: "지역 시설",
       value: 2,
-      displayValue: "2시설",
-      unit: "시설",
+      displayValue: "",
+      unit: "개 시설",
       sortOrder: 3,
     },
   ]);

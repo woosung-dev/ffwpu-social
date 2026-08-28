@@ -13,7 +13,7 @@ export async function listKpisForAdmin() {
   return kpiDb.listForAdmin("impact");
 }
 
-// StorySection 통계 (후원기관·지원가정·지역시설) — 어드민 입력 폼. updateKpis 와 동일 액션 재사용 (slug 키)
+// StorySection 통계 (나눔 쌀·나눔 가정·나눔 시설) — 어드민 입력 폼. 숫자는 쌀나눔 시트 동기화가 채운다 (ADR-058)
 export async function listStoryStatsForAdmin() {
   return kpiDb.listForAdmin("story");
 }
@@ -76,7 +76,7 @@ export async function updateStorySectionText(input: StoryTextUpdateInput) {
   });
 }
 
-// StorySection 통계 일괄 갱신 — 라벨·표시값 자유 텍스트(빈 표시값 허용). value/unit 미사용 → null 저장.
+// StorySection 통계 일괄 갱신 — 숫자·단위·표시값(ADR-058). 빈 단위는 null 로 저장해 formatKpiDisplay 가 접미사 없이 렌더.
 export async function updateStoryStats(input: StoryStatsUpdateInput) {
   return db.transaction(async (tx) => {
     const updated = [];

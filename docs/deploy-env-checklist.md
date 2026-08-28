@@ -23,6 +23,7 @@
 | `NEXT_PUBLIC_SITE_URL` | Vercel | `http://localhost:3100` | **실제 도메인**(OG·sitemap·canonical 기준, 끝 슬래시 없이) |
 | `NEXT_PUBLIC_GA_ID` | Vercel | 비움 | GA4 `G-XXXXXXXXXX`(없으면 비워두면 미로드) |
 | `KPI_SHEET_CSV_URL` | Vercel | 배포와 동일 값 사용 | **Apps Script 웹앱 URL** `https://script.google.com/macros/s/<배포ID>/exec?token=<TOKEN>` (§6) |
+| `RICE_SHEET_CSV_URL` | Vercel | 배포와 동일 값 사용 | **쌀 나눔 대장 CSV export** `https://docs.google.com/spreadsheets/d/<시트ID>/export?format=csv&gid=0` (§6.1) |
 | `CRON_SECRET` | **Vercel + GitHub 양쪽** | `local-dev-cron-secret-123` 등 아무 값 | `openssl rand -hex 32`. **양쪽 값이 같아야 함** — 다르면 403 |
 | `KPI_SYNC_ENDPOINT` | **GitHub Secrets 만** | (불필요) | `https://<도메인>/api/cron/sync-kpi` — Action 이 부를 주소 |
 | `PROD_DATABASE_URL_DIRECT` | **GitHub Secrets 만** | (불필요) | Neon **direct**(`-pooler` 제거) — migrate 워크플로 전용 (§5) |
@@ -88,6 +89,10 @@
 
 주간 자동·어드민 버튼이 **같은 URL 하나**(`KPI_SHEET_CSV_URL`)를 쓴다. 그래서 이 URL 이 죽으면 **둘 다** 죽는다.
 
+> **시트는 2개다** — 협회 누적 지표(`KPI_SHEET_CSV_URL` → 랜딩 KpiSection)와 쌀 나눔 대장
+> (`RICE_SHEET_CSV_URL` → 랜딩 StorySection). 한 번의 `/api/cron/sync-kpi` 호출이 둘을 각각 돌리고,
+> **한쪽 실패가 다른 쪽을 막지 않는다**. 응답의 `reports[]` 에 시트별 성공/실패가 따로 찍힌다. 자세한 건 §6.1.
+
 ### 구성 요소
 
 | 위치 | 내용 |
@@ -123,4 +128,39 @@ curl -sSL "<웹앱 URL>/exec"              # token 없이 → forbidden
 
 ### EC2 이전 시
 
-`KPI_SHEET_CSV_URL`·`CRON_SECRET` 을 EC2 env 로 옮기고, GitHub Secret **`KPI_SYNC_ENDPOINT` 주소만** 새 도메인으로 교체하면 끝. GitHub 은 사이트를 주소로만 부르므로 **Apps Script 는 손댈 필요 없다.**
+`KPI_SHEET_CSV_URL`·`RICE_SHEET_CSV_URL`·`CRON_SECRET` 을 EC2 env 로 옮기고, GitHub Secret **`KPI_SYNC_ENDPOINT` 주소만** 새 도메인으로 교체하면 끝. GitHub 은 사이트를 주소로만 부르므로 **Apps Script 는 손댈 필요 없다.**
+
+---
+
+## 6.1 쌀 나눔 대장 시트 (ADR-058)
+
+랜딩 StorySection 통계 3개(`나눔 쌀 kg` · `나눔 가정` · `나눔 시설`)를 채운다.
+
+| 항목 | 값 |
+|---|---|
+| 변수 | `RICE_SHEET_CSV_URL` |
+| 현재 방식 | 시트가 '링크가 있는 모든 사용자' 공유라 **CSV export URL 을 그대로** 쓴다 (Apps Script 불필요) |
+| URL 형식 | `https://docs.google.com/spreadsheets/d/<시트ID>/export?format=csv&gid=0` |
+| 읽는 것 | 행 0 의 라벨(`쌀 나눔 포대 무게(kg)` · `나눔가정 수` · `나눔 단체 수`) ↔ 행 1 의 총계 |
+| 갱신되는 것 | `kpi_metrics.value` (숫자)만. 제목·단위는 `/admin/landing` 에서 운영자가 소유 |
+
+```bash
+# 검증 — 라벨 행 + 총계 행이 나와야 한다
+curl -sSL "$RICE_SHEET_CSV_URL" | head -2
+```
+
+### 🔴 배포 후 1회 할 일
+
+1. Vercel 에 `RICE_SHEET_CSV_URL` 입력 → **Redeploy**
+2. 마이그레이션 `0020_story_stats_unit_backfill` 적용 (migrate 워크플로, §5)
+3. GitHub Actions **`Sync KPI + 쌀나눔 from Sheets (weekly)` → Run workflow** 수동 1회
+   — 안 돌리면 다음 월요일까지 낡은 값(`2,370kg`)이 그대로 노출된다
+4. 랜딩에서 세 통계 표기 육안 확인. 단위가 어긋나면 `/admin/landing` 에서 **단위 칸만** 수정
+
+### 시트가 '제한됨' 으로 바뀌면
+
+CSV export 는 401 이 된다. 코드는 그대로 두고 `RICE_SHEET_CSV_URL` 을 **Apps Script 웹앱 URL**
+(§6 의 `getKpi` 와 동일 방식)로 교체하면 된다. 읽는 쪽 인터페이스가 같아서 재배포 외 작업은 없다.
+
+> ⚠️ 이 시트에는 실명·수혜 기관명이 들어 있다(ADR-004). 공유 범위 결정은 사회공헌국 몫 —
+> `docs/TODO.md` escalation 참조.
