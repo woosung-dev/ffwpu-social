@@ -20,6 +20,109 @@ export const ALLOWED_FONT_SIZES = [
   "64px",
 ] as const;
 
+// 글꼴 — 툴바 드롭다운 · sanitize · 공개 렌더 · 웹폰트 로딩의 단일 출처.
+// 저장값(value)은 구글 폰트의 **대표 패밀리명 하나**다. 스택(stack)은 렌더 시점에 붙인다 —
+// 나중에 폴백을 손봐도 이미 발행된 글이 글꼴을 잃지 않는다.
+// 전부 SIL Open Font License 1.1 (google/fonts METADATA.pb `license: "OFL"` 확인, 2026-08-28) — 상업 이용·웹폰트 임베딩 무료.
+export type EditorFont = {
+  // 마크에 저장되는 값 = 구글 패밀리명. 절대 바꾸지 말 것(발행된 글이 이 문자열을 들고 있다).
+  value: string;
+  // 드롭다운에 보이는 한글 이름
+  label: string;
+  // 실제 적용 CSS 스택
+  stack: string;
+  // 구글 폰트 CSS2 요청용 family 파라미터(웨이트 포함). null 이면 웹폰트 로딩 불필요(사이트 기본 글꼴)
+  googleFamily: string | null;
+};
+
+// 기본(사이트 글꼴 SUIT)은 마크를 지우는 선택지라 value 가 빈 문자열이다 — 목록 맨 앞에 둔다.
+export const DEFAULT_FONT_VALUE = "";
+
+export const EDITOR_FONTS: readonly EditorFont[] = [
+  {
+    value: DEFAULT_FONT_VALUE,
+    label: "기본",
+    stack: "",
+    googleFamily: null,
+  },
+  {
+    value: "Noto Serif KR",
+    label: "본명조",
+    stack: "'Noto Serif KR', serif",
+    googleFamily: "Noto+Serif+KR:wght@400;700",
+  },
+  {
+    value: "Nanum Myeongjo",
+    label: "나눔명조",
+    stack: "'Nanum Myeongjo', serif",
+    googleFamily: "Nanum+Myeongjo:wght@400;700",
+  },
+  {
+    value: "Gowun Batang",
+    label: "고운바탕",
+    stack: "'Gowun Batang', serif",
+    googleFamily: "Gowun+Batang:wght@400;700",
+  },
+  {
+    value: "Nanum Gothic",
+    label: "나눔고딕",
+    stack: "'Nanum Gothic', sans-serif",
+    googleFamily: "Nanum+Gothic:wght@400;700",
+  },
+  {
+    value: "Gaegu",
+    label: "개구",
+    stack: "'Gaegu', cursive",
+    googleFamily: "Gaegu:wght@400;700",
+  },
+] as const;
+
+// 웹폰트가 필요한 글꼴만 (기본 제외)
+export const WEBFONT_EDITOR_FONTS = EDITOR_FONTS.filter(
+  (f): f is EditorFont & { googleFamily: string } => f.googleFamily !== null,
+);
+
+// 소문자 패밀리명 → 정의. 브라우저가 대소문자를 보존하지만 비교는 관대하게 한다.
+const FONT_BY_LOWER_VALUE = new Map(
+  WEBFONT_EDITOR_FONTS.map((f) => [f.value.toLowerCase(), f]),
+);
+
+// 글꼴 정규화 — 화이트리스트에 있는 대표 패밀리명으로 되돌린다. 없으면 null(= 마크 drop, 사이트 기본 글꼴).
+// 브라우저는 style.fontFamily 를 `"Nanum Myeongjo", serif` 처럼 따옴표 붙여 직렬화하므로
+// 첫 패밀리만 떼어 따옴표를 벗긴다. docx 붙여넣기의 임의 글꼴(맑은 고딕 등)은 여기서 걸러진다.
+export function normalizeFontFamily(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const first = v.split(",")[0]?.trim() ?? "";
+  const unquoted = first.replace(/^['"]|['"]$/g, "").trim();
+  if (!unquoted) return null;
+  return FONT_BY_LOWER_VALUE.get(unquoted.toLowerCase())?.value ?? null;
+}
+
+// 대표 패밀리명 → 적용 CSS 스택. 미등록 값은 null(인라인 style 미출력).
+export function resolveFontStack(v: unknown): string | null {
+  const normalized = normalizeFontFamily(v);
+  return normalized
+    ? (FONT_BY_LOWER_VALUE.get(normalized.toLowerCase())?.stack ?? null)
+    : null;
+}
+
+// 구글 폰트 CSS2 URL — 여러 글꼴을 한 요청에 묶는다(연결 1회).
+// families 가 비면 null → 호출측이 <link> 자체를 안 그린다(안 쓰는 글에 0 바이트).
+export function googleFontsHref(values: readonly string[]): string | null {
+  const families = Array.from(
+    new Set(
+      values
+        .map((v) => normalizeFontFamily(v))
+        .filter((v): v is string => v !== null)
+        .map((v) => FONT_BY_LOWER_VALUE.get(v.toLowerCase())!.googleFamily),
+    ),
+  ).sort();
+  if (families.length === 0) return null;
+  return `https://fonts.googleapis.com/css2?${families
+    .map((f) => `family=${f}`)
+    .join("&")}&display=swap`;
+}
+
 // 글자 색 "빠른 선택" 팔레트(툴바 프리셋) — 먹/회색 + 브랜드 + 강조 6.
 // 자유 색은 normalizeColor 가 hex 검증으로 통과시킨다(고정 화이트리스트 아님).
 export const ALLOWED_COLORS = [

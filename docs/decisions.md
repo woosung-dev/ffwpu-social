@@ -2347,6 +2347,66 @@ CHECK (board = 'story' OR (story_slot IS NULL AND featured_rank IS NULL AND hero
 
 ---
 
+## ADR-059: 게시물 글꼴 선택 — OFL 웹폰트 6종 + 글이 쓴 글꼴만 로딩
+
+- **Status**: Accepted
+- **Date**: 2026-08-28
+
+### Context
+
+사회공헌국이 "게시물 쓸 때 글꼴을 고르고 싶다, 명조체가 있으면 좋겠다"고 요청했다 (2026-08-28).
+
+확인한 것 세 가지.
+
+1. **라이선스·비용 제약 없음.** 후보 글꼴 전부 SIL Open Font License 1.1 —
+   `google/fonts` 저장소의 `METADATA.pb` 에서 `license: "OFL"` 를 직접 확인했다
+   (`nanummyeongjo` / `notoserifkr` / `gowunbatang` / `nanumgothic` / `gaegu`).
+   상업 이용·웹폰트 임베딩 모두 무료.
+2. **신규 의존성 0.** Tiptap v3 의 `FontFamily` 는 이미 설치된 `@tiptap/extension-text-style` 의
+   `TextStyleKit` 에 **기본 활성 상태로 포함**돼 있었다. `setFontFamily` 는 이미 동작하고 있었고,
+   없던 것은 툴바 UI·화이트리스트·렌더·폰트 로딩이었다.
+3. **진짜 제약은 용량이다.** 한글 웹폰트는 무겁다. 400+700 두 웨이트 기준 실측:
+
+   | 글꼴 | 청크 | 전체 | 청크당 |
+   |---|---|---|---|
+   | 나눔고딕 | 184 | 2.0 MB | 11 KB |
+   | 나눔명조 | 184 | 2.6 MB | 14 KB |
+   | 고운바탕 | 190 | 3.0 MB | 16 KB |
+   | 개구 | 178 | 1.1 MB | 6 KB |
+   | 본명조(Noto Serif KR) | 248 | **12.2 MB** | **49 KB** |
+
+### Decision
+
+1. **글꼴 6종** — 기본(SUIT) / 본명조 / 나눔명조 / 고운바탕 / 나눔고딕 / 개구. 사용자 선택.
+2. **글이 실제로 쓴 글꼴만 `<link>` 로 부른다.** `collectUsedFonts(정화된 문서)` → `googleFontsHref()`.
+   글꼴을 안 쓴 글은 폰트 요청이 **0 건**이고, 쓴 글도 구글의 unicode-range 분할 덕에
+   **등장한 글자의 조각만** 받는다. 실측: 세 문단짜리 글이 나눔명조 184 청크 중 **10 개**만 로드.
+   어드민 에디터만 6종을 전부 불러둔다 — 드롭다운 미리보기와 WYSIWYG 이 맞아야 고를 수 있다.
+3. **구글 CDN `<link>` 채택, 자체 호스팅 보류.** `next/font/google` 자체 호스팅도 동작을 확인했지만
+   (`subsets: ["latin"]` 으로도 184 청크를 전부 받아 로컬 서빙, unicode-range 유지),
+   6종이면 빌드 산출물에 **약 21 MB / 984 파일**이 얹히고 `output: standalone` 이미지도 같이 커진다.
+   사이트에 이미 GA4 가 있어 구글 third-party 요청이 새로 생기는 것도 아니다.
+4. **저장값은 대표 패밀리명 하나** (`Nanum Myeongjo`). 폴백 스택(`'Nanum Myeongjo', serif`)은
+   렌더 시점에 붙인다 — 나중에 폴백을 손봐도 발행된 글이 글꼴을 잃지 않는다.
+   브라우저가 `element.style.fontFamily` 를 `"Nanum Myeongjo", serif` 로 직렬화하므로
+   `normalizeFontFamily` 가 첫 패밀리만 떼어 따옴표를 벗기고 대소문자를 흡수한다.
+
+### Consequences
+
+- 화이트리스트 밖 글꼴(docx 의 맑은 고딕 등)은 붙여넣기 단계와 sanitize 양쪽에서 drop 된다 →
+  사이트 기본 글꼴로 떨어진다. 글자는 남고 글꼴만 사라지므로 내용 손실은 없다.
+- **본명조를 쓴 글은 무겁다.** 청크당 49 KB 라 나머지 글꼴의 4~6 배다. 부담은 그 글을 읽는 사람만
+  지지만, 실사용에서 체감되면 `EDITOR_FONTS` 에서 한 줄 빼면 끝난다(발행된 글은 폴백 serif 로 렌더).
+- 스타일시트는 PPR 스트리밍 경계 안에서 나오므로 초기 HTML 에는 `preload` 만 실리고,
+  실제 `<link rel="stylesheet">` 는 하이드레이션 때 React 가 `<head>` 로 끌어올린다(동작 확인).
+  JS 가 없으면 폴백 글꼴로 읽힌다 — 본문 가독성에는 영향이 없다.
+- **CSP 를 도입하면** `font-src https://fonts.gstatic.com` 과 `style-src https://fonts.googleapis.com`
+  을 허용해야 한다. 지금은 CSP 가 없어 걸리는 게 없다.
+- 글꼴 목록은 `EDITOR_FONTS` 단일 출처다. 툴바·sanitize·공개 렌더·폰트 로딩이 모두 이걸 읽으므로
+  항목을 늘릴 때 손댈 곳은 한 군데다. `font-family.test.ts` 가 목록의 왕복(저장→파싱) 불변식을 지킨다.
+
+---
+
 ## ADR-060: 시트에서 들여오는 KPI 값은 정수로 버림
 
 - **Status**: Accepted

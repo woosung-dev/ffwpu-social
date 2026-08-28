@@ -5,6 +5,7 @@ import {
   clampImagePx,
   extractYoutubeId,
   normalizeColor,
+  normalizeFontFamily,
   normalizeFontSize,
   resolveHighlightColor,
 } from "./editor-allowlist";
@@ -73,6 +74,10 @@ function sanitizeMark(mark: unknown): SafeMark | null {
       if (safeColor) attrs.color = safeColor;
       const safeFontSize = normalizeFontSize(fontSize);
       if (safeFontSize) attrs.fontSize = safeFontSize;
+      // 글꼴 — 드롭다운 화이트리스트 밖(docx 의 맑은 고딕 등)은 drop 해 사이트 기본 글꼴로 떨어뜨린다
+      const fontFamily = isObject(mark.attrs) ? mark.attrs.fontFamily : undefined;
+      const safeFontFamily = normalizeFontFamily(fontFamily);
+      if (safeFontFamily) attrs.fontFamily = safeFontFamily;
       // 유효 attr 없으면 drop (임의 style 차단)
       return Object.keys(attrs).length ? { type: "textStyle", attrs } : null;
     }
@@ -227,4 +232,19 @@ export function sanitizeTiptapJson(
   const sanitized = sanitizeNode(raw, opts.isAllowedImageSrc);
   if (!sanitized || sanitized.type !== "doc") return null;
   return sanitized;
+}
+
+// 정화된 문서가 실제로 쓴 글꼴 목록. 공개 렌더가 이 글에 필요한 웹폰트만 <link> 로 부르는 데 쓴다 —
+// 글꼴을 안 쓴 글은 빈 배열이라 폰트 요청이 0 건이다. 한글 웹폰트는 무거워서 이 구분이 값어치를 한다.
+export function collectUsedFonts(node: SafeNode | null): string[] {
+  const found = new Set<string>();
+  const walk = (n: SafeNode) => {
+    for (const mark of n.marks ?? []) {
+      const family = mark.attrs?.fontFamily;
+      if (family) found.add(family);
+    }
+    for (const child of n.content ?? []) walk(child);
+  };
+  if (node) walk(node);
+  return [...found];
 }

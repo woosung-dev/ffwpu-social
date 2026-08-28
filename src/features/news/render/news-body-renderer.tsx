@@ -3,9 +3,11 @@
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { isAllowedImagePublicUrl } from "@/lib/s3";
+import { googleFontsHref, resolveFontStack } from "./editor-allowlist";
 import {
   type SafeMark,
   type SafeNode,
+  collectUsedFonts,
   sanitizeTiptapJson,
 } from "./sanitize";
 
@@ -20,6 +22,9 @@ export function NewsBodyRenderer({ body }: Props) {
   if (!safe || !safe.content || safe.content.length === 0) {
     return <p className="text-sm text-ink-subtle">본문이 없습니다.</p>;
   }
+  // 이 글이 실제로 쓴 글꼴만 요청한다. 한글 웹폰트는 무겁고(본명조 전체 12MB) 구글이 unicode-range 로
+  // 쪼개 주므로, 안 쓰는 글에는 요청 0 건이고 쓰는 글도 등장한 글자의 조각만 받는다.
+  const fontsHref = googleFontsHref(collectUsedFonts(safe));
   return (
     // 본문 타이포 — 에디터(Tiptap)와 WYSIWYG 일치 + 티스토리/네이버 모델.
     // 16px / line-height 1.75 / 문단 마진 0 → 줄 pitch = line-height 만(티스토리와 동일, 28px).
@@ -31,6 +36,13 @@ export function NewsBodyRenderer({ body }: Props) {
         "[&_p]:my-0 [&_p]:leading-[1.75]",
       )}
     >
+      {/* React 19 가 head 로 끌어올리고 중복 제거한다 — 본문 안에 둬도 되고, 글꼴을 쓴 글에만 붙는다 */}
+      {fontsHref && (
+        <>
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+          <link rel="stylesheet" href={fontsHref} precedence="default" />
+        </>
+      )}
       {safe.content.map((node, i) => renderNode(node, i))}
     </article>
   );
@@ -68,6 +80,9 @@ function renderMarks(marks: SafeMark[] | undefined, children: ReactNode): ReactN
           style.fontSize = mark.attrs.fontSize;
           style.lineHeight = 1.3;
         }
+        // 저장값은 대표 패밀리명 하나 — 폴백 스택은 여기서 붙인다(웹폰트 로딩 실패 시 시스템 글꼴)
+        const fontStack = resolveFontStack(mark.attrs?.fontFamily);
+        if (fontStack) style.fontFamily = fontStack;
         return <span style={style}>{acc}</span>;
       }
       case "link":
