@@ -42,6 +42,7 @@ import "@/components/tiptap-node/paragraph-node/paragraph-node.scss"
 
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-menu"
+import { FontFamilyDropdownMenu } from "@/components/tiptap-ui/font-family-dropdown-menu"
 import { FontSizeDropdownMenu } from "@/components/tiptap-ui/font-size-dropdown-menu"
 import { YoutubeButton } from "@/components/tiptap-ui/youtube-button"
 import { ImageUploadButton } from "@/components/tiptap-ui/image-upload-button"
@@ -87,7 +88,10 @@ import {
   type EditorScope,
 } from "@/admin/components/editor-image-upload"
 import {
+  WEBFONT_EDITOR_FONTS,
+  googleFontsHref,
   normalizeColor,
+  normalizeFontFamily,
   normalizeFontSize,
 } from "@/features/news/render/editor-allowlist"
 
@@ -95,8 +99,13 @@ import {
 import "@/styles/tiptap-editor-globals.scss"
 import "@/components/tiptap-templates/simple/simple-editor.scss"
 
-// Word/구글독스 붙여넣기 정규화 — textStyle 의 fontSize(pt→px·clamp)·color(rgb→hex) 를 저장 직전(에디터 단계)에
-// sanitize 와 동일 규칙으로 변환해, 에디터 표시와 공개 렌더가 일치하도록 한다. 변환 불가 값은 해당 attr 제거.
+// 어드민 에디터가 항상 불러두는 글꼴 URL — 목록이 상수라 렌더마다 다시 만들 이유가 없다.
+const ALL_EDITOR_FONTS_HREF = googleFontsHref(
+  WEBFONT_EDITOR_FONTS.map((f) => f.value),
+)!
+
+// Word/구글독스 붙여넣기 정규화 — textStyle 의 fontSize(pt→px·clamp)·color(rgb→hex)·fontFamily(화이트리스트 밖은 제거)를
+// 저장 직전(에디터 단계)에 sanitize 와 동일 규칙으로 변환해, 에디터 표시와 공개 렌더가 일치하도록 한다. 변환 불가 값은 해당 attr 제거.
 function normalizePastedFragment(fragment: Fragment): Fragment {
   const nodes: ProseMirrorNode[] = []
   fragment.forEach((child) => {
@@ -110,6 +119,9 @@ function normalizePastedFragment(fragment: Fragment): Fragment {
         }
         if (typeof attrs.color === "string") {
           attrs.color = normalizeColor(attrs.color)
+        }
+        if (typeof attrs.fontFamily === "string") {
+          attrs.fontFamily = normalizeFontFamily(attrs.fontFamily)
         }
         return mark.type.create(attrs)
       })
@@ -153,6 +165,7 @@ const MainToolbarContent = ({
 
       <ToolbarGroup>
         <HeadingDropdownMenu levels={[1, 2, 3, 4]} portal={isMobile} />
+        <FontFamilyDropdownMenu portal={isMobile} />
         <FontSizeDropdownMenu portal={isMobile} />
         <ListDropdownMenu
           types={["bulletList", "orderedList", "taskList"]}
@@ -327,6 +340,14 @@ export function SimpleEditor({
 
   return (
     <div className="simple-editor-wrapper">
+      {/* 어드민 에디터에서는 선택 가능한 글꼴을 전부 불러둔다 — 드롭다운 미리보기와 WYSIWYG 이 맞아야
+          운영자가 고른 결과를 보고 판단할 수 있다. 공개 페이지는 글이 실제로 쓴 글꼴만 부른다. */}
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      <link
+        rel="stylesheet"
+        href={ALL_EDITOR_FONTS_HREF}
+        precedence="default"
+      />
       <EditorContext.Provider value={{ editor }}>
         <Toolbar
           ref={toolbarRef}
