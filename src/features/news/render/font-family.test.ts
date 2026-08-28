@@ -31,8 +31,16 @@ describe("normalizeFontFamily", () => {
 
   it("브라우저가 붙인 따옴표·폴백 스택에서 첫 패밀리만 추출", () => {
     // element.style.fontFamily 직렬화 형태 (Tiptap FontFamily 의 parseHTML 주석 참조)
-    expect(normalizeFontFamily('"Noto Serif KR", serif')).toBe("Noto Serif KR");
+    expect(normalizeFontFamily('"Gothic A1", sans-serif')).toBe("Gothic A1");
     expect(normalizeFontFamily("'Gowun Batang', serif")).toBe("Gowun Batang");
+  });
+
+  it("목록에서 제거된 글꼴(본명조)은 null — 사이트 기본 글꼴로 떨어진다", () => {
+    // ADR-061 에서 Noto Serif KR 을 뺐다(청크당 49KB). 그 값을 들고 있는 글은 마크가 drop 돼
+    // **사이트 기본 글꼴(SUIT, 고딕)** 로 렌더된다 — serif 로 떨어지지 않는다.
+    // 되살릴 필요가 생기면 EDITOR_FONTS 에 다시 넣기만 하면 옛 글도 함께 복구된다.
+    expect(normalizeFontFamily("Noto Serif KR")).toBeNull();
+    expect(resolveFontStack("Noto Serif KR")).toBeNull();
   });
 
   it("대소문자 차이를 흡수한다", () => {
