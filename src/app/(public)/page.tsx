@@ -23,15 +23,16 @@ import { PopupGate } from "@/features/popups/components/popup-gate";
 // 구글은 사이트당 이름 1개만 채택하는데, 홈만 "Sow Good" 이면 신호가 갈려 도메인으로 폴백한다 (ADR-057)
 export const metadata: Metadata = {
   title: `${SITE_NAME} — 가치를 삶으로, 변화를 꽃피우는 동행`,
+  // "사회공헌국 Sow Good" 표기는 사이트명(사회공헌단 Sow Good)과 갈려 구글 스니펫에 그대로 노출됐다 → 부서/브랜드 구분 (ADR-062)
   description:
-    "세계평화통일가정연합 신한국협회 사회공헌국 Sow Good. 쌀 나눔으로 따뜻한 변화를 이어갑니다.",
+    "세계평화통일가정연합 신한국협회 사회공헌국이 운영하는 사회공헌단 Sow Good. 쌀 나눔으로 따뜻한 변화를 이어갑니다.",
   alternates: { canonical: "/" },
   openGraph: {
     // siteName 은 레이아웃에 있어도 페이지가 openGraph 를 재정의하면 통째로 덮인다(Next 얕은 병합) — 페이지마다 명시 필수
     siteName: SITE_NAME,
     title: "Sow Good — 가치를 삶으로, 변화를 꽃피우는 동행",
     description:
-      "세계평화통일가정연합 신한국협회 사회공헌국. 쌀 나눔으로 따뜻한 변화를.",
+      "세계평화통일가정연합 신한국협회 사회공헌국이 운영하는 사회공헌단 Sow Good. 쌀 나눔으로 따뜻한 변화를.",
     type: "website",
     locale: "ko_KR",
     url: "/",

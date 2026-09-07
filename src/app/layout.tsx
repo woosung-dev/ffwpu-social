@@ -39,6 +39,11 @@ const gmarketSans = localFont({
 // title 템플릿은 쓰지 않음(어드민은 자체 풀 타이틀 사용 — 이중 접미사 방지). 각 페이지가 명시 타이틀.
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  // Google Search Console 소유확인(URL 접두어 속성 · HTML 태그 방식). 공개 값이지만 발급 전이라 env 로 받는다.
+  // 미설정 시 태그 미출력. Vercel 환경변수에 넣고 재배포하면 홈에 <meta name="google-site-verification"> 렌더 (ADR-062)
+  ...(process.env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+    : {}),
   title: "사회공헌단 Sow Good — 가치를 삶으로 증명",
   description: SITE_DESCRIPTION,
   openGraph: {
