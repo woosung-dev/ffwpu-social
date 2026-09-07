@@ -40,7 +40,11 @@
 ## Completed (최근 4개)
 
 - [x] **구글 검색 사이트명 — 도메인(`sowgood.kr`) 표시 수정 (2026-08-27, ADR-057)** — 검색결과 사이트명 자리에 브랜드명 대신 도메인이 나오던 문제. 원인 ① 레이아웃의 `openGraph.siteName` 이 페이지별 `openGraph` 재정의에 통째로 덮여 **`og:site_name` 이 라이브 HTML 에 0건**(Next 얕은 병합) ② `WebSite` JSON-LD 가 PR #87(ADR-044) 종료와 함께 미머지. 조치: 홈에 `Organization`+`WebSite` JSON-LD, 공개 7면 `openGraph.siteName` 명시, 홈 `<title>` 을 하위 접미사와 동일 이름으로 통일, `SITE_ALT_NAME` 추가. **스키마 0.** tsc0·lint0·build 통과 + dev 런타임에서 `/`·`/news`·`/press`·`/notices` og:site_name·JSON-LD 렌더 확인.
-  - **후속(배포 후)**: GSC 에서 홈 URL 색인 재요청. 구글 재크롤에 수일~수주 소요. 리치결과 테스트로 `WebSite` 파싱 확인.
+  - **후속(배포 후)**: GSC 에서 홈 URL 색인 재요청. 구글 재크롤에 수일~수주 소요. ~~리치결과 테스트로 `WebSite` 파싱 확인~~ → 구글 문서상 사이트명은 리치 결과 테스트 미지원. 스키마 마크업 검사기(validator.schema.org)로 확인.
+  - **2026-09-07 재점검 (ADR-062)** — 검색 결과 제목이 8/27 이전 문구 = 구글이 수정본을 아직 재크롤하지 않음. GSC 미인증이라 재크롤 요청 불가. 홈 텍스트에 이름 3종 혼재(title "사회공헌단 Sow Good" · 로고 alt "Sow Good" · description "사회공헌국 Sow Good") 정리 완료.
+    - [ ] **GSC 인증 (HTML 파일 방식)** — URL 접두어 속성 `https://sowgood.kr/` 의 권장 방법인 인증 파일 `public/googlef399a83167110633.html` 을 커밋함. **머지 → Vercel 프로덕션 배포 → `curl https://sowgood.kr/googlef399a83167110633.html` 로 1줄 확인 → Search Console 속성에서 [확인]** → 홈 색인 생성 요청. 확인 후에도 파일은 삭제 금지(구글 안내). HTML 태그(`GOOGLE_SITE_VERIFICATION` env) 경로는 예비로 유지.
+    - [ ] **www 리다이렉트 307→308** — Vercel 대시보드 → Domains → `www.sowgood.kr` Redirect 를 308(permanent) 로. 코드 변경 없음. 구글은 영구 리다이렉트를 더 강한 대표 URL 신호로 본다.
+    - [ ] 배포 2~4주 후 `site:sowgood.kr` 검색으로 사이트명 줄 확인. 구글이 alternateName "Sow Good" 을 고를 수 있으며 정상.
 - [x] **어드민 이미지 업로드 UX (2026-07-16, PR #89 머지·배포)** — 에디터 이미지 업로드가 콘솔에만 에러 찍고 침묵하던 문제. ① `onError` → 한국어 토스트 ② 업로드 전 자동 리사이즈(드롭존·2장나란히·커버 3경로). 저장 상한 5MB 유지 · 원본 상한 30MB 신설 · **원본 형식 보존**(커버가 OG 썸네일로 나가 webp 통일 시 크기에 따라 OG 형식이 조용히 갈림). ADR-046. 스키마 0. 실측 JPG 8.55→0.83MB · PNG 17.52→4.04MB · WEBP 5.37→0.56MB. tsc0·lint0·test115.
 - [x] **어드민 분석·예약 발행·Tiptap 숫자 크기 (2026-06-10)** — 익명 세션 기반 `analytics_events` 추가(조회·공감·공유), 어드민 대시보드 최근 30일 분석 카드, `publishedAt <= now()` 공개 조건 기반 예약 발행, 어드민 예약 상태 표시, Tiptap `12px~40px` 숫자 입력 + sanitize 정합. `pnpm tsc --noEmit`·`pnpm lint`·`pnpm test`(52)·`pnpm build` 통과. **스키마 변경 1건.**
 - [x] **소식 검색 + 768 그리드 정정 (2026-06-07)** — `/news` "더 많은 소식" 탭+검색 인라인 툴바(제목+태그 ILIKE, q×category AND). 768 카드 3열→2열 수정(skeleton·Figma 정합). branch `feat/news-search`, ADR-036. Generator-Evaluator(2-pass 적대 + codex C1 반복q 500 수락). tsc0·lint0·test47. **스키마 0.** 검증: `docs/design/review-news-search-2026-06-07.md`.

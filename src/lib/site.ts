@@ -9,8 +9,11 @@ export const SITE_NAME = "사회공헌단 Sow Good";
 // 구글은 사이트당 이름 1개만 채택하므로 SITE_NAME 이 정본, 이건 보조 신호다.
 export const SITE_ALT_NAME = "Sow Good";
 
+// 사회공헌국(운영 부서)과 사회공헌단 Sow Good(사이트명)을 구분해 쓴다 — 예전 문구 "사회공헌국 Sow Good" 은
+// 구글이 스니펫으로 그대로 뽑아 사이트명 후보를 셋("Sow Good"·"사회공헌단 Sow Good"·"사회공헌국 Sow Good")으로
+// 갈라놓았다. 홈의 모든 텍스트 소스가 SITE_NAME 문자열을 그대로 쓰도록 맞춘다 (ADR-062).
 export const SITE_DESCRIPTION =
-  "세계평화통일가정연합 신한국협회 사회공헌국 Sow Good — 쌀 나눔으로 따뜻한 변화를 이어갑니다.";
+  "세계평화통일가정연합 신한국협회 사회공헌국이 운영하는 사회공헌단 Sow Good — 쌀 나눔으로 따뜻한 변화를 이어갑니다.";
 
 // 커버 없는 글·랜딩·목록의 기본 OG 썸네일 — next/og 동적 생성 라우트(1200×630)
 export const DEFAULT_OG_IMAGE = "/api/og";

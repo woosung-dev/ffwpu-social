@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useScrollSpy } from "@/client/hooks/useScrollSpy";
+import { SITE_NAME } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 import { HEADER_BAR_HEIGHT_CLASS } from "./header-height";
@@ -80,7 +81,8 @@ export function PublicHeader() {
           {/* eslint-disable-next-line @next/next/no-img-element -- SVG asset, next/image SVG dangerouslyAllowSVG 회피 */}
           <img
             src="/icons/sow-good-header-logo.svg"
-            alt="Sow Good"
+            // 구글 사이트명 판정은 홈의 텍스트(로고 alt 포함)도 본다 — 짧은 "Sow Good" 대신 정본 SITE_NAME (ADR-062)
+            alt={SITE_NAME}
             width={80}
             height={53}
             // Figma 로고 높이 42(base·md)/53.3(lg·wide) 의 4px 스냅. w-auto 로 비율 유지
