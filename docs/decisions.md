@@ -2581,3 +2581,34 @@ ADR-057(8/27 배포) 이후에도 검색 결과 사이트명 자리에 `sowgood.
 - 반영은 배포 후 GSC 색인 요청 → 1~3일 재크롤 → 1~2주(최대 4주) 사이트명 재판정. 이 기간 동안 이름 관련
   문구를 다시 바꾸지 않는다 — 바꿀 때마다 판정이 처음부터다.
 - 검증은 리치 결과 테스트가 아니라 스키마 마크업 검사기 + GSC URL 검사("최근 크롤링" 갱신 여부)로 한다.
+
+---
+
+## ADR-063: Microsoft Clarity 도입 — 공개 사이트 한정, env 기반 주입
+
+- **Status**: Accepted
+- **Date**: 2026-09-08
+
+### Context
+
+GA4(G-…, Vercel env) 는 이미 동작 중이다. 사용자가 세션 리코딩·히트맵으로 행동을 보기 위해
+Microsoft Clarity 를 붙이고, Clarity 대시보드의 [설정 → 통합] 으로 GA4 수치를 함께 보려 한다.
+Clarity 의 "GA4 연동" 은 사이트에 태그를 추가하는 것이 아니라 대시보드 간 연결이므로 코드 변경은 Clarity 스니펫 하나다.
+
+### Decision
+
+1. **주입 위치는 `(public)/layout.tsx`.** root layout 에 두면 GA 처럼 `/admin` 에도 들어간다. 어드민 세션을 녹화할
+   이유가 없고 관리자 입력 화면이 마스킹 대상이 되므로 공개 Route Group 에만 둔다.
+2. **`NEXT_PUBLIC_CLARITY_PROJECT_ID` 미설정이면 미출력.** GA(`NEXT_PUBLIC_GA_ID`)와 같은 패턴. 로컬·프리뷰는 비워 둔다.
+3. **ID 형식 검사(`/^[a-z0-9]{6,20}$/`) 후 `JSON.stringify` 로 인라인.** 공식 스니펫이 인라인 JS 라, 환경변수 오입력이
+   그대로 실행되지 않도록 막는다.
+4. **`next/script` `afterInteractive`.** 하이드레이션 후 로드라 LCP·CLS 에 영향이 없다. npm 패키지(`@microsoft/clarity`)
+   대신 스니펫을 쓴 이유는 의존성 0 추가와 GA 와의 패턴 일치.
+
+### Consequences
+
+- 값 반영은 Vercel env 설정 + Redeploy(NEXT_PUBLIC_* 는 빌드 타임).
+- 개인정보처리방침에 행동 분석 도구 사용 기재가 필요하다 — 기획·법무 확인 [확인 필요]. 마스킹 기본값은 Clarity 가
+  텍스트 입력을 가리지만, 문의 폼 등이 생기면 [설정 → 마스킹] 에서 요소를 지정한다.
+- 검증: 배포 후 `curl -s https://sowgood.kr/ | grep clarity.ms` 로 태그 확인 → Clarity 설정 화면 "설치됨" → 리코딩은 즉시,
+  대시보드 집계는 수 시간.
