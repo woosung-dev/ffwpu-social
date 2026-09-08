@@ -119,6 +119,8 @@
 
 ## Next Actions
 
+- [ ] **Clarity 연동 후속 (2026-09-08, ADR-063)** — 코드는 env 기반으로 반영됨. ① clarity.microsoft.com 에서 프로젝트 생성 → 프로젝트 ID ② Vercel env `NEXT_PUBLIC_CLARITY_PROJECT_ID` 설정 → Redeploy ③ `curl -s https://sowgood.kr/ | grep clarity.ms` 로 태그 확인 → Clarity 설정 화면 "설치됨" ④ Clarity [설정 → 통합 → Google 애널리틱스] 에서 GA4 속성(G-34H1RTZ397) 연결 ⑤ 개인정보처리방침에 행동 분석 도구 기재 [확인 필요]
+
 ### 에디터 글꼴 — 보류 항목 (2026-08-28, ADR-061)
 
 - [ ] **Pretendard 도입 검토** — SIL OFL 1.1(`orioncactus/pretendard`, star 3.5k)이고 국내 웹 표준급 고딕이지만 **구글 폰트 미수록**. jsDelivr(`cdn.jsdelivr.net/gh/orioncactus/pretendard@vX/dist/web/variable/...`) 또는 자체 호스팅 경로를 추가해야 한다 — 현재 `googleFontsHref()` 는 구글 family 파라미터만 조립한다.
