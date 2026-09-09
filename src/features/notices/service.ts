@@ -11,6 +11,11 @@ import { DomainError } from "@/lib/errors";
 import * as noticeDb from "./db";
 import type { ListNoticesQuery, NoticeInput } from "./schemas";
 
+// 사이트맵 — 공개 공지 전건 (ADR-063: 공지 상세가 sitemap 에서 빠져 있던 ADR-044 잔여)
+export async function listPublishedNoticesForSitemap() {
+  return noticeDb.listPublishedForSitemap();
+}
+
 export async function listNotices(query: ListNoticesQuery) {
   const [items, total] = await Promise.all([
     noticeDb.listPublicNotices(query),
