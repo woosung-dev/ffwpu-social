@@ -2581,3 +2581,96 @@ ADR-057(8/27 배포) 이후에도 검색 결과 사이트명 자리에 `sowgood.
 - 반영은 배포 후 GSC 색인 요청 → 1~3일 재크롤 → 1~2주(최대 4주) 사이트명 재판정. 이 기간 동안 이름 관련
   문구를 다시 바꾸지 않는다 — 바꿀 때마다 판정이 처음부터다.
 - 검증은 리치 결과 테스트가 아니라 스키마 마크업 검사기 + GSC URL 검사("최근 크롤링" 갱신 여부)로 한다.
+
+## ADR-063: 구글 검색 사이트명 3차 — 3자 재채점, vercel.app 별칭 308 통합, 이름 문구 동결 유지
+
+- **Status**: Accepted (ADR-062 후속)
+- **Date**: 2026-09-10
+
+### Context
+
+ADR-062 배포 3일차, 외부 SEO 분석(5순위 조치안)이 들어왔다. 코드·라이브·구글 SERP 를 다시 실측하고 codex·agy 두 외부 모델의 의견을
+동일 프롬프트로 받아 셋을 합쳐 재채점했다(브레인스토밍 → 신호 경로 추적 → 소크라테스식 반문).
+
+| 외부 분석 주장 | 실측 | 판정 |
+|---|---|---|
+| "Sow Good" 글로벌 경합 (미국 상장사 Sow Good Inc.) | 구글 `sow good` (ko/KR) — 사이트명 "Sow Good" 은 sowginc.com(IR 사이트)이 보유, 그 회사의 자체 스토어 thisissowgood.com 조차 도메인 폴백 | **맞음. 단 우리 정본은 이미 `사회공헌단 Sow Good`** — 경합 대상은 alternateName 뿐 |
+| vercel.app 이 색인돼 검색에 뜬다 | `site:ffwpu-social.vercel.app` → 구글 결과 0건. canonical 이 작동 중. 다만 프로덕션 별칭엔 noindex 없음(프리뷰는 Vercel 자동 부여) | **과장.** 위생 조치 가치만 있음 |
+| WebSite JSON-LD 부재 | ADR-057 부터 라이브에 존재 | **틀림** |
+| 워드마크 alt 없음 | ADR-062 에서 alt=SITE_NAME | **틀림** |
+| og:title ≠ title / h1 에 브랜드 없음 / footer "© Sow Good" | 사실 | 맞음 — 그러나 ADR-062 동결 대상 |
+| www 307 | 현재 308 | 이미 해결(Vercel 설정) |
+| 브랜드 검색 사이트명 | `사회공헌단 sow good` 검색: sowgood.kr 전 결과가 "sowgood.kr" 표시, 스니펫 제목은 ADR-062 신 문구 → 재크롤 됐고 이름 판정만 지연 | 문제 실존 |
+
+구글 문서 근거(2026-09 원문): 사이트명 소스 = WebSite 구조화 데이터(최우선) + og:site_name + title + 헤딩 + 홈의 기타 텍스트.
+"글로벌 성격의 서로 다른 두 사이트에 같은 이름을 쓰지 않는다". `publisher`·`parentOrganization`·`@id` 는 사이트명 문서에 없음.
+"바꿀 때마다 판정이 처음부터"(ADR-062)는 구글 문서에 없는 내부 관례 — codex·agy 모두 동의. 다만 문구 흔들기는 신호를 흐리므로 유지.
+
+### 재채점 (구글 근거 / 코드 갭 실존 / 효과 / 부작용 / 비용, 각 0~5 → 10점 환산)
+
+| 항목 | 외부분석 | codex | agy | **최종** | 버킷 |
+|---|---|---|---|---|---|
+| 1 이름 전략(한글 조합 primary·alternateName·publisher) | 1순위 | 2 | 7.5 | **3** — primary 는 이미 반영, 잔여는 미문서 보강 | @id·publisher·parentOrganization 만 즉시 |
+| 2 vercel.app 차단 | 2순위 | 4 | 8.5 | **5** — 색인 0건이라 사이트명 효과 낮음, 통합 위생 | 즉시(308) |
+| 3 홈 텍스트 통일(og:title·h1·footer) | 3순위 | 2 | 9 | **6** — "기타 텍스트" 조항 직격이나 동결·카톡 카드·Figma 승인 | 동결 해제 후(10/01 판정 확인 뒤) |
+| 4 검사기·재크롤 | 4순위 | 5 | 6 | **5** | 즉시(사용자 GSC) |
+| 5 외부 신호(ffwpu.or.kr 앵커·보도 표기) | 5순위 | 5 | 8.5 | **5** | 사용자·사회공헌국 |
+| 신규 A 색인 상태 진단(GSC 색인된 페이지·구글 선택 canonical·최근 크롤) | — | 최상 | — | **7** — 결정가치 최고 | 즉시(사용자 GSC) |
+| 신규 B alternateName 에 `sowgood.kr` 백업 | 1순위 일부 | 보류 | 즉시 | **1** — 이미 도메인이 표시 중, ADR-062 §5 와 동일 결론 | 하지 않음 |
+| 신규 C /notices sitemap 편입 | — | 즉시 | 즉시 | **2**(사이트명 무관, 발견성) | 즉시 |
+| 신규 D 시간(사이트 3개월·ADR-062 3일) | — | 3일은 실패 증거 아님 | 콜드스타트 | — | 10/01 재측정 |
+
+### Decision
+
+1. **`ffwpu-social.vercel.app` → `https://sowgood.kr` 308** (`next.config.ts` `redirects()` + `has: host`). 정확 host 일치만 —
+   프리뷰(`*-git-*.vercel.app`)는 Vercel 이 `X-Robots-Tag: noindex` 를 자동 부여하므로 그대로. proxy.ts 의 vercel.app 우회는 프리뷰 전용으로 남긴다.
+   robots.txt 로 막지 않는다(막으면 구글이 리다이렉트를 못 읽음). GSC 삭제 요청은 하지 않는다(구글: 정규화 목적 삭제 도구 비권장).
+2. **JSON-LD 는 이름 문자열을 건드리지 않고 그래프만 보강**: `@id` 로 두 노드 연결, `WebSite.publisher → Organization`,
+   `Organization.parentOrganization = 세계평화통일가정연합(ffwpu.or.kr)`. 빌더를 `src/lib/landing-json-ld.ts` 로 추출하고 vitest 로 고정(SEO 테스트 0건 해소).
+3. **도메인 백업 alternateName 은 쓰지 않는다** — ADR-062 §5 유지. 이미 도메인이 폴백으로 표시되고 있어 얻을 것이 없다.
+4. **og:title·footer·h1 은 동결 유지.** 2026-10-01 GSC·SERP 재측정에서 여전히 도메인이면 그때 일괄(og:title = title, footer `© 2026 사회공헌단 Sow Good`,
+   h1 인근 sr-only 브랜드) — Figma 카피 변경은 사회공헌국 승인 필요.
+5. `/notices` 목록·상세를 sitemap 에 편입(ADR-044 잔여).
+
+### Consequences
+
+- 이번 변경으로 구글이 즉시 이름을 바꿀 것이라 기대하지 않는다. 가장 큰 변수는 시간과 GSC 색인 상태 진단이다.
+- 사용자 액션: ① GSC URL 검사 → "색인된 페이지 보기"에서 구글 선택 canonical·최근 크롤 확인 ② 홈 색인 요청 1회 ③ ffwpu.or.kr 푸터에
+  `사회공헌단 Sow Good` 텍스트 앵커 ④ 보도자료 표기 `사회공헌단 Sow Good(sowgood.kr)` 통일 ⑤ 10/01 `사회공헌단 sow good` 검색 재측정.
+- vercel.app 별칭으로 어드민에 들어가던 비상 경로는 사라진다 — admin.sowgood.kr 이 유일한 어드민 진입점.
+
+## ADR-064: Googlebot 에 메타데이터 blocking 렌더 — 상세 페이지 스트리밍 메타 실측 대응
+
+- **Status**: Accepted (ADR-063 후속)
+- **Date**: 2026-09-10
+
+### Context
+
+GSC URL 검사에서 홈이 "색인 생성 이후에만 확인됨"(미색인)이고 검색 결과 사이트명이 도메인으로 폴백하는 상황을 재진단하며
+Googlebot UA 로 프로덕션 HTML 을 직접 받아 대조했다.
+
+| 페이지 | Googlebot UA 응답 |
+|---|---|
+| `/` `/news` (정적 메타) | head 에 title·description·canonical·OG·JSON-LD 정상 |
+| `/news/<id>` (동적 `generateMetadata`) | **head·body 어디에도 `<title>`·canonical·OG 없음.** RSC 페이로드 문자열에만 존재 |
+| 같은 URL, Chrome·kakaotalk-scrap·Yeti·facebookexternalhit UA | `<title>`·OG 가 HTML 에 있음(body 스트림 또는 head) |
+
+원인: Next 16 `cacheComponents` 의 스트리밍 메타. Next 는 Googlebot 을 "JS 실행 봇(dom)"으로 분류해 메타를 blocking 하지 않고
+클라이언트 삽입에 맡긴다. 구글이 렌더링 큐를 거친 뒤 제목을 잡긴 한다(검색 결과에 글 제목이 뜨는 것이 증거)지만, 1차 HTML 크롤에
+canonical 이 없어 표준 URL 판정·색인이 렌더 큐만큼 늦고, 중복 판정(vercel.app 별칭·쿼리 변형)에 취약하다.
+
+### Decision
+
+1. `next.config.ts` `htmlLimitedBots` 에 Next 기본 목록 + `Googlebot` 을 지정한다. 옵션은 기본 목록을 대체하므로 목록을 통째로 복제한다.
+   효과는 동적 메타 라우트에서 Googlebot 요청만 TTFB 가 DB 조회만큼 늘어나는 것뿐 — 사용자 트래픽 무영향.
+2. 근본 해법(`getNewsDetail` 을 `"use cache"` + tag 무효화로 캐시해 메타를 정적 셸에 포함)은 발행·수정 시 무효화 경로를 전부 배선해야 하므로
+   별건으로 미룬다. 1 번이 그 사이의 안전판이다.
+3. 카카오톡 스크랩 등 Next `isBot` 밖의 UA 는 목록에 넣어도 PPR 정적 셸이 먼저 나가 효과가 없음을 로컬 프로덕션 빌드로 확인했다 —
+   넣지 않는다(스트림 끝의 `<title>`·OG 를 이미 읽고 있어 공유 카드는 정상).
+
+### Consequences
+
+- 검증: 로컬 `pnpm build && pnpm start` 후 `curl -A "Googlebot/2.1" /news/<id>` 의 `<head>` 에 title·canonical·og:title 1건씩 확인.
+  배포 후 GSC URL 검사 "크롤링된 페이지 보기 → HTML" 에서 head 메타 확인.
+- 사이트명 문구·이름 신호는 ADR-062/063 동결 그대로. 이 결정은 이름이 아니라 **색인 경로**를 고친다.
+

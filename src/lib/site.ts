@@ -15,5 +15,11 @@ export const SITE_ALT_NAME = "Sow Good";
 export const SITE_DESCRIPTION =
   "세계평화통일가정연합 신한국협회 사회공헌국이 운영하는 사회공헌단 Sow Good — 쌀 나눔으로 따뜻한 변화를 이어갑니다.";
 
+// 상위 조직 — JSON-LD Organization.parentOrganization 에만 쓴다 (실제 소속 관계 기술, ADR-063). 사이트명 후보가 아니다.
+export const SITE_PARENT_ORG = {
+  name: "세계평화통일가정연합",
+  url: "https://ffwpu.or.kr",
+} as const;
+
 // 커버 없는 글·랜딩·목록의 기본 OG 썸네일 — next/og 동적 생성 라우트(1200×630)
 export const DEFAULT_OG_IMAGE = "/api/og";

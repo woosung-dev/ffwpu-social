@@ -15,6 +15,7 @@ export {
 
 export {
   listNotices,
+  listPublishedNoticesForSitemap,
   getNoticeDetail,
   getAdjacentNotices,
   getPublishedAttachment,

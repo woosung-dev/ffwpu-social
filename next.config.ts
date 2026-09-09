@@ -45,6 +45,26 @@ const config: NextConfig = {
   },
   // Next.js 16 stable cache components — "use cache" + cacheLife/cacheTag 사용 가능
   cacheComponents: true,
+  // ADR-064 — 동적 generateMetadata(소식·언론 상세)는 cacheComponents 에서 "스트리밍 메타"로 나간다. Googlebot UA 로 받은
+  // 프로덕션 HTML(2026-09-10 실측)에는 title·description·canonical·OG 가 head 는 물론 body 에도 없었다(RSC 페이로드에만 존재
+  // → JS 렌더 후 삽입). 1차 크롤에 canonical 이 없으면 표준 URL 판정·색인이 렌더 큐만큼 늦어진다.
+  // 이 옵션은 Next 기본 목록을 **대체**하므로 기본 목록(next/dist/shared/lib/router/utils/html-bots.js 16.2.6)을 그대로 옮기고
+  // Googlebot 만 덧붙인다. 카카오톡 스크랩 등 Next `isBot` 밖의 UA 는 여기 넣어도 PPR 셸이 먼저 나가 효과가 없다(실측) — 넣지 않는다.
+  htmlLimitedBots:
+    /Googlebot|[\w-]+-Google|Google-[\w-]+|Chrome-Lighthouse|Slurp|DuckDuckBot|baiduspider|yandex|sogou|bitlybot|tumblr|vkShare|quora link preview|redditbot|ia_archiver|Bingbot|BingPreview|applebot|facebookexternalhit|facebookcatalog|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|SkypeUriPreview|Yeti|googleweblight/i,
+  // ADR-063 — Vercel 프로덕션 별칭(ffwpu-social.vercel.app)은 sowgood.kr 과 100% 동일한 중복 호스트다.
+  // 프리뷰 배포는 Vercel 이 X-Robots-Tag: noindex 를 자동 부여하지만 프로덕션 별칭엔 없다 → 영구 리다이렉트로 통합.
+  // 정확한 host 일치만 잡아 `*-git-*.vercel.app` 프리뷰는 그대로 둔다 (proxy.ts 의 vercel.app 우회는 프리뷰 전용으로 남음).
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "ffwpu-social.vercel.app" }],
+        destination: "https://sowgood.kr/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default config;
