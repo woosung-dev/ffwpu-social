@@ -2674,3 +2674,47 @@ canonical 이 없어 표준 URL 판정·색인이 렌더 큐만큼 늦고, 중�
   배포 후 GSC URL 검사 "크롤링된 페이지 보기 → HTML" 에서 head 메타 확인.
 - 사이트명 문구·이름 신호는 ADR-062/063 동결 그대로. 이 결정은 이름이 아니라 **색인 경로**를 고친다.
 
+
+## ADR-065: 검색·AI 인용 5레인 감사 — AI 크롤러 허용·llms.txt·RSS 복원·sameAs 배선
+
+- **Status**: Accepted (ADR-063/064 후속)
+- **Date**: 2026-09-10
+- **관련**: ADR-044 (PR #87 종료로 빠진 RSS 복원), ADR-057/062/063 (사이트명 — 이번 ADR 은 코드 변경 없음)
+
+### Context
+
+사이트명 도메인 폴백(ADR-063) 확인 중 오픈소스 스킬 `fire-your-seo-agency`(SEO·AEO·GEO·LLMO·NEO 5레인 체크리스트)로
+사이트를 크롤러 눈(JS 없는 `curl`)으로 재감사했다. 스킬 문서에는 "사이트명" 항목 자체가 없다 — 사이트명은 ADR-057~063 으로
+이미 완비 상태이며 남은 변수는 시간뿐이다. 대신 아래 공백이 드러났다.
+
+| 레인 | 실측 (2026-09-10, 라이브) | 판정 |
+|---|---|---|
+| SEO | sitemap 104 URL, 공지 0건(ADR-063 이 편입) · noindex 없음 · 404 정상 | ⚠️ → ADR-063 으로 해소 |
+| AEO | Bing 웹마스터 등록 미확인 · FAQ/About 없음 | ⚠️ 등록은 사용자 계정 |
+| GEO | `/llms.txt` 404 · robots.txt 에 AI 크롤러 정책 없음(`*` Allow 만) | ❌ |
+| LLMO | Organization `sameAs` 없음 · 공식 SNS URL 을 코드·문서 어디에도 확인 불가 | ⚠️ |
+| NEO | `/feed.xml` 404 (PR #87 종료로 유실) · 네이버 서치어드바이저 등록 미확인 | ❌ |
+
+### Decision
+
+1. **AI 크롤러 전부 명시 허용** (`src/app/robots.ts`): 학습(GPTBot·ClaudeBot·Google-Extended·CCBot·Applebot-Extended)·
+   AI 검색 색인(OAI-SearchBot·Claude-SearchBot·PerplexityBot)·실시간 fetch(ChatGPT-User·Claude-User·Perplexity-User) 11종을
+   `*` 규칙과 별도 그룹으로 선언. 비영리 홍보 사이트라 콘텐츠 보호보다 인용·노출이 목적(사용자 결정). `/admin` 은 동일 차단.
+   무정책(`*` 만)도 결과는 같지만, 명시 선언이 정책 결정의 기록이고 향후 특정 봇만 제외할 때 한 줄로 끝난다.
+2. **`/llms.txt` 를 라우트로 서빙** (`src/app/llms.txt/route.ts`): 마크다운 안내서 — 핵심 4페이지·데이터 정책(지표 출처=사회공헌국 집계,
+   스토리=1차 기록)·인용 표기·sitemap/RSS 위치. 정적 파일이 아닌 라우트인 이유는 `SITE_URL` 환경 분기. `runtime`/`revalidate` 지시어
+   금지(cacheComponents 비호환, ADR-044 교훈).
+3. **RSS `/feed.xml` 복원** (`src/app/feed.xml/route.ts` + `features/news/rss.ts`): PR #87 구현을 ADR-056 게시판 분리에 맞춰 재적용 —
+   `story` 게시판 최신 20건만(언론 보도는 외부 원문이 정본). 순수 빌더 + vitest 5(이스케이프·CDATA 분할·RFC-822·pubDate 생략).
+4. **`Organization.sameAs` 는 상수만 배선** (`SITE_SAME_AS`, 기본 빈 배열 → 비어 있으면 미출력). 공식 인스타그램·유튜브 등 URL 을
+   확인할 수 없어 추정 URL 을 넣지 않는다 — 틀린 sameAs 는 엔티티를 분열시킨다(LLMO). 사회공헌국 확인 후 배열만 채운다.
+5. **외부 등록(네이버 서치어드바이저·Bing 웹마스터·GSC sitemap 제출)은 코드 밖** — 사용자 계정이 필요해 이번 PR 에서 하지 않고
+   절차만 `docs/TODO.md` 에 남긴다.
+
+### Consequences
+
+- 크롤러 눈 검증(로컬 dev, DB 연결): `/robots.txt` 200(UA 12줄) · `/sitemap.xml` 200 XML 유효(홈·목록 4·news·press·notices) ·
+  `/llms.txt` 200 · `/feed.xml` 200 `application/rss+xml` XML 유효 · 홈 JSON-LD `@id`·`parentOrganization` 유지, `sameAs` 미출력.
+- 재측정 기준선(2026-09-10): 구글 색인 17 URL(7월 실측)·브랜드 검색 1~3위·사이트명 도메인 폴백·AI 인용 미측정.
+  **재측정 2026-10-01**(ADR-063 과 동일 날짜): GSC 노출/클릭 28일·`site:sowgood.kr` 건수·Perplexity/ChatGPT 에 "사회공헌단 Sow Good" 질문 시 출처 인용 O/X.
+- 하지 않은 것: 백링크·FAQPage LD(가시 FAQ 섹션이 없어 붙이면 스팸 판정 위험)·About 페이지(Figma 밖 신규 화면 = 사회공헌국 결정).
