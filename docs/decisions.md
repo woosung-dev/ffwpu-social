@@ -2638,3 +2638,39 @@ ADR-062 배포 3일차, 외부 SEO 분석(5순위 조치안)이 들어왔다. �
 - 사용자 액션: ① GSC URL 검사 → "색인된 페이지 보기"에서 구글 선택 canonical·최근 크롤 확인 ② 홈 색인 요청 1회 ③ ffwpu.or.kr 푸터에
   `사회공헌단 Sow Good` 텍스트 앵커 ④ 보도자료 표기 `사회공헌단 Sow Good(sowgood.kr)` 통일 ⑤ 10/01 `사회공헌단 sow good` 검색 재측정.
 - vercel.app 별칭으로 어드민에 들어가던 비상 경로는 사라진다 — admin.sowgood.kr 이 유일한 어드민 진입점.
+
+## ADR-064: Googlebot 에 메타데이터 blocking 렌더 — 상세 페이지 스트리밍 메타 실측 대응
+
+- **Status**: Accepted (ADR-063 후속)
+- **Date**: 2026-09-10
+
+### Context
+
+GSC URL 검사에서 홈이 "색인 생성 이후에만 확인됨"(미색인)이고 검색 결과 사이트명이 도메인으로 폴백하는 상황을 재진단하며
+Googlebot UA 로 프로덕션 HTML 을 직접 받아 대조했다.
+
+| 페이지 | Googlebot UA 응답 |
+|---|---|
+| `/` `/news` (정적 메타) | head 에 title·description·canonical·OG·JSON-LD 정상 |
+| `/news/<id>` (동적 `generateMetadata`) | **head·body 어디에도 `<title>`·canonical·OG 없음.** RSC 페이로드 문자열에만 존재 |
+| 같은 URL, Chrome·kakaotalk-scrap·Yeti·facebookexternalhit UA | `<title>`·OG 가 HTML 에 있음(body 스트림 또는 head) |
+
+원인: Next 16 `cacheComponents` 의 스트리밍 메타. Next 는 Googlebot 을 "JS 실행 봇(dom)"으로 분류해 메타를 blocking 하지 않고
+클라이언트 삽입에 맡긴다. 구글이 렌더링 큐를 거친 뒤 제목을 잡긴 한다(검색 결과에 글 제목이 뜨는 것이 증거)지만, 1차 HTML 크롤에
+canonical 이 없어 표준 URL 판정·색인이 렌더 큐만큼 늦고, 중복 판정(vercel.app 별칭·쿼리 변형)에 취약하다.
+
+### Decision
+
+1. `next.config.ts` `htmlLimitedBots` 에 Next 기본 목록 + `Googlebot` 을 지정한다. 옵션은 기본 목록을 대체하므로 목록을 통째로 복제한다.
+   효과는 동적 메타 라우트에서 Googlebot 요청만 TTFB 가 DB 조회만큼 늘어나는 것뿐 — 사용자 트래픽 무영향.
+2. 근본 해법(`getNewsDetail` 을 `"use cache"` + tag 무효화로 캐시해 메타를 정적 셸에 포함)은 발행·수정 시 무효화 경로를 전부 배선해야 하므로
+   별건으로 미룬다. 1 번이 그 사이의 안전판이다.
+3. 카카오톡 스크랩 등 Next `isBot` 밖의 UA 는 목록에 넣어도 PPR 정적 셸이 먼저 나가 효과가 없음을 로컬 프로덕션 빌드로 확인했다 —
+   넣지 않는다(스트림 끝의 `<title>`·OG 를 이미 읽고 있어 공유 카드는 정상).
+
+### Consequences
+
+- 검증: 로컬 `pnpm build && pnpm start` 후 `curl -A "Googlebot/2.1" /news/<id>` 의 `<head>` 에 title·canonical·og:title 1건씩 확인.
+  배포 후 GSC URL 검사 "크롤링된 페이지 보기 → HTML" 에서 head 메타 확인.
+- 사이트명 문구·이름 신호는 ADR-062/063 동결 그대로. 이 결정은 이름이 아니라 **색인 경로**를 고친다.
+

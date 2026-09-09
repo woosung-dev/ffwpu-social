@@ -46,7 +46,9 @@
     - [x] **www 리다이렉트 307→308** — 2026-09-10 실측 `www.sowgood.kr` → 308 확인(Vercel 설정 완료).
     - [ ] 배포 2~4주 후 `site:sowgood.kr` 검색으로 사이트명 줄 확인. 구글이 alternateName "Sow Good" 을 고를 수 있으며 정상.
   - **2026-09-10 3차 (ADR-063)** — 외부 분석 5순위를 codex·agy·자체 실측으로 재채점. `ffwpu-social.vercel.app` → `sowgood.kr` 308(`next.config` host 조건), JSON-LD `@id`·`publisher`·`parentOrganization` 보강(이름 문자열 불변) + 빌더 추출·vitest, `/notices` sitemap 편입. `sow good` 사이트명은 미국 상장사 sowginc.com 이 보유(경합 실증). `site:ffwpu-social.vercel.app` 구글 색인 0건.
-    - [ ] **GSC 색인 상태 진단** — URL 검사 → "색인된 페이지 보기": 구글 선택 canonical·최근 크롤 시각 확인(실시간 테스트가 아님). 홈 색인 요청 1회.
+    - [ ] **GSC 색인 상태 진단** — URL 검사 → "색인된 페이지 보기": 구글 선택 canonical·최근 크롤 시각 확인(실시간 테스트가 아님). 홈 색인 요청 1회. *2026-09-10 스크린샷: 홈 "Google 선택 표준 URL = 색인 생성 이후에만 확인됨" = 홈 미색인 확정.*
+    - [ ] **ADR-064 배포 확인** — GSC URL 검사(소식 상세 아무 글) → "크롤링된 페이지 보기 → HTML" 의 `<head>` 에 title·canonical·og:title 존재 확인. 이전엔 RSC 페이로드에만 있었음.
+    - [ ] **[확인 필요 · 사회공헌국]** 검색어·AI 개요·다음뉴스는 모두 "**가정연합 사회공헌단**" 표기인데 사이트명·title 엔 "가정연합"이 없다. 10/01 재측정 시 이름 후보에 `가정연합 사회공헌단 Sow Good` 포함 여부를 사회공헌국과 결정(포교 금지 제약과 무관 — 단체명은 이미 description 에 있는 사실 정보).
     - [ ] **2026-10-01 재측정** — `사회공헌단 sow good` 검색에서 사이트명 줄이 여전히 `sowgood.kr` 이면 동결 해제: og:title = title · footer `© 2026 사회공헌단 Sow Good` · h1 인근 sr-only 브랜드(Figma 카피 = 사회공헌국 승인).
     - [ ] **외부 신호** — ffwpu.or.kr 푸터 텍스트 앵커 `사회공헌단 Sow Good` → sowgood.kr, 보도자료 표기 `사회공헌단 Sow Good(sowgood.kr)` 통일.
 - [x] **어드민 이미지 업로드 UX (2026-07-16, PR #89 머지·배포)** — 에디터 이미지 업로드가 콘솔에만 에러 찍고 침묵하던 문제. ① `onError` → 한국어 토스트 ② 업로드 전 자동 리사이즈(드롭존·2장나란히·커버 3경로). 저장 상한 5MB 유지 · 원본 상한 30MB 신설 · **원본 형식 보존**(커버가 OG 썸네일로 나가 webp 통일 시 크기에 따라 OG 형식이 조용히 갈림). ADR-046. 스키마 0. 실측 JPG 8.55→0.83MB · PNG 17.52→4.04MB · WEBP 5.37→0.56MB. tsc0·lint0·test115.
