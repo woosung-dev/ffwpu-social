@@ -31,6 +31,7 @@ export {
   getRelatedNews,
   getAdjacentNews,
   listPublishedNewsForSitemap,
+  listPublishedNewsForFeed,
 } from "./service";
 
 export { NEWS_BOARDS, BOARD_LABELS, BOARD_PATHS, type NewsBoard } from "./board";

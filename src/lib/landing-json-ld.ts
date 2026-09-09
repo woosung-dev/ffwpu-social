@@ -4,6 +4,7 @@ import {
   SITE_DESCRIPTION,
   SITE_NAME,
   SITE_PARENT_ORG,
+  SITE_SAME_AS,
   SITE_URL,
 } from "@/lib/site";
 
@@ -27,6 +28,7 @@ export function buildLandingJsonLd() {
           name: SITE_PARENT_ORG.name,
           url: SITE_PARENT_ORG.url,
         },
+        ...(SITE_SAME_AS.length > 0 ? { sameAs: SITE_SAME_AS } : {}),
       },
       {
         "@type": "WebSite",

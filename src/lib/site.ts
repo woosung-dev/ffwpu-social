@@ -23,3 +23,7 @@ export const SITE_PARENT_ORG = {
 
 // 커버 없는 글·랜딩·목록의 기본 OG 썸네일 — next/og 동적 생성 라우트(1200×630)
 export const DEFAULT_OG_IMAGE = "/api/og";
+
+// Organization.sameAs — 공식 SNS·유튜브 등 "같은 실체" 표면(LLMO 엔티티 일관성, ADR-065).
+// 공식 채널 URL 은 사회공헌국 확인 후 채운다. 비어 있으면 sameAs 를 출력하지 않는다 — 추정 URL 금지.
+export const SITE_SAME_AS: string[] = [];

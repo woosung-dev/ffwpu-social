@@ -38,6 +38,11 @@ export async function listPublishedNewsForSitemap(board: NewsBoard) {
   return newsDb.listPublishedForSitemap(board);
 }
 
+// RSS 피드 용 — 발행글 최신 N건 (id·title·body·publishedAt). excerpt 는 소비 지점(route)에서 bodyToExcerpt
+export async function listPublishedNewsForFeed(board: NewsBoard, limit = 20) {
+  return newsDb.listPublishedForFeed(board, limit);
+}
+
 // 활성 카테고리 목록 — CategoryTabs·어드민 폼 데이터 소스
 export async function listCategories(board: NewsBoard) {
   return newsDb.findActiveCategories(board);
