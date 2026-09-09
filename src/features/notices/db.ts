@@ -39,6 +39,15 @@ export async function listPublicNotices(opts: { page: number; limit: number }) {
     .offset(offset);
 }
 
+// 사이트맵용 — 공개 공지 id·updatedAt 만 (news db.listPublishedForSitemap 동일 형태)
+export async function listPublishedForSitemap() {
+  return db
+    .select({ id: notices.id, updatedAt: notices.updatedAt })
+    .from(notices)
+    .where(publicPublishedWhere())
+    .orderBy(desc(notices.publishedAt));
+}
+
 export async function countPublicNotices() {
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })

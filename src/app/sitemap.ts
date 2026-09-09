@@ -1,13 +1,15 @@
-// 사이트맵 — 정적(랜딩·소식·언론 목록) + 발행 글 동적 포함. 검색 노출·색인 유도
+// 사이트맵 — 정적(랜딩·소식·언론·공지 목록) + 발행 글 동적 포함. 검색 노출·색인 유도
 import type { MetadataRoute } from "next";
 
 import { listPublishedNewsForSitemap } from "@/features/news";
+import { listPublishedNoticesForSitemap } from "@/features/notices";
 import { SITE_URL } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [storyArticles, pressArticles] = await Promise.all([
+  const [storyArticles, pressArticles, noticeRows] = await Promise.all([
     listPublishedNewsForSitemap("story"),
     listPublishedNewsForSitemap("press"),
+    listPublishedNoticesForSitemap(),
   ]);
   const now = new Date();
 
@@ -26,11 +28,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  // 공지는 운영 안내 성격 — 소식보다 낮고 언론과 같은 우선순위 (ADR-063)
+  const noticeRoutes: MetadataRoute.Sitemap = noticeRows.map((n) => ({
+    url: `${SITE_URL}/notices/${n.id}`,
+    lastModified: n.updatedAt,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+
   return [
     { url: SITE_URL, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}/news`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${SITE_URL}/press`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
+    { url: `${SITE_URL}/notices`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     ...newsRoutes,
     ...pressRoutes,
+    ...noticeRoutes,
   ];
 }

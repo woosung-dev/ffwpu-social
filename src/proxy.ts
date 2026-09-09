@@ -6,8 +6,9 @@ import { auth } from "@/auth";
 function isAdminHost(host: string): boolean {
   return host.startsWith("admin.");
 }
-// 분기 우회: 로컬(localhost) + Vercel 기본 배포 도메인(*.vercel.app).
-// 커스텀 도메인 연결 전까지는 한 호스트에서 양쪽 접근 — vercel.app 엔 admin. 서브도메인을 만들 수 없어 락아웃 방지.
+// 분기 우회: 로컬(localhost) + Vercel 프리뷰 배포(*.vercel.app — 플랫폼이 noindex 자동 부여).
+// vercel.app 엔 admin. 서브도메인을 만들 수 없어 프리뷰에서 양쪽 접근 허용. 프로덕션 별칭 ffwpu-social.vercel.app 은
+// 여기 오기 전에 next.config redirects 가 sowgood.kr 로 308 (ADR-063).
 function isBranchBypassHost(host: string): boolean {
   return (
     host.startsWith("localhost") ||

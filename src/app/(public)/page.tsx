@@ -15,7 +15,8 @@ import {
 import { SectionContainer } from "@/client/components/layout";
 import { RevealGroup } from "@/client/components/motion";
 import { JsonLd } from "@/client/components/seo";
-import { SITE_ALT_NAME, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { buildLandingJsonLd } from "@/lib/landing-json-ld";
+import { SITE_NAME } from "@/lib/site";
 import { landingDb } from "@/features/landing";
 import { PopupGate } from "@/features/popups/components/popup-gate";
 
@@ -40,28 +41,8 @@ export const metadata: Metadata = {
   },
 };
 
-// 조직·사이트 구조화 데이터 — 구글 사이트명 인식의 1순위 신호(og:site_name·title 보다 우선).
-// 도메인 루트에만 둔다 (서브디렉토리는 자체 사이트명을 가질 수 없음). @graph 로 한 script 에 결합.
-const landingJsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      name: SITE_NAME,
-      alternateName: SITE_ALT_NAME,
-      url: SITE_URL,
-      logo: `${SITE_URL}/icon.png`,
-      description: SITE_DESCRIPTION,
-    },
-    {
-      "@type": "WebSite",
-      name: SITE_NAME,
-      alternateName: SITE_ALT_NAME,
-      url: SITE_URL,
-      inLanguage: "ko",
-    },
-  ],
-};
+// 조직·사이트 구조화 데이터 — 구글 사이트명 인식의 1순위 신호(og:site_name·title 보다 우선). 빌더·테스트는 @/lib/landing-json-ld
+const landingJsonLd = buildLandingJsonLd();
 
 export default function Home() {
   return (
