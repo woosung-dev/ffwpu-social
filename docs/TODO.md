@@ -125,6 +125,14 @@
 
 ## Next Actions
 
+### 검색엔진·AI 외부 등록 (2026-09-10, ADR-065) — 사용자 계정 필요, 코드 밖
+
+- [ ] **네이버 서치어드바이저** — searchadvisor.naver.com 에 `https://sowgood.kr` 등록 → 소유 확인(HTML 태그 방식이면 `NAVER_SITE_VERIFICATION` env 에 토큰 넣고 재배포, 메타 자동 출력) → 사이트맵 `https://sowgood.kr/sitemap.xml` + RSS `https://sowgood.kr/feed.xml` 제출 → 홈·최근 글 수집 요청. 약 10분.
+- [ ] **Bing 웹마스터 도구** — bing.com/webmasters 에서 "GSC 에서 가져오기" 원클릭(소유 확인·사이트맵 동반). ChatGPT 검색·Copilot 이 Bing 색인을 쓴다. 약 5분.
+- [ ] **GSC** — 속성 인증 완료 상태. sitemap.xml 제출 여부 확인 + 홈 "색인 생성 요청" 1회(실시간 테스트만으로는 요청되지 않음).
+- [ ] **공식 SNS URL 확인** — 인스타그램·유튜브·모단체 페이지 등 공식 채널 URL 을 사회공헌국에 확인 → `src/lib/site.ts` `SITE_SAME_AS` 배열에 채우면 홈 JSON-LD `sameAs` 자동 출력.
+- [ ] **재측정 2026-10-01** — GSC 노출/클릭(최근 28일, 최근 3일 제외) · `site:sowgood.kr` 구글/Bing 건수 · Perplexity·ChatGPT(검색) 에 "사회공헌단 Sow Good 이 뭐야" 질문 시 sowgood.kr 인용 O/X 기록.
+
 ### 에디터 글꼴 — 보류 항목 (2026-08-28, ADR-061)
 
 - [ ] **Pretendard 도입 검토** — SIL OFL 1.1(`orioncactus/pretendard`, star 3.5k)이고 국내 웹 표준급 고딕이지만 **구글 폰트 미수록**. jsDelivr(`cdn.jsdelivr.net/gh/orioncactus/pretendard@vX/dist/web/variable/...`) 또는 자체 호스팅 경로를 추가해야 한다 — 현재 `googleFontsHref()` 는 구글 family 파라미터만 조립한다.
