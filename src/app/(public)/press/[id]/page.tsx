@@ -13,7 +13,11 @@ import { SITE_NAME } from "@/lib/site";
 
 import { SubBanner } from "../../news/sub-banner";
 import { DetailHeader } from "../../news/[id]/detail-header";
-import { DetailHeart } from "../../news/[id]/detail-heart";
+import {
+  DetailHeart,
+  DetailHeartCount,
+  DetailHeartProvider,
+} from "../../news/[id]/detail-heart";
 import { NewsViewTracker } from "../../news/[id]/news-view-tracker";
 import { PrevNextNav } from "../../news/[id]/prev-next-nav";
 import { ScrollTopButton } from "../../news/[id]/scroll-top";
@@ -97,65 +101,68 @@ async function PressDetailContent({
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[360px] bg-gradient-to-b from-white to-[#F9F4FF]/80 lg:h-[598px]"
       />
-      <div className="mx-auto w-full px-4 md:max-w-[648px] md:px-0 lg:max-w-[905px] py-12 lg:py-20">
-        <DetailHeader
-          categoryName={item.categoryName}
-          title={item.title}
-          publishedAt={item.publishedAt}
-        />
+      <DetailHeartProvider newsId={item.id} count={item.heartCount}>
+        <div className="mx-auto w-full px-4 md:max-w-[648px] md:px-0 lg:max-w-[905px] py-12 lg:py-20">
+          <DetailHeader
+            categoryName={item.categoryName}
+            title={item.title}
+            publishedAt={item.publishedAt}
+            heart={<DetailHeartCount />}
+          />
 
-        <div className="mt-10 lg:mt-[60px]">
-          <NewsBodyRenderer body={item.body} />
-        </div>
-
-        <div className="mt-16 lg:mt-[120px]">
-          <div className="flex flex-col items-center gap-7 lg:gap-[30px]">
-            <DetailHeart newsId={item.id} count={item.heartCount} />
-            <ShareRow title={item.title} newsId={item.id} />
+          <div className="mt-10 lg:mt-[60px]">
+            <NewsBodyRenderer body={item.body} />
           </div>
-          {item.tags.length > 0 && (
-            <ul className="mt-10 flex flex-wrap items-center gap-2 lg:mt-[50px]">
-              {item.tags.map((tag) => (
-                <li key={tag}>
-                  <span className="inline-flex items-center rounded-full border-[1.3px] border-tag-default bg-gray-50 px-4 py-1 text-base font-medium text-tag-default lg:text-lg">
-                    #{tag}
-                  </span>
-                </li>
-              ))}
-            </ul>
+
+          <div className="mt-16 lg:mt-[120px]">
+            <div className="flex flex-col items-center gap-7 lg:gap-[30px]">
+              <DetailHeart />
+              <ShareRow title={item.title} newsId={item.id} />
+            </div>
+            {item.tags.length > 0 && (
+              <ul className="mt-10 flex flex-wrap items-center gap-2 lg:mt-[50px]">
+                {item.tags.map((tag) => (
+                  <li key={tag}>
+                    <span className="inline-flex items-center rounded-full border-[1.3px] border-tag-default bg-gray-50 px-4 py-1 text-base font-medium text-tag-default lg:text-lg">
+                      #{tag}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <hr className="mt-12 border-border lg:mt-[70px]" />
+
+          <PrevNextNav prev={adjacent.prev} next={adjacent.next} basePath="/press" />
+
+          {related.length > 0 && (
+            <section className="mt-12 lg:mt-[30px]">
+              <h2 className="text-xl font-bold text-ink-strong">
+                다른 언론 보도 살펴보기
+              </h2>
+              <ul className="mt-4 grid [grid-template-columns:repeat(auto-fill,minmax(max(200px,calc(50%-14px)),1fr))] gap-7 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
+                {related.map((r) => (
+                  <li key={r.id} className="flex">
+                    <ArticleCard
+                      size={3}
+                      className="w-full max-w-none"
+                      href={`/press/${r.id}`}
+                      article={{
+                        id: r.id,
+                        title: r.title,
+                        categoryName: r.categoryName,
+                        coverImageUrl: r.coverImageUrl,
+                        publishedAt: r.publishedAt,
+                      }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
         </div>
-
-        <hr className="mt-12 border-border lg:mt-[70px]" />
-
-        <PrevNextNav prev={adjacent.prev} next={adjacent.next} basePath="/press" />
-
-        {related.length > 0 && (
-          <section className="mt-12 lg:mt-[30px]">
-            <h2 className="text-xl font-bold text-ink-strong">
-              다른 언론 보도 살펴보기
-            </h2>
-            <ul className="mt-4 grid [grid-template-columns:repeat(auto-fill,minmax(max(200px,calc(50%-14px)),1fr))] gap-7 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
-              {related.map((r) => (
-                <li key={r.id} className="flex">
-                  <ArticleCard
-                    size={3}
-                    className="w-full max-w-none"
-                    href={`/press/${r.id}`}
-                    article={{
-                      id: r.id,
-                      title: r.title,
-                      categoryName: r.categoryName,
-                      coverImageUrl: r.coverImageUrl,
-                      publishedAt: r.publishedAt,
-                    }}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </div>
+      </DetailHeartProvider>
     </div>
   );
 }

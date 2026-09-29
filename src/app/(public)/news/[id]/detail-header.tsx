@@ -1,4 +1,6 @@
-// 소식 상세 헤더 — 카테고리 + 제목 + 날짜. Figma 749:8059(B 시안 Title 블록) 정합 — 날짜 줄에 하트 없음(하트는 하단 Bottom 줄로 이동). Server Component
+// 소식 상세 헤더 — 카테고리 + 제목 + 날짜(+공감 수). Figma 749:8059(B 시안 Title 블록) 기반, 날짜 옆 공감 수는 사회공헌국 요청(후보 2)으로 추가. Server Component
+import type { ReactNode } from "react";
+
 function fmtDate(d: Date | string | null): string {
   if (!d) return "";
   const dt = new Date(d);
@@ -9,10 +11,13 @@ export function DetailHeader({
   categoryName,
   title,
   publishedAt,
+  heart,
 }: {
   categoryName: string;
   title: string;
   publishedAt: Date | string | null;
+  /** 날짜 옆 공감 수 슬롯 — 클라이언트 컴포넌트를 주입 (미지정 시 날짜만) */
+  heart?: ReactNode;
 }) {
   return (
     <header className="flex flex-col gap-5">
@@ -23,8 +28,11 @@ export function DetailHeader({
           {title}
         </h1>
       </div>
-      {/* 날짜 — Figma 749:8068: SUIT Medium(500) */}
-      <p className="text-base font-medium text-ink-date">{fmtDate(publishedAt)}</p>
+      {/* 날짜 — Figma 749:8068: SUIT Medium(500) · 공감 수는 날짜 오른쪽 */}
+      <div className="flex items-center gap-3">
+        <p className="text-base font-medium text-ink-date">{fmtDate(publishedAt)}</p>
+        {heart}
+      </div>
     </header>
   );
 }
