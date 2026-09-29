@@ -181,28 +181,29 @@ export function StorySection({
               data-fid="story-sparkles"
               className="pointer-events-none absolute z-10 h-auto w-[40px] left-[132px] top-[-30px] md:w-[49px] md:left-[159px] md:top-[-28px] lg:w-[56px] lg:left-[154px] lg:top-[-29px] wide:w-[82px] wide:left-[221px] wide:top-[-41px]"
             />
-            {/* Good: Go — 좌하단 오버행(갭 쪽) */}
-            {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
-            <img
-              src="/icons/story-go.svg"
-              alt=""
+            {/* Good — Go·od 를 한 단어로 붙여 이미지2 하단 중앙에 배치. 하단 오버행 깊이는 기존 스티커와 동일(29/30/37/40).
+                SVG 원화 자체가 기울어 그려져 있어(Go 반시계·od 시계 방향) 역회전(+8°/−12°)으로 기준선을 수평 정렬.
+                이미지2 폭 안에 들어오도록 lg 는 md 크기 유지(186 폭) → 우측 통계 칼럼과 겹침 0 */}
+            <div
               aria-hidden
-              data-fid="story-go"
-              className="pointer-events-none absolute z-10 h-auto -rotate-[3deg] w-[72px] left-[-29px] top-[183px] md:w-[88px] md:left-[-56px] md:top-[242px] lg:w-[101px] lg:left-[-67px] lg:top-[276px] wide:w-[119px] wide:left-[-82px] wide:top-[354px]"
-            />
-            {/* Good: od — 우하단 오버행.
-                lg/wide left 는 Figma(154/237)보다 각각 51/38px 왼쪽. Figma 더미 통계("16개·23가정·2시설")보다
-                실데이터 통계("나눔 쌀 1340kg" 포함, 폭 326px)가 넓어 우측 정렬로 자라며 스티커 오버행과 겹침
-                (lg −35px · wide −22px 측정). 통계 좌측에 16px 여백 확보. base/md 는 통계가 이미지 아래로
-                스택돼 겹침 없음 → Figma 값 유지. */}
-            {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
-            <img
-              src="/icons/story-od.svg"
-              alt=""
-              aria-hidden
-              data-fid="story-od"
-              className="pointer-events-none absolute z-10 h-auto rotate-[5deg] w-[68px] left-[119px] top-[192px] md:w-[84px] md:left-[151px] md:top-[245px] lg:w-[97px] lg:left-[103px] lg:top-[287px] wide:w-[115px] wide:left-[199px] wide:top-[357px]"
-            />
+              data-fid="story-good"
+              className="pointer-events-none absolute left-1/2 z-10 flex w-max -translate-x-1/2 items-end bottom-[-29px] md:bottom-[-30px] lg:bottom-[-37px] wide:bottom-[-40px]"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
+              <img
+                src="/icons/story-go.svg"
+                alt=""
+                data-fid="story-go"
+                className="h-auto w-[72px] rotate-[8deg] md:w-[88px] wide:w-[119px]"
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
+              <img
+                src="/icons/story-od.svg"
+                alt=""
+                data-fid="story-od"
+                className="-ml-1 h-auto w-[68px] -rotate-[12deg] md:-ml-[5px] md:w-[84px] wide:-ml-[7px] wide:w-[115px]"
+              />
+            </div>
           </div>
         </div>
 

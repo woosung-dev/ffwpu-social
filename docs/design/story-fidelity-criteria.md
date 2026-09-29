@@ -36,7 +36,7 @@ image1은 `flex-1`이라 폭이 비단조(非單調) — md(768~1023)에서 행�
 
 ## 데코 스티커 (w×h px + anchor 이미지 박스 기준 offset left,top)
 
-SVG 비율 보존(`h-auto`). SOW·heart는 **image1 박스**, sparkles·Go·od는 **image2 박스** 기준(`relative` 부모).
+SVG 비율 보존(`h-auto`). SOW·heart는 **image1 박스**, sparkles·Good(Go·od)는 **image2 박스** 기준(`relative` 부모).
 
 ### SOW (image1) — rotate −5°
 | BP | w | left | top |
@@ -62,31 +62,28 @@ SVG 비율 보존(`h-auto`). SOW·heart는 **image1 박스**, sparkles·Go·od�
 | lg | 56 | 154 | −29 |
 | wide | 82 | 221 | −41 |
 
-### Go (image2) — 좌하단 오버행, rotate −3°
-| BP | w | left | top |
-|---|---|---|---|
-| base | 72 | −29 | 183 |
-| md | 88 | −56 | 242 |
-| lg | 101 | −67 | 276 |
-| wide | 119 | −82 | 354 |
+### Good (image2) — Go·od 한 단어, 하단 중앙 (2026-09-29 사회공헌국 요청 "GOOD 붙여서 표시, 숫자 가려짐")
+Figma 원배치(Go 좌하단 −3° · od 우하단 +5°)는 실데이터 통계 폭에서 od 가 통계 칼럼을 가려 폐기.
+래퍼 `data-fid="story-good"` = image2 가로 중앙(`left-1/2 -translate-x-1/2 w-max`) · 하단 오버행 bottom 음수.
+SVG 원화가 기울어 그려져 있어 **Go +8° · od −12° 역회전**으로 기준선 수평. od 는 Go 에 살짝 겹침(−ml).
+| BP | Go w | od w | od −ml | bottom |
+|---|---|---|---|---|
+| base | 72 | 68 | 4 | −29 |
+| md | 88 | 84 | 5 | −30 |
+| lg | 88 | 84 | 5 | −37 |
+| wide | 119 | 115 | 7 | −40 |
 
-### od (image2) — 우하단, rotate +5°
-| BP | w | left | top |
-|---|---|---|---|
-| base | 68 | 119 | 192 |
-| md | 84 | 151 | 245 |
-| lg | 97 | 154 | 287 |
-| wide | 115 | 237 | 357 |
+lg 는 image2(186) 폭 안에 들어오도록 md 크기 유지 → 통계 칼럼과 겹침 0 (1024·1440 실측).
 
 ## 합격 기준
 
 - 길이(폭·높이) 우선 ±2px, 위치(offset) ±4px. 데코는 ±6px 허용(SVG 시각 무게 중심 오차).
 - 리사이즈 시 구간 내 연속 스케일 0 (각 BP 내 고정 px). [[figma_fidelity_measurement_harness]] discrete 원칙.
-- `data-fid`: `story-img1` `story-img2` `story-sow` `story-heart` `story-sparkles` `story-go` `story-od` (회귀용 잔존).
+- `data-fid`: `story-img1` `story-img2` `story-sow` `story-heart` `story-sparkles` `story-good` `story-go` `story-od` (회귀용 잔존).
 
 ## ⚠️ 회전 데코 측정 주의 (필독 — 회귀 검증 시)
 
-SOW(−5°)·Go(−3°)·od(+5°)는 Tailwind v4가 **`rotate:` CSS 속성**으로 회전한다. `getBoundingClientRect().width`는 **회전된 축정렬 bounding box**를 돌려줘 실제 폭보다 크다(예: SOW 110px → bbox 115px = 110·cos5°+63·sin5°). offset-top도 위로 확장돼 −31 → −38로 측정된다.
+SOW(−5°)·Go(+8°)·od(−12°)는 Tailwind v4가 **`rotate:` CSS 속성**으로 회전한다. `getBoundingClientRect().width`는 **회전된 축정렬 bounding box**를 돌려줘 실제 폭보다 크다(예: SOW 110px → bbox 115px = 110·cos5°+63·sin5°). offset-top도 위로 확장돼 −31 → −38로 측정된다.
 → **회전 데코는 반드시 `element.offsetWidth`/`offsetHeight`(레이아웃 폭, transform 무시)로 측정**할 것. heart·sparkles(회전 없음)는 bbox=offset 으로 무관.
 2026-06-08 1차 Evaluator가 이 함정으로 SOW/Go/od 12건을 오탐(FAIL)했으나 offsetWidth 재측정 결과 전 BP 목표값 정확 일치(PASS) 확정.
 
