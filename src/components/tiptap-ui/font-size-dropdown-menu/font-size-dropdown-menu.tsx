@@ -18,6 +18,7 @@ import {
   DropdownMenuItem,
 } from "@/components/tiptap-ui-primitive/dropdown-menu"
 import { Card, CardBody } from "@/components/tiptap-ui-primitive/card"
+import { Separator } from "@/components/tiptap-ui-primitive/separator"
 
 // --- Lib ---
 import {
@@ -79,6 +80,10 @@ export const FontSizeDropdownMenu = React.forwardRef<
       return null
     }
 
+    // 커서 위치의 글자 크기 — 트리거 라벨·목록 선택 표시에 쓴다(글꼴 드롭다운과 동일 원칙).
+    // 영문 "Size" 고정 라벨은 운영자가 기능을 못 찾는 원인이었다(사회공헌국 "글씨 크기 기능 추가" 요청).
+    const active = normalizeFontSize(editor.getAttributes("textStyle").fontSize)
+
     return (
       <DropdownMenu modal open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
@@ -87,12 +92,12 @@ export const FontSizeDropdownMenu = React.forwardRef<
             data-style="ghost"
             role="button"
             tabIndex={-1}
-            aria-label="Font size"
-            tooltip="Font size"
+            aria-label="글자 크기"
+            tooltip="글자 크기"
             {...buttonProps}
             ref={ref}
           >
-            <span className="tiptap-button-text">Size</span>
+            <span className="tiptap-button-text">{active ?? "글자 크기"}</span>
             <ChevronDownIcon className="tiptap-button-dropdown-small" />
           </Button>
         </DropdownMenuTrigger>
@@ -101,43 +106,56 @@ export const FontSizeDropdownMenu = React.forwardRef<
           <Card>
             <CardBody>
               <ButtonGroup>
+                <DropdownMenuItem asChild>
+                  <Button
+                    type="button"
+                    data-style="ghost"
+                    data-active-state={active ? "off" : "on"}
+                    onClick={() => applySize(null)}
+                  >
+                    <span className="tiptap-button-text">기본 크기</span>
+                  </Button>
+                </DropdownMenuItem>
+              </ButtonGroup>
+              <Separator orientation="horizontal" />
+              {/* 프리셋 — 같은 크기의 숫자 3열 격자. 항목을 실제 크기로 그리면 40px↑ 글자가 줄높이(24px)를 넘어 서로 겹치고
+                  메뉴가 500px 넘게 길어진다. 선택된 크기는 active 상태로 표시 */}
+              <div
+                role="group"
+                aria-label="크기 선택"
+                style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 2 }}
+              >
                 {sizes.map((size) => (
                   <DropdownMenuItem key={size} asChild>
                     <Button
                       type="button"
                       data-style="ghost"
+                      data-active-state={size === active ? "on" : "off"}
+                      aria-label={size}
                       onClick={() => applySize(size)}
                     >
-                      <span
-                        className="tiptap-button-text"
-                        style={{ fontSize: size }}
-                      >
+                      <span className="tiptap-button-text" style={{ textAlign: "center" }}>
                         {size.replace("px", "")}
                       </span>
                     </Button>
                   </DropdownMenuItem>
                 ))}
-                <DropdownMenuItem asChild>
-                  <Button
-                    type="button"
-                    data-style="ghost"
-                    onClick={() => applySize(null)}
-                  >
-                    <span className="tiptap-button-text">Default</span>
-                  </Button>
-                </DropdownMenuItem>
-                {/* 직접 입력 — 12~64px clamp */}
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px" }}
-                  onKeyDown={(e) => e.stopPropagation()}
-                >
+              </div>
+              <Separator orientation="horizontal" />
+              {/* 직접 입력 — 12~64px clamp */}
+              <div
+                style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 4px", fontSize: 12 }}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                <label style={{ display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
+                  직접 입력
                   <input
                     type="number"
                     min={FONT_SIZE_MIN}
                     max={FONT_SIZE_MAX}
                     inputMode="numeric"
                     aria-label={`직접 입력 (${FONT_SIZE_MIN}~${FONT_SIZE_MAX}px)`}
-                    placeholder="px"
+                    placeholder={`${FONT_SIZE_MIN}~${FONT_SIZE_MAX}`}
                     value={customValue}
                     onChange={(e) => setCustomValue(e.target.value)}
                     onKeyDown={(e) => {
@@ -148,11 +166,12 @@ export const FontSizeDropdownMenu = React.forwardRef<
                     }}
                     style={{ width: 56, padding: "2px 6px", border: "1px solid var(--tt-gray-light-a-400, #ccc)", borderRadius: 4 }}
                   />
-                  <Button type="button" data-style="ghost" onClick={applyCustom}>
-                    <span className="tiptap-button-text">적용</span>
-                  </Button>
-                </div>
-              </ButtonGroup>
+                  px
+                </label>
+                <Button type="button" data-style="ghost" onClick={applyCustom}>
+                  <span className="tiptap-button-text">적용</span>
+                </Button>
+              </div>
             </CardBody>
           </Card>
         </DropdownMenuContent>

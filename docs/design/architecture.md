@@ -38,7 +38,7 @@
 | `ArticleCard` =유지(슬림) | `features/news/components/` | S | 정보카드(관련글 흡수, `state` 제거) |
 | `MediaCard` ← StoryCard | (L2 로 승격) | S | (위) |
 | `NewsFeaturedSlider` ←FeaturedStoryCard | `features/news/components/` | C | 피처드 탭 슬라이더 |
-| `Heart` =유지 | `features/news/components/` | C | 익명 좋아요(optimistic) |
+| `Heart` =유지 | `features/news/components/` | C | 익명 좋아요(optimistic). 소식·보도 상세는 `DetailHeartProvider`(`app/(public)/news/[id]/detail-heart.tsx`)가 하단 "공감해요" pill 과 날짜 옆 표시 전용 카운트에 같은 상태를 공유 (2026-09-29 사회공헌국 요청) |
 | `CategoryTabs` =유지 | `features/news/components/` | C | 카테고리 필터(≤767 가로스크롤) |
 | `Pagination` =유지 | `features/news/components/` | C | 페이지 네비 |
 | `ShareRow` →이동 | `features/news/components/` | C | 공유(native share+copy) |
