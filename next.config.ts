@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { buildSecurityHeaders } from "./src/lib/security-headers";
+
 const config: NextConfig = {
   // ADR-001a — Docker 이미지 ~150MB. AWS 이전 친화.
   output: "standalone",
@@ -45,6 +47,19 @@ const config: NextConfig = {
   },
   // Next.js 16 stable cache components — "use cache" + cacheLife/cacheTag 사용 가능
   cacheComponents: true,
+  // ADR-067 — 전역 보안 헤더 + 정적 CSP. 빌드 시 평가되므로 S3_* env 가 빌드 환경에 있어야 업로드·이미지가 허용된다.
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: buildSecurityHeaders({
+          isDev: process.env.NODE_ENV === "development",
+          s3PublicUrl: process.env.NEXT_PUBLIC_S3_PUBLIC_URL,
+          s3Endpoint: process.env.S3_ENDPOINT,
+        }),
+      },
+    ];
+  },
 };
 
 export default config;

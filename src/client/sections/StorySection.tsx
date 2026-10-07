@@ -65,6 +65,9 @@ function StoryImage({
       alt={alt}
       width={width}
       height={height}
+      // 랜딩 하단 섹션 — 첫 화면 대역폭을 히어로에 양보
+      loading="lazy"
+      decoding="async"
       className="absolute inset-0 h-full w-full object-cover"
     />
   );

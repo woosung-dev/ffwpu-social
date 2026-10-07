@@ -326,6 +326,8 @@ Unique index `uniq_heart` ON `(news_id, ip_hash, session_id)` — 1회 토글. �
 
 ## 캐싱 전략 (fullstack.md §7)
 
+> ⚠️ 2026-10-07 기준 **미구현** — 공개 조회에 `"use cache"`·`cacheTag` 0건, `revalidatePath` 만 사용. 아래는 목표 설계. 별도 PR 로 진행 (`docs/TODO.md`).
+
 - 랜딩·소식 목록·상세 → `"use cache"` + `cacheTag('news')` + `cacheTag('news:<id>')`
 - 글 생성/수정/삭제 시 → `revalidateTag('news')`, 상세는 `revalidateTag('news:<id>')`
 - 캐싱은 **service.ts** 레이어에서만. db.ts에서는 금지.
@@ -333,8 +335,12 @@ Unique index `uniq_heart` ON `(news_id, ip_hash, session_id)` — 1회 토글. �
 
 ## 성능 전략
 
-- 랜딩: Server Component + `"use cache"` (분 단위 invalidation)
-- 이미지: Next.js Image + `remotePatterns`(localhost:9000, *.r2, *.s3)
+- 랜딩: Server Component + `"use cache"` (분 단위 invalidation) — 미구현, 위 캐싱 전략 참조
+- 이미지: Next.js Image 유지하되 런타임 변환 끔(`unoptimized`, ADR-051) — 커버는 업로드 시 1200px 정규화본 단일 서빙.
+  /news 히어로 첫 슬라이드만 `preload`(LCP), 랜딩 하단 사진은 `loading="lazy"`
+- 폰트: SUIT 5 weight(400~800, 루트 preload) + Gmarket Sans 는 HeroBanner 에서만 로드(랜딩 한정 preload). 미사용 weight 추가 금지
+- React Query 는 `/news`·`/press` 페이지에서만 Provider 로 감싼다 — 홈 등 다른 공개 페이지는 RQ 번들 미포함
+- 측정: 로컬 prod 빌드 Lighthouse(mobile) — 기준 수치 `docs/reports/prod-standards-2026-10-07/`
 - 본문 jsonb는 Tiptap doc — 직렬화/렌더 비용 작음
 - Drizzle relations 쿼리(`db.query.X.findMany({ with: {...} })`) — N+1 방지
 
@@ -342,7 +348,8 @@ Unique index `uniq_heart` ON `(news_id, ip_hash, session_id)` — 1회 토글. �
 
 - 환경: local(Docker) → staging(Vercel preview) → production(Vercel)
 - 도메인: TBD (사회공헌국 회신 대기)
-- CI: GitHub Actions (lint + tsc + build) — D-1 셋업
+- CI: GitHub Actions — 현재 마이그레이션(`migrate*.yml`)·KPI 동기화(`sync-kpi.yml`)만. lint·tsc·test·build·E2E 게이트는 미셋업(`docs/TODO.md`)
+- E2E: `pnpm e2e` (Playwright, 로컬 prod 빌드 대상) — 콘솔 에러·4xx/5xx·CSP 위반 0 을 모든 테스트에서 자동 검사 (`e2e/fixtures.ts`)
 - 시크릿: Vercel Dashboard (배포 시 import)
 - 백업: 1단계는 Neon/RDS 자동 백업 + audit_logs 시계열 보존
 - 2단계 AWS 이전(ADR-019): `output: 'standalone'` Docker 이미지 → ECS Fargate 또는 EC2

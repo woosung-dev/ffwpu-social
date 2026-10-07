@@ -16,7 +16,7 @@ import {
   FEATURED_SLOT_MAX,
   STORY_SLOT_COUNT,
 } from "@/features/landing/constants/slots";
-import { BOARD_PATHS, type NewsBoard } from "./board";
+import { BOARD_PATHS, NEWS_BOARDS, type NewsBoard } from "./board";
 import * as newsService from "./service";
 import { newsInputSchema, type NewsInput } from "./schemas";
 
@@ -47,12 +47,6 @@ function revalidateNewsRoutes(board: NewsBoard, id?: string) {
 
 // ─── 사용자 사이트 (인증 불필요, 읽기 전용) ─────────────────────────────────
 // 목록 조회는 Server Action 대신 GET /api/news (route handler) — 클라 useSuspenseQuery 렌더 중 Router setState 경고 방지
-
-export async function getNewsDetailAction(board: NewsBoard, id: string) {
-  const data = await newsService.getNewsDetail(board, id);
-  if (!data) return { success: false as const, error: "Not Found" };
-  return { success: true as const, data };
-}
 
 // 익명 좋아요 토글 / 상태 조회 — 인증 불필요. sessionId 는 client localStorage UUID (ADR-026, IP 미수집)
 export async function toggleHeartAction(newsId: string, sessionId: string) {
@@ -209,6 +203,12 @@ export async function setNewsHiddenAction(
   }
 }
 
+// 태그 접두어 — 저장 태그 상한(schemas.ts tags max 50)과 동일
+const searchTagsInputSchema = z.object({
+  board: z.enum(NEWS_BOARDS),
+  prefix: z.string().max(50),
+});
+
 // 태그 자동완성 — TagsInput(T8) 진입점. super 가드 (결정 로그 [T8 searchTags 인증])
 export async function searchTagsAction(
   board: NewsBoard,
@@ -216,7 +216,14 @@ export async function searchTagsAction(
 ): Promise<ActionResult<Array<{ tag: string; count: number }>>> {
   try {
     await requireSuperAdmin();
-    const tags = await newsService.searchTags(board, prefix);
+    const parsed = searchTagsInputSchema.safeParse({ board, prefix });
+    if (!parsed.success) {
+      return { success: false, error: "잘못된 검색 요청입니다." };
+    }
+    const tags = await newsService.searchTags(
+      parsed.data.board,
+      parsed.data.prefix,
+    );
     return { success: true, data: tags };
   } catch (e) {
     return toActionError(e, "newsAction");
