@@ -2400,8 +2400,8 @@ CHECK (board = 'story' OR (story_slot IS NULL AND featured_rank IS NULL AND hero
 - 스타일시트는 PPR 스트리밍 경계 안에서 나오므로 초기 HTML 에는 `preload` 만 실리고,
   실제 `<link rel="stylesheet">` 는 하이드레이션 때 React 가 `<head>` 로 끌어올린다(동작 확인).
   JS 가 없으면 폴백 글꼴로 읽힌다 — 본문 가독성에는 영향이 없다.
-- **CSP 를 도입하면** `font-src https://fonts.gstatic.com` 과 `style-src https://fonts.googleapis.com`
-  을 허용해야 한다. 지금은 CSP 가 없어 걸리는 게 없다.
+- CSP(ADR-067)가 `font-src https://fonts.gstatic.com` 과 `style-src https://fonts.googleapis.com`
+  을 허용한다. 글꼴 CDN 을 바꾸면 `src/lib/security-headers.ts` 도 함께 고칠 것.
 - 글꼴 목록은 `EDITOR_FONTS` 단일 출처다. 툴바·sanitize·공개 렌더·폰트 로딩이 모두 이걸 읽으므로
   항목을 늘릴 때 손댈 곳은 한 군데다. `font-family.test.ts` 가 목록의 왕복(저장→파싱) 불변식을 지킨다.
 
@@ -2626,6 +2626,51 @@ ADR-057(8/27 배포) 이후에도 검색 결과 사이트명 자리에 `sowgood.
   추가분은 본문 `<p>` 다. 10/01 사이트명 재측정 결과를 해석할 때 이 변경(9/29 배포분)을 감안한다.
 - 함께 반영(같은 요청 묶음, ADR 없음): StorySection "Good" 스티커 병합·수평화(`docs/design/story-fidelity-criteria.md`),
   소식·보도 상세 날짜 옆 공감 수(Figma "메타(작성일+좋아요)" 정합), 에디터 글자 크기 메뉴 UI 재구성(허용 크기 불변).
+
+---
+
+## ADR-067: 전역 보안 헤더 + 정적 CSP
+
+- **Status**: Accepted
+- **Date**: 2026-10-07
+
+### Context
+
+프로덕션 표준 감사(보안·성능·E2E, `docs/reports/prod-standards-2026-10-07/`)에서 응답 보안 헤더가 하나도 없음을 확인했다
+(`next.config.ts` headers()·proxy·vercel.json 모두 없음). 어드민 인가·Zod·본문 sanitize 는 이미 갖춰져 있어
+남은 큰 구멍은 클릭재킹·MIME 스니핑·외부 스크립트 주입 방어였다.
+
+### Decision
+
+1. `src/lib/security-headers.ts` 순수 함수가 헤더 6종을 만들고 `next.config.ts` `headers()` 가 전 경로(`/(.*)`)에 붙인다.
+   - CSP · `X-Frame-Options: DENY` · `X-Content-Type-Options: nosniff` · `Referrer-Policy: strict-origin-when-cross-origin`
+     · `Permissions-Policy: camera=(), microphone=(), geolocation=()` · `Strict-Transport-Security: max-age=63072000; includeSubDomains`
+2. **정적 CSP, 즉시 enforce.** `script-src 'self' 'unsafe-inline'` + GA, `frame-ancestors 'none'`, `object-src 'none'`,
+   `base-uri 'self'`, `form-action 'self'`. 외부 허용은 GA4 · Google Fonts(ADR-059) · youtube-nocookie 임베드뿐이다.
+3. **S3 origin 은 env 에서 파생** — `NEXT_PUBLIC_S3_PUBLIC_URL`(img-src), `S3_ENDPOINT`(connect-src, 어드민 presigned PUT).
+   하드코딩하지 않는다.
+4. dev 만 `'unsafe-eval'`·`ws:` 추가(React 디버깅·HMR).
+5. Zod v4 의 eval 탐지(`Function("")`)가 CSP 위반을 남겨 `z.config({ jitless: true })` 로 끈다
+   (`src/admin/components/ZodJitless.tsx`, `app/admin/layout.tsx` — 공개 번들엔 zod 없음). 기능은 원래도 Zod 가 자체 폴백하던 경로다.
+
+### 기각안
+
+| 안 | 기각 사유 |
+|---|---|
+| nonce 기반 CSP (`'strict-dynamic'`) | nonce 는 요청마다 달라 모든 페이지를 동적 렌더로 강제 → cacheComponents/PPR 정적 셸 상실 |
+| Report-Only 로 1주 관찰 후 enforce | 배포 2회 필요. E2E 가 CSP 위반 이벤트를 0 으로 강제해 같은 위험을 배포 전에 잡는다 |
+| `'unsafe-eval'` 허용으로 Zod 위반 해소 | 주입된 문자열 실행을 열어 CSP 의미가 크게 줄어든다. jitless 한 줄로 해결됨 |
+| HSTS `preload` | 브라우저 내장 목록 등재는 되돌리기 어렵다. 서브도메인 운용(ADR-023) 확정 후 재검토 |
+| `upgrade-insecure-requests` | 로컬 prod 검증(MinIO http) 이미지를 깨고, 배포 origin 은 이미 전부 https 다 |
+
+### Consequences
+
+- XSS 1차 방어는 여전히 본문 sanitize(`features/news/render`)다 — `'unsafe-inline'` 때문에 CSP 는 2차 방어선이다.
+- **`headers()` 는 빌드 시 평가된다.** `S3_ENDPOINT`·`NEXT_PUBLIC_S3_PUBLIC_URL` 이 빌드 환경에 없으면 업로드·커버 이미지가
+  CSP 에 막힌다. Vercel 은 빌드에 env 가 주입되지만, Docker 빌드(ADR-001a)는 build-arg 로 넘겨야 한다.
+- 새 외부 origin(지도·SNS 임베드·분석 도구 등)을 붙일 때는 `security-headers.ts` 에 추가하고 `pnpm e2e` 로 위반 0 을 확인한다.
+- Vercel Preview 의 피드백 툴바(vercel.live)는 허용 목록에 없다 — Preview 에서만 콘솔에 차단 로그가 보일 수 있다(기능 영향 없음).
+- 롤백 = `next.config.ts` 의 `headers()` 블록 제거.
 
 ---
 

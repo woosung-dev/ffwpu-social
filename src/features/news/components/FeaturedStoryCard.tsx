@@ -159,6 +159,8 @@ export function FeaturedStoryCard({ stories }: Props) {
                 alt=""
                 fill
                 sizes="(max-width: 639px) 100vw, 50vw"
+                // 첫 슬라이드 = /news 첫 화면 LCP 후보 → SSR 에서 preload·고우선 로드
+                preload={selected === 0}
                 className="motion-safe:animate-featured-fade object-cover"
               />
             ) : (

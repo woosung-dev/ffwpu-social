@@ -1,5 +1,6 @@
 // 소식(news) 비즈니스 로직 — db import 금지. db 레이어 함수만 호출 (fullstack.md §3). public/admin 분리 (codex P1#7). mutation 은 db.transaction 안에서 (codex P1#5)
 import { cache } from "react";
+import { z } from "zod";
 
 import { db } from "@/db";
 import { deleteByPrefix } from "@/features/storage";
@@ -26,7 +27,9 @@ export async function listNews(board: NewsBoard, query: ListNewsQuery) {
 }
 
 // cache() — 같은 요청 내 generateMetadata + 페이지 렌더가 각각 호출해도 DB 1회만 (요청 단위 dedupe)
+// uuid 형식 불량(직접 URL 진입)은 DB 조회 없이 null → 404. 그대로 넘기면 Postgres uuid 캐스팅 오류로 500 (notices 상세와 동일 처리)
 export const getNewsDetail = cache(async (board: NewsBoard, id: string) => {
+  if (!z.uuid().safeParse(id).success) return null;
   const item = await newsDb.getPublicNewsById(board, id);
   if (!item) return null;
   const heartCount = await newsDb.countActiveHearts(id);
