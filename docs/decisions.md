@@ -2659,3 +2659,38 @@ ADR-057(8/27 배포) 이후에도 검색 결과 사이트명 자리에 `sowgood.
 - ⚠️ '총 누적 지표' 탭은 공개 상태 — 탭에 개인정보가 들어가면 즉시 노출(ADR-004). 사회공헌국 고지 필요. 그때는 Apps Script 폴백.
 - 결합 지점: 시트 B1 `희망나눔가정` ↔ `mapping.ts` `HOPE_SHEET_LABELS`. 마이그레이션 0(`updateSyncedValue` 는 slug 로 갱신).
 - 배포 시 Vercel: `KPI_SHEET_CSV_URL` 교체 + `HOPE_SHEET_CSV_URL` 추가 → Redeploy. 런북 `docs/deploy-env-checklist.md` §6·§6.2.
+
+---
+
+## ADR-069: 랜딩 파트너 = 일화 1곳(단색 85%) + 상세 상단 공감 badge 토글
+
+- **Status**: Accepted
+- **Date**: 2026-10-07
+
+### Context
+
+- 랜딩 Partners 섹션은 파트너 미확정으로 섹션째 숨겨져 있었다. 하단 로고 5개(선학UP대학원대학교 등)는 Figma placeholder 를 채운 임시 자료였다. 사회공헌국이 실제 파트너로 **일화 1곳**을 지정했다(사용자, 2026-10-07).
+- Figma 원본 처리는 로고 줄 `opacity 0.23`. 일화 원본은 빨간 타원 컬러 로고다.
+- 소식·보도 상세 날짜 옆 공감 수(ADR-066 묶음)는 표시 전용이라, 토글은 하단 "공감해요" pill 에서만 가능했다. 사회공헌국이 상단에서도 누를 수 있게 요청했다.
+
+### Decision
+
+1. **파트너 = 일화 1곳**, 임시 로고 5개와 이미지 삭제. 섹션 노출 재개.
+2. **로고 = grayscale + opacity 85%**. 일화 측 "공식 흑백은 없음, 단색 사용 괜찮음" 승인(사용자 전달, 2026-10-07).
+3. 로고 줄 정렬 = `justify-center`(1개일 때 lg 이상에서 왼쪽에 붙던 `justify-between` 제거). 파트너가 늘면 md+ 가로 wrap.
+4. **상세 상단 badge 도 토글 가능.** Provider 가 슬롯(top/bottom)별 `{ key, base }` 를 관리한다. 누른 슬롯은 유지(포커스·optimistic)하고, 반대 슬롯만 서버 권위 count 로 remount 한다.
+
+### 기각안
+
+| 안 | 기각 사유 |
+|---|---|
+| 원색 로고 | 보라 화면에서 빨강만 튀어 헤딩보다 먼저 보이고, 계열사 광고로 읽힐 위험(디자이너·PR·방문자 관점 검토 5인 중 4인 C안) |
+| opacity 23~55% 유지 | 방문자 관점에서 "준비 중인 자리"로 읽힘. 벤치마킹 단색 로고 띠 4곳(기아대책·charity: water·Vercel·Linear) 모두 불투명 |
+| 두 하트를 매 토글마다 모두 remount | 누른 버튼 포커스가 사라짐(키보드 접근성 회귀) |
+| Heart 에 count prop 을 live 값으로 전달 | Heart 는 count 대비 optimistic delta 를 내부에 들고 있어 count 가 바뀌면 이중 가산 |
+
+### Consequences
+
+- 결합 지점: `detail-heart.tsx` 슬롯 sync ↔ `Heart.tsx` 의 "count prop 은 mount 후 고정" 전제. Heart 의 delta 모델을 바꾸면 슬롯 sync 도 같이 바꿔야 한다.
+- 파트너 데이터는 여전히 코드 상수(`PartnersSection.tsx`). 어드민 CRUD 는 v1.1 백로그.
+- 일화와의 관계(후원·협력·협약) 문구는 미확정 — 사회공헌국 답변 시 로고 아래 한 줄 추가 후보.

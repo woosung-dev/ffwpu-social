@@ -196,11 +196,7 @@ mcp__plugin_figma_figma__get_variable_defs({});
 |---|---|---|---|
 | `96:7900` (`Group`) | 92×92 보라 박스 안 일러스트 | SVG 1.7KB | `public/icons/s5-icon-group.svg` |
 | `96:7904` (`_레이어_1`) | Sow Good 로고 (100×66, 헤더와 다른 크기) | SVG 23KB | `public/icons/s5-sow-good-logo.svg` |
-| `96:7958` (`image 42`) ▲ | 파트너 로고 1 (218×31) | PNG 185B (**Figma 도 placeholder**) → **placeholder 69B** | `public/images/s5-partner1.png` (사용자 조달 필수) |
-| `96:7960` (`image 37`) ▲ | 파트너 로고 2 (183×53) | PNG 332B (**Figma 도 placeholder**) → **placeholder 69B** | `public/images/s5-partner2.png` (사용자 조달 필수) |
-| `96:7962` (`image 38`) ▲ | 파트너 로고 3 (164×38) | PNG 1.1KB (**Figma 도 placeholder**) → **placeholder 69B** | `public/images/s5-partner3.png` (사용자 조달 필수) |
-| `96:7964` (`image 39`) ▲ | 파트너 로고 4 (86×33) | PNG 172B (**Figma 도 placeholder**) → **placeholder 69B** | `public/images/s5-partner4.png` (사용자 조달 필수) |
-| `96:7966` (`image 41`) ▲ | 파트너 로고 5 (173×52) | PNG 181B (**Figma 도 placeholder**) → **placeholder 69B** | `public/images/s5-partner5.png` (사용자 조달 필수) |
+| `96:7958`~`96:7966` (`image 37~42`) | 파트너 로고 (Figma placeholder 5슬롯) | — | **제거** (2026-10-07, 임시 자료). 실제 파트너 일화 1곳 → `public/images/s5-partner-ilhwa.png` (669×180 PNG, 사회공헌국 제공) |
 
 ### FeaturedSection (`125:8985`) — news-list 의 Featured Card 영역
 

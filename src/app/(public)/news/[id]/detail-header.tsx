@@ -1,4 +1,4 @@
-// 소식 상세 헤더 — 카테고리 + 제목 + 날짜(+공감 수). Figma 749:8059(B 시안 Title 블록) 기반, 날짜 옆 공감 수는 사회공헌국 요청(후보 2)으로 추가. Server Component
+// 소식 상세 헤더 — 카테고리 + 제목 + 날짜(+공감 수). Figma 749:8059(B 시안 Title 블록) 기반, 날짜 옆 공감 수는 사회공헌국 요청(후보 2)으로 추가, 이후 상단에서도 누를 수 있게 확장(ADR-066 후속). Server Component
 import type { ReactNode } from "react";
 
 function fmtDate(d: Date | string | null): string {
@@ -16,7 +16,7 @@ export function DetailHeader({
   categoryName: string;
   title: string;
   publishedAt: Date | string | null;
-  /** 날짜 옆 공감 수 슬롯 — 클라이언트 컴포넌트를 주입 (미지정 시 날짜만) */
+  /** 날짜 옆 공감 버튼 슬롯 — 클라이언트 컴포넌트를 주입 (미지정 시 날짜만) */
   heart?: ReactNode;
 }) {
   return (

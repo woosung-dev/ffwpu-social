@@ -15,7 +15,7 @@ import { SubBanner } from "../../news/sub-banner";
 import { DetailHeader } from "../../news/[id]/detail-header";
 import {
   DetailHeart,
-  DetailHeartCount,
+  DetailHeartBadge,
   DetailHeartProvider,
 } from "../../news/[id]/detail-heart";
 import { NewsViewTracker } from "../../news/[id]/news-view-tracker";
@@ -107,7 +107,7 @@ async function PressDetailContent({
             categoryName={item.categoryName}
             title={item.title}
             publishedAt={item.publishedAt}
-            heart={<DetailHeartCount />}
+            heart={<DetailHeartBadge />}
           />
 
           <div className="mt-10 lg:mt-[60px]">

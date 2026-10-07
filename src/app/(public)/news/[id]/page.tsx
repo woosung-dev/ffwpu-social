@@ -14,7 +14,7 @@ import { SubBanner } from "../sub-banner";
 import { DetailHeader } from "./detail-header";
 import {
   DetailHeart,
-  DetailHeartCount,
+  DetailHeartBadge,
   DetailHeartProvider,
 } from "./detail-heart";
 import { NewsViewTracker } from "./news-view-tracker";
@@ -121,7 +121,7 @@ async function NewsDetailContent({
             categoryName={item.categoryName}
             title={item.title}
             publishedAt={item.publishedAt}
-            heart={<DetailHeartCount />}
+            heart={<DetailHeartBadge />}
           />
 
           {/* 본문 — 1440 리듬: 제목 블록 →60→ 본문 */}
