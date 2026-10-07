@@ -152,3 +152,23 @@ describe("extractCumulativeMetrics — 쌀 나눔 대장(kind: story)", () => {
     expect(extractCumulativeMetrics(parseCsv(RICE_CSV))).toHaveLength(0);
   });
 });
+
+// 실제 '희망가정' 탭 레이아웃 모사 (2026-10-07 export) — B1 라벨 / B2 누계, B3 이하는 순번별 행
+const HOPE_CSV = [
+  ",희망나눔가정,,,",
+  "순번,89,,집계일,2026. 9. 22",
+  "1,89,,,",
+].join("\n");
+
+describe("extractCumulativeMetrics — 희망가정(kind: hope)", () => {
+  it("B1 라벨 아래 B2 누계 → helped_household_count", () => {
+    expect(extractCumulativeMetrics(parseCsv(HOPE_CSV), "hope")).toEqual([
+      { slug: "helped_household_count", value: 89, externalId: "희망나눔가정" },
+    ]);
+  });
+
+  it("다른 시트 맵으로는 희망가정 라벨이 안 잡힌다 (시트 교차 오염 방지)", () => {
+    expect(extractCumulativeMetrics(parseCsv(HOPE_CSV), "impact")).toHaveLength(0);
+    expect(extractCumulativeMetrics(parseCsv(HOPE_CSV), "story")).toHaveLength(0);
+  });
+});

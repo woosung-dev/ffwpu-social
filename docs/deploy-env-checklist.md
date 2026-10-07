@@ -22,8 +22,9 @@
 | `NEXT_PUBLIC_S3_PUBLIC_URL` | Vercel | `http://localhost:9000/ffwpu-social` | **R2 공개 도메인**(`https://<id>.r2.dev` 또는 커스텀, 끝 슬래시 없이) |
 | `NEXT_PUBLIC_SITE_URL` | Vercel | `http://localhost:3100` | **실제 도메인**(OG·sitemap·canonical 기준, 끝 슬래시 없이) |
 | `NEXT_PUBLIC_GA_ID` | Vercel | 비움 | GA4 `G-XXXXXXXXXX`(없으면 비워두면 미로드) |
-| `KPI_SHEET_CSV_URL` | Vercel | 배포와 동일 값 사용 | **Apps Script 웹앱 URL** `https://script.google.com/macros/s/<배포ID>/exec?token=<TOKEN>` (§6) |
+| `KPI_SHEET_CSV_URL` | Vercel | 배포와 동일 값 사용 | **'총 누적 지표' 탭 웹 게시 CSV** `https://docs.google.com/spreadsheets/d/e/<게시ID>/pub?gid=<GID>&single=true&output=csv` (§6, ADR-068) |
 | `RICE_SHEET_CSV_URL` | Vercel | 배포와 동일 값 사용 | **쌀 나눔 대장 CSV export** `https://docs.google.com/spreadsheets/d/<시트ID>/export?format=csv&gid=0` (§6.1) |
+| `HOPE_SHEET_CSV_URL` | Vercel | 배포와 동일 값 사용 | **희망가정 탭 CSV export** — 쌀 나눔과 같은 파일, `gid=128301359` (§6.2) |
 | `CRON_SECRET` | **Vercel + GitHub 양쪽** | `local-dev-cron-secret-123` 등 아무 값 | `openssl rand -hex 32`. **양쪽 값이 같아야 함** — 다르면 403 |
 | `KPI_SYNC_ENDPOINT` | **GitHub Secrets 만** | (불필요) | `https://<도메인>/api/cron/sync-kpi` — Action 이 부를 주소 |
 | `PROD_DATABASE_URL_DIRECT` | **GitHub Secrets 만** | (불필요) | Neon **direct**(`-pooler` 제거) — migrate 워크플로 전용 (§5) |
@@ -75,6 +76,12 @@
 > **AWS(2단계) 이전 시:** Vercel 자동배포가 사라지므로 `migrate.yml`에 `deploy` 잡(standalone Dockerfile build→ECR→EC2, `needs: migrate`)을 추가해 "migrate → deploy" 게이트 구조로 수렴. `migrate.ts`·secret·advisory lock 그대로 재사용.
 
 ## 6. KPI 시트 동기화 — Apps Script 웹앱(getKpi)
+
+> **2026-10-07 현재 운영 방식은 Apps Script 가 아니라 '웹에 게시' 다 (ADR-068).** 구글 계정 이전으로 옛 웹앱이
+> 사라졌고(404), 새 소유자가 **'총 누적 지표' 탭만** 웹에 게시했다. `KPI_SHEET_CSV_URL` = 그 게시 CSV 주소.
+> - 검증: `curl -sSL "$KPI_SHEET_CSV_URL" | sed -n 5,6p` → 라벨 행 + 숫자 행. 같은 게시 주소에 다른 `gid=` 를 넣으면 **401** 이어야 한다(탭 단위 게시 확인).
+> - ⚠️ 이 탭은 누구나 볼 수 있다 — 탭에 개인정보가 들어가면 즉시 공개된다. 사회공헌국 고지 필요.
+> - 게시가 막히면(조직 정책·탭에 개인정보 유입) 아래 Apps Script 방식으로 되돌린다 — 스크립트 원문은 `docs/apps-script/getKpi.gs`.
 
 ### 왜 이렇게 됐나 (건드리기 전에 읽을 것)
 
@@ -164,3 +171,26 @@ CSV export 는 401 이 된다. 코드는 그대로 두고 `RICE_SHEET_CSV_URL` �
 
 > ⚠️ 이 시트에는 실명·수혜 기관명이 들어 있다(ADR-004). 공유 범위 결정은 사회공헌국 몫 —
 > `docs/TODO.md` escalation 참조.
+
+---
+
+## 6.2 희망가정 탭 (ADR-068)
+
+랜딩 KpiSection **가정 수 카드**(`helped_household_count`) 숫자 1개를 채운다. 그전에는 어드민 수동 입력이었다.
+
+| 항목 | 값 |
+|---|---|
+| 변수 | `HOPE_SHEET_CSV_URL` |
+| 시트 | §6.1 과 **같은 파일**(`희망가정 & 쌀나눔 집계표`)의 `희망가정` 탭 — 링크 공개라 export URL 그대로 |
+| URL 형식 | `https://docs.google.com/spreadsheets/d/<시트ID>/export?format=csv&gid=128301359` |
+| 읽는 것 | **B1 라벨 `희망나눔가정`** 바로 아래 **B2** 값. 라벨 글자가 바뀌면 동기화 실패(랜딩은 기존 값 유지) |
+| 어드민 | `/admin/kpi` "시트에서 불러오기" 가 협회 시트 + 이 탭을 함께 읽어 4칸을 채운다. 한쪽 실패는 다른 쪽을 막지 않는다 |
+
+```bash
+curl -sSL "$HOPE_SHEET_CSV_URL" | head -2   # ",희망나눔가정,..." 아래 "순번,89,..."
+```
+
+### 🔴 배포 후 1회 할 일
+
+1. Vercel 에 `HOPE_SHEET_CSV_URL` 추가 → **Redeploy**
+2. `/admin/kpi` → 시트에서 불러오기 → 가정 수 칸 확인 → 저장 + 발행 (또는 GitHub Actions 수동 1회)

@@ -2626,3 +2626,36 @@ ADR-057(8/27 배포) 이후에도 검색 결과 사이트명 자리에 `sowgood.
   추가분은 본문 `<p>` 다. 10/01 사이트명 재측정 결과를 해석할 때 이 변경(9/29 배포분)을 감안한다.
 - 함께 반영(같은 요청 묶음, ADR 없음): StorySection "Good" 스티커 병합·수평화(`docs/design/story-fidelity-criteria.md`),
   소식·보도 상세 날짜 옆 공감 수(Figma "메타(작성일+좋아요)" 정합), 에디터 글자 크기 메뉴 UI 재구성(허용 크기 불변).
+
+---
+
+## ADR-068: KPI 시트 — 구글 계정 이전 후 '총 누적 지표' 탭 웹 게시 + 희망가정 탭 연동
+
+- **Status**: Accepted (Supersedes ADR-045 의 운영 방식 — Apps Script 는 폴백으로 유지)
+- **Date**: 2026-10-07
+
+### Context
+
+- 2026-09 사회공헌국 구글 계정 이전으로 ADR-045 의 Apps Script 웹앱 URL 이 **404**(옛 계정과 함께 소실). 주간 동기화 9/14 부터 연속 500, `/admin/kpi` "불러오기" 실패. `/admin/landing`(쌀나눔, 링크 공개 export)은 무관하게 정상.
+- ADR-045 가 '탭만 웹에 게시' 를 기각한 사유는 "소유자가 공유 자체 불가" 였다. 새 소유 계정은 **'총 누적 지표' 탭만 게시**할 수 있었다.
+- 랜딩 KPI 4번째 카드(가정 수)는 시트가 없어 수동 입력이었는데, 사회공헌국이 `희망가정 & 쌀나눔 집계표` 의 `희망가정` 탭 B열(B1 `희망나눔가정` / B2 누계)을 출처로 지정했다(사용자, 2026-10-07).
+
+### Decision
+
+1. **`KPI_SHEET_CSV_URL` = '총 누적 지표' 탭 웹 게시 CSV**(`/pub?gid=1436201833&single=true&output=csv`). 코드 변경 0 — 탭 전체 CSV 를 기존 `extractCumulativeMetrics` 가 라벨 기준으로 찾는다.
+2. **시트 종류 `hope` 추가** — `HOPE_SHEET_LABELS = { "희망나눔가정": "helped_household_count" }`, env `HOPE_SHEET_CSV_URL`(같은 파일 gid 128301359 export). 파서·주간 동기화는 `SHEET_CONFIG` 순회라 자동 포함.
+3. `/admin/kpi` 불러오기 버튼은 `impact` + `hope` 를 병렬로 읽고, 실패한 시트만 에러 토스트를 띄운다.
+
+### 기각안
+
+| 안 | 기각 사유 |
+|---|---|
+| Apps Script 재설치(`docs/apps-script/getKpi.gs`) | 동작하나 토큰·배포 버전 관리가 운영자 부담. 게시가 가능해진 지금은 과함 → **폴백으로 보존** |
+| 희망가정 URL 을 `RICE_SHEET_CSV_URL` 에서 gid 치환으로 유도 | env 하나 덜 쓰지만 두 탭이 같은 파일이라는 우연에 코드가 묶인다. 탭/파일이 갈라지면 깨짐 |
+
+### Consequences
+
+- 검증(2026-10-07): 게시 CSV → 981 / 11,629 / 25,773 추출 · 같은 게시 주소의 다른 gid(0·128301359·2067258207) **401** · 희망가정 export → 89 · 단위 테스트 추가.
+- ⚠️ '총 누적 지표' 탭은 공개 상태 — 탭에 개인정보가 들어가면 즉시 노출(ADR-004). 사회공헌국 고지 필요. 그때는 Apps Script 폴백.
+- 결합 지점: 시트 B1 `희망나눔가정` ↔ `mapping.ts` `HOPE_SHEET_LABELS`. 마이그레이션 0(`updateSyncedValue` 는 slug 로 갱신).
+- 배포 시 Vercel: `KPI_SHEET_CSV_URL` 교체 + `HOPE_SHEET_CSV_URL` 추가 → Redeploy. 런북 `docs/deploy-env-checklist.md` §6·§6.2.
