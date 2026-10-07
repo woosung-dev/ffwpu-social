@@ -29,6 +29,7 @@ export function buildLabelLookup(
 const LOOKUP_BY_KIND: Record<SheetKind, Record<string, SyncTargetSlug>> = {
   impact: buildLabelLookup(SHEET_CONFIG.impact.labels),
   story: buildLabelLookup(SHEET_CONFIG.story.labels),
+  hope: buildLabelLookup(SHEET_CONFIG.hope.labels),
 };
 
 // 최소 CSV 파서 — 따옴표 필드 안의 콤마·줄바꿈 보존("4,973 명" 같은 그룹 숫자), RFC4180 "" → " 이스케이프

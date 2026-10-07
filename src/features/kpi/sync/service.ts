@@ -68,7 +68,7 @@ export type SheetSyncReport = {
   error?: string;
 };
 
-// 두 시트를 각각 동기화. 한 시트의 실패(URL 미설정·시트 구조 변경·401)가 다른 시트를 막지 않도록 격리한다 —
+// 시트들을 각각 동기화. 한 시트의 실패(URL 미설정·시트 구조 변경·401)가 다른 시트를 막지 않도록 격리한다 —
 // 쌀나눔 시트 공유 설정이 바뀌어도 협회 지표는 계속 갱신돼야 한다.
 export async function syncAllSheets(): Promise<SheetSyncReport[]> {
   const kinds = Object.keys(SHEET_CONFIG) as SheetKind[];

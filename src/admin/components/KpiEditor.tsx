@@ -61,28 +61,38 @@ export function KpiEditor({ initialRows, lastSyncedAt }: Props) {
   // slug → 폼 row 인덱스 (시트 불러오기 시 해당 칸에 채우기)
   const slugToIndex = new Map(initialRows.map((r, i) => [r.slug, i]));
 
+  // 협회 지표 3칸 + 희망가정 1칸은 서로 다른 시트 — 한쪽이 실패해도 다른 쪽 값은 채운다
   const onLoadFromSheet = () => {
     startFetch(async () => {
-      const result = await fetchSheetKpiValuesAction();
-      if (!result.success) {
-        toast.error(
-          typeof result.error === "string"
-            ? result.error
-            : "시트를 불러오지 못했습니다.",
-        );
-        return;
-      }
+      const results = await Promise.all([
+        fetchSheetKpiValuesAction("impact"),
+        fetchSheetKpiValuesAction("hope"),
+      ]);
       let filled = 0;
-      for (const m of result.data.metrics) {
-        const idx = slugToIndex.get(m.slug);
-        if (idx === undefined) continue;
-        // 숫자만 채움 — 단위·화면표기는 운영자 설정 유지(화면 표시는 숫자+단위로 자동)
-        form.setValue(`rows.${idx}.value`, m.value, { shouldDirty: true });
-        filled++;
+      const errors: string[] = [];
+      for (const result of results) {
+        if (!result.success) {
+          errors.push(
+            typeof result.error === "string"
+              ? result.error
+              : "시트를 불러오지 못했습니다.",
+          );
+          continue;
+        }
+        for (const m of result.data.metrics) {
+          const idx = slugToIndex.get(m.slug);
+          if (idx === undefined) continue;
+          // 숫자만 채움 — 단위·화면표기는 운영자 설정 유지(화면 표시는 숫자+단위로 자동)
+          form.setValue(`rows.${idx}.value`, m.value, { shouldDirty: true });
+          filled++;
+        }
       }
-      toast.success(
-        `시트에서 ${filled}개 숫자를 불러왔습니다. 확인 후 '저장 + 발행'을 눌러주세요.`,
-      );
+      for (const message of errors) toast.error(message);
+      if (filled > 0) {
+        toast.success(
+          `시트에서 ${filled}개 숫자를 불러왔습니다. 확인 후 '저장 + 발행'을 눌러주세요.`,
+        );
+      }
     });
   };
 
@@ -137,7 +147,7 @@ export function KpiEditor({ initialRows, lastSyncedAt }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-ink-strong">
-            협회 시트에서 값 불러오기
+            협회·희망가정 시트에서 값 불러오기
           </p>
           <p className="text-xs text-ink-date">
             {formatSynced(lastSyncedAt)} · 매주 월요일 자동 갱신
