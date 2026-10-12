@@ -190,6 +190,8 @@ mcp__plugin_figma_figma__get_variable_defs({});
 
 ### Section5 (`96:7897`) — "Sow Good 과 함께하고 있는 파트너"
 
+> ⚠️ **2026-10-12 — 현재 코드는 사회공헌국 시안 "SOW GOOD PARTNER" 락업(ADR-070).** 아래 Figma 명세 레이아웃은 `PartnersSection.tsx` 에 주석으로 보존 — 파트너 증가 시 복귀.
+
 > 배경 그라디언트 `from-#f8f1ff to-white`. 아이콘 박스 (92×92, `#dbb4ff` + 다크 border 2px) + Sow Good 로고 (100×66) + "과 함께하고 있는 파트너" + 파트너 로고 5개 (opacity-23 흐리게).
 
 | Figma 노드 (이름) | 명칭 | 파일 형식 | 코드 위치 |
