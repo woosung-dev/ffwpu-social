@@ -1,5 +1,5 @@
 // 사용자 랜딩 Partners 섹션 — 현재: 사회공헌국 제공 "SOW GOOD PARTNER" 락업(꽃 로고 | 타이틀·슬로건 + 파트너 로고, ADR-070).
-// 레이아웃: base 세로 스택(가로 구분선) / md+ 가로 1줄(세로 구분선). 사이즈 4-BP: base·md·lg·wide 단계 확대.
+// 레이아웃: base 세로 스택(가로 구분선) / md+ 가로 1줄(세로 구분선). 타이틀은 wide 28px 상한 — 다른 섹션 제목(28~36px)보다 크지 않게(ADR-070 개정).
 // 파트너가 늘면 아래 주석 처리한 기존 레이아웃(Figma 96:7897 — 헤딩 + 로고 줄)으로 복귀 예정.
 import { SectionContainer } from "@/client/components/layout";
 
@@ -22,7 +22,7 @@ export function PartnersSection() {
     >
       <SectionContainer>
         {/* SOW GOOD PARTNER 락업 — 사회공헌국 제공 시안(2026-10-12). 일화 로고는 시안대로 원색 */}
-        <div className="flex flex-col items-center gap-5 md:flex-row md:justify-center md:gap-6 lg:gap-8 wide:gap-10">
+        <div className="flex flex-col items-center gap-5 md:flex-row md:justify-center md:gap-6 lg:gap-7 wide:gap-8">
           {/* eslint-disable-next-line @next/next/no-img-element -- 정적 로고 */}
           <img
             src="/images/s5-partner-sow-good-flower.png"
@@ -30,23 +30,23 @@ export function PartnersSection() {
             width={304}
             height={508}
             loading="lazy"
-            className="h-24 w-auto md:h-[88px] lg:h-26 wide:h-32"
+            className="h-24 w-auto md:h-20 lg:h-[88px] wide:h-24"
           />
           {/* 구분선 — base 가로 / md+ 세로 */}
           <span
             aria-hidden
-            className="h-0.5 w-10 bg-tag-default md:h-16 md:w-0.5 lg:h-19 wide:h-24"
+            className="h-0.5 w-10 bg-tag-default md:h-14 md:w-0.5 lg:h-16 wide:h-18"
           />
-          <div className="flex flex-col items-center gap-5 md:flex-row md:gap-6 lg:gap-8 wide:gap-12">
+          <div className="flex flex-col items-center gap-5 md:flex-row md:gap-6 lg:gap-8 wide:gap-10">
             <div className="text-center md:text-left">
               <h2
                 id="partners-heading"
-                className="text-2xl font-medium leading-none text-surface-dark md:text-[26px] lg:text-[32px] wide:text-[40px]"
+                className="text-2xl font-medium leading-none text-surface-dark lg:text-[26px] wide:text-[28px]"
               >
                 SOW GOOD <span className="font-extrabold">PARTNER</span>
               </h2>
               {/* 시안 라벤더(#a98ed6, 대비 2.8:1)는 AA 미달 → brand-mid(4.7:1) */}
-              <p className="mt-2 text-sm font-bold leading-none tracking-wide text-brand-mid md:text-[15px] lg:mt-3 lg:text-lg wide:text-[22px]">
+              <p className="mt-2 text-sm font-bold leading-none tracking-wide text-brand-mid lg:text-[15px] wide:mt-2.5 wide:text-base">
                 TOGETHER FOR GOOD
               </p>
             </div>
@@ -59,7 +59,7 @@ export function PartnersSection() {
                 width={partner.w}
                 height={partner.h}
                 loading="lazy"
-                className="h-9 w-auto max-w-full md:h-[34px] lg:h-[42px] wide:h-[52px]"
+                className="h-9 w-auto max-w-full md:h-[30px] lg:h-[34px] wide:h-[38px]"
               />
             ))}
           </div>
