@@ -25,10 +25,10 @@ export function PartnersSection() {
         <div className="flex flex-col items-center gap-5 md:flex-row md:justify-center md:gap-6 lg:gap-7 wide:gap-8">
           {/* eslint-disable-next-line @next/next/no-img-element -- 정적 로고 */}
           <img
-            src="/images/s5-partner-sow-good-flower.png"
+            src="/icons/s5-partner-sow-good-flower.svg"
             alt="사회공헌단 Sow Good"
-            width={304}
-            height={508}
+            width={38}
+            height={64}
             loading="lazy"
             className="h-24 w-auto md:h-20 lg:h-[88px] wide:h-24"
           />
