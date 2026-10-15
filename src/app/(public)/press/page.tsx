@@ -12,6 +12,7 @@ import {
 } from "@/features/news/api";
 import { getQueryClient } from "@/lib/query/get-query-client";
 import { SectionContainer } from "@/client/components/layout";
+import { QueryProvider } from "@/client/providers/QueryProvider";
 import { SITE_NAME } from "@/lib/site";
 
 // 게시판이 달라도 상단 배너·목록 UI 는 같은 컴포넌트를 쓴다 — board/basePath prop 으로만 분기 (복제 금지)
@@ -100,9 +101,12 @@ async function PressListPrefetch({
   });
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <NewsListClient board="press" categories={categoriesForTabs} />
-    </HydrationBoundary>
+    // RQ Provider 는 목록 소비처(/news·/press)에만 — 레이아웃 전역이면 홈 등 모든 공개 페이지가 RQ 번들을 받는다
+    <QueryProvider>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <NewsListClient board="press" categories={categoriesForTabs} />
+      </HydrationBoundary>
+    </QueryProvider>
   );
 }
 

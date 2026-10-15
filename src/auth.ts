@@ -5,7 +5,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { normalizeEmail } from "@/features/accounts/schemas";
+import { loginSchema, normalizeEmail } from "@/features/accounts/schemas";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" }, // Credentials는 jwt 필수
@@ -17,11 +17,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const rawEmail = credentials?.email as string | undefined;
-        const password = credentials?.password as string | undefined;
-        if (!rawEmail || !password) return null;
-        // 생성 시와 동일 정규화 — 대소문자·공백 차이로 로그인 실패 방지 (단일 출처 normalizeEmail)
-        const email = normalizeEmail(rawEmail);
+        // 클라 폼 검증과 동일 스키마로 서버 재검증 — 직접 POST 로 폼 검증을 우회하는 입력 차단.
+        // 이메일은 검증 전에 정규화(생성 시와 동일, 단일 출처 normalizeEmail) — 앞뒤 공백·대소문자 차이로 거부되지 않도록
+        const rawEmail = credentials?.email;
+        const parsed = loginSchema.safeParse({
+          email: typeof rawEmail === "string" ? normalizeEmail(rawEmail) : rawEmail,
+          password: credentials?.password,
+        });
+        if (!parsed.success) return null;
+        const { email, password } = parsed.data;
 
         const [user] = await db
           .select({

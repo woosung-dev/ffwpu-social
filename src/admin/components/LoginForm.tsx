@@ -6,7 +6,6 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,14 +16,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { type LoginInput, loginSchema } from "@/features/accounts/schemas";
 import { PasswordInput } from "./PasswordInput";
-
-const loginSchema = z.object({
-  email: z.email("이메일 형식을 확인해주세요"),
-  password: z.string().min(1, "비밀번호를 입력해주세요"),
-});
-
-type LoginInput = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();

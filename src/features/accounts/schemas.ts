@@ -8,6 +8,13 @@ export function normalizeEmail(raw: string): string {
 
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// 로그인 입력 — LoginForm(클라 검증)·auth.ts authorize(서버 재검증) 공용
+export const loginSchema = z.object({
+  email: z.email("이메일 형식을 확인해주세요"),
+  password: z.string().min(1, "비밀번호를 입력해주세요"),
+});
+export type LoginInput = z.infer<typeof loginSchema>;
+
 // 비밀번호 — 최소 10자, 영문+숫자. bcrypt 72바이트 한계 고려 max 72
 export const PASSWORD_MIN = 10;
 const passwordSchema = z

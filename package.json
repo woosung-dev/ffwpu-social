@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "tsc": "tsc --noEmit",
     "test": "vitest run",
+    "e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:deploy": "tsx src/db/migrate.ts",
@@ -84,6 +85,7 @@
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^16.0.0",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@tailwindcss/typography": "^0.5.20",
     "@types/bcryptjs": "^2.4.6",

@@ -12,6 +12,7 @@ import {
 } from "@/features/news/api";
 import { getQueryClient } from "@/lib/query/get-query-client";
 import { SectionContainer } from "@/client/components/layout";
+import { QueryProvider } from "@/client/providers/QueryProvider";
 import { SITE_NAME } from "@/lib/site";
 
 import { SubBanner } from "./sub-banner";
@@ -109,9 +110,12 @@ async function NewsListPrefetch({
   });
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <NewsListClient board="story" categories={categoriesForTabs} />
-    </HydrationBoundary>
+    // RQ Provider 는 목록 소비처(/news·/press)에만 — 레이아웃 전역이면 홈 등 모든 공개 페이지가 RQ 번들을 받는다
+    <QueryProvider>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <NewsListClient board="story" categories={categoriesForTabs} />
+      </HydrationBoundary>
+    </QueryProvider>
   );
 }
 

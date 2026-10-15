@@ -9,6 +9,7 @@ import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, DEFAULT_OG_IMAGE } from "@/lib/s
 // GA4 측정 ID — 환경변수 설정 시(프로덕션)에만 로드. 미설정(로컬·미발급) 시 미주입.
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
+// 900(Heavy) 는 쓰는 곳이 없어 제외 — preload 167KB 절감. Gmarket Sans 는 HeroBanner 가 랜딩에서만 로드.
 const suit = localFont({
   src: [
     { path: "../../public/fonts/SUIT-Regular.woff2", weight: "400", style: "normal" },
@@ -16,20 +17,8 @@ const suit = localFont({
     { path: "../../public/fonts/SUIT-SemiBold.woff2", weight: "600", style: "normal" },
     { path: "../../public/fonts/SUIT-Bold.woff2", weight: "700", style: "normal" },
     { path: "../../public/fonts/SUIT-ExtraBold.woff2", weight: "800", style: "normal" },
-    { path: "../../public/fonts/SUIT-Heavy.woff2", weight: "900", style: "normal" },
   ],
   variable: "--font-suit",
-  display: "swap",
-  preload: true,
-  fallback: ["system-ui", "-apple-system", "Apple SD Gothic Neo", "sans-serif"],
-});
-
-// Gmarket Sans Medium — Hero 헤드라인 전용(SIL OFL, corp.gmarket.com). Medium(500) 단일 weight.
-const gmarketSans = localFont({
-  src: [
-    { path: "../../public/fonts/GmarketSans-Medium.woff2", weight: "500", style: "normal" },
-  ],
-  variable: "--font-gmarket",
   display: "swap",
   preload: true,
   fallback: ["system-ui", "-apple-system", "Apple SD Gothic Neo", "sans-serif"],
@@ -62,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko" className={`${suit.variable} ${gmarketSans.variable}`}>
+    <html lang="ko" className={suit.variable}>
       <body>{children}</body>
       {GA_ID ? <GoogleAnalytics gaId={GA_ID} /> : null}
     </html>

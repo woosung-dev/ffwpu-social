@@ -1,4 +1,4 @@
-// React Query Provider — 공개 영역 클라이언트 캐시 (/news 목록 한정). 서버 데이터 기본은 RSC, RQ 는 클라 캐시가 필요한 곳만
+// React Query Provider — 공개 목록 클라이언트 캐시 (/news·/press 페이지에서만 감쌈). 서버 데이터 기본은 RSC, RQ 는 클라 캐시가 필요한 곳만
 "use client";
 
 import type { ReactNode } from "react";

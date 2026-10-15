@@ -25,6 +25,18 @@
 - [ ] **A7 — 로그인 rate limit** — Vercel Firewall rate-limit 룰을 `/api/auth/*` 에 적용(코드 0). 단일 super 브루트포스·credential stuffing 방어. 배포 대시보드 설정. (Vercel 배포 확정 — 2026-06-01)
 - [ ] **AUTH_SECRET 강도** — 32바이트+ 시크릿 강제·회전(rank20). 임시 어드민 비번 변경(`admin@ffwpu-social.local`).
 
+## 프로덕션 표준 감사 후속 (2026-10-07, ADR-067 · `docs/reports/prod-standards-2026-10-07/`)
+
+**먼저 할 것**
+- [ ] **공개 조회 `"use cache"` + `cacheTag`** — 홈 1회 렌더에 DB 쿼리 7건(직렬 1건 포함), 캐시 0건. Neon 쿼터 장애 재발 원인 후보. 어드민 저장 액션 ~10곳의 `revalidatePath` → `revalidateTag` 동반 전환. 별도 PR (사용자 결정 2026-10-07).
+  - 같은 PR 에서 **/news CLS 0.62 해소** — `NewsHero` 가 `Suspense fallback={null}` 로 늦게 스트리밍돼 목록을 밀어냄(main 동일). 히어로 조회를 캐시해 정적 셸에 넣으면 사라진다(대안: 실높이 skeleton).
+- [ ] **[기존 결함] prod hydration 불일치 #418** — 홈(`/`, 5/5 재현)·`/admin/news/new`(하드 로드). main 에서도 동일, dev 미재현(PPR 정적 셸 관련 추정). E2E 가 해당 테스트에서만 `#418` 을 허용 중 — 고치면 `e2e/public.spec.ts`·`e2e/admin.spec.ts` 의 허용 줄 삭제.
+
+**나중에**
+- [ ] **CI 게이트** — lint·tsc·test·build + E2E(Postgres 서비스 컨테이너 + migrate + seed). 현재 CI 는 마이그레이션·KPI 동기화만.
+- [ ] **배포 후 실측** — PageSpeed Insights(필드 LCP·CLS·INP)로 로컬 Lighthouse 수치 대조. 운영 응답에 보안 헤더 6종 확인(`curl -sI https://sowgood.kr`).
+- [ ] **업로드 시 WebP/AVIF 생성** — ADR-051 정규화본(JPEG 138KB) 대비 전송량 절감. 비용 결정(ADR-051) 재검토 포함. Docker 빌드(ADR-001a) 전환 시 `S3_*` env 를 build-arg 로 넘길 것(ADR-067 Consequences).
+
 ## 운영 절차 — 이미지 긴급 내리기 (ADR-051 로 단순화됨)
 
 > **2026-08-08 갱신 (ADR-051).** `images.unoptimized: true` 로 전환해 이미지가 Vercel 옵티마이저를 거치지 않는다 → **Vercel purge 단계가 사라졌다.** ADR-049 시절의 "최대 7일 계속 서빙" 문제도 함께 해소됐다. ADR-004 개인정보 보호 절대 제약과 직결되므로 아래를 지킨다.
